@@ -1,0 +1,160 @@
+from bisect import bisect_left, bisect_right
+from math import hypot, fabs
+from p_ggen import iterby2
+from p_gmath import thanSegSeguw
+from dtmvar import ThanDTMDEM, interpolatez
+
+
+class ThanDTMlines(ThanDTMDEM):
+    "A set of lines which behaves as a Digital Terrain Model."
+
+    def __init__(self, dxmax=20.0, dext=50.0):
+        "Initialize DEM."
+        self.thanLines = []
+        self.thanDxmax = dxmax   #Max X distance of the end points of a line segment
+        self.thanDext = dext     #X distance that a line segment is Max extended at both ends..
+                                 #..in order to find an intersection
+        self.thanCen = [0.0, 0.0, 0.0]  #Centroid of the area of the dtm
+        self.thanNori = 0        #Number of original line segments (just for information)
+
+
+    def thanAddLine1(self, cp):
+        "Add a (3d) line to the DEM."
+        for ca, cb in iterby2(cp):
+            ca = tuple(ca[:3])
+            cb = tuple(cb[:3])
+            self.thanNori += 1
+            if ca[0] > cb[0]: ca, cb = cb, ca
+            dx = cb[0]-ca[0]
+            if dx <= self.thanDxmax:
+                self.thanLines.append((ca, cb))
+                continue
+            n = int(dx/self.thanDxmax) + 1
+            ddx = self.thanDxmax/n
+            x = 0.0
+            cc = ca
+            for i in xrange(n-1):
+                x += ddx
+                cd = [ca1+(cb1-ca1)/dx*x for (ca1,cb1) in zip(ca, cb)]
+                self.thanLines.append((tuple(cc), tuple(cd)))
+                cc = cd
+            self.thanLines.append((tuple(cc), cb))
+
+    def thanRecreate(self):
+        "Recreate DEM after lines additions."
+        if len(self.thanLines) < 1: return False, "DTM is empty!"
+        self.thanLines.sort()
+        self.thanCentroidCompute()
+        return True, None
+
+    def thanCentroidCompute(self):
+        "Compute the centroid of all lines."
+        cc = [0.0]*3
+        sdis = 0.0
+        xr = xrange(3)
+        for ca, cb in self.thanLines:
+            dis = hypot(cb[0]-ca[0], cb[1]-ca[1])
+            for i in xr:
+                cc[i] += (ca[i]+cb[i])*0.5 * dis
+            sdis += dis
+        self.thanCen[:] = [cc1/dis for cc1 in cc]
+
+
+    def thanIntersegZ(self, ca, cb):
+        "Compute intersections of segment with DEM lines; don't sort intersections from ca to cb."
+        ca = tuple(ca)
+        cb = tuple(cb)
+#        print "ca=", ca, "cb=", cb
+        rev = False
+        if ca[0] > cb[0]: ca, cb = cb, ca; rev=True
+#        print "ca=", ca, "cb=", cb, "rev=", rev
+        i = bisect_left(self.thanLines, ((ca[0]-self.thanDxmax,), (-1.0e30,)))
+        j = bisect_right(self.thanLines, ((cb[0],),(+1.0e30,)))
+#        print "i=", i, "j=", j, "len=", len(self.thanLines)
+#        for ii in xrange(i, j):
+#            print "thanlines", ii,":", self.thanLines[ii]
+        cint = []
+        for k in xrange(i, j):
+            c1, c2 = self.thanLines[k]
+            uw = thanSegSeguw(ca, cb, c1, c2)
+            if uw == None: continue
+            cd = [ca1+(cb1-ca1)*uw[1] for (ca1,cb1) in zip(c1, c2)]
+            if rev: cint.append((1-uw[0], cd))
+            else:   cint.append((uw[0], cd))
+        return cint
+
+
+    def thanPointZ(self, cp):
+        "Calculate the z coordinate of a point."
+        for p in (1, 2, 4):
+            cp = list(cp)     # bisect (called in __z1) needs cp as a list
+            ca = list(cp)
+            cb = list(cp)
+            ca[0] -= self.thanDext*p           # |cb-ca| (1)
+            cb[0] += self.thanDext*p
+            d1, z1 = self.__z1(cp, ca, cb)     # Try to find intersections along x direction
+#            if z1 != None and fabs(z1) < 1.0: stop()
+            ca = list(cp)
+            cb = list(cp)
+            ca[1] -= self.thanDext*p           # |cb-ca| must be the same as in (1), or the d1, d2..
+            cb[1] += self.thanDext*p           # ..returned by __z1 will not be comparable
+            d2, z2 = self.__z1(cp, ca, cb)     # Try to find intersections along y direction
+#            if z2 != None and fabs(z2) < 1.0: stop()
+
+            if   z1 == None: z = z2            # Note that z2 may be None
+            elif z2 == None: z = z1
+            elif d1 < d2:    z = z1
+            else:            z = z2
+            if z != None: break
+#        if z != None and fabs(z) < 1.0: stop()
+        return z
+
+
+    def __z1(self, cp, ca, cb):
+        "Calclulate z with cp between ca and cb."
+        cint = self.thanIntersegZ(ca, cb)
+#        print "cint=", cint, "len=", len(cint)
+        if len(cint) < 1: return None, None
+        if len(cint) < 2:
+            d1 = fabs(cint[0][0]-0.5)
+            if d1 < 0.001: return d1, cint[0][1][2]  # 1 intersection, but exactly on the isoline, with 0.1% tolerance
+            return None, None
+        if cint[0][0] > 0.5:
+             if cint[0][0] < 0.501: return cint[0][0]-0.5, cint[0][1][2]     # Allow for 0.1% error
+             return None, None
+        if cint[-1][0] < 0.5:
+             if cint[-1][0] > 0.499: return 0.5-cint[-1][0], cint[-1][1][2]  # Allow for 0.1% error
+             return None, None
+        j = bisect_left(cint, (0.5, cp))
+#        print "cint[j], j=", j
+        i = j-1
+        di = cint[i][0]
+        zi = cint[i][1][2]
+        dj = cint[j][0]
+        zj = cint[j][1][2]
+        z1 = zi+(zj-zi)/(dj-di)*(0.5-di)
+        d1 = min((0.5-di, dj-0.5))
+#        print "z1=", z1, "d1=", d1
+        return d1, z1
+
+
+    def thanExpThc1(self, fw):
+        "Saves the lines of the DTM to a .thc file."
+        f = fw.formFloat
+        f3 = "  ".join((f, f, f))
+        fw.writeAtt("maxdistancex", f % (self.thanDxmax,))
+        fw.writeAtt("extensionx", f % (self.thanDext,))
+        fw.writeSnode("centroid", 3, self.thanCen)
+        fw.writeAtt("Original_segments", "%d" % (self.thanNori,))
+        fw.writeNodes(c for lin in self.thanLines for c in lin)
+
+    def thanImpThc1(self, fr, ver):
+        "Reads the lines of the DTM from a .thc file."
+        self.thanDxmax  = float(fr.readAtt("maxdistancex")[0])
+        self.thanDext   = float(fr.readAtt("extensionx")[0])
+        self.thanCen[:] = fr.readSnode("centroid", 3)
+        self.thanNori   = int(fr.readAtt("Original_segments")[0])
+        it = fr.iterNodes()
+        for ca in it:
+            cb = it.next()
+            self.thanLines.append((tuple(ca), tuple(cb)))

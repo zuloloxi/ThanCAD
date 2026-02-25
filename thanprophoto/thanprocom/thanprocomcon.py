@@ -1,0 +1,46 @@
+# -*- coding: iso-8859-7 -*-
+##############################################################################
+# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# 
+# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# URL:     http://thancad.sourceforge.net
+# e-mail:  cyberthanasis@excite.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##############################################################################
+
+"""\
+ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+
+This is the professional part of ThanCad which is initially commercial.
+Package which processes commands entered by the user.
+This module defines various constants.
+"""
+import thancomphot
+
+coms = \
+[ ("photcosys",   thancomphot.thanPhotCosys),
+  ("photcamera",  thancomphot.thanPhotCamera),
+  ("photf6",      thancomphot.thanPhotF6),
+  ("photf7",      thancomphot.thanPhotF7),
+  ("photimage",   lambda proj: thancomphot.thanPhotImage(proj, "m")),
+  ("photintcamera",thancomphot.thanPhotIntcamera),
+  ("photinterior",thancomphot.thanPhotInterior),
+  ("photintimage",thancomphot.thanPhotImage),
+  ("photmodel",   thancomphot.thanPhotModel),
+  ("phot90",      lambda win: thancomphot.thanPhotTranspose(win, "phot90", 1)),
+  ("phot180",     lambda win: thancomphot.thanPhotTranspose(win, "phot180", 2)),
+  ("phot270",     lambda win: thancomphot.thanPhotTranspose(win, "phot270", 3)),
+]

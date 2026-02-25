@@ -1,0 +1,1388 @@
+# -*- coding: iso-8859-7 -*-
+##############################################################################
+# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# 
+# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# URL:     http://thancad.sourceforge.net
+# e-mail:  cyberthanasis@excite.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##############################################################################
+
+"""\
+ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+
+Package which processes commands entered by the user.
+This module provides for a modification commands.
+"""
+
+from math import pi, hypot, fabs, atan2, cos, sin
+from itertools import izip
+from p_gmath import thanNear2, thanNear3, sign
+from thanvar import Canc, thanFiletCalc, ThanLayerError
+from thantrans import T
+import thancomsel, thanjoin
+
+from selutil import thanSel1line, thanSel2linsegs, thanSelMultlines, thanSelectCrosClear
+
+
+def thanModContline(proj):
+    "Continues a line selected by the user."
+    linori = thanSel1line(proj, T["Select a line to continue.."])
+    if linori == Canc: return thanModCanc(proj)               # Line continue was cancelled
+    selold = proj[2].thanSelold
+    lin = linori.thanClone()
+#    lin.thanTags = linori.thanTags
+#    lin.handle = linori.handle
+
+    proj[2].thanTkSet(lin)          # Set the attributes of lin's layer
+    res = lin.thanTkContinue(proj)
+    proj[2].thanTkSet()             # Set the attribute of current layer
+    if res == Canc: return thanModCanc(proj)
+    if lin.cp == linori.cp: return thanModCanc(proj)  #No change; cancel
+
+    delelems = [linori]
+    newelems = set((lin,))
+    thanModReplaceRedo(proj, delelems, newelems, newelems) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("continueline", thanModReplaceRedo, (delelems, newelems, newelems),
+                                               thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)                # 'Reset color' is not needed, but it is called for only 1..
+                                    # ..element, so it is fast
+
+#=============================================================================
+
+def thanModChelevContour(proj):
+    "Change the elevation of contour lines massively."
+    from thandr import ThanLine, ThanText
+    from thandr.thanintall import thanInt
+    fil = lambda e: isinstance(e, ThanLine)
+    def sel1(proj, stat):
+        "Select a line and find its nearest point."
+        while True:
+            elem1 = thancomsel.thanSelect1(proj, stat, filter=fil)
+            thanModCancSel(proj)
+            if elem1 == Canc: return Canc, Canc       #elevation cancelled
+            print "chelevcontour: type(sel1coor)=", type(proj[2].thanSel1coor)
+            c1 = elem1.thanPntNearest(proj[2].thanSel1coor)
+            print "chelevcontour: type(c1)=", type(c1)
+            if c1 != None: return elem1, c1
+            proj[2].thanPrter(T["Point not near line. Try again."])
+
+    elem1, c1 = sel1(proj, T["Select first contour line to elevate.."])
+                            #"Επιλογή πρώτης ισοϋψούς για αλλαγή υψομέτρου: "
+    if elem1 == Canc: return proj[2].thanGudCommandCan()
+    while True:
+        elem2, c2 = sel1(proj, T["Select last contour line to elevate.."])
+                            #"Επιλογή τελευταίας ισοϋψούς για αλλαγή υψομέτρου: "
+        if elem2 == Canc: return proj[2].thanGudCommandCan()
+        if not thanNear2(c1, c2): break
+        proj[2].thanPrter(T["Selected points are identical. Try again."])
+
+    stat = "%s%s): " % (T["Elevation of first contour line (enter="], c1[2])
+    z1 = proj[2].thanGudGetFloat(stat, c1[2])
+    if z1 == Canc: return thanModCanc(proj)
+
+    stat = "%s%s): " % (T["Elevation of last contour line (enter="], c2[2])
+    z2 = proj[2].thanGudGetFloat(stat, c2[2])
+    if z2 == Canc: return thanModCanc(proj)
+
+    lin1 = ThanLine()
+    lin1.thanSet([c1, c2])
+    lines = thanSelectCrosClear(proj, c1, c2, fil)
+    lines -= set((elem1, elem2))
+    seq = []
+    for lin2 in lines:
+        ct = thanInt(lin1, lin2, proj)
+        if len(ct) == 0: continue
+        if len(ct) > 1:
+            return proj[2].thanGudCommandCan("%s\n%s" % (
+                T["Error: An interim line is met more than once:"],
+                T["The elevation must increase/decrease monotonically between first and last line."]))
+        ct = ct[0]
+        seq.append((hypot(ct[0]-c1[0], ct[1]-c1[1]), ct, lin2))
+    n = len(seq)
+    if n == 0:
+        return proj[2].thanGudCommandCan(T["No lines were met between first and last line."])
+    dz = (z2-z1)/float(n+1)
+    idz = fabs(dz)
+    idz = sign(int(idz+0.5), dz)
+    if fabs(dz-idz) > 0.001:
+        statonce = T["Warning: delta z is not a integer: %s\n"] % dz
+        stat1 = T["Continue (yes/no) (enter=yes): "]
+        ans = proj[2].thanGudGetYesno(stat1, default=True, statonce=statonce)
+        if ans == Canc: return proj[2].thanGudCommandCan()
+        if not ans: return proj[2].thanGudCommandCan()
+    else:
+        dz = idz
+    seq.sort()
+    seq.insert(0, (0.0, c1, elem1))
+    seq.append((hypot(c2[0]-c1[0], c2[1]-c1[1]), c2, elem2))
+    sizes = [seq[i+1][0]-seq[i][0] for i in xrange(len(seq)-1)]
+    siz = min(sizes)*0.5
+    theta = atan2(c2[1]-c1[1], c2[0]-c1[0])   #Note that c1 != c2
+    cost = cos(theta)                         #This is the user line direction
+    sint = sin(theta)
+    theta -= pi*0.5                           #This is the text (the plotted number z) direction
+    strd = proj[1].thanUnits.strdis
+
+    delelems = set()
+    newelems = set()
+    selelems = set()
+    z = z1
+    for _, ct, lin1 in seq:
+        lin2 = lin1.thanClone()
+        lin2.thanChelev(z)
+#        lin2.thanTags = lin1.thanTags
+#        lin2.handle = lin1.handle
+        delelems.add(lin1)
+        newelems.add(lin2)
+        selelems.add(lin2)
+        e = ThanText()
+        ct[0] -= siz*0.5*cost
+        ct[1] -= siz*0.5*sint
+        e.thanSet(strd(z), ct, siz, theta)
+        proj[1].thanElementTag(e)
+        newelems.add(e)
+        z += dz
+    selold = proj[2].thanSelall
+    thanModReplaceRedo(proj, delelems, newelems, selelems)
+    proj[1].thanDoundo.thanAdd("chelevcontour", thanModReplaceRedo, (delelems, newelems, selelems),
+                                                thanModReplaceUndo, (delelems, newelems, selold))
+    proj[2].thanGudCommandEnd()
+
+
+def thanModBreak(proj):
+    "Breaks an element to 2 pieces if possible."
+    elem = thancomsel.thanSelect1(proj, T["Select a (breakable) element to break.."],
+        filter=lambda e: e.thanBreak()) # .break() with no arguments returns True if element is breakable
+    if elem == Canc: return thanModCanc(proj)         # Break was cancelled
+    c1 = proj[2].thanSel1coor
+    if c1 == None or elem.thanPntNearest(c1) == None:
+        c1 = __getNearPnt(proj, elem, T["First point of element to break: "])
+        if c1 == Canc: return thanModCanc(proj)      # Break was cancelled
+        c2 = __getNearPnt(proj, elem, T["Second point of element to break: "])
+        if c2 == Canc: return thanModCanc(proj)      # Break was cancelled
+    else:
+        c2 = __getNearPnt(proj, elem, T["Second point of element to break (F for first point): "], options=("first",))
+        if c2 == Canc: return thanModCanc(proj)      # Break was cancelled
+        if c2 == "f":
+            c1 = __getNearPnt(proj, elem, T["First point of element to break: "])
+            if c1 == Canc: return thanModCanc(proj)  # Break was cancelled
+            c2 = __getNearPnt(proj, elem, T["Second point of element to break: "])
+            if c2 == Canc: return thanModCanc(proj)      # Break was cancelled
+    newelems = set(e for e in elem.thanBreak(c1, c2) if e != None)
+    if not newelems: return thanModCanc(proj, T["Element can not be deleted; use 'ERASE'."])
+
+    lay = proj[1].thanGetLayer(elem)
+    for e in newelems: proj[1].thanElementTag(e, lay)
+    delelems = [elem]
+    selold = proj[2].thanSelold
+    thanModReplaceRedo(proj, delelems, newelems, newelems) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("break", thanModReplaceRedo, (delelems, newelems, newelems),
+                                        thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)           # 'Reset color' is completely unnecessary here, and it will slow..
+                               # ..the command down. Room for optimisation here.
+
+def __getNearPnt(proj, elem, stat1, options=()):
+    "Get a point and check if it is near the element."
+    statonce = ""
+    while True:
+        res = proj[2].thanGudGetPoint(stat1, statonce, options=options)
+        if res == Canc: return Canc      # Break was cancelled
+        for opt in options:
+            if res == opt[:1]: return res
+        if elem.thanPntNearest(res) != None: return res
+        statonce = T["Point is not near element. Try again.\n"]
+
+
+def thanModStraighten(proj):
+    "Straightens a line between 2 user selected points."
+    from thandr import ThanLine
+    elem = thancomsel.thanSelect1(proj, T["Select a line element to straighten.."],
+        filter=lambda e: isinstance(e, ThanLine)) # .break() with no arguments returns True if element is breakable
+    if elem == Canc: return thanModCanc(proj)         # Straighten was cancelled
+    c1 = proj[2].thanSel1coor
+    if c1 == None or elem.thanPntNearest(c1) == None:
+        c1 = __getNearPnt(proj, elem, T["First point of element to straighten: "])
+        if c1 == Canc: return thanModCanc(proj)      # Straighten was cancelled
+        c2 = __getNearPnt(proj, elem, T["Second point of element to straighten: "])
+        if c2 == Canc: return thanModCanc(proj)      # Straighten was cancelled
+    else:
+        c2 = __getNearPnt(proj, elem, T["Second point of element to straighten (F for first point): "], options=("first",))
+        if c2 == Canc: return thanModCanc(proj)      # Straighten was cancelled
+        if c2 == "f":
+            c1 = __getNearPnt(proj, elem, T["First point of element to straighten: "])
+            if c1 == Canc: return thanModCanc(proj)  # Straighten was cancelled
+            c2 = __getNearPnt(proj, elem, T["Second point of element to straighten: "])
+            if c2 == Canc: return thanModCanc(proj)      # Straighten was cancelled
+    if thanNear2(c1, c2): return thanModCanc(proj, T["Selected points are identical."])
+    e = elem.thanStraighten(c1, c2)
+    e.thanTags = elem.thanTags
+    delelems = [elem]
+    newelems = [e]
+    selold = proj[2].thanSelold
+    thanModReplaceRedo(proj, delelems, newelems, newelems) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("straighten", thanModReplaceRedo, (delelems, newelems, newelems),
+                                             thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)           # 'Reset color' is completely unnecessary here, and it will slow..
+                               # ..the command down. Room for optimisation here.
+
+#=============================================================================
+
+def __filterCut(e):
+    "Filters alaments that can be used as cutting edges."
+    from thandr import ThanLine, ThanCircle, ThanArc, ThanImage
+    for cls in ThanLine, ThanCircle, ThanArc, ThanImage:
+        if isinstance(e, cls): return True
+    return False
+
+
+def thanModTrim(proj):
+    """Trims elements using other elements as cutting edges, if possible.
+
+    Note that the selection this command does, is the selection of the cutting
+    edges. This selection is cancelled if the command is cancelled. And this
+    is the "previous" selection of next command to be given to ThanCad.
+    The selections of 1 breakable element are not recorded.
+    """
+    from thandr import thanintall
+    proj[2].thanPrt(T["Select elements to be used as cutting edges:"])
+    res = thancomsel.thanSelectGen(proj, standalone=False, filter=__filterCut)
+    if res == Canc: return thanModCanc(proj)               # Rotation cancelled
+    elcut = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    proj[2].thanUpdateLayerButton()                   # Show current layer again
+    iel = 0
+    dodo = []             # Undo/Redo list
+    mes1 = T["Select an element to trim"]
+    while True:
+        opts = []
+        if iel > 0: opts.append("undo")
+        if len(dodo) > iel: opts.append("redo")
+        if len(opts) > 0: mes = "%s (%s): " % (mes1, "/".join(opts))
+        else: mes = "%s: " % mes1
+        opts.append("")
+        res = thancomsel.thanSelect1Gen(proj, mes, filter=lambda e: e.thanBreak(), options=opts)
+        if res == Canc: break                         # Trim was cancelled/ended
+        if res == "": break                           # Trim was cancelled/ended
+        if res == "u":
+            iel -= 1
+            delelems, newelems = dodo[iel]
+            proj[1].thanElementDelete(newelems, proj)
+            proj[1].thanElementRestore(delelems, proj)
+            continue
+        if res == "r":
+            delelems, newelems = dodo[iel]
+            proj[1].thanElementDelete(delelems, proj)
+            proj[1].thanElementRestore(newelems, proj)
+            iel += 1
+            continue
+        c1 = proj[2].thanSel1coor
+        assert c1 != None, "thancomsel.thanSelect1Gen does not work well!"
+        for elem in proj[2].thanSelall: break    # Get the element
+        ps = []
+        for elcut1 in elcut:
+            ps.extend(thanintall.thanInt(elem, elcut1, proj))
+        if len(ps) < 1:
+            proj[2].thanCom.thanAppend(T["Element does not intersect cutting edges\n"], "can")
+            proj[2].thanUpdateLayerButton()           # Show current layer again
+            continue
+        newelems = [e for e in elem.thanTrim(ps, c1) if e != None]
+        if not newelems:
+            proj[2].thanCom.thanAppend(T["Element can not be deleted; use 'ERASE' instead.\n"], "can")
+            proj[2].thanUpdateLayerButton()           # Show current layer again
+            continue
+        for e in newelems: proj[1].thanElementTag(e)
+        proj[1].thanElementDelete((elem,), proj)
+        proj[1].thanElementRestore(newelems, proj)
+
+        proj[2].thanUpdateLayerButton()               # Show current layer again
+        del dodo[iel:]
+        dodo.append(((elem,), newelems))
+        iel += 1
+
+    proj[2].thanGudSetSelElem(elcut)          # The current selection (cutting edges)
+    proj[2].thanGudSetSeloldElem(selold)      # The selection before the command trim started
+    if iel == 0: return thanModCanc(proj)     # Trim was cancelled: unselect cutting edges
+    delelems = []
+    newelems = []
+    for i in xrange(iel):
+        delelems.extend(dodo[i][0])
+        newelems.extend(dodo[i][1])
+    proj[1].thanDoundo.thanAdd("trim", thanModReplaceRedo, (delelems, newelems, elcut),
+                                       thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)
+
+#=============================================================================
+
+def thanModEnd(proj, mes=None, mestype="can"):
+    "House keeping for normal end."
+    proj[2].thanGudResetSelColor()                   # Unmarks the selection
+    proj[2].thanUpdateLayerButton()                  # Show current layer again
+    proj[2].thanGudCommandEnd(mes, mestype)
+
+
+def thanModCanc(proj, mes=None, mestype="can"):
+    "House keeping for user cancel."
+    proj[2].thanGudResetSelColor()                   # Unmarks the selection
+    proj[2].thanGudSetSelRestore()                   # Restores previous selection
+    proj[2].thanUpdateLayerButton()                  # Show current layer again
+    proj[2].thanGudCommandCan(mes, mestype)          # Show prompt
+
+def thanModCancSel(proj):
+    "Cancels the most recent selection."
+    proj[2].thanGudResetSelColor()                   # Unmarks the selection
+    proj[2].thanGudSetSelRestore()                   # Restores previous selection
+    proj[2].thanUpdateLayerButton()                  # Show current layer again
+
+
+def thanModUndoWarn(proj):
+    "Print a warning message that the command will clear undo history."
+    proj[2].thanCom.thanAppend("%s\n" % T["(Warning: This command, if completed, can not be undone)"], "can1")
+
+
+def thanModUndoClear(proj):
+    "Clears the do/undo list of the current drawing."
+    proj[1].thanDoundo.clear()
+
+#=============================================================================
+
+def thanModRotate(proj):
+    "Rotates selected elements."
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Rotation cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    c1 = proj[2].thanGudGetPoint(T["Origin of rotation (Insertion point): "], options=("Insertion", ))
+    if c1 == Canc: return thanModCanc(proj)                # Rotation cancelled
+
+    un = proj[1].thanUnits
+    st = "%s(%s): " % (T["Rotation angle"], un.anglunit)
+    phi = un.rad2unit(0.5*pi)
+    phi = proj[2].thanGudGetFloat(st, phi)
+    if phi == Canc: return thanModCanc(proj)               # Rotation cancelled
+    phi = un.unit2rad(phi)
+
+    __modRotateDo(proj, c1, phi)
+    proj[1].thanDoundo.thanAdd("rotate", thanModRotateRedo, (elems, c1, phi),
+                                         thanModRotateUndo, (elems, c1, phi, selold))
+    thanModEnd(proj)                                       # 'Reset color' is necessary here; OK!
+
+
+def __modRotateDo(proj, cc, phi):
+    "Rotates selected elements; it actualy does the job."
+    import time
+    t1 = time.time()
+    if cc == "i": proj[2].thanGudSetSelRotateins(phi)
+    else:         proj[2].thanGudSetSelRotate(cc[0], cc[1], phi)
+    t2 = time.time(); proj[1].thanRotateSel(proj[2].thanSelall, cc, phi) # ThanTouch is implicitely called
+    t3 = time.time()
+    print "Rotate time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+
+
+def thanModRotateRedo(proj, elems, cc, phi):
+    "Re-rotates the previously un-rotated elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modRotateDo(proj, cc, phi)
+
+
+def thanModRotateUndo(proj, elems, cc, phi, selold):
+    "Un-rotates the previously rotated elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modRotateDo(proj, cc, -phi)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModMirror(proj):
+    "Mirrors the selected elements."
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Mirror cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    c1 = proj[2].thanGudGetPoint(T["First point of mirror line: "])
+    if c1 == Canc: return thanModCanc(proj)                # Mirror cancelled
+    while True:
+        c2 = proj[2].thanGudGetLine(c1, T["Second point of mirror line: "])
+        if c2 == Canc: return thanModCanc(proj)            # Mirror cancelled
+        if not thanNear2(c1, c2): break
+        proj[2].thanCom.thanAppend("Second point coincides with first. Try again.\n", "can")
+    keeporig = proj[2].thanGudGetYesno(T["Keep original elements (<yes>/no): "], default="yes")
+    if keeporig == Canc: return thanModCanc(proj)          # Mirror cancelled
+    t = [c2[0]-c1[0], c2[1]-c1[1]]
+    tt = hypot(t[0], t[1])
+    t[0] /= tt
+    t[1] /= tt
+    if keeporig:
+        dc = [0.0]*len(c1)
+        newelems = __modMirrorCopyDo(proj, elems, c1, t)
+        proj[1].thanDoundo.thanAdd("mirror", thanModReplaceRedo, ((), newelems, elems),
+                                             thanModReplaceUndo, ((), newelems, selold))
+    else:
+        __modMirrorDo(proj, c1, t)
+        proj[1].thanDoundo.thanAdd("mirror", thanModMirrorRedo, (elems, c1, t),
+                                             thanModMirrorUndo, (elems, c1, t, selold))
+    thanModEnd(proj)       # 'Reset color' is necessary here; OK!
+
+
+def __modMirrorCopyDo(proj, elems, c1, t):
+    "Copies selected elements; it actualy does the job."
+    import time
+    t1 = time.time();
+    dc = [0.0]*len(c1)
+    copelems = proj[1].thanCopySel(elems, dc)   # thanTouch is implicitely called
+    proj[1].thanMirrorSel(copelems, c1, t)
+    t2 = time.time(); proj[2].thanGudDrawElemsMany(copelems)
+    t3 = time.time()
+    print "Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1)
+    return copelems
+
+
+def __modMirrorDo(proj, c1, t):
+    "Mirrors selected elements; it actualy does the job."
+    import time
+    t1 = time.time(); proj[2].thanGudSetSelMirror(c1[0], c1[1], t)
+    t2 = time.time(); proj[1].thanMirrorSel(proj[2].thanSelall, c1, t) # ThanTouch is implicitely called
+    t3 = time.time()
+    print "Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+
+
+def thanModMirrorRedo(proj, elems, c1, t):
+    "Re-mirrors the previously un-mirrored elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modMirrorDo(proj, c1, t)
+
+
+def thanModMirrorUndo(proj, elems, c1, t, selold):
+    "Un-mirrors the previously mirrored elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modMirrorDo(proj, c1, t)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModReverse(proj):
+    "Reverses the orientation of the direction of lines."
+    from thandr import ThanLine, ThanCircle, ThanArc
+    reversibles = (ThanLine, ThanCircle, ThanArc)
+    filt = lambda elem: isinstance(elem, reversibles)
+    proj[2].thanPrt(T["Select lines, circles, arcs to reverse orientation:"])
+    res = thancomsel.thanSelectGen(proj, standalone=False, filter=filt)
+    if res == Canc: return thanModCanc(proj)               # Reverse cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    __modReverseDo(proj)
+    proj[1].thanDoundo.thanAdd("reverse", thanModReverseRedo, (elems, ),
+                                          thanModReverseUndo, (elems, selold))
+    thanModEnd(proj)                                       # 'Reset color' is necessary here; OK!
+
+
+def __modReverseDo(proj):
+    "Rotates selected elements; it actualy does the job."
+    import time
+    t1 = time.time()                                       # nothing to do on the canvas
+    t2 = time.time()
+    for e in proj[2].thanSelall:
+        e.thanReverse()
+    t3 = time.time()
+    print "Reverse time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    proj[1].thanTouch()
+
+
+def thanModReverseRedo(proj, elems):
+    "Re-reverses the previously un-reversed elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modReverseDo(proj)
+
+
+def thanModReverseUndo(proj, elems, selold):
+    "Un-reverses the previously reversed elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modReverseDo(proj)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModExplode(proj):
+    "Explodes elements to (1 level) smaller elements."
+    res = thancomsel.thanSelectGen(proj, standalone=False, filter=lambda e: e.thanExplode())
+    if res == Canc: return thanModCanc(proj)     # Explode was cancelled
+    delelems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    newelems = set()
+    for e in delelems:
+        lay = proj[1].thanGetLayer(e)
+        for e1 in e.thanExplode(proj[2].than):
+            proj[1].thanElementTag(e1, lay)
+            newelems.add(e1)
+    thanModReplaceRedo(proj, delelems, newelems, newelems) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("explode", thanModReplaceRedo, (delelems, newelems, newelems),
+                                          thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)   # 'Reset color' is not needed since the exploded fragments are redrawn. So..
+                       # ..if a large number of elements are exploded, this will slow down..
+                       # ..the command. Here, there is room for optimisation!
+
+#=============================================================================
+
+def thanModJoin(proj, ndim):
+    "Joins elements (lines) to bigger ones, ignoring z and higher dimensions."
+    if ndim == 3:
+        nearx = thanNear3
+        comname = "join"
+    else:
+        nearx = thanNear2
+        comname = "join2d"
+        proj[2].thanPrt(T["This command will join lines even if they have different z or higher dimensions"], "info1")
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Join cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    delelems, newelems, samelems, othelems = thanjoin.thanJoinSel(proj, elems, nearx)
+    selelems = othelems | samelems | newelems
+    thanModReplaceRedo(proj, delelems, newelems, selelems)
+    proj[1].thanDoundo.thanAdd(comname, thanModReplaceRedo, (delelems, newelems, selelems),
+                                        thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj, "%d joined lines were produced (%d left unchanged)." % (len(newelems), len(samelems)))
+                       # 'Reset color' is not needed for the joined lines..
+                       # since the joined elements are redrawn. So if a large number of elements..
+                       # (unlikely)  are joined, this will slow down the command.
+                       # However, unjoined lines remain with the "selection" color.
+                       # there is room for optimisation!
+
+
+def thanModJoinGap(proj, ndim=2):
+    "Joins n>=2 lines to form a bigger filling the smallest gaps between them."
+    if ndim == 3:
+        disx = lambda a, b: hypot(hypot(b[0]-a[0], b[1]-a[1]), b[2]-a[2])
+        comname = "joingap3"
+    else:
+        disx = lambda a, b: hypot(b[0]-a[0], b[1]-a[1])
+        comname = "joingap"
+        proj[2].thanPrt(T["This command will join nearest lines ignoring z or higher dimesnion distance"], "info1")
+    delelems = thanSelMultlines(proj, 1, T["Select at least 2 lines to join or 1 line to close:\n"], strict=False)
+    if delelems == Canc: return thanModCanc(proj)               # Join cancelled
+    selold = proj[2].thanSelold
+    ok, terr = __testz2(delelems)
+    if not ok:
+        return thanModCanc(proj, terr)               # Join failed
+    if len(delelems) == 1:
+        for e in delelems: break
+        if thanNear2(e.cp[0], e.cp[-1]): thanModCanc(proj, T["Line already closed"])      # Join failed
+        en = e.thanClone()
+        en.cp.append(list(en.cp[0]))
+#        en.thanTags = e.thanTags
+#        en.handle = e.handle
+        newelems = [en]
+    else:
+        newelems = thanjoin.thanJoinGapn(proj, delelems, disx)
+    selelems = set(newelems)
+    thanModReplaceRedo(proj, delelems, newelems, selelems)
+    proj[1].thanDoundo.thanAdd(comname, thanModReplaceRedo, (delelems, newelems, selelems),
+                                        thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)   # 'Reset color' is not needed for the joined lines..
+                       # since the joined elements are redrawn. So if a large number of elements..
+                       # (unlikely)  are joined, this will slow down the command.
+                       # there is room for optimisation!
+
+def __testz2(elems):
+    "Tests if each polyline has the same z every where and that all polylines have the same z."
+    zall = None
+    for e in elems:
+        zpol = e.cp[0][2]
+        for ct in e.cp:
+            if ct[2] != zpol:
+                return False, T["One of the lines has no constant z"]
+        if zall == None: zall = zpol
+        if zpol != zall:
+            return False, T["One of the lines has not the same z as the others"]
+    return True, ""
+
+#=============================================================================
+
+def thanModChlayer(proj):
+    "Changes the layer of selected elements."
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Rotation cancelled
+    dilay = proj[1].thanLayerTree.dilay
+    elemslays = [(elem, dilay[elem.thanTags[1]]) for elem in proj[2].thanSelall]
+    selold = proj[2].thanSelold
+
+    res = proj[2].thanGudGetLayerleaf(T["Select new layer for the elements"])
+    if res == Canc: return thanModCanc(proj)               # Rotation cancelled
+    laynew = res
+
+    __modChlayerDo(proj, elemslays, laynew)
+    proj[1].thanDoundo.thanAdd("chlayer", thanModChlayerRedo, (elemslays, laynew),
+                                          thanModChlayerUndo, (elemslays, laynew, selold))
+    thanModEnd(proj)         # 'Reset color' is necessary here (in fact, _it_ _is_ optimisation
+
+
+def __modChlayerDo(proj, elemslays, laynew):
+    "Changes the layer of selected elements; it actualy does the job; implicitely assumes that elements were visible."
+    import thanlayer
+    proj[1].thanTouch()
+    for elem,lay in elemslays:
+        tags = list(elem.thanTags)
+        lay.thanQuad.remove(elem)
+        laynew.thanQuad.add(elem)
+        tags[1] = laynew.thanTag
+        elem.thanTags = tuple(tags)
+    if laynew.thanAtts["frozen"].thanVal:
+        proj[2].thanGudSetSelDel()      # Deletes the canvas items, because the new layer is frozen
+        proj[2].thanGudSetSelClear()    # Can't change frozen elements (if select previous is used)
+        return
+    lays = set(lay for (elem,lay) in elemslays)
+    assert len(lays) > 0, "How come that no layers were found, when there is at least one element????"
+    draworder = False
+    for lay in lays:             # Find only the attributes which differ (and thus they must be changed)
+        for a in thanlayer.thanlayatts.thanLayAttsNames[2:]:   # We know that lay is NOT frozen (otherwise the elements could not be selected:) )
+            nval = laynew.thanAtts[a].thanVal
+            val = lay.thanAtts[a].thanAct
+            if nval == val: continue
+            if a == "moncolor":
+                pass  # Optimisation: Since thanGudResetSelColor will be called, no need to change colour now
+            elif a == "draworder":
+                draworder = True
+            elif a == "penthick":
+                pass              # Nothing visible changes
+    proj[2].thanGudSetSelLayertag(laynew.thanTag)
+    if draworder: proj[2].thanRedraw()
+
+
+def __modChlayerUndo(proj, elemslays, laynew, selold):
+    "UnChanges the layer of selected elements; implicitely assumes that elements were visible."
+    import thanlayer
+    proj[1].thanTouch()
+    for elem,lay in elemslays:
+        tags = list(elem.thanTags)
+        laynew.thanQuad.remove(elem)
+        lay.thanQuad.add(elem)
+        tags[1] = lay.thanTag
+        elem.thanTags = tuple(tags)
+    if laynew.thanAtts["frozen"].thanVal:    #Layer was frozen; so redraw elements
+        proj[2].thanGudDrawElemsMany([elem for (elem,lay) in elemslays])
+        return
+    lays = set(lay for (elem,lay) in elemslays)
+    assert len(lays) > 0, "How come that no layers were found, when there is at least one element????"
+    draworder = False
+    for lay in lays:                     #Find only the attributes which differ (and thus they must be changed)
+        for a in thanlayer.thanlayatts.thanLayAttsNames[2:]:   # We know that lay is NOT frozen (otherwise the elements could not be selected:) )
+            nval = laynew.thanAtts[a].thanVal
+            val = lay.thanAtts[a].thanAct
+            if nval == val: continue
+            if a == "moncolor":
+                pass  # Optimisation: thanGudResetSelColor will probably do the work faster
+            elif a == "draworder":
+                draworder = True
+            elif a == "penthick":
+                pass           # Nothing visible changes
+    dc = proj[2].thanCanvas
+    for elem,lay in elemslays:
+        titem = elem.thanTags[0]
+        tags = list(dc.gettags(titem))
+        tags[1] = lay.thanTag
+        dc.itemconfig(titem, tags=tuple(tags))
+    proj[2].thanGudResetSelColor()
+    if draworder: proj[2].thanRedraw()
+
+
+def thanModChlayerRedo(proj, elemslays, laynew):
+    "Re-changes the layer of selected elements to laynew."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(set(e for (e,lay) in elemslays))
+    __modChlayerDo(proj, elemslays, laynew)
+    proj[2].thanGudResetSelColor()
+
+
+def thanModChlayerUndo(proj, elemslays, laynew, selold):
+    "Un-rotates the oreviously rotated elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(set(e for (e,lay) in elemslays))
+    __modChlayerUndo(proj, elemslays, laynew, selold)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModScale(proj):
+    """Scales selected elements.
+
+    FIXME: The limits (area iterated) of the visible drawing are probably changed
+    as well. It must be checked.
+    """
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Scale was cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    c1 = proj[2].thanGudGetPoint(T["Origin of scale (Insertion point): "], options=("Insertion", ))
+    if c1 == Canc: return thanModCanc(proj)                # Scale was cancelled
+    print "c1=", c1, type(c1)
+    fact = 1.0
+    fact = proj[2].thanGudGetPosFloat(T["Scale factor: "], fact)
+    if fact == Canc: return thanModCanc(proj)              # Scale was cancelled
+
+    __modScaleDo(proj, c1, fact)
+    proj[1].thanDoundo.thanAdd("scale", thanModScaleRedo, (elems, c1, fact),
+                                        thanModScaleUndo, (elems, c1, fact, selold))
+    thanModEnd(proj)                                       # 'Reset color' is necessary here
+
+
+def __modScaleDo(proj, cc, fact):
+    "Scales selected elements; it actualy does the job."
+    import time       # thanScaleSel is called first, because thanGudSetSelScale calls thanautoregen to re-render the images
+    t1 = time.time()
+    t1 = time.time(); proj[1].thanScaleSel(proj[2].thanSelall, cc, fact) # ThanTouch is implicitely called
+    t2 = time.time()
+    if cc == "i": proj[2].thanGudSetSelScaleIns(fact)
+    else:         proj[2].thanGudSetSelScale(cc[0], cc[1], fact)
+    t3 = time.time()
+    print "Scale time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1)
+
+def thanModScaleRedo(proj, elems, cc, fact):
+    "Re-scales the previously un-scaled elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modScaleDo(proj, cc, fact)
+
+
+def thanModScaleUndo(proj, elems, cc, fact, selold):
+    "Un-scales the oreviously scaled elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modScaleDo(proj, cc, 1.0/fact)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModMove(proj):
+    "Moves slelected elements."
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Move was cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    stat1 = T["Destination or <enter>: "]
+#    n = proj[1].thanVar["dimensionality"]
+#    dc = [0.0] * n
+    res = proj[2].thanGudGetPoint(T["Origin or Delta coordinates: "])
+    if res == Canc: return thanModCanc(proj)               # Move was cancelled
+    dc = res
+    res = proj[2].thanGudGetMovend(dc, stat1, options=("",))
+    if res == Canc: return thanModCanc(proj)               # Move was cancelled
+    if res != "":
+        for i in xrange(len(dc)): dc[i] = res[i] - dc[i]
+
+    __modMoveDo(proj, dc)
+    proj[1].thanDoundo.thanAdd("move", thanModMoveRedo, (elems, dc),
+                                       thanModMoveUndo, (elems, dc, selold))
+    thanModEnd(proj)                                       # 'Reset color' is necessary here
+
+
+def __modMoveDo(proj, dc):
+    "Moves selected elements; it actualy does the job."
+    import time
+    t1 = time.time(); proj[2].thanGudSetSelMove(dc[0], dc[1])
+    t2 = time.time(); proj[1].thanMoveSel(proj[2].thanSelall, dc)   # thanTouch is implicitely called
+    t3 = time.time()
+    print "Move time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+
+
+def thanModMoveRedo(proj, elems, dc):
+    "Re-moves the previously un-moved elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modMoveDo(proj, dc)
+
+
+def thanModMoveUndo(proj, elems, dc, selold):
+    "Unmoves the previously moved elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    dc = [-c for c in dc]
+    __modMoveDo(proj, dc)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModCopy(proj):
+    "Copies selected elements."
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)                # Copy was cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    stat1 = T["Destination or <enter>: "]
+    c1 = proj[2].thanGudGetPoint(T["Origin or Delta coordinates: "])
+    if c1 == Canc: return thanModCanc(proj)                 # Copy was cancelled
+    res = proj[2].thanGudGetMovend(c1, stat1, options=("",))
+    if res == Canc: return thanModCanc(proj)                # Copy was cancelled
+    if res == "":
+        copelems = __modCopyDo(proj, elems, c1)
+    else:
+        dc = [b-a for a,b in izip(c1, res)]
+        copelems = __modCopyDo(proj, elems, dc)
+        while True:                                             # Copy multiple mode
+            res = proj[2].thanGudGetMovend(c1, stat1, options=("",))
+            if res == Canc or res == "": break                  # Copy is ended
+            dc = [b-a for a,b in izip(c1, res)]
+            e1 = __modCopyDo(proj, elems, dc)
+            copelems.extend(e1)
+
+    proj[1].thanDoundo.thanAdd("copy", thanModReplaceRedo, ((), copelems, elems),
+                                       thanModReplaceUndo, ((), copelems, selold))
+    thanModEnd(proj)                       # 'Reset color' is necessary here
+
+
+def __modCopyDo(proj, elems, dc):
+    "Copies selected elements; it actualy does the job."
+    import time
+    t1 = time.time(); copelems = proj[1].thanCopySel(elems, dc)   # thanTouch is implicitely called
+    t2 = time.time(); proj[2].thanGudDrawElemsMany(copelems)
+    t3 = time.time()
+    print "Move time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1)
+    return copelems
+
+
+def thanModCopyRedo(proj, elems, copelems):
+    "Recopies the previously uncopied elements."
+    proj[1].thanElementRestore(copelems, proj)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+
+def thanModCopyUndo(proj, copelems, selold):
+    "Uncopies the previously copied elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(copelems)
+    __modEraseDo(proj)
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModOffset(proj):
+    "Offsets elements (1 by 1 to be compatible with thAtCad - WARNING CODE NOT FINISED."
+    elems = set()
+    selold = proj[2].thanSelall
+    newelems = set()
+    dis = disori = proj[1].thanVar["useroffsetdistance"]
+    through = throughori = proj[1].thanVar["useroffsetthrough"]
+    strd = proj[1].thanUnits.strdis
+    elemun = True
+    while True:
+        if through:
+            mes = T["Select element to offset or (offset Distance): "]
+            elem = thancomsel.thanSelect1(proj, mes, options=("distance", ), filter=lambda e: e.thanOffset())
+            if elem == Canc: return thanModCanc(proj)  # Offset cancelled
+            if elem != "d": elemun=False; break
+            through = False
+            proj[2].thanGudSetSelRestore()             # Restores previous selection
+        else:
+            mes = "%s <%s>: " % (T["Specify offset distance or (Through point)"], strd(dis))
+            dis = proj[2].thanGudGetPosFloat(mes, default=dis, options=("through",))
+            if dis == Canc: return proj[2].thanGudCommandCan() # Offset cancelled (no thanModCanc here because no selection has been made)
+            if dis != "t": break
+            through = True
+    while True:
+        if elemun:
+            elem = thancomsel.thanSelect1(proj, T["Select element to offset or <exit>: "],
+                   options=("",), filter=lambda e: e.thanOffset())
+            if elem == Canc or elem == "": break     # Offset cancelled or ended
+        elemun = True
+        if through:
+            ct = proj[2].thanGudGetPoint(T["Specify through point: "])
+            if ct == Canc: proj[2].thanPrtCan(); continue        # Offset of _this_ element was cancelled
+            e = elem.thanOffset(through, None, ct)
+        else:
+            ct = proj[2].thanGudGetPoint(T["Specify point on side to offset: "])
+            if ct == Canc: proj[2].thanPrtCan(); continue        # Offset of _this_ element was cancelled
+            e = elem.thanOffset(through, dis, ct)
+        if e == None:
+            proj[2].thanCom.thanAppend(T["Invalid point or element can not be offset. Try again.\n"], "can")
+            continue
+        proj[1].thanElementAdd(e, proj[1].thanGetLayer(elem))
+        proj[2].thanTkSet(elem)
+        e.thanTkDraw(proj[2].than)
+        elems.add(elem)
+        newelems.add(e)
+
+    proj[2].thanGudSetSelElem(elems)          # The original elements which were offset
+    proj[2].thanGudSetSeloldElem(selold)      # The selection before the command offset started
+    if len(newelems) == 0: return thanModCanc(proj)     # Offset cancelled
+    proj[2].thanTkSet()       #Set current layer's settings
+    newvars = {"useroffsetthrough":through}
+    oldvars = {"useroffsetthrough":throughori}
+    if not through:
+        newvars["useroffsetdistance"] = dis
+        oldvars["useroffsetdistance"] = disori
+    proj[1].thanVar.update(newvars)   # Set new default only if user did not cancel
+    proj[1].thanDoundo.thanAdd("offset", thanModReplaceRedo, ((), newelems, elems, newvars),
+                                         thanModReplaceUndo, ((), newelems, selold, oldvars))
+    thanModEnd(proj)       # 'Reset color' is not necessary here; room for optimization here
+
+#=============================================================================
+
+def thanModDDedit(proj):
+    "Prompts the user to alter the text of a ThanText object."
+    from thandr import ThanText
+    first = True
+    while True:
+        elem = thancomsel.thanSelect1(proj, T["Select text to edit: "], filter=lambda e: isinstance(e, ThanText), options=("",))
+        if elem == Canc or elem == "":
+            if first: return thanModCanc(proj)            # DDedit cancelled
+            else: break                                   # DDedit ended
+        textold = elem.text
+        textnew = proj[2].thanGudGetText1(T["Edit text"], textDefault=textold)
+        if textnew == Canc:
+            proj[2].thanGudSetSelRestore()
+            proj[2].thanPrtCan()
+            continue                      # DDedit of this text was cancelled; ask for other
+        elems = set((elem,))
+        selold = proj[2].thanSelold
+
+        __modDDeditDo(proj, elems, textnew)
+        proj[1].thanDoundo.thanAdd("ddedit", thanModDDeditRedo, (elems, textnew),
+                                             thanModDDeditUndo, (elems, textold, selold))
+        first = False
+    proj[2].thanGudSetSelRestore()   #Reselect the most recent modified element
+    if elem == Canc: thanModEnd(proj, "")    # If cancelled then goto the next line of the command window
+    else:            thanModEnd(proj)        # If the use pressed enter, we are already on the next line
+
+
+def __modDDeditDo(proj, elems, text):
+    "Changes the text of the (single) selected element."
+    for elem in elems: break
+    elem.thanSet(text, elem.cc, elem.size, elem.theta)
+    proj[2].thanGudSetSelDel()                         # Delete the text from the canvas
+    proj[2].thanTkSet(elem)                            # Set attrinutes of elem's layer
+    elem.thanTkDraw(proj[2].than)                      # Draw the new text
+    proj[2].thanTkSet()                                # Set atributes of current layer
+    proj[2].thanGudSetSelElem1(elems)                  # Reselect the element (we deleted it)
+    proj[1].thanTouch()
+
+
+def thanModDDeditRedo(proj, elems, text):
+    "Re-chnages the text of the previously un-changed text element."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modDDeditDo(proj, elems, text)
+
+
+def thanModDDeditUndo(proj, elems, textold, selold):
+    "Un-changes the text of the previously changed text element."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modDDeditDo(proj, elems, textold)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+#=============================================================================
+
+def thanModPoint(proj):
+    "Prompts the user to alter the text/usability/Z of a named point."
+    from thandr import ThanPointNamed
+    first = True
+    while True:
+        elem = thancomsel.thanSelect1(proj, T["Select named point to edit: "], filter=lambda e: isinstance(e, ThanPointNamed), options=("",))
+        if elem == Canc or elem == "":
+            if first: return thanModCanc(proj)            # Point edit cancelled
+            else: break                                   # Point edit ended
+        attsnew = __pointgetnewatts(proj, elem)
+        if attsnew[0] == Canc:
+            proj[2].thanGudSetSelRestore()
+            proj[2].thanPrtCan()
+            continue                   # Edit of this point was cancelled; ask for other
+        attsold = elem.cc[2], elem.name, list(elem.validc)
+        elems = set((elem,))
+        selold = proj[2].thanSelold
+        __modPointDo(proj, elems, attsnew)
+        proj[1].thanDoundo.thanAdd("poedit", __modPointRedo, (elems, attsnew),
+                                             __modPointUndo, (elems, attsold, selold))
+        first = False
+    proj[2].thanGudSetSelRestore()   #Reselect the most recent modified element
+    if elem == Canc: thanModEnd(proj, "")    # If cancelled then goto the next line of the command window
+    else:            thanModEnd(proj)        # If the use pressed enter, we are already on the next line
+
+
+def __pointgetnewatts(proj, elem):
+    "Prompt the use to edit Z, name or usablility of the named point."
+    cvis = T["Coordinate usability (for DTM, etc)"]
+    strd = proj[1].thanUnits.strdis
+    z, name, validc = elem.cc[2], elem.name, list(elem.validc)
+    while True:
+        statonce = "Name=%s   %s: X=%r Y=%r Z=%r\n" % (name, cvis, validc[0], validc[1], validc[2])
+        res = proj[2].thanGudGetFloat(T["New Z or (change Name/toggle X/toggle Y/toggle Z) <enter=%s>: " % strd(z)],
+            default=z, statonce=statonce, options=("Name", "X", "Y", "Z"))
+        if res == Canc:
+            return Canc, Canc, Canc                    # Point cancelled
+        if res == "n":
+            res = proj[2].thanGudGetText0(T["New point name (enter=%s): "]%name, default=name)
+            if res != Canc: name = res
+        elif res in ("x", "y", "z"):
+            i = "xyz".index(res)
+            validc[i] = not validc[i]
+        else:
+            z = res
+            return z, name, validc
+
+
+def __modPointDo(proj, elems, atts):
+    "Changes attributes of points; it actualy does the job."
+    for elem in elems: break
+    elem.cc[2] = atts[0]
+    elem.thanSet(elem.cc, atts[1], atts[2])
+    proj[2].thanGudSetSelDel()                         # Delete the text from the canvas
+    proj[2].thanTkSet(elem)                            # Set attrinutes of elem's layer
+    elem.thanTkDraw(proj[2].than)                      # Draw the new text
+    proj[2].thanTkSet()                                # Set atributes of current layer
+    proj[2].thanGudSetSelElem1(elems)                  # Reselect the element (we deleted it)
+    proj[1].thanTouch()
+
+
+def __modPointRedo(proj, elems, atts):
+    "Re-rotates the previously un-rotated elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modPointDo(proj, elems, atts)
+
+
+def __modPointUndo(proj, elems, attsold, selold):
+    "Un-rotates the previously rotated elements."
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(elems)
+    __modPointDo(proj, elems, attsold)
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(selold)
+
+
+#=============================================================================
+
+def thanModErase(proj):
+    "Erases selected elements."
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Erase was cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    __modEraseDo(proj)
+    proj[1].thanDoundo.thanAdd("erase", thanModReplaceRedo, (elems, set(), set()),
+                                        thanModReplaceUndo, (elems, set(), selold))
+    thanModEnd(proj)           # 'Reset color' is completely unnecessary here, and it will slow..
+                               # ..the command down. Room for optimisation here.
+
+def thanModEraseRedo(proj, *args, **kw): pass  #for compatibility
+def thanModEraseUndo(proj, *args, **kw): pass  #for compatibility
+
+def __modEraseDo(proj):
+    "Erases selected elements; it actualy does the job."
+    import time
+    t1 = time.time()
+    proj[2].thanGudSetSelDel()
+    proj[2].thanImages.difference_update(proj[2].thanSelall) #Delete deleted images from thanImages
+    t2 = time.time(); proj[1].thanDelSel(proj[2].thanSelall) #thanTouch is implicitely called
+    t3 = time.time()
+    print "Erase time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    proj[2].thanGudSetSelClear()
+
+
+def thanModReplaceUndo(proj, delelems, newelems, selold=None, oldvars={}):
+    "Undeletes the previously deleted elements, and deletes the previously created new elements."
+    if selold == None: selold = proj[2].thanSelall
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(newelems)
+    proj[2].thanGudSetSelDel()
+    proj[2].thanImages.difference_update(newelems) # Delete deleted images from thanImages
+    proj[1].thanDelSel(newelems)                   # thanTouch is implicitely called
+    proj[1].thanElementRestore(delelems, proj)     # thanTouch is implicitely called
+    proj[2].thanGudSetSelElem(selold)
+    proj[1].thanVar.update(oldvars)
+
+
+def thanModReplaceRedo(proj, delelems, newelems, selelems=None, newvars={}):
+    "Redeletes the deleted elements, and recreates the new elements."
+    if selelems == None: selelems = proj[2].thanSelall
+    proj[2].thanGudSetSelClear()
+    proj[2].thanGudSetSelElem(delelems)
+    proj[2].thanGudSetSelDel()
+    proj[2].thanImages.difference_update(delelems) # Delete deleted images from thanImages
+    proj[1].thanDelSel(delelems)                   # thanTouch is implicitely called
+    proj[1].thanElementRestore(newelems, proj)     # thanTouch is implicitely called
+    proj[2].thanGudSetSelElem(selelems)
+    proj[1].thanVar.update(newvars)
+
+#=============================================================================
+
+def thanModPurge(proj):
+    "Purges unused declarations; for the moment unused layer and objects."
+    ans = proj[2].thanGudGetOpts(T["Purge [Layers/Objects/Do-undo history] <L>:"], default="Layers",
+        options="Layers/Objects/Doundo".split("/"))
+    if ans == Canc: return proj[2].thanGudCommandCan()  # user cancelled purge
+    elif ans == "l": return thanModPurgelay(proj)
+    elif ans == "d": __purgeDoundo(proj)
+    else: return __purgeobjects(proj)
+
+
+def __purgeobjects(proj):
+    "Purges (unused) objects."
+    mes = { False: T["Delete %s (enter=no): "],
+            True : T["Delete %s (enter=yes): "]
+          }
+    ansdef = False
+    delyes = []
+    purgeable = False
+    for name, objs in proj[1].thanObjects.iteritems():
+        for i,obj in enumerate(objs):
+            purgeable = True
+            more = ""
+            if i > 0: more = " (%d)" % (i+1,)
+            ans = proj[2].thanGudGetYesno(mes[ansdef] % (obj.thanObjectInfo+more,), default=ansdef)
+            if ans == Canc: return proj[2].thanGudCommandCan()  # user cancelled purge
+            if ans: delyes.append((name, obj))
+            ansdef = ans
+    if len(delyes) == 0:
+        proj[1].thanDoundo.thanAdd("purge", thanRedoNothing, (),
+                                            thanRedoNothing, ())
+        if not purgeable: mes = T["No defined/unused objects."]
+        else:             mes = T["No objects were purged."]
+        return proj[2].thanGudCommandEnd(mes)
+    addobjs = []
+    thanModObjsRestore(proj, delyes, addobjs)
+    proj[1].thanDoundo.thanAdd("purge", thanModObjsRestore, (delyes, addobjs),
+                                        thanModObjsRestore, (addobjs, delyes))
+    proj[1].thanTouch()         # Drawing was changed
+    proj[2].thanGudCommandEnd() # thanModEnd() does not carry a benefit here; no elements were selected.
+
+
+def thanModObjsRestore(proj, delobjs, addobjs):
+    "Restores objects."
+    for name, obj1 in delobjs:
+        proj[1].thanObjects[name].remove(obj1)
+    for name, obj1 in addobjs:
+        proj[1].thanObjects[name].append(obj1)
+
+
+def thanModPurgelay(proj):
+    "Purges unused declarations; for the moment unused layer declarations (but not the current and its parents)."
+    from thancomvar import thanModLTClone, thanModLTRestore
+    lt = proj[1].thanLayerTree
+    cl, newRoot = thanModLTClone(proj)
+
+    cl.thanQuad.add(None)         # Make current layer non Empty
+    delnot = set((newRoot, newRoot.thanChildren[0]))   # Layers which must not be deleted
+    delyes = set()                # Layers that are going to deleted
+    try:                   purgeable = __purgeLay(proj, newRoot, delnot, delyes)
+    except ThanLayerError:
+        cl.thanQuad.remove(None)            #New cl gets a reference to thanQuad, so this is NECESSARY
+        return proj[2].thanGudCommandCan()  #user cancelled purge
+    if len(delyes) == 0:
+        proj[1].thanDoundo.thanAdd("purge", thanRedoNothing, (),
+                                            thanRedoNothing, ())
+        if not purgeable: mes = T["No unused layers (current layer can not be purged)."]
+        else:             mes = T["No layers were purged."]
+        cl.thanQuad.remove(None)            #New cl gets a reference to thanQuad, so this is NECESSARY
+        return proj[2].thanGudCommandEnd(mes)
+    for chlay in delyes:
+        lay = chlay.thanParent
+        chlay.thanUnlink()        # remove chlay and hierarchy from parent's children
+        chlay.thanDestroy()       # Delete chlay and hierarchy
+        if len(lay.thanChildren) == 0:  # This is leaf layer now; it can hold elements
+            lay.thanQuad = set()
+            lay.thanTag = lay.lt.thanIdLay.new()  # In order to exploit TK mechanism
+    cl.thanQuad.remove(None)
+    oldCl = lt.thanCur
+    oldRoot = lt.thanRoot
+    __modLtRestore(proj, newRoot, cl)
+    proj[1].thanDoundo.thanAdd("purge", thanModLTRestore, (cl, newRoot),
+                                        thanModLTRestore, (oldCl, oldRoot))
+    proj[2].thanGudCommandEnd()   # thanModEnd() does not carry a benefit here; no elements were selected..
+
+
+def thanRedoNothing(proj, *args):
+    "This function redoes or undoes nothing in the do/undo mechanism."
+    pass
+
+
+def __modLtRestore(proj, newRoot, newCl):
+    "Restores a previous layer tree."
+    lt = proj[1].thanLayerTree
+    lt.thanCur = newCl
+    lt.thanRoot = newRoot
+    lt.thanDictRebuild()          # Inform about the new leaf layers
+
+    lt.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)    # Set Attributes of the current layer
+    proj[1].thanTouch()                                        # Drawing IS modified
+    proj[2].thanUpdateLayerButton()
+
+
+def __purgeLay(proj, lay, delnot, delyes):
+    "Ask recursively the empty layers to be deleted."
+    emptyFound = False
+    ansdef = False
+    mes = { False: T["Delete empty layer %s (enter=no): "],
+            True : T["Delete empty layer %s (enter=yes): "]
+          }
+    for chlay in lay.thanChildren:
+        if chlay in delnot: continue           # These layers can not be deleted
+        if not chlay.thanIsEmpty(): continue   # Layer not empty
+        emptyFound = True
+        ans = proj[2].thanGudGetYesno(mes[ansdef] % chlay.thanGetPathname(), default=ansdef)
+        if ans == Canc: raise ThanLayerError, "User cancelled purge"
+        if ans: delyes.add(chlay)
+        ansdef = ans
+    for chlay in lay.thanChildren:
+        if chlay in delyes: continue           # Already marked for deletion
+        emptyFound1 = __purgeLay(proj, chlay, delnot, delyes)
+        emptyFound = emptyFound or emptyFound1
+    return emptyFound
+
+def __purgeDoundoold(proj):
+    "Purge do/undo history."
+    ans = proj[2].thanGudGetYesno(T["Are you sure you want to purge do/undo history (this command can not be undone) (enter=no): "], default=False)
+    if ans == Canc: return proj[2].thanGudCommandCan() # User cancelled purge
+    if not ans:     return proj[2].thanGudCommandCan() # User cancelled purge
+    proj[1].thanDoundo.clear()
+    proj[2].thanGudCommandEnd(T["Do/undo history has been purged."], "info")
+
+
+def __purgeDoundo(proj):
+    "Purge do/undo history."
+    if thanRetainDoundo(proj): return proj[2].thanGudCommandCan() # User cancelled purge
+    proj[2].thanGudCommandEnd(T["Do/undo history has been purged."], "info")
+
+
+def thanRetainDoundo(proj, code=0):
+    "Purge do/undo history."
+    if code == 0:
+        proj[2].thanPrter(T["WARNING: This command can not be undone, and it will purge the do/undo history."])
+    else:
+        proj[2].thanPrter(T["WARNING: This command will take a long time, it can not be undone, and it will purge the do/undo history."])
+    ans = proj[2].thanGudGetYesno(T["Are you sure you want to proceed (enter=no): "], default=False)
+    if ans == Canc: return True # User cancelled the command
+    if not ans:     return True # User cancelled the command
+    proj[1].thanDoundo.clear()
+    return False
+
+#=============================================================================
+
+__filetrad = 0.0
+def thanModFilet(proj):
+    "Extends and joins 2 line segments with circular arc."
+    global __filetrad
+    strd = proj[1].thanUnits.strdis
+    rr = __filetrad
+    while True:
+        proj[2].thanPrt("Current radius=%s" % (strd(rr),))
+        res = thanSel2linsegs(proj, T["Select first two sinle segment line to filet (R=Radius): "],
+                                    T["Select second two sinle segment line to filet: "], options=("radius",))
+        if res == Canc: return thanModCanc(proj)               # Filet was cancelled
+        if res[0] != "r": break
+        mes = T["Radius of circular arc (enter=%s): "] % (strd(rr),)
+        res = proj[2].thanGudGetFloat2(mes, default=rr, limits=(0.0, None), strict=True)
+        if res == Canc: proj[2].thanPrtCan()      #New radius was cancelled; continue with the filet command
+        else:           rr = res
+    aa, bb, anear, bnear = res
+    __filetrad = rr
+    selold = proj[2].thanSelold
+    a, b = aa.thanClone(), bb.thanClone()
+    ierr, obj = thanFiletCalc(a, b, rr, anear, bnear)
+    if ierr == 1: return thanModCanc(proj, T["End lines are parallel and do not intersect"])
+    if ierr == 2: return thanModCanc(proj, T["Circular arc lies beyond the line segments"])
+    assert ierr == 0
+#    a.thanTags = aa.thanTags
+#    a.handle = aa.handle
+#    b.thanTags = bb.thanTags
+#    b.handle = bb.handle
+    delelems = set((aa, bb))
+    newelems = set((a, b))
+    if obj != None:
+        from thandr import ThanArc
+        arc = ThanArc()
+        arc.thanSet(*obj)
+        proj[1].thanElementAdd(arc)
+        newelems.add(arc)
+    thanModReplaceRedo(proj, delelems, newelems, newelems),
+    proj[1].thanDoundo.thanAdd("fillet", thanModReplaceRedo, (delelems, newelems, newelems),
+                                         thanModReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)           # 'Reset color' is needed here
+
+
+def thanModChelev(proj):
+    "Change the elevation of z dimension of elements."
+    nd = proj[1].thanVar["dimensionality"]
+    assert nd > 2, "Well, this should be ThanCad with limited n-dimensional support!"
+    if nd > 3:
+        proj[2].thanPrt(T["This drawing has %d dimensions. The elevation"] % nd)
+        proj[2].thanPrt(T["of dimensions higher than 3 are set with the CHELEVN command."])
+    c = proj[1].thanVar["elevation"]          # Reference to the elevation list
+    sd = proj[1].thanUnits.strdis
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)  # chelev was cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    stat = "%s%s): " % (T["New elevation (enter="], sd(c[2]))
+    z = proj[2].thanGudGetFloat(stat, c[2])
+    if z == Canc: return thanModCanc(proj)
+
+    newelems = set()
+    for e in elems:
+        en = e.thanClone()
+        en.thanChelev(z)
+        newelems.add(en)
+    thanModReplaceRedo(proj, elems, newelems, newelems)
+    proj[1].thanDoundo.thanAdd("chelev", thanModReplaceRedo, (elems, newelems, newelems),
+                                         thanModReplaceUndo, (elems, newelems, selold))
+    thanModEnd(proj)           # 'Reset color' is completely unnecessary here, and it will slow..
+                               # ..the command down. Room for optimisation here.
+
+def thanModChelevn(proj):
+    "Change the elevation of z and higher dimensions of elements."
+    nd = proj[1].thanVar["dimensionality"]
+    assert nd > 2, "Well, this should be ThanCad with limited n-dimensional support!"
+    if nd < 4:
+        proj[2].thanPrt(T["This drawing has only %d dimensions. The elevation"] % nd)
+        proj[2].thanPrt(T["of dimension z can also be set with the CHELEV command."])
+    c = proj[1].thanVar["elevation"]          # Reference to the elevation list
+    sd = proj[1].thanUnits.strdis
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)   # chelevn cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    t = ",".join(sd(c[j]) for j in xrange(2, nd))
+    stat = "%s%s): " % (T["New elevations of z and higher dimensions (enter="], t)
+    cz = proj[2].thanGetElevations(nd, stat, c[2:])
+    if cz == Canc: return thanModCanc(proj)
+
+    newelems = set()
+    for e in elems:
+        en = e.thanClone()
+        en.thanChelevn(cz)
+        newelems.add(en)
+    thanModReplaceRedo(proj, elems, newelems, newelems) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("chelevn", thanModReplaceRedo, (elems, newelems, newelems),
+                                          thanModReplaceUndo, (elems, newelems, selold))
+    thanModEnd(proj)

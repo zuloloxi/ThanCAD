@@ -1,0 +1,13 @@
+TABLE LAYER
+62:  5 (or positive) : layer on
+    -5 (or negative) : layer off
+
+70:  0  : layer not frozen (the layer is drawn on the monitor)
+     1  : layer frozen (the layer is NOT drawn on the monitor)
+
+370: 106 :  lineweight 1.06 mm
+      60 :             0.60 mm
+
+290: 0   : no plot is on (the layer is NOT plotted)
+     If code 290 is absent, then no plot is off (the layer is plotted)
+     

@@ -1,0 +1,12 @@
+from thanimp import ThanCadDrSave
+from thansupport import ThanDxfEmu
+
+def test():
+    from thandr import ThanDrawing
+    dr = ThanDrawing()
+    f = file("mhk.dxf", "r")
+    ts = ThanCadDrSave(dr, proj[2].thanPrt)
+    dxf = ThanDxfEmu()
+    dxf.thanDxfPlots(ts)
+#   .... do the job here    
+    dxf.thanDxfPlot(0,0,999)

@@ -1,0 +1,145 @@
+##############################################################################
+# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# 
+# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# URL:     http://thancad.sourceforge.net
+# e-mail:  cyberthanasis@excite.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##############################################################################
+
+"""\
+ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+
+Package which processes commands entered by the user.
+This module provides various high level selection routines.
+"""
+
+from thanvar import Canc
+from thantrans import T
+import thandr, thancomsel
+
+
+def thanSel1line(proj, statonce, strict=True, options=()):
+    """Selects 1 line and return immediatelly.
+
+    The argument strict is not used and it is there for compatibility
+    with thanSel1Order."""
+    return thancomsel.thanSelect1(proj, statonce, filter=lambda e: isinstance(e, thandr.ThanLine), options=options)
+
+
+def thanSel2linsegsold(proj, statonce, strict=True):
+    "Selects 2 line segments; i.e. lines with only 2 nodes."
+    while True:
+        elems = []
+        proj[2].thanCom.thanAppend(statonce, "info1")
+        res = thancomsel.thanSelectGen(proj, standalone=False)
+        if res == Canc: return Canc
+        for elem in proj[2].thanSelall:
+            if isinstance(elem, thandr.ThanLine) and len(elem.cp) == 2: elems.append(elem)
+        if len(elems) == 2: break
+        if not strict and len(elems) > 1: return elems[:2]
+        proj[2].thanCom.thanAppend(T["Two single segment lines are required (%d found). Try again.\n"]%len(elems), "can")
+        proj[2].thanGudResetSelColor()                   # Unmarks the selection
+        proj[2].thanGudSetSelRestore()                   # Restores previous selection
+        proj[2].thanUpdateLayerButton()                  # Show current layer again
+    return True
+
+
+def thanSel2linsegs(proj, statonce1, statonce2, options=()):
+    "Selects 2 line segments; i.e. lines with only 2 nodes."
+    while True:
+        gps = thanSel1line(proj, statonce1, strict=True, options=options)
+        if gps == Canc: return Canc
+        if any(gps==o1[:1] for o1 in options): return gps, None, None, None # Option given
+        if len(gps.cp) == 2: break
+        proj[2].thanPrter(T["A single segment line is required. Try again."])
+    gpsnear = proj[2].thanSel1coor                    # This is the first point in the 'break' command
+    selold = proj[2].thanSelold
+
+    while True:
+        rel = thanSel1line(proj, statonce2, strict=True)
+        if rel == Canc:
+            selall = set((gps,))
+            proj[2].thanGudSetSelElem(selall)         # The current selection (cutting edges) #Subsequent thanmodcanc() will correct it
+            proj[2].thanGudSetSeloldElem(selold)      # The selection before the command trim started
+            return Canc
+        if len(rel.cp) == 2: break
+        proj[2].thanPrter(T["A single segment line is required. Try again."])
+    relnear = proj[2].thanSel1coor                    # This is the first point in the 'break' command
+
+    gr = [gps, rel]
+    selall = set(gr)
+    proj[2].thanGudSetSelElem(selall)         # The current selection (cutting edges)
+    proj[2].thanGudSetSeloldElem(selold)      # The selection before the command trim started
+    return gps, rel, gpsnear, relnear
+
+
+def thanSel2linesOrder(proj, statonce1, statonce2):
+    "Selects 2 lines with predefined order."
+    gps = thanSel1line(proj, statonce1, strict=True)
+    if gps == Canc: return Canc
+    selold = proj[2].thanSelold
+    rel = thanSel1line(proj, statonce2, strict=True)
+    if rel == Canc:
+        selall = set((gps,))
+        proj[2].thanGudSetSelElem(selall)    # The current selection (cutting edges) #Subsequent thanmodcanc() will correct it
+        proj[2].thanGudSetSeloldElem(selold) # The selection before the command trim started
+        return Canc
+    gr = [gps, rel]
+    selall = set(gr)
+    proj[2].thanGudSetSelElem(selall)         # The current selection (cutting edges)
+    proj[2].thanGudSetSeloldElem(selold)      # The selection before the command trim started
+    return gr
+
+
+def thanSelMultlines(proj, nsel, statonce1, strict=False):
+    """Selects (at least) nsel lines.
+
+    If strict == True then the user must select exactly nsel lines, otherwise it is an error.
+    If strict == False then the user must selct at least nsel lines, otherwise it is an error."
+    """
+    if strict: atl = T["Exactly"]
+    else:      atl = T["At least"]
+    while True:
+        elems = []
+        proj[2].thanCom.thanAppend(statonce1, "info1")
+        res = thancomsel.thanSelectGen(proj, standalone=False, filter=lambda elem: isinstance(elem, thandr.ThanLine))
+        if res == Canc: return Canc
+        for elem in proj[2].thanSelall:
+            assert isinstance(elem, thandr.ThanLine), "filter does not work?"
+        elems = proj[2].thanSelall
+        if len(elems) == nsel: break
+        if not strict and len(elems) >= nsel: break
+        proj[2].thanCom.thanAppend(T["%s %d line(s) are required (%d found). Try again.\n"]%(atl, nsel, len(elems)), "can")
+        proj[2].thanGudResetSelColor()                   # Unmarks the selection
+        proj[2].thanGudSetSelRestore()                   # Restores previous selection
+        proj[2].thanUpdateLayerButton()                  # Show current layer again
+    return elems
+
+
+def thanSelectCrosClear(proj, c1, c2, filter):
+    "Select and get elements in crossing widnow, and then clear selection without user intervention."
+    proj[2].thanGudSetSelExternalFilter(filter)                 # Set filter
+    proj[2].thanGudSetSelSave()                                 # Save old selection
+    res = proj[2].thanGudGetSelCros(c1[0], c1[1], c2[0], c2[1]) # Select crossing
+    proj[2].thanGudSetSelcurClear()                             # Clears current selection (which is already inside selall)
+    elems = proj[2].thanSelall
+    proj[2].thanGudSetSelExternalFilter(None)                   # Reset filter
+    proj[2].thanGudSetSelRestore()                              # Restores previous selection
+    return elems
+
+
+if __name__ == "__main__": print __doc__

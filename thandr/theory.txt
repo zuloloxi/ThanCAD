@@ -1,0 +1,230 @@
+    """A raster image.
+
+    A. Theory
+        1.We assume that a pixel is rectangular in shape and the the world
+          coordinates of a pixel correspond to its center.
+        2.The x world
+          coordinate corresponds to the column j and the y world coordinate
+          corresponds to row i. To get the colour of the pixel of a PIL image
+          we call the function:
+              image.get((j,i))
+          where j is the column and i is the row.
+        3.The row i increases downwards, while the world coordinate y
+          increases upwards.
+        4.The column j takes values from 0 to dxp-1, where dxp is the image
+          width in pixels
+          The row i takes values from 0 to dyp-1, where dyp is the image
+          height in pixels.
+        5.The world image width is  dx=self.c2[0]-self.c1[0] and the
+          the world image height is dy=self.c2[1]-self.c1[1]
+        6.Because of compatibility with leading commercial CAD system,
+          the world coordinates of the lower left corner of the image
+          self.c1 (that means x1,y1; z1,t1,.. are ignored here) are NOT
+          the coordinates of the center of the pixel j=0, i=dyp-1; they
+          are the coordinates of of the lower left corner of the pixel
+          j=0, i=dyp-1
+          Likewise the coordinates of the upper right corner of the image
+          self.c2 are the coordinates of the upper left corner of the pixel
+          j=dxp-1, i=0
+        7.There are ((dxp-1)-0)+1=dxp pixels in the width and
+          ((dyp-1)-0)+1=dyp pixels in the height of the image.
+          The distance (real number), in pixel sizes (real number), 
+          between the lowerleft and upperright corners of the image are
+          also dxp, dyp.
+          However the distance, in pixels sizes, from the center of its 
+          lower left corner to its upper right corner are dxp-1 and dyp-1
+          in the x (column) and y (row) directions respectively.
+          Suppose 10 pixel in the x (column) direction:
+              0123456789
+              OOOOOOOOOO
+              ^        ^
+          from the center of the zeroth pixel to the center of the nineth
+          pixel stands the width of 9 pixels.
+        8.Thus the width dxp1 and the height dyp1 of a pixel in world
+          coordinates are:
+              dxp1 = (x2-x1)/dxp
+              dyp1 = (y2-y1)/dyp
+        9. In the x (column direction) the correspondence between pixels
+           and world coordinates are:
+               x1          -> 0
+               x1+0.5*dxp1 -> 0       coordinate x of the center of the pixel
+               x1+1.0*dxp1 -> 0
+               x2          -> dxp-1
+               x2-0.5*dxp1 -> dxp-1   coordinate y of the center of the pixel
+               x2-1.0*dxp1 -> dxp-1
+           In one formula, if we seek the pixel column of world coordinate x:
+               j = int[(x-x1)/dxp1] =>
+               j = int[(x-x1)/((x2-x1)/dxp)] =>
+               j = int[(x-x1)/(x2-x1)*dxp] =>
+               j = int[(x-x1)/dx*dxp]
+           where dx = x2-x1
+               j = int[(x-x1)/dx*dxp]
+               i = int[(y2-y)/dy*dyp]
+        10.As a test, for the x=x1 amd y=y2 the pixel is:
+               j = int[(x1-x1)/dx*dxp] = 0 correct
+               i = int[(y2-y2)/dy*dyp] = 0 correct
+           However for x=x2, y=y1 the pixel is:
+               j = int[(x2-x1)/dx*dxp] = dxp-1 correct
+               i = int[(y2-y1)/dy*dyp] = dyp-1 correct
+           This means that for arithmetic reason we should give tolerance to the
+           world coordinates in an image:
+               float j = (x-x1)/dx*dxp
+               if j >= dxp:
+                   if j > dxp+0.01: x is outside image
+                   j = dxp-1
+               elif j < 0.0: 
+                   if j < -0.01: x is outside image
+                   j = 0
+               else:
+                   j = int[j]
+
+               float i = (y2-y)/dy*dyp
+               if i >= dyp:
+                   if i > dyp+0.01: y is outside image
+                   i = dyp-1
+               elif i < 0.0:
+                   if i < -0.01: y is outside image
+                   i = 0
+               else:
+                   i = int[i]
+        13.The reverse function x, that is if we seek the world x coordinate
+           of the center of pixel with column=j, row=i:
+               x = x1+(j+0.5)*dxp1
+               y = y1+(i+0.5)*dyp1
+           which for j=0 and j=dxp-1 gives:
+               x = x1+(0+0.5)*dxp1 = x1+0.5*dxp1  -> correct
+               x = x1+(dxp-1+0.5)*dxp1 = x1+dxp*dxp1-0.5*dxp1 = x2-0.5*dxp1 ->correct
+           It must be realised that this x coordinate is just the center of
+           pixel. The pixel j,i in reality spans:
+              x1+j*dxp1 <= x <= x1+(j+1)*dxp1
+              y1+i*dyp1 <= y <= y1+(i+1)*dyp1
+    B. Implementation
+        1.Because the values dxp-1 and dyp-1 are used more than the dxp,dyp
+          we set:
+              dxp, dyp = self.image.size
+              self.size = dxp-1, dyp-1
+          So the width and height of the image are one less than the actual
+          ones.
+        2.Since dxp-1, dyp-1 are in the denominator the size of the image
+          must be at least 2 pixels in x and y direction.
+
+
+
+
+    OLDER TEHORY - IMPLEMENTATION
+    C. Theory
+        1.We assume that a pixel is rectangular in shape and the the world
+          coordinates of a pixel correspond to its center.
+        2.The x world
+          coordinate corresponds to the column j and the y world coordinate
+          corresponds to row i. To get the colour of the pixel of a PIL image
+          we call the function:
+              image.get((j,i))
+          where j is the column and i is the row.
+        3.The row i increases downwards, while the world coordinate y
+          increases upwards.
+        4.The column j takes values from 0 to dxp-1, where dxp is the image
+          width in pixels
+          The row i takes values from 0 to dyp-1, where dyp is the image
+          height in pixels.
+        5.The world image width is  dx=self.c2[0]-self.c1[0] and the
+          the world image height is dy=self.c2[1]-self.c1[1]
+        6.The world coordinates of the lower left corner of the image
+          self.c1 (that means x1,y1; z1,t1,.. are ignored here) are the
+          coordinates of the center of the pixel j=0, i=dyp-1
+          Likewise the coordinates of the upper right corner of the image
+          self.c2 are the coordinates of the center of the pixel
+          j=dxp-1, i=0
+        7.There are ((dxp-1)-0)+1=dxp pixels in the width and
+          ((dyp-1)-0)+1=dyp pixels in the hight of the image.
+          However the distance in pixels from the center of its lower left
+          corner to its upper right corner are dxp-1 and dyp-1 in the
+          x (column) and y (row) directions respectively.
+          Suppose 10 pixel in the x (column) direction:
+              0123456789
+              OOOOOOOOOO
+              ^        ^
+          from the center of the zeroth pixel to the center of the nineth
+          pixel stands the width of 9 pixels.
+        8.Thus the width dxp1 and the height dyp1 of a pixel in world
+          coordinates are:
+              dxp1 = (x2-x1)/(dxp-1)
+              dyp1 = (y2-y1)/(dyp-1)
+        9.Thus, because the size of a pixel is small, but not infinitesimal,
+          the image spans a little more space than intended. Its lower left
+          and upper right corners are, in reality:
+              x1-dxp1*0.5, y1-dyp1*0.5
+              x2+dxp1*0.5, y2+dyp1*0.5
+        10.In the x (column direction) the correspondence between pixels
+           and world coordinates are:
+               x1          -> 0
+               x1-0.5*dxp1 -> 0
+               x1+0.5*dxp1 -> 0
+               x2          -> dxp-1
+               x2-0.5*dxp1 -> dxp-1
+               x2+0.5*dxp1 -> dxp-1
+           In one formula, if we seek the pixel column of world coordinate x:
+               j = int[(x-x1)/dxp1+0.5] =>
+               j = int[ (x-x1)/((x2-x1)/(dxp-1)) + 0.5] =>
+               j = int[ (x-x1)/(x2-x1)*(dxp-1) + 0.5] =>
+               j = int[ (x-x1)/dx*(dxp-1) + 0.5]
+           where dx = x2-x1
+               j = int[ (x-x1)/dx*(dxp-1) + 0.5]
+               i = int[ (y2-y)/dy*(dyp-1) + 0.5]
+        11.In the y (row direction) the correspondence between pixels
+           and world coordinates are:
+               y2          -> 0
+               y2-0.5*dyp1 -> 0
+               y2+0.5*dyp1 -> 0
+               y1          -> dyp-1
+               y1-0.5*dyp1 -> dyp-1
+               y1+0.5*dyp1 -> dyp-1
+           In one formula, if we seek the pixel column of world coordinate x:
+               float i = (y2-y)/dyp1
+           this gives for y=y2:
+               float i = (y2-y2)/dyp1 = 0  ->correct
+           this gives for x=x2:
+               float i = (y2-y1)/dyp1 = (y2-y1)/((y2-y1)/(dyp-1)) = dyp-1  ->correct
+           The integer value of the pixel is:
+               i = int[(y2-y)/dyp1 + 0.5] => ... =>
+               i = int[ (y2-y)/dy*(dyp-1) + 0.5]
+           where dy = y2-y1
+           If we put the limits y1-0.5*dyp1, y1+0.5*dyp1, y2-0.5*dyp1,
+               y2+0.5*dyp1 the results are ok.
+        12.For additional safety we can limit the world coordinates to
+               x1 <= x <=x2 and y1 <= y <=y2
+           even thougth the image in reality is a little longer.
+        13.The reverse function x, that is if we seek the world x coordinate
+           of the center of pixel with column=j, row=i:
+               x = x1+j*dxp1   which for j=0 and j=dxp-1 gives:
+               x = x1+0*dxp1 = x1    -> correct
+               x = x1+(dxp-1)*dxp1 = x1+(dxp-1)*(x2-x1)/(dxp-1) =
+                 = x1+(x2-x1) = x2   -> correct
+           The formula becomes:
+               x = x1+j*dxp1 = x1 + j*(x2-x1)/(dxp-1) =>
+               x = x1 + j*dx/(dxp-1)
+           It must be realised that this x coordinate is just the center of
+           pixel. The pixel j,i in reality spans:
+              x1+j*dx/(dxp-1) - dyp1*0.5 <= x <=x1+j*dx/(dxp-1) + dyp1*0.5
+        14.The reverse function y, that is if we seek the world y coordinate
+           of the center of pixel with column=j, row=i:
+               y = y2-i*dyp1   which for i=0 and i=dyp-1 gives:
+               y = y2-0*dyp1 = y2    -> correct
+               y = y2-(dyp-1)*dyp1 = y2-(dyp-1)*(y2-y1)/(dyp-1) =
+                 = y2-(y2-y1) = y1   -> correct
+           The formula becomes:
+               y = y2-i*dyp1 = y2 - i*(y2-y1)/(dyp-1) =>
+               y = y2 - i*dy/(dyp-1)
+           It must be realised that this x coordinate is just the center of
+           pixel. The pixel j,i in reality spans:
+               y2-i*dy/(dyp-1) - dyp1*0.5 <= y <=y2-i*dy/(dyp-1) + dyp1*0.5
+    D. Implementation
+        1.Because the values dxp-1 and dyp-1 are used more than the dxp,dyp
+          we set:
+              dxp, dyp = self.image.size
+              self.size = dxp-1, dyp-1
+          So the width and height of the image are one less than the actual
+          ones.
+        2.Since dxp-1, dyp-1 are in the denominator the size of the image
+          must be at least 2 pixels in x and y direction.
+    """

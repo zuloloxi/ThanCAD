@@ -1,10 +1,8 @@
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from .chart import ThanChart
 from .vis import vis
 
 class ThanChartDxf:
-        "Class to emulate dxf; it takes dxf calls and produces a ThaChart at the end."
+        "Class to emulate dxf; it takes dxf calls and produces a ThanChart at the end."
 
         def __init__(self):
             self.ch = ThanChart("Dxf like chart")
@@ -50,5 +48,5 @@ class ThanChartDxf:
         def thanDxfPlotPolyLine(self, xx, yy):
             "Plot a polyline."
             self.thanDxfPlot(xx[0], yy[0], 3)
-            for i in xrange(1, len(xx)):
+            for i in range(1, len(xx)):
                 self.thanDxfPlot(xx[i], yy[i], 2)

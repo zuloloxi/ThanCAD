@@ -1,8 +1,5 @@
-from __future__ import print_function
 import time, copy
-from xml.etree.ElementTree import ElementTree
-#from xml.etree.ElementTree import ElementTree, parse, fromstring
-#from xml.parsers.expat import ExpatError
+from xml.etree.ElementTree import ElementTree, XMLParser
 
 
 class SarTime:
@@ -66,8 +63,9 @@ def pathElementTree(element=None, file=None):
     if element is not None:
         tree = element
     elif file is not None:
-        tree = ElementTree()
-        tree.parse(file)    #may raise xml.parsers.expat.ExpatError if tree not understood by parser..
+        tree = ElementTree() 
+        tree.parse(file, parser=XMLParser()) #Thanasis2016_12_24:We don't override encoding in the xml file.
+                            #may raise xml.parsers.expat.ExpatError if tree not understood by parser..
                             #.. or xml.etree.ElementTree.ParseError if fn is not XML, or IOError if..
     else:                   #.. or ValueError see below
         raise ValueError("either element or file must be defined.")
@@ -148,7 +146,9 @@ class _PathElementTree:
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
         if child_elem is None: raise IndexError("'%s' element not found" % (p,))
-        return child_elem.text
+        text = child_elem.text
+        if text is None: text = ""
+        return text
 
 
     def timeutcr(self, child_path):

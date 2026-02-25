@@ -1,59 +1,55 @@
-from __future__ import print_function
 import math
-from p_gmath import linEq2
+from typing import Optional, Union, Iterable, Tuple, Iterator
+from p_gmath import linEq2 # type: ignore
 
 class Vector2:
     "Implements 2d vectors."
 
-    def __initolds__ (self, xx=0.0, yy=0.0):
+    def __init__(self, xx:Union[float, Iterable[float]]=0.0, yy:float=0.0):
         "Initialise a new 2d vector to zero by default."
-        self.x = float(xx)
-        self.y = float(yy)
-
-    def __init__ (self, xx=None, yy=None):
-        "Initialise a new 2d vector to zero by default."
-        if xx is None:                    #No arguments: Default vector is zero
-            self.x = self.y = 0.0
-        elif yy is None:                  #Only one argument: it should be an iterable
-            yy = iter(xx)
-            self.x = next(yy)
-            self.y = next(yy)
+        if isinstance(xx, Iterable):     #Only one argument: it should be an iterable
+            temp = iter(xx)
+            self.x = next(temp)
+            self.y = next(temp)
         else:                             #Two arguments: they should be the number like
             self.x = float(xx)
             self.y = float(yy)
 
-    def __add__ (self, other):
+    def __add__ (self, other):  # type: (Vector2, Vector2) -> Vector2
         "Addition of vectors."
         if isinstance(other, Vector2):
             return Vector2(self.x+other.x, self.y+other.y)
         else:
             raise TypeError("Don't know how to add Vector2 by " + str(type(other)))
 
-    def __sub__ (self, other):
+    def __sub__ (self, other):  # type: (Vector2, Vector2) -> Vector2
         "Subtraction of vectors."
         if isinstance(other, Vector2):
             return Vector2(self.x-other.x, self.y-other.y)
         else:
             raise TypeError("Don't know how to subtract Vector2 by " + str(type(other)))
 
-    def __neg__ (self):
+    def __neg__ (self):  # type: (Vector2) -> Vector2 
         "Returns the 2d vector with inverse direction."
         return Vector2(-self.x, -self.y)
 
-    def __pos__ (self):
+    def __pos__ (self):  # type: (Vector2) -> Vector2
         "Returns the 3d vector with the same direction."
         return Vector2(self.x, self.y)
 
-    def __mul__ (self, other):
+    def __or__ (self, other):  # type: (Vector2, Vector2) -> float
+        "Returns the scalar product of 2d vectors."
+        return self.x * other.x + self.y * other.y
+
+    def __mul__ (self, other):  # type: (Vector2, float) -> Vector2
         "Returns the scalar product of 2d vectors, or the vector multiplied by a number."
-        if isinstance(other, Vector2):
-            return self.x * other.x + self.y * other.y
-        #if isinstance(other, Float) or isinstance(other, Int):
         try: other+0.0      #Is it number like
         except: raise TypeError("Don't know how to multiply Vector2 by " + str(type(other)))
         return Vector2(self.x * other, self.y * other)
+    def __rmul__ (self, other):  # type: (Vector2, float) -> Vector2
+        return self.__mul__(other)
 
-    def __truediv__ (self, other):
+    def __truediv__ (self, other):  # type: (Vector2, float) -> Vector2
         "Returns the vector divided by a number."
         #if isinstance(other, types.FloatType) or isinstance(other, types.IntType):
         try: other+0.0      #Is it number like
@@ -61,33 +57,29 @@ class Vector2:
         return Vector2(self.x / other, self.y / other)
     __div__ = __truediv__    #For python2 compatibility
 
-    def __rmul__ (self, other):
-        "Just an alias of multiplication."
-        return self.__mul__ (other)
-
-    def __abs__ (self):
+    def __abs__ (self):   # type: (Vector2) -> float
         "Computes the length of the vector."
-        return math.sqrt(self.x**2 + self.y**2)
+        return math.hypot(self.x, self.y)
 
-    def unit (self):
+    def unit (self):  # type: (Vector2) -> Optional[Vector2]
         "Computes the unit vector with the same direction."
         a = abs(self)
         if a == 0.0: return None
         return Vector2(self.x / a, self.y / a)
 
-    def normal (self):
+    def normal (self):   # type: (Vector2) -> Optional[Vector2]
         "Compute the unit vector normal to the vector's direction; positive is the left side."
         a = abs(self)
         if a == 0.0: return None
         return Vector2(-self.y / a, self.x / a)
 
-    def dircos(self):
+    def dircos(self) -> Tuple[float, float]:
         "Compute direction cosines."
         t = self.unit()
         if t is None: return 0.0, 0.0
         return t.x, t.y
 
-    def cross(self, b):
+    def cross(self, b):   # type: (Vector2, Vector2) -> float
         """Return the cross product of 2d vectors: self x b; the result is a scalar value.
 
         The result is a vector whose direction is normal to the xy plane.
@@ -100,20 +92,20 @@ class Vector2:
         """
         return self.x*b.y-self.y*b.x
 
-    def rot (self, f):
+    def rot (self, f):  # type: (Vector2, float) -> Vector2
         "Rotates the vector to f counterclockwise radians."
         cosf = math.cos(f); sinf = math.sin(f)
         return Vector2(self.x*cosf - self.y*sinf, self.x*sinf + self.y*cosf)
 
-    def mirX(self):
+    def mirX(self):  # type (Vector2) -> Vector2
         "Returns the vector with the same x and opposite y: mirror with repsect to X axis."
         return Vector2(self.x, -self.y)
 
-    def atan2 (self):
+    def atan2 (self) -> float:
         "Computes the direction angle; positive=counterclockwise, zero at 3o'clock."
         return math.atan2(self.y, self.x)
 
-    def anal (self, da, db):
+    def anal (self, da, db):  # type (Vector2, vector, Vector2) -> Tuple[float, float]
         """Analyses the vector into two non-colinear vectors da and db.
 
         It solves the vector system:
@@ -124,83 +116,14 @@ class Vector2:
 
     def vector3(self, z=0.0):
         "Transform self to a 3d vector with given or zero z."
-        from . import vec3
+        from . import vec3  # type: ignore
         return vec3.Vector3(self.x, self.y, z)
 
-    def __str__ (self):
+    def __str__ (self) -> str:
         "Just a string representation of the object."
         return "<%.3f, %.3f>" % (self.x, self.y)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[float]:
         "Return an iterator to the vector."
         yield self.x
         yield self.y
-
-#===========================================================================
-
-def testV():
-    a = Vector2(10.0, 20.0); print("a      = ", a)
-    b = Vector2(5.0, 6.0);   print("b      = ", b)
-    z = Vector2(0.0, 0.0);   print("z      = ", b)
-    c = a + b;               print("a+b    = ", c)
-    c = a - b;               print("a-b    = ", c)
-    c = a * b;               print("a*b    = ", c)
-    c = -a;                  print("-a     = ", c)
-    c = +a;                  print("+a     = ", c)
-    print()
-    c = a * 10.0;            print("a*10.0 = ", c)
-    c = 10.0 * a;            print("10.0*a = ", c)
-    c = a / 10.0;            print("a/10.0 = ", c)
-    #c = a / b;               print("a/b    = ", c)    # Error!
-    #c = 10.0 / a;            print("10.0/a = ", c)    # Error!
-    print()
-    c = 10.0 * a * b;        print("10.0*a*b = ", c)
-    c = a * 10.0 * b;        print("a*10.0*b = ", c)
-    c = a *  b * 10.0;       print("a*b*10.0 = ", c)
-    print()
-    c = 10.0 * a + 20.0 * b; print("10.0*a+20.0*b = ", c)
-    print()
-    c = abs(a);              print("abs(a) = ", c)
-    c = abs(b);              print("abs(b) = ", c)
-    print()
-    c = a.unit();            print("a.unit = ", c)
-    c = z.unit();            print("z.unit = ", c)           # Error
-    c = a.normal();          print("a.normal = ", c)
-
-
-    i = Vector2(1, 0)
-    j = Vector2(0, 1)
-    print()
-    a = 10*i + 25*j;        print("a =", a)
-    t=Vector2(1, 1).unit(); print("t =", t)
-    at = (a * t) * t;       print("at =", at)
-    an = a - at;            print("an =", an)
-
-    print()
-    print("testing iterator:")
-    v = Vector2(999.0, 1999.0)
-    for i,c in enumerate(v): print("v[", i, "] =", c)
-    print("list(v)=", list(v))
-    print()
-
-#    k = 1
-#    while (k < 3000):
-#        a = 10*i + 25*j
-#        t = a.normal()
-#        k = k + 1
-
-#    print("-----")
-#    for k in range(3000):
-#        a = 10*i + 25*j
-#        t = a.normal()
-
-def testAnal():
-    i = Vector2(2, 9);      print("i =", i)
-    j = Vector2(4, -18);    print("j =", j)
-    a = Vector2(10, 25);    print("a =", a)
-    s = a.anal(i, j);       print("a.anal =", s)
-    print("a = ", s[0], "* i +", s[1], "* j =", s[0]*i + s[1]*j)
-
-if __name__ == "__main__":
-    testV();
-    testAnal()

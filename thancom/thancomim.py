@@ -1,33 +1,33 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes image related commands.
 """
 import re
-import p_gtkwid, p_ggen, p_gimgeo
+import p_gtkwid, p_ggen, p_gimgeo, p_gearth, p_gvarcom
 import thandr
 from thanvar import Canc, thanfiles
 from thantrans import T
@@ -69,6 +69,59 @@ def thanTkGetPos(proj, com, methodname, ext, stat):
             proj[1].thanElementAdd(elem)     # thanTouch is implicitly called
             elem.thanTkDraw(proj[2].than)    # This also sets thanImages
             newelems.append(elem)
+    proj[2].thanRedraw()                 # Images regen probably violated draworder
+    proj[1].thanDoundo.thanAdd(com, thanundo.thanReplaceRedo, ((), newelems),
+                                    thanundo.thanReplaceUndo, ((), newelems))
+    return proj[2].thanGudCommandEnd()
+
+
+def thanTkGetOrtho(proj):
+    "Imports global orthoimage frames."
+    mes = T["Load global orthoimage(s) from: greekcLso/greekcVlso/Okxe (enter=L): "]
+    res = proj[2].thanGudGetOpts(mes, default="L", options=("LSO", "VLSO", "OKXE"))
+    if res == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
+    if   res == "l":
+        name = "GREEKCLSO"
+    elif res == "v":
+        name = "GREEKCVLSO"
+    else:
+        name = "OKXE"
+    gorth = p_gearth.gortho(name)    #This is empty initially so that it doesn't cost much memory and time
+    gorth.thanSetProjection(proj[1].geodp)
+    c1 = proj[2].thanGudGetPoint(T["Click on a arbitrary point on the orthoimage (R=Region): "], options=("Region", ))
+    if c1 == Canc: return proj[2].thanGudCommandCan()      # Orthoimage cancelled
+    if c1 == "r" :
+        c1 = proj[2].thanGudGetPoint(T["First point: "])
+        if c1 == Canc: return proj[2].thanGudCommandCan()                # Rectangle cancelled
+        c2 = proj[2].thanGudGetRect(c1, T["Second point: "])
+        if c2 == Canc: return proj[2].thanGudCommandCan()                # Rectangle cancelled
+        xymm = p_gvarcom.Xymm()
+        xymm.includePoint(c1)
+        xymm.includePoint(c2)
+        fns = gorth.thanGetWinC(xymm, fail=False, prg=proj[2].thanPrt)
+        if len(fns) == 0: return proj[2].thanGudCommandCan()      # No Orthoimages found
+    else:
+        fnpath = gorth.thanGetAt(c1)
+        if fnpath is None: return proj[2].thanGudCommandCan(T["An orthoimage was not found at this point or in this computer."])      # Region not implemented
+        fns = [fnpath]
+
+    tit = T["Image file open failed"]
+    com = "gorthoimage"
+    methodname = "thanTfwGet"
+    newelems = []
+    for fi in fns:
+        elem = thandr.ThanImage()
+        try:
+#            elem.thanTfwGet(proj, fi)
+            method = getattr(elem, methodname)
+            method(proj, fi)
+        except (IOError, ValueError) as why:
+            p_gtkwid.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
+        else:
+            proj[1].thanElementAdd(elem)     # thanTouch is implicitly called
+            elem.thanTkDraw(proj[2].than)    # This also sets thanImages
+            newelems.append(elem)
+    if len(newelems) == 0: return proj[2].thanGudCommandCan(T["No orthoimages were loaded."])      # Region not implemented
     proj[2].thanRedraw()                 # Images regen probably violated draworder
     proj[1].thanDoundo.thanAdd(com, thanundo.thanReplaceRedo, ((), newelems),
                                     thanundo.thanReplaceUndo, ((), newelems))

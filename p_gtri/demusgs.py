@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
 """
 21/5/2011
 This program reads a USGS DEM (which is stored as .tif file) and writes
@@ -21,8 +19,6 @@ THIS PROGRAM NEEDS MORE TESTING
 """
 docusgs = __doc__
 
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import hypot, floor, ceil
 from PIL import Image
 from math import fabs
@@ -62,6 +58,27 @@ class ThanDEMusgs(ThanDTMDEM):
         d.xymma.includeXymm(self.xymma)
         d.thanCena = tuple(self.thanCena)  #Centroid of the DEM in object coordinates
         return d
+
+
+    def thanNew(self, X0, Y0, XB, YB, DX, DY, mode, nodata=None, native=True):
+        "Create a new dem which contains no values."
+        if nodata is not None: self.GDAL_NODATA = nodata  #if nodata is None, leave the value provided py __init__()
+        self.X0 = round(X0/DX) * DX
+        self.Y0 = round(Y0/DY) * DY
+        self.DX = DX
+        self.DY = DY
+        if nodata is not None: self.GDAL_NODATA = nodata  #if nodata is None, leave the value provided py __init__()
+        #thanPixelCoor() has now enough info to work
+        jxa, iya = self.thanPixelCoor((self.X0, self.Y0, 0.0), native=True)    #Up, left point of the window     #Note these are integers
+        assert jxa==0 and iya==0
+        jxb, iyb = self.thanPixelCoor((XB, YB, 0.0), native=True)              #Down, right point of the window  #Note these are integers
+        self.nxcols, self.nyrows = jxb+1, iyb+1
+        if self.GDAL_NODATA is None: self.im = Image.new(mode, (self.nxcols, self.nyrows), 0)
+        else:                        self.im = Image.new(mode, (self.nxcols, self.nyrows), self.GDAL_NODATA)
+        #filnam is the default value ("") set by __init__()
+        self.xymma[:] = self.X0, self.Y0-self.DY*(self.nyrows-1), self.X0+self.DX*(self.nxcols-1), self.Y0 #WARNING: xymma must be valid node coordinates
+        self.thanCentroidCompute()
+        return True, ""
 
 
     def thanSet(self, filnam, im=None):
@@ -120,10 +137,6 @@ class ThanDEMusgs(ThanDTMDEM):
         return self.im.putpixel((jx, iy), z)
 
 
-    def than2Num(self):
-        "Return the DEM as a numpy array."
-        return p_gnum.im2num(self.im)
-
     def thanCentroidCompute(self):
         "Compute the centroid of all lines."
         self.thanCena = ((self.xymma[0]+self.xymma[2])*0.5,
@@ -135,9 +148,19 @@ class ThanDEMusgs(ThanDTMDEM):
         return self.xymma
 
 
+    def thanCen(self, native=True):
+        "Return the coordinates of the centroid."
+        return self.thanCena  #Note that this is a tuple
+
+
     def thanDxy(self):
         "Return the DX, DY of the dem."
         return self.DX, self.DY
+
+
+    def than2Num(self, native=False, centroidundulation=True):  #The optional arguments are for compatibility with ThanDEMsrtm.than2Num
+        "Return the DEM as a numpy array."
+        return p_gnum.im2num(self.im)
 
 
     def thanGetSize(self):
@@ -183,10 +206,18 @@ class ThanDEMusgs(ThanDTMDEM):
         "Return the pixel coordinates of the point."
         x = (cp[0]-self.X0) / self.DX
         y = (self.Y0-cp[1]) / self.DY
-        jx = int(x)
-        iy = int(y)
+        jx = floor(x)
+        iy = floor(y)
 #        print "jx, iy=", jx, iy
         return jx, iy
+
+
+    def thanObjCoor(self, jx, iy, native=False):
+        "Return the object coordinates of a pixel."
+        x = self.X0 + jx*self.DX
+        y = self.Y0 - iy*self.DY
+        z = self.GDAL_NODATA
+        return x, y, z
 
 
     def iterNodes(self, validnodes=True, invalidnodes=False, xymm=None):
@@ -211,8 +242,8 @@ class ThanDEMusgs(ThanDTMDEM):
             #print "    ", jx2, iy2
             #print "validnodes, invalidnodes", validnodes, invalidnodes
             #print "GDAL_NODATA=", self.GDAL_NODATA
-        for iy in xrange(iy1, iy2):
-            for jx in xrange(jx1, jx2):
+        for iy in range(iy1, iy2):
+            for jx in range(jx1, jx2):
                 h = self.getpixel(jx, iy)      #getpixel:  im.getpixel(xy)
                 x = self.X0 + jx*self.DX
                 y = self.Y0 - iy*self.DY
@@ -249,8 +280,8 @@ class ThanDEMusgs(ThanDTMDEM):
         jx2 = self.nxcols
         iy2 = self.nyrows
         f = "="+str(self.nxcols)+form
-        for iy in xrange(iy1, iy2):
-            dline = [self.getpixel(jx, iy) for jx in xrange(jx1, jx2)]
+        for iy in range(iy1, iy2):
+            dline = [self.getpixel(jx, iy) for jx in range(jx1, jx2)]
             dline = struct.pack(f, *dline)
             fw.write(dline)
         fw.close()
@@ -271,7 +302,7 @@ class ThanDEMusgs(ThanDTMDEM):
         DC = self.DX, self.DY
         C0 = self.X0, self.Y0-(self.nyrows-1)*self.DY
         c = [0.0, 0.0, 0.0]
-        for i in xrange(2):
+        for i in range(2):
             j = (i+1) % 2
             if ca[i] > cb[i]: ca, cb = cb, ca; rev = not rev
             if ca[i] >= self.xymma[2+i]: return ()
@@ -300,8 +331,8 @@ class ThanDEMusgs(ThanDTMDEM):
         fw.write("DX, DY        :  %f  %f\n" % (self.DX, self.DY))
         fw.write("nxcols, nyrows:  %d  %d\n" % (self.nxcols, self.nyrows))
         fw.write("NODATA        :  %f\n" % (self.GDAL_NODATA,))
-        for iy in xrange(self.nyrows):
-            for jx in xrange(self.nxcols):
+        for iy in range(self.nyrows):
+            for jx in range(self.nxcols):
                 z = self.getpixel(jx, iy)
                 fw.write(" %f" % (z,))
             fw.write("\n")
@@ -343,11 +374,11 @@ class ThanDEMusgs(ThanDTMDEM):
         self.thanCentroidCompute()
 
         self.im = Image.new("F", (self.nxcols, self.nyrows), self.GDAL_NODATA)   #Tif image which stores the DTM
-        for iy in xrange(self.nyrows):
+        for iy in range(self.nyrows):
             dline = next(fr)
             dl = dline.split()
             if len(dl) != self.nxcols: raise ValueError("Line with exactly %d numbers was expected")
-            for jx in xrange(self.nxcols):
+            for jx in range(self.nxcols):
                 z = float(dl[jx])
                 self.putpixel(jx, iy, z)
 
@@ -369,8 +400,8 @@ class ThanDEMusgs(ThanDTMDEM):
         fr.seek(0)
         it = iter(fr)
         try:
-            for iy in xrange(nrows):
-                for jx in xrange(ncols):
+            for iy in range(nrows):
+                for jx in range(ncols):
                     x1,y1,z = map(float, next(it).split())
                     self.putpixel(jx, iy, z)
         except (ValueError, IndexError, StopIteration) as e:
@@ -387,9 +418,9 @@ class ThanDEMusgs(ThanDTMDEM):
         """
         iy1, iy2 = 0, self.nyrows
         jx1, jx2 = 0, self.nxcols
-        for iy in xrange(iy1, iy2):
+        for iy in range(iy1, iy2):
             prt("%d/%d" % (iy, iy2))
-            for jx in xrange(jx1, jx2):
+            for jx in range(jx1, jx2):
                 h = self.getpixel(jx, iy)      #getpixel:  im.getpixel(xy)
                 if h == self.GDAL_NODATA: continue
                 if h < hminthres:
@@ -426,9 +457,9 @@ class ThanDEMusgs(ThanDTMDEM):
             return False
         iy1, iy2 = 0, self.nyrows
         jx1, jx2 = 0, self.nxcols
-        for iy in xrange(iy1, iy2):
+        for iy in range(iy1, iy2):
             prt("%d/%d" % (iy, iy2))
-            for jx in xrange(jx1, jx2):
+            for jx in range(jx1, jx2):
                 h = self.getpixel(jx, iy)      #getpixel:  im.getpixel(xy)
                 if h == self.GDAL_NODATA: continue
                 cp = self.X0 + jx*self.DX, self.Y0 - iy*self.DY, 0.0
@@ -438,12 +469,12 @@ class ThanDEMusgs(ThanDTMDEM):
 
 
     def createFromDem(self, dem, prt=p_ggen.doNothing):
-        "Cpompute the z value of each grid point using another dem."
+        "Compute the z value of each grid point using another dem."
         iy1, iy2 = 0, self.nyrows
         jx1, jx2 = 0, self.nxcols
-        for iy in xrange(iy1, iy2):
+        for iy in range(iy1, iy2):
             prt("%d/%d" % (iy, iy2))
-            for jx in xrange(jx1, jx2):
+            for jx in range(jx1, jx2):
                 x = self.X0 + jx*self.DX
                 y = self.Y0 - iy*self.DY
                 hg = dem.thanPointZ((x, y, 0.0))
@@ -476,13 +507,43 @@ def prop(im, nodatadef=None):
     if DZ != 0.0 or Z0 != 0.0:
         #raise ValueError, "Can not handle nonzero DZ or Z0: %s %s" % (DZ, Z0)
         p_ggen.prg("Can not handle nonzero DZ or Z0: %s %s" % (DZ, Z0), "can1")
-    try:
-        GDAL_NODATA = im.tag.get(42113)
-        #print "demusgs prop(): GDAL_NODATA=", GDAL_NODATA
-        if GDAL_NODATA is not None: GDAL_NODATA = float(im.tag.get(42113))
-        else:                   GDAL_NODATA = nodatadef  #Use default value supplied by user
-    except (IndexError, ValueError) as why:
-        GDAL_NODATA = nodatadef   #if nodatadef==None then ALL pixel values are full (all contain valid values) ...
-                                  #... else nodatadef is a NODATA value supplied by the user, because it is not supplied by the TIFF file
+    GDAL_NODATA = decipherNodata(im, nodatadef)
     nxcols, nyrows = im.size
     return X0, Y0, DX, DY, nxcols, nyrows, GDAL_NODATA
+
+
+def decipherNodata(im, nodatadef):
+    "Decipher the nodata value."
+    temp = im.tag.get(42113)
+    print("demusgs prop(): GDAL_NODATA in image=", temp)
+    if temp is None: 
+        GDAL_NODATA = nodatadef  #Use default value supplied by user, if tag is not found
+        print("demusgs prop(): tag not found, using user supplied value GDAL_NODATA=", GDAL_NODATA)
+    elif p_ggen.floate(str(temp)) is not None:    #Try to convert to real number
+        GDAL_NODATA = p_ggen.floate(str(temp))
+        print("demusgs prop(): successfuly converted to GDAL_NODATA=", GDAL_NODATA)
+    elif p_ggen.floate(str(temp[0])) is not None: #Try to convert to real number, in case temp is a tuple with one value
+        GDAL_NODATA = p_ggen.floate(str(temp[0]))
+        print("demusgs prop(): successfuly converted to GDAL_NODATA=", GDAL_NODATA)
+    else:
+        GDAL_NODATA = nodatadef  #Use default value because we could not convert it to real number
+                                 #if nodatadef==None then ALL pixel values are full (all contain valid values) ...
+                                 #... else nodatadef is a NODATA value supplied by the user, because it is not supplied by the TIFF file
+        print("demusgs prop(): could not convert, using user supplied value GDAL_NODATA=", GDAL_NODATA)
+
+    #If user supplied value is None, or we could not decipher the value in the image
+    #then we use the least height, if it is less than 9000
+    #Else if the highest height is > 10000 then we use the height height
+    if GDAL_NODATA is None:
+        print("prop(): Trying to infer GDAL_NODATA..")
+        temp = p_gnum.im2num(im)
+        tempmin = temp.min()
+        if tempmin <= -9000:
+            GDAL_NODATA = tempmin
+        else:
+            tempmax = temp.max()
+            if tempmax >= 10000.0: GDAL_NODATA = tempmax
+        del temp
+        if GDAL_NODATA is not None: print("        GDAL_NODATA set to", GDAL_NODATA)
+        else:                       print("        could not infer GDAL_NODATA")
+    return GDAL_NODATA

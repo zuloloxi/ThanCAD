@@ -1,37 +1,36 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for the commands of the tool menu.
 """
 
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import atan2, hypot
 import copy
-import p_ggen, p_ggeom
+import p_ggen, p_ggeom, p_ganneal
+from p_gmath import thanNear2
 from p_ggeom import area
 from p_gtri import hull
 import thandr, thanobj, thantkdia
@@ -55,17 +54,34 @@ def thanToolSimplif(proj):
         s = copy.deepcopy(lss[0])
     objnew = [(name, s)]
     strd = proj[1].thanUnits.strdis
+
+    #def prt2(lab, val):
+    #    proj[2].thanPrts(lab)
+    #    proj[2].thanPrts(val, "info1")
+
     while True:
-        statonce = "Max mean xy error=%s / Max absolute xy error=%s /\n"\
-                   "Max absolute z error=%s / Keep original lines=%s" % \
-                   (strd(s.entXYmean), strd(s.entXY), strd(s.entZ), s.choKeep)
+        i = s.algs.index(s.choAlg)
+        #prt2("Max mean xy error=", strd(s.entXYmean))
+        #prt2(" / Max absolute xy error=", strd(s.entXY))
+        #prt2(" /\n", "")
+        #prt2("Max absolute z error=", strd(s.entXYmean))
+        #prt2(" / Max absolute xy error=", strd(s.entZ))
+        #prt2(" /\n", "")
+        #prt2("Simplification method=", s.algsdesc[i])
+        #prt2("\n", "")
+
+        statonce = "Max mean xy error: %s / Max absolute xy error: %s /\n"\
+                    "Max absolute z error: %s / Keep original lines: %s /\n"\
+                   "Simplification method: %s" % \
+                   (strd(s.entXYmean), strd(s.entXY), strd(s.entZ), s.choKeep, s.algsdesc[i])
         proj[2].thanPrt(statonce)
+
         res = thancomsel.thanSelectOr(proj, standalone=False, filter=lambda e:isinstance(e, ThanLine),
               optionname="settings", optiontext="s=settings")
         if res == Canc: return thanModCanc(proj)
         if res == "s":
             thanModCancSel(proj)   #The user did not select anything so cancel current (empty) selection
-            w = thantkdia.ThanSimplificationSettings(proj[2], vals=s.toDialog(), cargo=proj)
+            w = thantkdia.ThanSimplificationSettings(proj[2], vals=s.toDialog(), cargo=(proj, s.algsdesc, s.algs))
             if w.result is None:
                 proj[2].thanPrtCan()  #Inform user that the dialog was cancelled
             else:
@@ -78,7 +94,7 @@ def thanToolSimplif(proj):
     delelems = set()
     newelems = set()
     for lin1 in elems:
-        cp = __lineSimplify(lin1.cp, s.entXYmean, erabsmax=s.entXY, zerabsmax=s.entZ)
+        cp = __lineSimplify(lin1.cp, s.entXYmean, erabsmax=s.entXY, zerabsmax=s.entZ, alg=s.choAlg)
         lin2 = ThanLine()
         lin2.thanSet(cp)
         if s.choKeep:
@@ -97,10 +113,10 @@ def thanToolSimplif(proj):
     thanModEnd(proj)
 
 
-def __lineSimplify(cp, ermeanmax=0.15, erabsmax=0.20, zerabsmax=0.10):
+def __lineSimplify(cp, ermeanmax=0.15, erabsmax=0.20, zerabsmax=0.10, alg="RDP"):
     "Approximate the line with fewer points keeping the error controlled."
     temp = [(i,)+tuple(c1) for i,c1 in enumerate(cp)]
-    r = p_ggeom.lineSimplify3d(temp, ermeanmax, erabsmax, zerabsmax)
+    r = p_ggeom.lineSimplify3d(temp, ermeanmax, erabsmax, zerabsmax, alg)
     temp = [c1[1:] for c1 in r]
     return temp
 
@@ -162,7 +178,7 @@ def iterdis2(a, dd, dismin=0.0):
         xa,ya,za = a[:3]
         xb,yb,zb = b[:3]
         d = hypot(xb-xa, yb-ya)
-        for d1 in p_ggen.xfrange(0.0, d-dismin, dd):
+        for d1 in p_ggen.frange(0.0, d-dismin, dd):
 #            print "iterdis2: %15.3f%15.3f" % (d1, d)
             x = xa + (xb-xa)/d*d1
             y = ya + (yb-ya)/d*d1
@@ -195,8 +211,8 @@ def thanToolCen(proj):
     lins = thanSelMultlines(proj, 1, T["Select lines to find their centroid:\n"])
     if lins == Canc: return thanModCanc(proj)    # centroid cancelled
     n = proj[1].thanVar["dimensionality"]
-    xr = xrange(n)
-    xr3 = xrange(2, n)
+    xr = range(n)
+    xr3 = range(2, n)
     iterby2 = p_ggen.iterby2
     sum = [0.0]*n
     s =  0.0
@@ -346,11 +362,13 @@ def __gettext(proj, st):
     dilay = proj[1].thanLayerTree.dilay
     TT = thandr.ThanText
     PN = thandr.ThanPointNamed
+    DA = thandr.ThanDimali
     for lay in dilay.values():    #works for python2,3
         if lay.thanAtts["frozen"].thanVal: continue
         for elem in lay.thanQuad:
             if isinstance(elem, TT) and st in elem.text: yield elem, elem.text
             if isinstance(elem, PN) and st in elem.name: yield elem, elem.name
+            if isinstance(elem, DA) and st in elem.distext: yield elem, elem.distext
 
 def __getTextfindOpts(proj, elem, i, statonce):
     "Gets text find options."
@@ -369,3 +387,54 @@ def __getTextfindOpts(proj, elem, i, statonce):
         if res == "next"[:n]:   return "n"
         if i > 0 and res == "previous"[:n]: return "p"
         stat = "Invalid option. Try again.\n" + stat1
+
+
+def thanToolOptline(proj):
+    "Find optimum line which passes from points and other elements."
+    from .thancommod import thanModEnd, thanModCanc
+    ThanLine = thandr.ThanLine
+    ThanPoint = thandr.ThanPoint
+    comname = "optline"
+    strd = proj[1].thanUnits.strdis
+    filt = lambda e: isinstance(e, ThanPoint) or isinstance(e, ThanLine)  #This includes ThanPointNamed, ThanLineFilled, ThanCurve, ThanSpline
+    statonce = T["Please select points, lines, splines that the optimum line will pass through"]
+    proj[2].thanPrt(statonce, "info1")
+    res = thancomsel.thanSelectGen(proj, standalone=False, filter=filt)
+    if res == Canc: return thanModCanc(proj)
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    delelems = set()
+    newelems = set()
+    cc = []
+    for e in elems:
+        if isinstance(e, ThanPoint):
+            cc.append(e.cc)
+        else:    #ThanLine
+            try:    cp = e.cpori   #To accommodate ThanSpline
+            except: cp = e.cp
+            cc.extend(cp)
+
+    #test degenerate case
+    if len(cc) < 2: return thanModCanc(proj, T["Objects with at least 2 distinct points are required"])
+    c1 = cc[0]
+    for c2 in cc[1:]:
+        if not thanNear2(c1, c2): break
+    else:
+        return thanModCanc(proj, T["Objects with at least 2 distinct points are required"])
+
+    p, vt, rmsey = p_ganneal.fitline_simple(cc, "auto")   #Fit a line to points
+    c1, c2 = p_ganneal.fitline_endpoints(cc, p, vt)
+    cp = [list(cc[0]), list(cc[0])]
+    cp[0][:2] = c1
+    cp[1][:2] = c2
+    lin2 = ThanLine()
+    lin2.thanSet(cp)
+    proj[1].thanElementTag(lin2)
+    newelems.add(lin2)
+
+    selelems = elems
+    thanundo.thanReplaceRedo(proj, delelems, newelems, selelems)
+    proj[1].thanDoundo.thanAdd(comname, thanundo.thanReplaceRedo, (delelems, newelems, selelems),
+                                        thanundo.thanReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj, "RMSE={}".format(strd(rmsey)), "info1")

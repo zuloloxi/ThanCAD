@@ -1,34 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the road element. It is a polyline with its corners rounded
 with circular arcs of given radius.
 """
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import fabs, hypot, sqrt, pi, cos, sin
 from p_ggen import iterby2, iterby3, thanUnicode
 from p_gmath import thanNearx, thanNear2
@@ -73,11 +70,6 @@ class ThanRoad(ThanElement):
         for c2 in cp:
             if not thanNear2(c1, c2): return True
         return False      # All line points are close together
-
-
-    def thanClean(self):
-        "Clean zero lengthed segments."
-        self.cpr = thanCleanLine2(self.cpr)
 
 
     def thanRotate(self):
@@ -130,7 +122,7 @@ class ThanRoad(ThanElement):
     def thanPntNearest2(self, ccu):
         "Finds the nearest point of this road to a point."
         dmax=1e100; cp1 = None; iseg = -1; cp = self.cpr
-        for i in xrange(1, len(cp)):
+        for i in range(1, len(cp)):
             a = cp[i][0]-cp[i-1][0], cp[i][1]-cp[i-1][1]
             aa = hypot(*a)
             if thanNearx(aa, 0.0): continue      # Segment has zero length
@@ -163,7 +155,7 @@ class ThanRoad(ThanElement):
         """
         dmax=1e100
         cp = self.cpr
-        for i in xrange(1, len(cp)):
+        for i in range(1, len(cp)):
             a = cp[i][0]-cp[i-1][0], cp[i][1]-cp[i-1][1]
             aa = hypot(*a)
             if aa == 0.0: continue              # Segment has zero length
@@ -185,7 +177,7 @@ class ThanRoad(ThanElement):
             d2 = hypot(cp2[0]-self.cpr[i][0], cp2[1]-self.cpr[i][1])
             if d2 < d1:
                 cp1, i1, cp2, i2 = cp2, i2, cp1, i1
-        assert cp1 is not None and cp2 != None, "It should have been checked!"
+        assert cp1 is not None and cp2 is not None, "It should have been checked!"
         e1 = ThanRoad()
         e1.thanSet(self.cpr[:i1+1])
         e1.cpr[i1] = cp1
@@ -203,6 +195,7 @@ class ThanRoad(ThanElement):
         l2g = proj[2].than.ct.local2Global
         dc = proj[2].than.dc
         fi = proj[2].than.outline
+        w = proj[2].than.tkThick
         rdef = 50.0                                             # default radius
 
         cpr = []; ctr = []
@@ -244,7 +237,7 @@ class ThanRoad(ThanElement):
                     xp3, yp3 = g2l(c1[0], c1[1])
                     rp2, _ = g2lr(cpr[-2][-1], 0.0)
                     tags = "e0", "e"+str(len(cpr))
-                    items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, (), tags)
+                    items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, (), w, tags)
                     dc.delete(items[2])
                     ctr[-2] = l2g(*ct)
                     print("----------------------------------------------")
@@ -280,18 +273,19 @@ class ThanRoad(ThanElement):
         g2lr = than.ct.global2LocalRel
         dc = than.dc
         fi = than.outline
+        w = than.tkThick
         tags = self.thanTags
         xp1, yp1 = g2l(self.cpr[0][0], self.cpr[0][1])
         xp2, yp2 = g2l(self.cpr[1][0], self.cpr[1][1])
 
         n = len(self.cpr)
         if n < 3:
-            item = dc.create_line(xp1, yp1, xp2, yp2, fill=fi, dash=than.dash, tags=tags)
+            item = dc.create_line(xp1, yp1, xp2, yp2, fill=fi, dash=than.dash, width=w, tags=tags)
             return
-        for i in xrange(1, n-1):
+        for i in range(1, n-1):
             xp3, yp3 = g2l(self.cpr[i+1][0], self.cpr[i+1][1])
             rp2, _ = g2lr(self.cpr[i][-1], 0.0)
-            items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, than.dash, tags)
+            items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, than.dash, w, tags)
             if i < n-2: dc.delete(items[2])
             xp1, yp1 = ct
             xp2, yp2 = xp3, yp3
@@ -356,7 +350,7 @@ class ThanRoad(ThanElement):
             return
         c1 = self.cpr[0]
         fDxf.thanDxfPlotPolyVertex(c1[0], c1[1], 2)
-        for i in xrange(2, len(self.cpr)):
+        for i in range(2, len(self.cpr)):
             c2 = self.cpr[i-1]
             c3 = self.cpr[i]
             r = c2[-1]
@@ -409,7 +403,7 @@ class ThanRoad(ThanElement):
             e.thanExpPil(than)
             return
         c1 = self.cpr[0]
-        for i in xrange(2, len(self.cpr)):
+        for i in range(2, len(self.cpr)):
             c2 = self.cpr[i-1]
             c3 = self.cpr[i]
             nod = calcRoadNode(c1[0], c1[1], c2[0], c2[1], c3[0], c3[1], c2[-1])
@@ -453,10 +447,6 @@ class ThanRoad(ThanElement):
         wr(T["Vertices %d (X Y Z Radius):\n"] % len(cpr))
         wr("    %s\n" % coo(cpr[0][:-1]))
         n = len(cpr) - 1
-        for i in xrange(1, n):
+        for i in range(1, n):
             wr("    %s %s%s\n" % (coo(cpr[i][:-1]), T["Radius: "], dis(cpr[i][-1])))
         wr("    %s\n" % coo(cpr[n][:-1]))
-
-
-if __name__ == "__main__":
-    print(__doc__)

@@ -1,34 +1,35 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the text element.
 """
 
-from __future__ import print_function
 from math import sin, cos, fabs, pi, atan2, hypot
 from itertools import islice
+from tkinter.font import Font
+from thanopt import thancadconf
 from p_ggen import thanUnicode
 from p_gmath import PI2
 from thanvar import Canc
@@ -55,6 +56,15 @@ class ThanText(ThanElement):
         self.cc = list(c1)
         self.theta = theta % PI2       # Radians assumed
 #       self.thanTags = ()             # thanTags is initialised in ThanElement
+
+
+    def thanRename(self, text):
+        "Rename the text, calculate temp size."
+        self.text = text
+        #self.h1 is here probably the correct height as reported by font
+        self.w1 = len(text)*self.h1          # Temporary dimensions
+        self.tempSize = True
+        self.setBoundBoxRect(self.cc[0], self.cc[1], self.w1, self.h1, self.theta)
 
 
     def thanIsNormal(self):
@@ -134,7 +144,7 @@ class ThanText(ThanElement):
         text to single line texts). This is in order to
         avoid user confusion, who are acquainted with other leading Cad.
         """
-        if than is None: return True               # Break IS implemented
+        if than is None: return True               # Explode IS implemented
         return self.__explode(than)
     def __explode(self, than):
         "Transform the line to a set of smaller 2-point lines; do the job as a generator."
@@ -174,8 +184,9 @@ class ThanText(ThanElement):
         self.thanSet(text, c1, size, un.unit2rad(theta))
         return True                                      # Text OK
 
-#    _canvasfonts = {}
-    def thanTkDraw1(self, than):
+    _canvasfonts = {}
+    _canvasfamilyfactor = {}
+    def thanTkDraw1(self, than, rectangle=False):
         "Draws rotated text in ThanCad line font."
         if self.tempSize:  # The GUI is active: time to compute the dimension of the text accurately
             self.w1, self.h1 = than.font.thanCalcSizexy(self.text, self.size)
@@ -184,7 +195,7 @@ class ThanText(ThanElement):
 #           FIXME: When user changes font of a layer, then all texts of this layer should have tempsize=True
         x1, y1 = than.ct.global2Local(self.cc[0], self.cc[1])
         w, h = than.ct.global2LocalRel(self.w1, -self.h1)    # Ensure h>0 (local y-axis is positive downwards)
-        if h < 4:                                            # Size too small to be seen; draw rectangle instead
+        if h < 4 or rectangle:                               # Size too small to be seen; draw rectangle instead
             tags = self.thanTags + ("nocomp",)
             h = -h
             cost = cos(-self.theta)        # Opposite y-axis changes the sign of the angle
@@ -198,16 +209,51 @@ class ThanText(ThanElement):
                        (x1 - h*sint, y1 + h*cost),
                      ]
             than.dc.create_polygon(wpList, outline=than.outline, fill="", tags=tags)
-        elif False and self.theta == 0.0:                                #Use canvas fonts for speed
-            hp = int(h*1.38+0.5)        #Canvas bug?
-            print("text h=", h, "hp=", hp)
+        elif self.theta == 0.0 and False:                                #Use canvas fonts for speed
+            #bounds = than.dc.bbox(id)  # returns a tuple like (x1, y1, x2, y2)
+            #width = bounds[2] - bounds[0]
+            #height = bounds[3] - bounds[1]
+            #family = "Times New Roman"
+            #family = "Arial"
+            family = "Liberation Sans"
+            #family = "Liberation Mono"
+            #family = "Carlito"
+            #family = "Courier new"
+            #family = "Comic Sans MS"
+            #family = "URW Chancery L"
+            if family not in self._canvasfamilyfactor:
+                fo = Font(family=family, size=-100)
+                fm = fo.metrics(window=than.dc)
+                #print(fm)
+                w=fo.measure("w", displayof=than.dc)
+                #print(w, fo.measure("A", displayof=than.dc), fo.measure("O", displayof=than.dc))
+                #print(fo.actual(displayof=than.dc))
+                self._canvasfamilyfactor[family] = 100/w
+                    #i = than.dc.create_text(0, 0, text=self.text, anchor="sw", font=fo)
+                    #than.dc.update()
+                    #x1, y1, x2, y2 = than.dc.bbox(i)
+                    #print("bbox=", x2-x1, y2-y1)
+                    #than.dc.delete(i)
+                    #than.dc.update()
+                #self._canvasfamilyfactor[family] = fm['ascent'] / (fm['ascent']-fm['descent'])
+                #self._canvasfamilyfactor[family] = (fm['linespace']+fm['descent']) / (fm['ascent'])
+                #self._canvasfamilyfactor[family] = (fm['linespace']) / (fm['ascent']-(100-fm['ascent']))
+                #self._canvasfamilyfactor[family] = (fm['linespace']) / (fm['ascent']*fm['ascent']/100)
+                #self._canvasfamilyfactor[family] = (100) / (fm['ascent']*fm['ascent']/100)
+                #self._canvasfamilyfactor[family] = 100 / (fm['ascent']-fm['descent'])
+
+                #self._canvasfamilyfactor[family] = fm['linespace'] / (fm['ascent']*0.85)
+                #self._canvasfamilyfactor[family] = fm['linespace'] / (fm['ascent']-fm['descent']*0.45)
+            #hp = int(h*1.38+0.5)        #Canvas bug?
+            #hp = int(h+0.5)
+            hp = int(h*self._canvasfamilyfactor[family]+0.5)        #Canvas bug?
+            #print("text h=", h, "hp=", hp)
             if hp not in self._canvasfonts:
-                from tkinter.font import Font
-                from thanopt import thancadconf
-                self._canvasfonts[hp] = Font(family=thancadconf.thanFontfamilymono, size=-hp)
+                #self._canvasfonts[hp] = Font(family=thancadconf.thanFontfamilymono, size=-hp)
+                self._canvasfonts[hp] = Font(family=family, size=-hp)
             tags = self.thanTags + ("nocomp",)
-            than.dc.create_text(x1, y1-hp, text=self.text, anchor="nw", font=self._canvasfonts[hp],
-                                fill=than.outline, tags=tags)
+            than.dc.create_text(x1, y1, text=self.text, anchor="sw", angle=self.theta/pi*180,
+                font=self._canvasfonts[hp], fill=than.outline, tags=tags)
         else:      # Draw text - ThanFont does not distinguish between theta==0 and theta!=zero
             than.font.thanTkPaint(than, x1, y1, h, self.text, self.theta, self.thanTags)
 
@@ -325,7 +371,3 @@ class ThanText(ThanElement):
              T["Size: %s    Angle: %s\n"] % (than.strdis(self.size), than.strdir(self.theta)),
             )
         than.write("\n".join(t))
-
-
-if __name__ == "__main__":
-    print(__doc__)

@@ -1,6 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, cos, sin, atan2, fabs
 import p_ggen
 from p_gmath import dpt
@@ -103,7 +100,7 @@ class Pin:
         return [x1 for x1, y1 in cc], [y1 for x1, y1 in cc]
 
 
-    def dxfout(self, dxf):
+    def dxfoutold(self, dxf):
         "Plots the frame into dxf file."
         (x1,y1), (x2,y2), (x3,y3), (x4,y4) = self.coords()
         dxf.thanDxfPlotPolyline((x1,x2,x3,x4,x1), (y1,y2,y3,y4,y1))
@@ -116,11 +113,27 @@ class Pin:
         yc -= h*0.5*sin(th)
         dxf.thanDxfPlotSymbol(xc, yc, h, self.aa, self.theta)
 
+    def dxfout(self, dxf):
+        "Plots the frame into dxf file."
+        theta1 = self.theta
+        if theta1 > 90 and theta1 <= 270: theta1 = theta1 - 180
+        th1 = theta1*pi/180
+
+        (x1,y1), (x2,y2), (x3,y3), (x4,y4) = self.coords()
+        dxf.thanDxfPlotPolyline((x1,x2,x3,x4,x1), (y1,y2,y3,y4,y1))
+        h = self.ap/4.0
+        xc = (x1+x2+x3+x4)/4 - h*len(self.aa)*0.5*cos(th1)
+        yc = (y1+y2+y3+y4)/4 - h*len(self.aa)*0.5*sin(th1)
+        th1 += 0.5*pi
+        xc -= h*0.5*cos(th1)
+        yc -= h*0.5*sin(th1)
+        dxf.thanDxfPlotSymbol(xc, yc, h, self.aa, theta1)
+
 
     def sykout(self, fw, orthoim=False):
         "Writes the frame into .syk file; if orthoim==True then slightly different format."
         (x1,y1), (x2,y2), (x3,y3), (x4,y4) = self.coords()
-        if not orthoim: fw.write("%15.3f  %-10s\n" % (0.0, self.aa))
+        if not orthoim: fw.write("%15.3f  %s\n" % (0.0, self.aa))
         form = "%15.3f%15.3f\n"
         fw.write(form % (x1, y1))
         fw.write(form % (x2, y2))
@@ -158,7 +171,7 @@ def poly2pin(thanPolylines, thanTexts=(), prt=p_ggen.prg):
         ok = ok or (len(xx) == 5 and fabs(xx[0]-xx[-1]) < 0.01 and fabs(yy[0]-yy[-1]) < 0.01)
         if not ok:
             prt("Frame does not have 4 corners:")
-            for i in xrange(min((len(xx), 10))): prt("%15.3f%15.3f" % (xx[i], yy[i]))
+            for i in range(min((len(xx), 10))): prt("%15.3f%15.3f" % (xx[i], yy[i]))
             prt("Frame is ignored.\n")
             continue
 #-------Make sure the order is counter clockwise

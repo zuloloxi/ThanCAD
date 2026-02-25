@@ -1,12 +1,8 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from itertools import islice
 from bisect import bisect
 from math import fabs, hypot
 from p_gmath import linEq2, linint
-from p_ggen import prg, iterby2, tog, xfrange, xfrangec
+from p_ggen import prg, iterby2, tog, frange, frangec
 from p_gvec import Vector2
 from .area import area
 
@@ -25,7 +21,7 @@ class Polygon:
         self.csori = dict(zip(cs2, cs))        # Save original coordinates    #Ok for python 2, 3
         cs = cs2
         remDup(cs, dcmin)                      # Delete very close points
-        assert len(cs) > 2, "Degenerate polygon."
+        if len(cs) <= 2: raise ValueError("Degenerate polygon")
 
 #-------Ensure that first and last point are the same
 
@@ -35,7 +31,7 @@ class Polygon:
         else:
             cs.append(cs[0])
         assert cs[0] == cs[-1], "First and last point of polygon should coincide."
-        assert len(cs) > 3, "Degenerate polygon."
+        if len(cs) <= 3: raise ValueError("Degenerate polygon")
 
         css = []
         for y, a, b in limitDy(cs, self.DYMAX):
@@ -93,7 +89,7 @@ class Polygon:
         while True:
             ja = self.__next1(ja1, da)
             jb = other.__next1(jb1, db)
-            assert (ja, jb) != (ia, ib), "Ταυτίζονται τα πολύγωνα?"
+            assert (ja, jb) != (ia, ib), "Ξ¤Ξ±Ο…Ο„Ξ―Ξ¶ΞΏΞ½Ο„Ξ±ΞΉ Ο„Ξ± Ο€ΞΏΞ»ΟΞ³Ο‰Ξ½Ξ±?"
             if not near(self.cs[ja], other.cs[jb]): return ja1, jb1
             ja1, jb1 = ja, jb
 
@@ -161,12 +157,12 @@ class Polygon:
     def __intPolEdge(self, other):
         """Finds 1 of the intersections points of self with another polygon."""
         cints = []
-        for i1 in xrange(len(self.cs)-1):
+        for i1 in range(len(self.cs)-1):
             in1 = other.inPol(self.cs[i1])
             if in1 != 2: break
         else:
             return cints                      # No intersections (they probably coincide)
-        for i2 in xrange(i1+1, len(self.cs)):
+        for i2 in range(i1+1, len(self.cs)):
             in2 = other.inPol(self.cs[i2])
             if in2 == 2: continue
             if in2 == in1:
@@ -176,7 +172,7 @@ class Polygon:
             if i2-i1 > 1:                     # There was a point exactly on edge (which is now an intersection)
                 cints.append(self.cs[i1+1])
                 return cints
-            for j in xrange(1, len(other.cs)):
+            for j in range(1, len(other.cs)):
                 fs, fo = intLinseg(self.cs[i1], self.cs[i2], other.cs[j-1], other.cs[j])
                 if fs is not None and 0 <= fs <= 1 and 0 <= fo <= 1:
                     a, b = self.cs[i1], self.cs[i2]
@@ -211,8 +207,8 @@ class Polygon:
         intss = [ ]
         intso = [ ]
         cints = [ ]
-        for i in xrange(1, len(self.cs)):
-            for j in xrange(1, len(other.cs)):
+        for i in range(1, len(self.cs)):
+            for j in range(1, len(other.cs)):
                 fs, fo = intLinseg(self.cs[i-1], self.cs[i], other.cs[j-1], other.cs[j])
 #                print "fs,fo=", fs, fo
 #                if fs is not None and -1 <= fs <= 2 and -1 <= fo <= 2:
@@ -276,7 +272,7 @@ class Polygon:
                         f = file("qp1.syk", "w")
                         wrsyk(f, self.cs)
                         wrsyk(f, other.cs)
-                        assert 0, tog("5000 τομές!")
+                        assert 0, "5000 Ο„ΞΏΞΌΞ­Ο‚!"
 
 #-----------Clear the intersection points found on the common area
 
@@ -326,12 +322,12 @@ class Polygon:
             vab = vb - va
             assert abs(vab) > 0.0
             tab = vab.unit()
-            dab = vab*tab
+            dab = vab|tab
             vap = vp - va
-            dap = vap*tab
+            dap = vap|tab
             if dap <    -2*self.DCMIN: continue
             if dap > dab+2*self.DCMIN: continue
-            dn = vap*tab.normal()
+            dn = vap|tab.normal()
             if fabs(dn) <= 2*self.DCMIN:
                 if   dap <     2*self.DCMIN: node = a
                 elif dap > dab-2*self.DCMIN: node = b
@@ -346,9 +342,9 @@ class Polygon:
     def inPol2(self, ca):
         "Checks if point a is in polygon."
 
-#-----Αποφυγή της ισότητας   yPol(i) == yGram:
-#     Αν yGram-yPol(i) < 10% του dot, τότε άλλαξε τη συντεταγμένη yPol
-#     έτσι ώστε να υπάρχει αυτή η διαφορά.
+#-----Ξ‘Ο€ΞΏΟ†Ο…Ξ³Ξ® Ο„Ξ·Ο‚ ΞΉΟƒΟΟ„Ξ·Ο„Ξ±Ο‚   yPol(i) == yGram:
+#     Ξ‘Ξ½ yGram-yPol(i) < 10% Ο„ΞΏΟ… dot, Ο„ΟΟ„Ξµ Ξ¬Ξ»Ξ»Ξ±ΞΎΞµ Ο„Ξ· ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ξ· yPol
+#     Ξ­Ο„ΟƒΞΉ ΟΟƒΟ„Ξµ Ξ½Ξ± Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ Ξ±Ο…Ο„Ξ® Ξ· Ξ΄ΞΉΞ±Ο†ΞΏΟΞ¬.
 
         res = self.onEdge(ca)
         if res[0] == 2: return res
@@ -358,7 +354,7 @@ class Polygon:
 
         xs = self.compYinter(yy)
         if len(xs) == 0 or xx < xs[0]: return 0, None, None
-        for i in xrange(len(xs)):
+        for i in range(len(xs)):
 #            assert xx != xs[i], "inpol: xx="+str(xx)+" should not be equal to polygon point."
             if xs[i] > xx: return (i % 2 == 1), None, None
         return 0, None, None
@@ -392,8 +388,8 @@ class Polygon:
     def interpYpoints(self, yy, dx):
         "Compute interpolation points inside the polygon with distance dx, at a horizontal line at yy; assume yy is already quantumised."
         xs = self.compYinter(yy)
-        for i in xrange(0, len(xs), 2):
-            for xx in xfrangec(xs[i], xs[i+1], dx):
+        for i in range(0, len(xs), 2):
+            for xx in frangec(xs[i], xs[i+1], dx):
                 yield xx, yy
 
 
@@ -402,7 +398,7 @@ class Polygon:
         ymin, ccmin = min((cc[1],cc) for cc in self.cs)
         ymax, ccmax = max((cc[1],cc) for cc in self.cs)
         yield ccmin[:2]
-        for y in xfrange(ymin+dy, ymax-dy*0.1, dy):
+        for y in frange(ymin+dy, ymax-dy*0.1, dy):
             _, yy = quant((0.0, y), self.DCMIN)
             yy += self.DCMIN*0.25
             for cp in self.interpYpoints(yy, dx):
@@ -415,7 +411,7 @@ class Polygon:
         for (xa, ya), (xb, yb) in iterby2(self.cs):   #Create points in the edges of the polygon
             yield xa, ya
             dol = hypot(yb-ya, xb-xa)
-            for d in xfrange(dd, dol-dd/10.0, dd):
+            for d in frange(dd, dol-dd/10.0, dd):
                 xp = linint(0.0, xa, dol, xb, d)
                 yp = linint(0.0, ya, dol, yb, d)
                 yield xp, yp
@@ -423,7 +419,7 @@ class Polygon:
 
 
     def area(self, force=False):
-        "Computes the area of the polygon; note that this is lasy operation."
+        "Computes the area of the polygon; note that this is lazy operation."
         if self._area is None or force:
             self._area = area(self.cs)
         return self._area
@@ -445,7 +441,7 @@ def limitDy(cs, dymax):
                 dd = dab / n
                 d = 0.0
                 u = a
-                for i in xrange(n-1):
+                for i in range(n-1):
                     d += dd
                     v = a[0] + (b[0]-a[0]) * d / dab, a[1] + d
                     css.append((u[1], u, v))
@@ -629,5 +625,5 @@ def testKthm():
     f.close()
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     testPoints()

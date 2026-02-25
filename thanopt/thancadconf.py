@@ -1,37 +1,36 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which provides for ThanCad customisation.
 This module keeps a central repository of the options and variables common to all
 all drawings of ThanCad. It also gets/saves options to configuration files.
 """
 
-from __future__ import print_function
-try:    from configparser import SafeConfigParser
-except: from ConfigParser import SafeConfigParser
-import p_ggen
+try: from configparser import SafeConfigParser     #python3.9
+except: from configparser import ConfigParser as SafeConfigParser  #python3.12
+import p_ggen, p_gimage
 from thandefs.thanatt import thanAttCol, ThanAttCol
 
 thanOsnapModesText = \
@@ -62,7 +61,7 @@ thanCanvasdim = [780, 400]       #Canvas size in pixels (width, height)
 
 thanOsnapModes = dict(end=True)  #Object snap modes
 
-p_ggen.thanSetEncoding("iso-8859-1")   #Encoding for non-unicode characters
+p_ggen.thanSetEncoding("utf_8")  #Encoding for non-unicode characters
 thanTranslateTo = "en"
 
 thanFiledir = ""                 #Directory where previous drawings were found
@@ -71,10 +70,14 @@ thanCameradir = ""               #Directory where photogrammetric camera files a
 thanTempPrefix = "untitled"      #Prefix for the names of new drawings
 thanUndefPrefix = "<undefined>"  #Prefix for the undefined names (files, dirs etc)
 
-thanFontfamily = "Liberation serif"
-thanFontsize = 12
-thanFontfamilymono = "Liberation mono"
+thanFontfamily = "Liberation Serif"
+thanFontsize = 16
+if p_ggen.Pyos.Windows: thanFontsize = 14
+thanFontfamilymono = "Liberation Mono"
 thanFontsizemono = thanFontsize - 1
+
+
+p_gimage.imageSetmaxpixels(int(300e6))  #Set the max image pixels; after that PIL complains about "DecompressionBomb"
 
 
 def thanOptColorsGet(c):
@@ -191,7 +194,7 @@ def thanOptColorsSave(c):
     if not c.has_section("colors"): c.add_section("colors")
     c.set("colors", "background",   str(thanColBack))
     c.set("colors", "root",         str(thanColRoot))
-    c.set("colors", "user defined", ";".join(str(thc) for thc in thanColUser if thc != None))
+    c.set("colors", "user defined", ";".join(str(thc) for thc in thanColUser if thc is not None))
     c.set("colors", "select",       str(thanColSel))
     c.set("colors", "osnap",        str(thanColOsn))
 
@@ -234,16 +237,19 @@ def thanOptGeometrySave(c):
 def thanOptsGet():
     "Reads the attributes from config files and store them as global variables."
     fc, terr = p_ggen.configFile("thancad.conf", "thancad")
-    if terr != "":
+    if terr != "":  #Error locating thancad.conf: leave default config values
         print("thanOptsGet():", terr)
         return
-    c = SafeConfigParser()
-    c.read(fc)
-    thanOptColorsGet(c)
-    thanOptOsnapGet(c)
-    thanOptInterGet(c)
-    thanOptFilesGet(c)
-    thanOptGeometryGet(c)
+    try:
+        c = SafeConfigParser()
+        c.read(fc)
+        thanOptColorsGet(c)
+        thanOptOsnapGet(c)
+        thanOptInterGet(c)
+        thanOptFilesGet(c)
+        thanOptGeometryGet(c)
+    except Error as e: #Error parsing/reading thancad.conf: leave the rest config values with default values
+        print("thanOptsGet():", e)
 
 
 def thanOptsSave():

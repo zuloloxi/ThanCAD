@@ -1,15 +1,10 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange, iteritems
-#from future.utils import iteritems
 from math import cos, sin, pi
 from fnmatch import fnmatch
 import p_ggen
 
 
 class ThanDrIgnore:
-    "A class which ignores the elements read by ThanImportDxf."
+    "A receiver class which ignores the elements read by ThanImportDxf."
     POLYLINE = "polyline"
     LINE     = "line"
     CIRCLE   = "circle"
@@ -20,6 +15,8 @@ class ThanDrIgnore:
     BLOCK    = "block"
     IMAGE    = "image"
     FACE3D   = "3dface"
+    HATCH    = "hatch"
+    SOLID    = "solid"
 
     def __init__(self, prt=p_ggen.prg):
         "Just get print function."
@@ -31,8 +28,9 @@ class ThanDrIgnore:
     def dxfXymm    (self, x1, y1, x2, y2):        pass
     def dxfLayer   (self, name, atts):            pass
     def dxfLtype   (self, name, desc, elems):     pass
+    def dxfUnknown (self, name,       lay, handle, col):   pass   #Thanasis2023_04_24
     def dxfPolyline(self, xx, yy, zz, lay, handle, col):   pass
-    def dxfLine    (self, xx, yy, zz, lay, handle, col):   pass
+    def dxfLine    (self, xx, yy, zz, lay, handle, col, linw):   pass
     def dxfCircle  (self, xx, yy, zz, lay, handle, col, r):pass
     def dxfPoint   (self, xx, yy, zz, lay, handle, col):   pass
     def dxfArc     (self, xx, yy, zz, lay, handle, col, r, theta1, theta2): pass
@@ -41,10 +39,12 @@ class ThanDrIgnore:
     def dxfBlockAtt(self, xx, yy, zz, lay, handle, col, blname, blatts):    pass
     def dxfThanImage(self, xx, yy, zz, lay, handle, col, filnam, size, ale, theta): pass
     def dxf3dface  (self, xx, yy, zz, lay, handle, col): pass
+    def dxfSolid   (self, xx, yy, zz, lay, handle, col): pass
+    def dxfHatch   (self, xx, yy, zz, lay, handle, col): pass
 
 
 class ThanDrLayer(ThanDrIgnore):
-    "A class which saves layers and ignores anything else."
+    "A receiver class which saves layers and ignores anything else."
 
     def __init__(self, *args, **kw):
         "Initialize layer container."
@@ -57,7 +57,7 @@ class ThanDrLayer(ThanDrIgnore):
 
 
 class ThanDrWarn(ThanDrIgnore):
-    """A class which warns about unknown object/layer pairs.
+    """A receiver class which warns about unknown object/layer pairs.
 
     I think that this is the safest class to derive from. If new functionality is 
     added to the library, this class will be updated. So the derived classes will
@@ -71,6 +71,7 @@ class ThanDrWarn(ThanDrIgnore):
         The argument laykno is a list/tuple of layers which the user is interested in.
         (and expects). The layers may contain wild characters as understood by fnmatch().
         These layers (with the wild characters) are copied to _layknopat (pat is for pattern).
+        If all layers are to be considered, then set: laykno=("*",)
         """
         ThanDrIgnore.__init__(self, **kw)
         self._objunk = {}  # Unknown objects: objects which the user is not interested in
@@ -87,13 +88,13 @@ class ThanDrWarn(ThanDrIgnore):
             m = self._objunk.get((obj, lay), 0) + 1
             self._objunk[obj, lay] = m
             if m > 1: return
-            self.prt("Dxf import Warning: (duplicate) objects of type '%s'" % obj, "can1")
+            self.prt("Dxf import Warning: one or more elements of type '%s'" % obj, "can1")
             self.prt("                    are ignored in layer %s." % lay, "can1")
         else:
             m = self._layunk[lay] + 1
             self._layunk[lay] = m
             if m > 1: return
-            self.prt("Dxf import Warning: layer %s will be ignored." % lay, "can1")
+            self.prt("Dxf import Warning: layer %s is ignored." % lay, "can1")
 
 
     def isLayerKnown(self, lay):
@@ -114,7 +115,7 @@ class ThanDrWarn(ThanDrIgnore):
         n = self._functy.get(functyname, 0) + 1
         self._functy[functyname] = n
         if n > 1: return
-        self.prt("Dxf import Warning: %s will be ignored." % functyname, "can1")
+        self.prt("Dxf import Warning: %s is ignored." % functyname, "can1")
 
 
     def dxfVars     (self, v):                     self.warnFuncty("Variables definition")
@@ -123,8 +124,9 @@ class ThanDrWarn(ThanDrIgnore):
     def dxfLayer    (self, name, atts):            self.warnFuncty("Layer definition")
     def dxfLtype    (self, name, desc, elems):     self.warnFuncty("Line type definition")
 
+    def dxfUnknown  (self, name,       lay, handle, col):                 self.warnObj(lay, name)   #Thanasis2023_04_24
     def dxfPolyline (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.POLYLINE)
-    def dxfLine     (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.LINE) 
+    def dxfLine     (self, xx, yy, zz, lay, handle, col, linw):           self.warnObj(lay, self.LINE) 
     def dxfCircle   (self, xx, yy, zz, lay, handle, col, r):              self.warnObj(lay, self.CIRCLE) 
     def dxfPoint    (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.POINT)
     def dxfArc      (self, xx, yy, zz, lay, handle, col, r, theta1,
@@ -136,10 +138,12 @@ class ThanDrWarn(ThanDrIgnore):
     def dxfThanImage(self, xx, yy, zz, lay, handle, col, filnam, size, 
                      scale,  theta):                                      self.warnObj(lay, self.IMAGE)
     def dxf3dface   (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.FACE3D)
+    def dxfSolid    (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.SOLID)
+    def dxfHatch    (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.HATCH)
 
 
 class ThanDrLine(ThanDrWarn):
-    "A class which gets only lines/polylines; it is an example of ThanDrWarn usage."
+    "A receiver class which gets only lines/polylines; it is an example of ThanDrWarn usage."
 
     def dxfPolyline (self, xx, yy, zz, lay, handle, col):
         "Get polyline if it is in known layers."
@@ -150,22 +154,22 @@ class ThanDrLine(ThanDrWarn):
             self.warnObj(lay, self.POLYLINE)
 
 
-    def dxfLine     (self, xx, yy, zz, lay, handle, col):
+    def dxfLine     (self, xx, yy, zz, lay, handle, col, linw):
         "Get line if it is in known layers."
         lay = lay.lower()
         if self.isLayerKnown(lay):
-            self.processLine(xx, yy, zz, lay, handle, col)
+            self.processLine(xx, yy, zz, lay, handle, col, linw)
         else:
             self.warnObj(lay, self.LINE) 
 
 
-    def processLine(self, xx, yy, zz, lay, handle, col):
+    def processLine(self, xx, yy, zz, lay, handle, col, linw):
         "What to do with the line/polyline; overwrite it."
         self.prt("Line x1=%.3f  y1=%.3f z1=%.3f ... in layer=%s" % (xx[0], yy[0], zz[0], lay), "info1")
 
 
 class ThanDrSave(ThanDrIgnore):
-    "A class which stores the elements read by ThanImportDxf."
+    "A receiver class which stores the elements read by ThanImportDxf."
 
     def __init__(self, *args, **kw):
         "Creates an instance of the class."
@@ -185,6 +189,8 @@ class ThanDrSave(ThanDrIgnore):
         self.thanBlocks = []
         self.thanImages = []
         self.than3dfaces = []
+        self.thanSolids = []
+        self.thanhatches = []
 
 
     def dxfVars(self, v):
@@ -211,9 +217,9 @@ class ThanDrSave(ThanDrIgnore):
         "Saves a polyline."
         self.thanPolylines.append((xx, yy, zz, lay, col))
 
-    def dxfLine(self, xx, yy, zz, lay, handle, col):
+    def dxfLine(self, xx, yy, zz, lay, handle, col, linw):
         "Saves a line."
-        self.thanLines.append((xx, yy, zz, lay, col))
+        self.thanLines.append((xx, yy, zz, lay, col, linw))
 
     def dxfCircle(self, xx, yy, zz, lay, handle, col, r):
         "Saves a circle."
@@ -243,9 +249,17 @@ class ThanDrSave(ThanDrIgnore):
         "Saves an ThanImage."
         self.thanImages.append((xx, yy, zz, lay, col, handle, filnam, size, scale, theta))
 
-    def dxf3dface  (self, xx, yy, zz, lay, handle, col):
+    def dxf3dface(self, xx, yy, zz, lay, handle, col):
         "Saves a 3dface."
         self.than3dfaces.append((xx, yy, zz, lay, handle, col))
+
+    def dxfSolid(self, xx, yy, zz, lay, handle, col):
+        "Saves a solid."
+        self.thanSolids.append((xx, yy, zz, lay, handle, col))
+
+    def dxfHatch(self, xx, yy, zz, lay, handle, col):
+        "Saves a hatch."
+        self.thanhatches.append((xx, yy, zz, lay, handle, col))
 
     def statistics(self):
         "Saves a text."
@@ -268,10 +282,11 @@ class ThanDrSave(ThanDrIgnore):
         self.prt("Number of blocks ins: %d" % len(self.thanBlocks), "info1")
         self.prt("Number of thanImages: %d" % len(self.thanImages), "info1")
         self.prt("Number of 3dfaces   : %d" % len(self.than3dfaces), "info1")
+        self.prt("Number of hatches   : %d" % len(self.thanhatches), "info1")
 
 
 class ThanDxfDrawing(ThanDrSave):
-    """A class which stores and plots the elements read by ThanImportDxf.
+    """A receiver class which stores and plots the elements read by ThanImportDxf.
 
     The object reads a dxf file and stores all its elements (the elements supported
     by ThanImportDxf.
@@ -290,7 +305,7 @@ class ThanDxfDrawing(ThanDrSave):
             ymin = min((min(yy), ymin))
             xmax = max((max(xx), xmax))
             ymax = max((max(yy), ymax))
-        for xx, yy, zz, lay, col in self.thanLines:
+        for xx, yy, zz, lay, col, linw in self.thanLines:
             xmin = min((min(xx), xmin))
             ymin = min((min(yy), ymin))
             xmax = max((max(xx), xmax))
@@ -306,7 +321,7 @@ class ThanDxfDrawing(ThanDrSave):
                 xref += sum(xx)
                 yref += sum(yy)
                 n += len(xx)
-            for xx, yy, zz, lay, col in self.thanLines:
+            for xx, yy, zz, lay, col, linw in self.thanLines:
                 xref += sum(xx)
                 yref += sum(yy)
                 n += len(xx)
@@ -318,7 +333,7 @@ class ThanDxfDrawing(ThanDrSave):
 
     def textFind(self, searchstring):
         "Finds searchstring in one of the drawing's texts."
-        for i in xrange(len(self.thanTexts)):
+        for i in range(len(self.thanTexts)):
             if self.thanTexts[i][4] == searchstring: return i
         return -1
 
@@ -347,7 +362,7 @@ class ThanDxfDrawing(ThanDrSave):
         def af(xx, yy):
             "Perform translation rotation and scale in set of coordinates."
             xx1 = []; yy1 = []
-            for i in xrange(len(xx)):
+            for i in range(len(xx)):
                 xa = xx[i] - xref; ya = yy[i] - yref
                 xt = xa*cs - ya*ss
                 yt = xa*ss + ya*cs
@@ -373,7 +388,7 @@ class ThanDxfDrawing(ThanDrSave):
             atts(lay, col)
             dxf.thanDxfPlotPolyline(*af(xx, yy))
 
-        for xx, yy, zz, lay, col in self.thanLines:
+        for xx, yy, zz, lay, col, linw in self.thanLines:
             atts(lay, col)
             dxf.thanDxfPlotLine(*af(xx, yy))
 
@@ -409,13 +424,26 @@ class ThanDxfDrawing(ThanDrSave):
             atts(lay, col)
             pass
 
-        for  xx, yy, zz, lay, handle, col in self.than3dfaces:
+        for xx, yy, zz, lay, handle, col in self.than3dfaces:
             atts(lay, col)
+            pass
+
+        for xx, yy, zz, lay, handle, col in self.thanSolids:
+            atts(lay, col)
+            xx, yy = af(xx, yy)
+            if len(xx) > 3:
+                dxf.thanDxfPlotSolid4(xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4)
+            else:
+                dxf.thanDxfPlotSolid3(xx1, yy1, xx2, yy2, xx3, yy3)
+
+        for xx, yy, zz, lay, handle, col in self.thanhatches:
+            atts(lay, col)
+            xx, yy = af1(xx, yy)
             pass
 
 
 class ThanDxfDrawing2(ThanDrIgnore):
-    "A class which stores the elements read by ThanImportDxf and creates an index with handles."
+    "A receiver class which stores the elements read by ThanImportDxf and creates an index with handles."
 
     def __init__(self, **kw):
         "Creates an instance of the class."
@@ -435,6 +463,8 @@ class ThanDxfDrawing2(ThanDrIgnore):
         self.thanBlocks = []
         self.thanImages = []
         self.than3dfaces = []
+        self.thanSolids = []
+        self.thanHatches = []
         self.xref = self.yref = 0.0
         self.ind = {}
         self.deleted = []
@@ -490,8 +520,8 @@ class ThanDxfDrawing2(ThanDrIgnore):
     def dxfPolyline(self, xx, yy, zz, lay, handle, col):
         self.saveElem(xx, yy, zz, lay, handle, col, self.POLYLINE, self.thanPolylines)
 
-    def dxfLine(self, xx, yy, zz, lay, handle, col):
-        self.saveElem(xx, yy, zz, lay, handle, col, self.LINE, self.thanLines)
+    def dxfLine(self, xx, yy, zz, lay, handle, col, linw):
+        self.saveElem(xx, yy, zz, lay, handle, col, linw, self.LINE, self.thanLines)
 
     def dxfCircle(self, xx, yy, zz, lay, handle, col, r):
         self.saveElem(xx, yy, zz, lay, handle, col, r, self.CIRCLE, self.thanCircles)
@@ -516,6 +546,14 @@ class ThanDxfDrawing2(ThanDrIgnore):
 
     def dxf3dface  (self, xx, yy, zz, lay, handle, col):
         self.saveElem(xx, yy, zz, lay, handle, col, self.FACE3D, self.than3dfaces)
+
+    def dxfSolid   (self, xx, yy, zz, lay, handle, col):
+        self.saveElem(xx, yy, zz, lay, handle, col, self.SOLID, self.thanSolids)
+
+    def dxfHatch(self, xx, yy, zz, lay, handle, col):
+        "Saves a hatch."
+        self.saveElem(xx, yy, zz, lay, handle, col, self.HATCH,  self.thanHatches)
+
 
     def dif(self, other):
         "Find the differences of this drawing and another."
@@ -565,7 +603,7 @@ class ThanDxfDrawing2(ThanDrIgnore):
         def af(xx, yy):
             "Perform translation rotation and scale in set of coordinates."
             xx1 = []; yy1 = []
-            for i in xrange(len(xx)):
+            for i in range(len(xx)):
                 xa = xx[i] - xref; ya = yy[i] - yref
                 xt = xa*cs - ya*ss
                 yt = xa*ss + ya*cs
@@ -594,7 +632,7 @@ class ThanDxfDrawing2(ThanDrIgnore):
                 atts(lay, col)
                 dxf.thanDxfPlotPolyline(*af(xx, yy))
             elif typ == self.LINE:
-                xx, yy, zz, lay, handle, col = elem[:-1]
+                xx, yy, zz, lay, handle, col, linw = elem[:-1]
                 atts(lay, col)
                 dxf.thanDxfPlotLine(*af(xx, yy))
             elif typ == self.CIRCLE:
@@ -633,6 +671,19 @@ class ThanDxfDrawing2(ThanDrIgnore):
                 xx, yy = af1(xx, yy)
                 pass
             elif typ == self.FACE3D:
+                xx, yy, zz, lay, handle, col = elem[:-1]
+                atts(lay, col)
+                xx, yy = af(xx, yy)
+                pass
+            elif typ == self.SOLID:
+                xx, yy, zz, lay, handle, col = elem[:-1]
+                atts(lay, col)
+                xx, yy = af(xx, yy)
+                if len(xx) > 3:
+                    dxf.thanDxfPlotSolid4(xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4)
+                else:
+                    dxf.thanDxfPlotSolid3(xx1, yy1, xx2, yy2, xx3, yy3)
+            elif typ == self.HATCH:
                 xx, yy, zz, lay, handle, col = elem[:-1]
                 atts(lay, col)
                 xx, yy = af(xx, yy)

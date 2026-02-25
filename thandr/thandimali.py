@@ -1,35 +1,34 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the dimension element.
 """
 
-from __future__ import print_function
 from math import hypot, atan2, fabs
-from p_ggen import thanUnicode
-from p_gmath import thanNear2
+from p_ggen import thanUnicode, Struct
+from p_gmath import thanNear2, isZero
 from thanvar import Canc
 from thantrans import T
 from .thanelem import ThanElement
@@ -67,10 +66,15 @@ class ThanDimali(ThanElement):
         c4[1] = c1[1] + h*cost
         return [list(c1), list(c2), c3, c4]
 
+    #distype=0: actual distance between c1 and c2
+    #distype=1: a number different to the actual distance, stored in disnum
+    #distype=2: nonnumeric text, stored in distext
 
-    def thanSet(self, text, c1, c2, perp):
+    def thanSet(self, distype, disnum, distext, c1, c2, perp):
         "Sets the attributes of the aligned dimension."
-        self.text = text
+        self.distype = distype
+        self.disnum = disnum
+        self.distext = distext
         self.cp = self.__rect(c1, c2, perp)
         self.perp = perp
         xp = [c1[0] for c1 in self.cp]
@@ -145,8 +149,8 @@ class ThanDimali(ThanElement):
 
     def thanExplode(self, than=None):
         "Transform the dimension to a set of smaller elements."
-        if than is None: return True               # Break IS implemented
-        return iter(self.__decompose())
+        if than is None: return True               # Explode IS implemented
+        return iter(self.__decompose(than.font, than.dimstyle))
 
 
     def getInspnt(self):
@@ -179,7 +183,7 @@ class ThanDimali(ThanElement):
 
     def thanTkGet(self, proj):
         "Gets the attributes of the text interactively from a window."
-        un = proj[1].thanUnits
+        #proj[1].thanLayerTree.thanCur.thanTkSet(proj[2].than)  #Thanasis2021_11_20:is this needed?
         c1 = proj[2].thanGudGetPoint(T["First dimension point: "])
         if c1 == Canc: return Canc                       # Aligned dimension cancelled
         statonce = ""
@@ -191,7 +195,7 @@ class ThanDimali(ThanElement):
         cost = c2[0]-c1[0]; sint = c2[1]-c1[1]
         w = hypot(cost, sint)
         cost /= w; sint /= w
-        dis = un.strdis(w)
+        dis = self.strdis(proj[2].than.dimstyle, w)
         mes = "%s (enter=%s): " % (T["Dimension text"], dis)
         text = proj[2].thanGudGetText(mes, dis)
         if text == Canc: return Canc                     # text cancelled
@@ -208,16 +212,21 @@ class ThanDimali(ThanElement):
         return True                                      # Text OK
 
 
-    ticksize = 0.15
-    textsize = 0.20
-    dimscale = 1.0
     def thanTkDraw1(self, than):
         "Draws the aligned dimension in tkinter canvas."
-        for e in self.__decompose():
+        print("thanTkdraw1(): dimstyle.thanTextsize=", than.dimstyle.thanTextsize)
+        for e in self.__decompose(than.font, than.dimstyle):
             e.thanTkDraw(than)
 
-    def __decompose(self):
+    @staticmethod
+    def strdis(dimstyle, d):
+        "Transform number to text."
+        form = "{:."+str(dimstyle.thanNdigits)+"f}"
+        return form.format(d)
+
+    def __decompose(self, font, dimstyle):
         "Decompose aligned dimensions to a set of ThanCad text and lines."
+        print("__decompose(): dimstyle.thanTextsize=", dimstyle.thanTextsize)
         elems = []
         if thanNear2(self.cp[0], self.cp[1]): return elems  # degenerate - no elements
         c1 = self.cp[3]
@@ -228,42 +237,44 @@ class ThanDimali(ThanElement):
         w = hypot(cost, sint)
         ThanElement.thanRotateSet(c1, theta)
 
+        #text
+        if self.distype == 0:   #Recreate dimension text if it is the actual distance
+            self.distext = self.strdis(dimstyle, self.thanLength())
+        elif self.distype == 1: #Recreate dimension text if it is a number
+            self.distext = self.strdis(dimstyle, self.disnum)
         temp = ThanText()
-        temp.thanSet(self.text, c1, self.textsize*self.dimscale, 0.0)
+        h = dimstyle.thanTextsize
+        temp.thanSet(self.distext, c1, h, 0.0)
+        w1, h1 = font.thanCalcSizexy(self.distext, h)
+
         dc = [0.0] * len(c1)
-        dc[0] += (w-temp.w1)*0.5
-        dc[1] -= temp.h1*0.5
+        dc[0] += (w-w1)*0.5
+        dc[1] -= h1*0.5
         temp.thanMove(dc)
         temp.thanRotate()
         temp.thanTags = self.thanTags
         elems.append(temp)
 
-        ct = list(c1)
-        ct1 = list(ct)
-        ct1[0] += self.ticksize*self.dimscale
-        ct1[1] -= self.ticksize*self.dimscale*0.5
-        ct2 = list(ct1)
-        ct2[1] += self.ticksize*self.dimscale
-        cline = [[ct1, ct, ct2]]
+        #left arrow
+        if dimstyle.thanTicktype == "arrow": tickfun = self.__arrow
+        else:                                tickfun = self.__architect
+        cline = tickfun(dimstyle, c1, -1.0)
 
+        #line before text
         ct = list(c1)
         ct2 = list(ct)
-        ct2[0] += (w-temp.w1-temp.h1)*0.5
+        ct2[0] += (w-w1-h1)*0.5
         cline.append([list(ct), ct2])
 
+        #line after text
         ct = list(c1)
         ct[0] += w
         ct1 = list(ct)
-        ct1[0] -= (w-temp.w1-temp.h1)*0.5
+        ct1[0] -= (w-w1-h1)*0.5
         cline.append([ct1, ct])
 
-        ct = list(ct)
-        ct1 = list(ct)
-        ct1[0] -= self.ticksize*self.dimscale
-        ct1[1] -= self.ticksize*self.dimscale*0.5
-        ct2 = list(ct1)
-        ct2[1] += self.ticksize*self.dimscale
-        cline.append([ct1, ct, ct2])
+        #right arrow
+        cline.extend(tickfun(dimstyle, ct, 1.0))
 
         for cp in cline:
             temp = ThanLine()
@@ -273,10 +284,44 @@ class ThanDimali(ThanElement):
             elems.append(temp)
         return elems
 
+    def __arrow(self, dimstyle, c1, pr):
+        "Lines of left arrow if pr=-1.0, or right arrow if pr=1.0."
+        ct = list(c1)
+        ct1 = list(ct)
+        ct1[0] -= dimstyle.thanTicksize*pr
+        ct1[1] += (dimstyle.thanTicksize*0.3)*0.5
+        ct2 = list(ct1)
+        ct2[1] -= (dimstyle.thanTicksize*0.3)
+        cline = [[ct1, ct, ct2]]
+        return cline
+
+
+    def __architect(self, dimstyle, c1, pr):
+        "Lines of architectural tick, left if pr=-1.0, or right if pr=1.0."
+        t1 = dimstyle.thanTicksize*0.5
+        cline = []
+
+        t = t1         # 0.70711    #sin(45 deg)
+        ca = list(c1)
+        ca[0] -= t
+        ca[1] -= t
+        cb = list(c1)
+        cb[0] += t
+        cb[1] += t
+        cline.append([ca, cb])
+
+        t = t1
+        ca = list(c1)
+        ca[1] -= t
+        cb = list(c1)
+        cb[1] += t
+        cline.append([ca, cb])
+        return cline
+
 
     def thanExpDxf(self, fDxf):
         "Exports the aligned dimension to dxf file."
-        for e in self.__decompose():
+        for e in self.__decompose(fDxf.than.font, fDxf.than.dimstyle):
             e.thanExpDxf(fDxf)
 
     def thanExpThc1(self, fw):
@@ -285,36 +330,59 @@ class ThanDimali(ThanElement):
         fw.writeNode(self.cp[0])
         fw.writeNode(self.cp[1])
         fw.writeln(f % self.perp)
-        fw.writeTextln(self.text)
+        fw.writeTextln(self.distext)
+        fw.writeln("%d" % (self.distype,))
+        fw.writeln(f % self.disnum)
 
 
     def thanImpThc1(self, fr, ver):
         "Read the aligned dimension from thc format."
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         c2 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
-        perp = float(next(fr))          #May raise ValueError, StopIteration
-        text = fr.readTextln()           #May raise StopIteration, ValueError
-        self.thanSet(text, c1, c2, perp)
+        perp = float(next(fr))           #May raise ValueError, StopIteration
+        distext = fr.readTextln()        #May raise StopIteration, ValueError
+
+        if ver >= (0,5,1):
+            distype = int(next(fr))      #May raise ValueError, StopIteration
+            if distype not in (0, 1, 2): raise ValueError("distype must 0, 1 or 2")
+            disnum = float(next(fr))     #May raise ValueError, StopIteration
+        else:
+            distype, disnum = self.guesstype(c1, c2, distext) #try to guess dimension type
+        self.thanSet(distype, disnum, distext, c1, c2, perp)
 
 
-    def thanExpPilother(self, than):
-        "Exports the text to a PIL raster image."
-        x1, y1 = than.ct.global2Locali(self.x1, self.y1)
-        than.dc.text((x1, y1), self.text, font=than.font, fill=than.outline)
+    def setText(self, distext):
+        "Set the text which will be shown as the dimension."
+        if distext.strip() == "":  #If blank then set the actual distance
+            distype = 0
+            disnum = 0.0
+        else:
+            distype, disnum = self.guesstype(self.cp[0], self.cp[1], distext)
+        self.thanSet(distype, disnum, distext, self.cp[0], self.cp[1], self.perp)
+
+
+    @staticmethod
+    def guesstype(c1, c2, distext):
+        "Try to guess dimension type; return distype, disnum."
+        try: disnum = float(distext)
+        except ValueError: return 2, 0.0 #Distance is text
+        temp = hypot(c2[1]-c1[1], c2[0]-c1[0])
+        if isZero(temp-disnum, xmax=temp, fact=0.01): return 0, 0.0 #Distance is actual distance
+        return 1, disnum     #Distance is a number different to actual distance
+
 
     def thanExpPil(self, than):
-        "Exports rotated text (in ThanCad line font) into a PIL raster image."
-        xa, ya = than.ct.global2Local(self.c1[0], self.c1[1])
-        w, h = than.ct.global2LocalRel(self.w1, -self.h1)     # Ensure h>0  (local y-axis is positive downwards)
-        if h < 1: return                                      # Size too small to be seen; draw rectangle instead
-        than.thanFont.thanPilPaint(than, xa, ya, h, self.text, self.theta)
+        "Draws the aligned dimension in tkinter canvas."
+        for e in self.__decompose(than.font, than.dimstyle):
+            e.thanExpPil(than)
+
 
     def thanPlotPdf(self, than):
         "Plots rotated text (in ThanCad line font) into a PDF file."
         xa, ya = than.ct.global2Local(self.c1[0], self.c1[1])
         w, h = than.ct.global2LocalRel(self.w1, self.h1)     # Ensure h>0  (local y-axis is positive upwards)
         if h < 0.05: return                                  # Size too small to be seen; draw rectangle instead
-        lines = than.thanFont.than2lines(xa, ya, h, self.text, self.theta, mirrory=True)
+        lines = than.font.than2lines(xa, ya, h, self.distext, self.theta, mirrory=True)
 
         lineto = pyx.path.lineto
         moveto = pyx.path.moveto
@@ -341,7 +409,7 @@ class ThanDimali(ThanElement):
         attribute, not as geometric property."""
         cp = [list(cc) for cc in self.cp[:2]]
         for cc in cp: cc[:3] = fun(cc)
-        self.thanSet(self.text, cp[0], cp[1], self.perp)
+        self.thanSet(self.distype, self.disnum, self.distext, cp[0], cp[1], self.perp)
 
 
     def thanList(self, than):
@@ -349,12 +417,8 @@ class ThanDimali(ThanElement):
         than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
         than.write("%s: %s\n" % (T["Length"], than.strdis(self.thanLength())))
-        t = ('%s"%s"' % (T["Text: "], thanUnicode(self.text)),
+        t = ('%s"%s"' % (T["Text: "], thanUnicode(self.distext)),
              T["Reference points: %s -:- %s"]  % (than.strcoo(self.cp[0]), than.strcoo(self.cp[1])),
              "%s%s\n" % (T["Perpendicular location: "], than.strdis(self.perp)),
             )
         than.write("\n".join(t))
-
-
-if __name__ == "__main__":
-    print(__doc__)

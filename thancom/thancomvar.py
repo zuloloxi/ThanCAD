@@ -1,43 +1,37 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes various commands.
 """
-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
-from math import pi
+from math import pi, fabs
 import tkinter
 import p_ggen, p_gtkwid
 import thandr, thantkdia, thanlayer
 from thanvers import tcver
-from thanvar import Canc
+from thanvar import Canc, InfoWin, thanNearElev
 from thantrans import T, thanLangSetall
 from thanopt import thancadconf
 from . import thancomsel, thanundo
@@ -83,7 +77,7 @@ def thanVarElevn(proj):
         proj[2].thanPrt(T["of dimension z can also be set with the ELEV command."])
     c = proj[1].thanVar["elevation"]          # Reference to the elevation list
     sd = proj[1].thanUnits.strdis
-    t = ",".join(sd(c[j]) for j in xrange(2, nd))
+    t = ",".join(sd(c[j]) for j in range(2, nd))
     proj[2].thanPrt("%s %s" % (T["Current elevations of z and higher dimensions:"], t), "")
     stat = "%s%s): " % (T["Enter new elevations separated by coma (enter="], t)
     cz = proj[2].thanGetElevations(nd, stat, c[2:])
@@ -93,24 +87,84 @@ def thanVarElevn(proj):
     proj[2].thanGudCommandEnd()
 
 
-def thanVarSudup(proj):
-    "Funny!."
-    proj[2].thanGudCommandEnd(T["Sudup, brother!"])
+def thanTkImageFrame(proj):
+    "Set imageframe on or off."
+    prev = bool(proj[1].thanVar["imageframe"])
+    defa = ("OFF", "ON")[prev]
+    proj[2].thanPrt(T["Imageframe is %s."] % (defa, ))
+    mes = T["Enter image frame setting [ON/OFF] <%s>: "] % (defa, )
+    imfr = proj[2].thanGudGetOnoff(mes, default=defa)
+    if imfr == Canc: return proj[2].thanGudCommandCan()
+    __regenimages(proj, imfr)
+    proj[1].thanDoundo.thanAdd("imageframe", __regenimages, (imfr,),
+                                             __regenimages, (prev,))
+    proj[2].thanGudCommandEnd()
+
+def __regenimages(proj, imfr):
+    "Regenerate images, set variables and print result."
+    imfr = bool(imfr)
+    proj[1].thanVar["imageframe"] = imfr
+    proj[2].than.imageFrameOn = imfr
+    proj[2].thanAutoRegen(regenImages=True)
+    proj[2].thanPrtbo(T["Imageframe is now %s."] % ( ("OFF", "ON")[imfr], ))
 
 
 def thanVarFill(proj):
-    "Explain what happened with the fill command."
-    proj[2].thanPrt("ThanCad hint: The 'fill' attribute of layers is superior to the 'fill' command.")
-    res = proj[2].thanGudGetOpts(T["Enter fill mode for all layers [ON/OFF] <ON>:"],
-        default="ON", fullopt=True, options=("ON", "OFF"))
-    if res == Canc: return proj[2].thanGudCommandCan()
-    res = res == "on"
-    from thanlayer.thanlayatts import thanUpdateElements
-    leaflayers = {}
-    proj[1].thanLayerTree.thanRoot.thanPropAttAll(leaflayers, "fill", res)
-    thanUpdateElements(proj, leaflayers)
-    proj[1].thanTouch()
+    "Set fill on or off."
+    proj[2].thanPrt("This command controls the fill of hatches and solids.")
+    prev = bool(proj[1].thanVar["fillmode"])
+    defa = ("OFF", "ON")[prev]
+    mes = T["Enter mode [ON/OFF] <%s>: "] % (defa, )
+    fimo = proj[2].thanGudGetOnoff(mes, default=defa)
+    if fimo == Canc: return proj[2].thanGudCommandCan()
+    __regensolidshatches(proj, fimo)
+    proj[1].thanDoundo.thanAdd("fillmode", __regensolidshatches, (fimo,),
+                                           __regensolidshatches, (prev,))
     proj[2].thanGudCommandEnd()
+
+
+def __regensolidshatches(proj, fimo):
+    "Regenerate solids and hatches, set variables and print result."
+    fimo = bool(fimo)
+    proj[1].thanVar["fillmode"] = fimo
+    than = proj[2].than
+    than.fillModeOn = fimo
+
+    filt = lambda e: isinstance(e, thandr.ThanHatch)
+    proj[2].thanGudSetSelExternalFilter(filt)
+    elems = proj[2].thanGudGetDisplayed()
+
+    proj[2].thanGudSetSelExternalFilter(None)   #Reset filter
+    proj[2].thanGudGetSelElemx(elems)           #Mark elements with 'selx'
+    proj[2].thanGudSetSelDelx()                 #Removes the drawn elements from the canvas
+
+    for e in elems: e.thanTkDraw(than)  #Redraws the elements on the canvas
+    #proj[2].thanPrtbo(T["Fill mode is now %s."] % ( ("OFF", "ON")[fimo], ))
+    proj[1].thanTouch()
+
+
+def thanVarOrtho(proj):
+    "Set ortho mode on or off."
+    prev = proj[2].thanCanvas.thanOrtho.toggle()   #Toggle
+    prev = proj[2].thanCanvas.thanOrtho.toggle()   #Toggle again to get current ortho mode
+    defa = ("OFF", "ON")[prev]
+    mes = T["Enter mode [ON/OFF] <%s>: "] % (defa, )
+    fimo = proj[2].thanGudGetOnoff(mes, default=defa)
+    if fimo == Canc: return proj[2].thanGudCommandCan()
+    __setortho(proj, fimo)
+    proj[1].thanDoundo.thanAdd("orthomode", __setortho, (fimo,),
+                                            __setortho, (prev,))
+    proj[2].thanGudCommandEnd()
+
+
+def __setortho(proj, fimo):
+    "Regenerate solids and hatches, set variables and print result."
+    fimo = bool(fimo)
+    cur = proj[2].thanCanvas.thanOrtho.toggle()   #Toggle and get current value
+    if fimo:
+        if not cur: cur = proj[2].thanCanvas.thanOrtho.toggle()   #Toggle again to make it True
+    else:
+        if cur: cur = proj[2].thanCanvas.thanOrtho.toggle()   #Toggle again to make it False
 
 
 def thanVarScript(proj):
@@ -315,11 +369,12 @@ def thanDevFont(proj):
     c[1] -= h*1.2
     __AddElem(proj, thandr.ThanText, "abcdefghijklmnopqrstuvwxyz", c, h, 0.0)
 
-    for i in xrange(0, 256, 8):
+    codes = sorted(proj[2].than.font.thanGetCodes())
+    for i in range(0, len(codes), 8):
         c[1] -= h*3
         c[0] = 0
-        for j in xrange(i, i+8):
-            t = "%3d:%s" % (j, chr(j))
+        for j in range(i, min(i+8, len(codes))):
+            t = "%3d:%s" % (codes[j], chr(codes[j]))
             __AddElem(proj, thandr.ThanText, t, c, h, 0.0)
             c[0] += h*8
     proj[2].thanGudCommandEnd()
@@ -376,6 +431,66 @@ def thanDevHandle(proj):
     for h,e in itertools.islice(proj[1].thanTagel.items(), n):   #works for python2,3
         prt("%7d %-7s %-7s %r" % (e.handle, h, e.thanTags[0], e))
     proj[2].thanGudCommandEnd()
+
+
+
+
+def thanHighlightZero(proj):
+    "Show briefely all (currently visible) lines and point with elevation 0."
+    elev2show = 0.0
+
+    ThanLine = thandr.ThanLine
+    ThanPoint = thandr.ThanPoint
+    filt = lambda e: isinstance(e, ThanLine) or isinstance(e, ThanPoint)
+    proj[2].thanGudSetSelExternalFilter(filt)
+
+    elzer = []
+    for e in proj[2].thanGudGetDisplayed():    #Select all lines and points currently visible
+        if isinstance(e, ThanPoint):
+            c1 = e.getInspnt()
+            if thanNearElev(c1[2], elev2show): elzer.append(e)
+        else:
+            for c1 in e.cp:
+                if not thanNearElev(c1[2], elev2show): break
+            else:
+                elzer.append(e)
+    if len(elzer) == 0: return proj[2].thanGudCommandCan(T["No elements with zero elevation found."])
+
+    proj[2].thanGudSetSelExternalFilter(None)
+    proj[2].thanGudGetSelElemx(elzer)
+    proj[2].thanGudSetSelColorx()
+    text = "z=" + proj[2].than.strdis(elev2show)
+    dc = proj[2].thanCanvas
+    ct = proj[2].thanCt
+    n = len(elzer)
+    nmax = 20
+    if n > nmax:
+        proj[2].thanPrter1("Too many lines/points with zero elevations: only {} elevations are shown".format(nmax))
+        proj[2].thanPrter1("(zoom in, in oder to limit the search area)")
+        n = nmax
+    for i in range(n):
+        e = elzer[i]
+        c1 = e.getInspnt()
+        px, py = ct.global2Locali(c1[0], c1[1])
+        px += -dc.canvasx(0) + dc.winfo_rootx()
+        py += -dc.canvasy(0) + dc.winfo_rooty()
+        t = InfoWin(help=text, position=(px, py))
+    dc.after(3000, __recolor, proj, elzer)
+    proj[2].thanGudCommandEnd()
+
+
+def __recolor(proj, elzer):
+    "Paint the elements with their original color."
+    dilay = proj[1].thanLayerTree.dilay
+    for e in elzer:
+        tlay = e.thanTags[1]
+        lay = dilay[tlay]
+        outline = lay.thanAtts["moncolor"].thanTk
+        if lay.thanAtts["fill"].thanVal: fill = outline
+        else:                            fill = ""
+        proj[2].thanGudGetSelElemx([e])
+        proj[2].thanGudSetSelColorx(outline, fill)
+
 
 
 def thanFractal(proj):
@@ -440,19 +555,56 @@ def __backgrestore(proj, col):
         proj[2].thanGudSetSelColorx(col=scoli, fillcol=fill)  #..Change their colour
 
 
+def thanEditEncoding(proj):
+    "Sets the encoding for import/export to text data format and other uses."
+    encold = p_ggen.thanGetEncoding()
+    proj[2].thanPrt(T["Current encoding is: "]+encold, "info1")
+    encnew = thantkdia.thanSelectEncoding(proj, encold)
+    if encnew is None: return proj[2].thanGudCommandCan()   #User cancelled
+    p_ggen.thanSetEncoding(encnew)
+    proj[1].thanDoundo.thanAdd("encoding", __encrestore, (encnew,),
+                                           __encrestore, (encold,))
+    proj[2].thanGudCommandEnd(T["Encoding set to: "]+encnew, "info")
+
+
+def __encrestore(proj, enc):
+    "Restores encoding for imprort/export of text files."
+    p_ggen.thanSetEncoding(enc)
+
+
+def thanDrawOrder(proj):
+    "Inform the user about the draworder attribute of layers."
+    comname = "draworder"
+    proj[2].thanPrt(T["Instead of the draworder command, please use ThanCad's draworder layer attribute"], "can1")
+    proj[2].thanPrt(T["which is much more versatile."], "can1")
+    proj[2].thanGudCommandCan()
+
+
 import p_gimgeo
 import thantk, thansupport
-class Dfr(tkinter.Toplevel):
+class EduDfr(tkinter.Toplevel):
+    """Opens dfr file produced by the demtra.py program (demtra finds the systematic bias in a DEM file).
+
+    See: /home/a12/h/a/topog/demresearch/demtra/developer/ex/sanfransisco_tanxdem_srtm_cgiar
+    This class reads the file content (coordinates) and shows them in a window.
+    Doubleclicking on a line of the opened window, the class reads the coordinates
+    of the point there, makes a circle in the current drawing, writes the coordinates
+    to a kml file with the prefix of the current drawing, and writes the coordinates
+    to .syn.tel file with the prefix of the current drawing."""
+
+
     def __init__(self, proj, fn, fr, *args, **kw):
         tkinter.Toplevel.__init__(self, proj[2], *args, **kw)
         self.thanProj = proj
         self.title(proj[0].basename()+" - "+fn.basename())
-        self.txt = p_gtkwid.ThanText(self)
+        #self.txt = p_gtkwid.ThanText(self)
+        self.txt = p_gtkwid.ThanScrolledText(self)
         self.txt.grid(sticky="wesn")
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
         self.txt.thanAppend(fr.read())
-        self.txt.bind("<Double-Button-1>", self.dfrOnDClick)
+        #self.txt.bind("<Double-Button-1>", self.dfrOnDClick)
+        self.txt.bindte("<Double-Button-1>", self.dfrOnDClick)
         thantk.createTags((self.txt,))
         self.cps = []        #Points that we made circles at
         fn = self.thanProj[0].parent / self.thanProj[0].namebase + ".kml"
@@ -461,6 +613,12 @@ class Dfr(tkinter.Toplevel):
                                                          # ..destroy()) is automatically called when window is deleted
 
     def dfrOnDClick(self, evt):
+        """Selects a point from read .dxf point, draws ity and saves it.
+
+        Doubleclicking on a line of the opened window, the class reads the coordinates
+        of the point there, makes a circle in the current drawing, writes the coordinates
+        to a kml file with the prefix of the current drawing, and writes the coordinates
+        to .syn.tel file with the prefix of the current drawing."""
         pos = "@%d,%d" % (evt.x, evt.y)
         t = self.txt.thanGetPart(pos+"linestart", pos+"lineend")
         #print t
@@ -503,12 +661,12 @@ class Dfr(tkinter.Toplevel):
         tkinter.Toplevel.destroy(self)
 
 
-def thanDfr(proj):
+def thanEduDfr(proj):
     "Open a dfr file which contains coordinates."
     fn, fr = thanTxtopen(proj, "Please select .dfr file", suf=".dfr", mode="r", initialfile=None, initialdir=None)
     if fn == Canc: return proj[2].thanGudCommandCan()
-    top = Dfr(proj, fn, fr)
+    top = EduDfr(proj, fn, fr)
     fr.close()
-    proj[1].thanDoundo.thanAdd("dfr", p_ggen.doNothing, (),
-                                      p_ggen.doNothing, ())
+    proj[1].thanDoundo.thanAdd("edudfr", p_ggen.doNothing, (),
+                                         p_ggen.doNothing, ())
     proj[2].thanGudCommandEnd()

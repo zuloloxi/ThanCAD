@@ -3,7 +3,6 @@ This module defines a means to execute commands in an orderly way, while
 not allowing the user to do something else.
 """
 
-from __future__ import print_function
 from . import thantkutila
 
 class ThanScheduler:

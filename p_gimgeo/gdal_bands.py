@@ -1,7 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import p_ggen, p_gnum
 prg = p_ggen.prg
 try:
@@ -186,12 +182,12 @@ def testHistogram():
     h, _ = p_gnum.histogram(band[0], 4096, (0, 4096))
     print("len(histogram)=", len(h))
     with open("q1", "w") as fw:
-        for i in xrange(4096):
+        for i in range(4096):
             fw.write("%d:  %d\n" % (i, h[i]))
     convertCol16to8(band, 150, 600)
     print("type(band[0])=", band[0].dtype)
     h, _ = p_gnum.histogram(band[0], 256, (0, 256))
     print("len(histogram)=", len(h))
     with open("q2", "w") as fw:
-        for i in xrange(256):
+        for i in range(256):
             fw.write("%d:  %d\n" % (i, h[i]))

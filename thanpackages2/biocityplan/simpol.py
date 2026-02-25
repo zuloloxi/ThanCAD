@@ -1,35 +1,30 @@
-#!/usr/bin/python
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which creates a bioclimatic city plan.
 """
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import sys
 import p_ggen, p_ganneal, p_gfil, p_gmath, p_gtri, p_gtkwid
 from . import hippoanneal, roadut
@@ -64,11 +59,11 @@ def pyMain():
               hu = makeHull([hu])
           pc.pol.hull = hu
           if pc.pol.USEDEM:
-              prg("Προεπεξεργασία DEM (μπορεί να χρειαστεί πολλά λεπτά)..", "info")
+              prg("Ξ ΟΞΏΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ± DEM (ΞΌΟ€ΞΏΟΞµΞ― Ξ½Ξ± Ο‡ΟΞµΞΉΞ±ΟƒΟ„ΞµΞ― Ο€ΞΏΞ»Ξ»Ξ¬ Ξ»ΞµΟ€Ο„Ξ¬)..", "info")
               pc.pol.build_dem(dtm, prt=prg)
 #              pc.pol.dem.plot()    #Plot the hull and the dem as points
           else:
-              prg("Προεπεξεργασία (μπορεί να χρειαστεί πολλά λεπτά)..", "info")
+              prg("Ξ ΟΞΏΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ± (ΞΌΟ€ΞΏΟΞµΞ― Ξ½Ξ± Ο‡ΟΞµΞΉΞ±ΟƒΟ„ΞµΞ― Ο€ΞΏΞ»Ξ»Ξ¬ Ξ»ΞµΟ€Ο„Ξ¬)..", "info")
               pc.pol.build_cache(dtm, prt=prg)
               wrCache(pc)
       else:
@@ -79,18 +74,18 @@ def pyMain():
           if devdebug:
               clines = readDTM()                                                    ##########
               dtm = makeDTM(clines)                                                 ##########
-              prg("Προεπεξεργασία DEM (μπορεί να χρειαστεί πολλά λεπτά)..", "info") ##########
+              prg("Ξ ΟΞΏΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ± DEM (ΞΌΟ€ΞΏΟΞµΞ― Ξ½Ξ± Ο‡ΟΞµΞΉΞ±ΟƒΟ„ΞµΞ― Ο€ΞΏΞ»Ξ»Ξ¬ Ξ»ΞµΟ€Ο„Ξ¬)..", "info") ##########
               pc.pol.build_dem(dtm, prt=prg)                                        ##########
               pc.pol.dem.dtmq = dtm                                                 ##########
 
-      coms = ("1. Εκτέλεση του προγράμματος 1 φορά (1=προεπιλογή)",
-              "2. Εκτέλεση του προγράμματος πολλές φορές",
-              "3. Προβολή ήδη υπολογισμένης λύσης",
+      coms = ("1. Ξ•ΞΊΟ„Ξ­Ξ»ΞµΟƒΞ· Ο„ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚ 1 Ο†ΞΏΟΞ¬ (1=Ο€ΟΞΏΞµΟ€ΞΉΞ»ΞΏΞ³Ξ®)",
+              "2. Ξ•ΞΊΟ„Ξ­Ξ»ΞµΟƒΞ· Ο„ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚ Ο€ΞΏΞ»Ξ»Ξ­Ο‚ Ο†ΞΏΟΞ­Ο‚",
+              "3. Ξ ΟΞΏΞ²ΞΏΞ»Ξ® Ξ®Ξ΄Ξ· Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞ­Ξ½Ξ·Ο‚ Ξ»ΟΟƒΞ·Ο‚",
              )
       if winmain is None:
           prg("")
           prg("\n".join(coms))
-          i = p_ggen.inpLongR("Επιλογή (enter=1): ", 1, 3, 1)
+          i = p_ggen.inpLongR("Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® (enter=1): ", 1, 3, 1)
       else:
           i = p_gtkwid.xinpMchoice(winmain, "", coms, douDef=1)
           if i is None: sys.exit()
@@ -101,18 +96,18 @@ def pyMain():
           show(pc)
       elif i == 2:
           if winmain is None:
-              n = p_ggen.inpLongR("Πόσες εκτελέσεις (enter=100): ", 1, 1000, 100)
+              n = p_ggen.inpLongR("Ξ ΟΟƒΞµΟ‚ ΞµΞΊΟ„ΞµΞ»Ξ­ΟƒΞµΞΉΟ‚ (enter=100): ", 1, 1000, 100)
           else:
-              n = p_gtkwid.xinpLongR(winmain, "Πόσες εκτελέσεις (enter=100): ", 1, 1000, 100)
+              n = p_gtkwid.xinpLongR(winmain, "Ξ ΟΟƒΞµΟ‚ ΞµΞΊΟ„ΞµΞ»Ξ­ΟƒΞµΞΉΟ‚ (enter=100): ", 1, 1000, 100)
               if n is None: sys.exit()
-          for i in xrange(n):
+          for i in range(n):
               runOnce(pc, prt=prg)
               wrState(pc, pref)
       else:
           if winmain is None:
-              i = p_ggen.inpLongR("α/α υπολογισμένης λύσης (enter=0): ", 0, 1000, 0)
+              i = p_ggen.inpLongR("Ξ±/Ξ± Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞ­Ξ½Ξ·Ο‚ Ξ»ΟΟƒΞ·Ο‚ (enter=0): ", 0, 1000, 0)
           else:
-              i = p_gtkwid.xinpLongR(winmain, "α/α υπολογισμένης λύσης (enter=0): ", 0, 1000, 0)
+              i = p_gtkwid.xinpLongR(winmain, "Ξ±/Ξ± Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞ­Ξ½Ξ·Ο‚ Ξ»ΟΟƒΞ·Ο‚ (enter=0): ", 0, 1000, 0)
               if i is None: sys.exit()
           rdState(pc, i)
           show(pc)
@@ -217,22 +212,22 @@ def readRym():
 def readPar(pc):
     "Reads parameters of city blocks."
     fd = p_gfil.Datlin(frw["par"])
-    fd.datCom("ΠΛΑΤΟΣ Ο.Τ.")
+    fd.datCom("Ξ Ξ›Ξ‘Ξ¤ΞΞ£ Ξ.Ξ¤.")
     boik1, boik2 = rdminmax(fd)
-    fd.datCom("ΥΨΟΣ Ο.Τ.")
+    fd.datCom("Ξ¥Ξ¨ΞΞ£ Ξ.Ξ¤.")
     hoik1, hoik2 = rdminmax(fd)
-    fd.datCom("ΠΛΑΤΟΣ ΟΔΩΝ")
+    fd.datCom("Ξ Ξ›Ξ‘Ξ¤ΞΞ£ ΞΞ”Ξ©Ξ")
     bod1, bod2 = rdminmax(fd)
-    fd.datCom("ΒΙΟΚΛΙΜΑΤΙΚΗ ΘΕΩΡΗΣΗ")
+    fd.datCom("Ξ’Ξ™ΞΞΞ›Ξ™ΞΞ‘Ξ¤Ξ™ΞΞ— ΞΞ•Ξ©Ξ΅Ξ—Ξ£Ξ—")
     biochange = fd.datYesno()
     pc.setPar(boik1, boik2, hoik1, hoik2, bod1, bod2, biochange)
 
 
 def rdminmax(fd):
     "Read min and max value."
-    fd.datCom("ΕΛΑΧΙΣΤΟ")
+    fd.datCom("Ξ•Ξ›Ξ‘Ξ§Ξ™Ξ£Ξ¤Ξ")
     hoik1 = fd.datFloatR(1.0, 1000.0)
-    fd.datCom("ΜΕΓΙΣΤΟ")
+    fd.datCom("ΞΞ•Ξ“Ξ™Ξ£Ξ¤Ξ")
     hoik2 = fd.datFloatR(1.0, 1000.0)
     return hoik1, hoik2
 
@@ -248,7 +243,7 @@ def rdState(pc, i):
 
 def wrRym(hu):
     "Writes the area of the city plan."
-    frw.update(p_gfil.opFile1e(1, "rym", "", pref, "περιοχής ρυμοτομικού - μορφή .syk"))
+    frw.update(p_gfil.opFile1e(1, "rym", "", pref, "Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ - ΞΌΞΏΟΟ†Ξ® .syk"))
     fw = frw["rym"]
     fw.write("%15.3f  %s\n" % (0.0, "cityplan"))
     for c in hu: fw.write("%15.3f%15.3f\n" % tuple(c[:2]))
@@ -257,14 +252,14 @@ def wrRym(hu):
 
 def wrCache(pc):
     "Writes cache."
-    frw.update(p_gfil.opFile1e(1, "cache", "", pref, 'προεπεξεργασίας'))
+    frw.update(p_gfil.opFile1e(1, "cache", "", pref, 'Ο€ΟΞΏΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚'))
     fw = frw["cache"]
     pc.pol.writeGrid(fw)
 
 
 def wrState(pc, pref, prter=p_ggen.prg):
     "Write computed solution."
-    for i in xrange(1000):
+    for i in range(1000):
         fn = p_ggen.path("%s.state%03d" % (pref, i))
         if not fn.exists(): break
     else:
@@ -290,11 +285,11 @@ def test_cache():
 def openFiles():
       "Opens the needed files."
       global frw, winmain, prg, pref
-      p_gfil.openFile1(0, ' ',   ' ',   1, 'ΠΡΟΓΡΑΜΜΑ υπολογισμού βιοκλιματικού ρυμοτομικού σχεδίου')
-      p_gfil.openFile1(1, 'syk',  'old', 1, 'με γραμμές DTM')
-      p_gfil.openFile1(1, 'rym',  'opt', 1, 'περιοχής ρυμοτομικού - μορφή .syk')
-      p_gfil.openFile1(1, 'par',  'opt', 1, 'παραμέτρων Ο.Τ.')
-      p_gfil.openFile1(1, 'cache','opt', 1, 'προεπεξεργασίας')
+      p_gfil.openFile1(0, ' ',   ' ',   1, 'Ξ Ξ΅ΞΞ“Ξ΅Ξ‘ΞΞΞ‘ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞΏΟ Ξ²ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΞΏΟ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ ΟƒΟ‡ΞµΞ΄Ξ―ΞΏΟ…')
+      p_gfil.openFile1(1, 'syk',  'old', 1, 'ΞΌΞµ Ξ³ΟΞ±ΞΌΞΌΞ­Ο‚ DTM')
+      p_gfil.openFile1(1, 'rym',  'opt', 1, 'Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ - ΞΌΞΏΟΟ†Ξ® .syk')
+      p_gfil.openFile1(1, 'par',  'opt', 1, 'Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΟ‰Ξ½ Ξ.Ξ¤.')
+      p_gfil.openFile1(1, 'cache','opt', 1, 'Ο€ΟΞΏΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚')
       frw = p_gfil.openFile1(998, ' ', ' ', 1, ' ')
       pref = p_ggen.path(frw["syk"].name)
       pref = pref.parent / pref.namebase

@@ -1,39 +1,36 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module defines various constants.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import thandr, thanopt
 from . import (thancomsel, thancommod, thancommodext, thancomedit, thancomdraw, thancomfile,
     thancomvar, thancomview, thancomedu, thancomtool, thancomhatch, thancomeng,
-    thancompr, thancomim, thancomtest, thanpedit)
+    thancompr, thancomim, thancomtest, thanpedit, thancomglp, thancomset, thancomtop)
 
 
 def thanAddCommands(coms1, abbrevs1):
@@ -44,7 +41,7 @@ def thanAddCommands(coms1, abbrevs1):
         if c in thanComsOri: raise KeyError("Command %s is already defined" % (c,))
         thanComsOri[c] = thanComs[c] = c, f
         if c == "exit": continue     #Do not abbreviate exit; it is very similar to extend :)
-        for i in xrange(1, min(len(c), 10)):
+        for i in range(1, min(len(c), 10)):
             if c[:i] not in thanComs: thanComs[c[:i]] = c, f  #Avoid an abbreviation to overwrite a previous command/abbreviation
     for c,f in abbrevs1: thanComs[c] = thanComs[f]
 
@@ -78,12 +75,13 @@ def thanComFun(com):
 
 dr = thancomdraw.thanTkDrawElem
 coms = \
-[ ("about",       thancomvar.thanHelpAbout),
+[ ("3dface",      lambda w, cl=thandr.ThanFace3d, dr=dr: dr(w, cl)),
+  ("about",       thancomvar.thanHelpAbout),
   ("angle",       thancomtool.thanToolAngle),
   ("area",        thancomtool.thanToolArea),
   ("arc",         lambda w, cl=thandr.ThanArc,   dr=dr: dr(w, cl)),
-  ("edubiocityplan", thancomedu.thanEdubiocityplan),
   ("background",  thancomvar.thanBackroundColor),
+  ("bimcolumn",   lambda w, cl=thandr.ThanBimColumn, dr=dr: dr(w, cl)),
   ("break",       thancommod.thanModBreak),
   ("brkout",      lambda w: thancomfile.thanFileSaveas(w, ".brk")),
   ("centroid",    thancomtool.thanToolCen),
@@ -100,7 +98,8 @@ coms = \
   ("cutclip",     thancomedit.thanClipCut),
   ("ddedit",      thancommod.thanModDDedit),
   ("ddlmodes",    thancomvar.thanFormLay),
-  ("dfr",         thancomvar.thanDfr),
+  ("draworder",   thancomvar.thanDrawOrder),
+  ("layer",       thancomvar.thanFormLay),
   ("decurve",     thancomdraw.thanDecurve),
   ("dem",         thancomeng.thanEngDem),
   ("demdirectory",thancomeng.thanDemImageDir),
@@ -111,7 +110,9 @@ coms = \
   ("devfont",     thancomvar.thanDevFont),
   ("devhandle",   thancomvar.thanDevHandle),
   ("devtrans",    thancomvar.thanDevTrans),
-  ("dimali",      lambda w, cl=thandr.ThanDimali,dr=dr: dr(w, cl)),
+ # ("dimali",      lambda w, cl=thandr.ThanDimali,dr=dr: dr(w, cl)),
+  ("dimali",      thancomdraw.thanTkDrawDimali),
+  ("dimstyle",    thancomset.thanFormDimstyle),
   ("dist",        thancomtool.thanToolDist),
   ("dsettings",   thancomtool.thanToolOsnap),
   ("dtext",       thancomdraw.thanTkDrawText),
@@ -121,6 +122,8 @@ coms = \
   ("dtmz",        thancomeng.thanEngDtmpoint1),
   ("dxfin",       lambda w, cl=".dxf": thancomfile.thanFileOpen(w, cl)),
   ("dxfout",      lambda w: thancomfile.thanFileSaveas(w, ".dxf")),
+  ("edubiocityplan", thancomedu.thanEdubiocityplan),
+  ("edudfr",      thancomvar.thanEduDfr),
   ("eduedit",     thancomedu.thanEduEdit),
   ("edufloorplan",thancomedu.thanEduFplan),
   ("edurectangle",thancomedu.thanEduRect),
@@ -128,22 +131,31 @@ coms = \
   ("elevn",       thancomvar.thanVarElevn),
   ("ellipse",     lambda w, cl=thandr.ThanEllipse,dr=dr: dr(w, cl)),
   ("erase",       thancommod.thanModErase),
+  ("encoding",    thancomvar.thanEditEncoding),
   ("enggrid",     thancomeng.thanEngGrid),
   ("enginterchange", thancomeng.thanEngInterchange),
   ("engquickprofile", thancomeng.thanEngQuickprofile),
   ("engtrace",    thancomeng.thanEngTrace),
   ("exit",        thancomfile.thanFileExit),
   ("extend",      thancommodext.thanModExtend),
+  ("exportimages",thancomfile.thanFileExportImages),
+  ("exportspreadlines",  lambda w, eltype="lines":  thancomfile.thanFileExportSpreadx(w, eltype)),
+  ("exportspreadpoints", lambda w, eltype="points": thancomfile.thanFileExportSpreadx(w, eltype)),
   ("explode",     thancommod.thanModExplode),
-  ("filet",       thancommodext.thanModFilet),
-  ("fill",        thancomvar.thanVarFill),
+  ("fillet",      thancommodext.thanModFillet),
+  ("fillmode",    thancomvar.thanVarFill),
   ("find",        thancomtool.thanToolTextfind),
   ("fractal",     thancomvar.thanFractal),
   ("geodeticprojection", thancomeng.thanEngGeodp),
+  ("glp",         thancomglp.thanTkGetGlp),
+  ("glpexport",   thancomglp.thanGlpExport),
+  ("goi",         thancomim.thanTkGetOrtho),
   ("gpl",         thancomvar.thanHelpGpl),
   ("greeceperimeter", thancomeng.thanGreecePerimeter),
+  ("bhatch",      lambda w, cl=thandr.ThanHatch, dr=dr: dr(w, cl)),
   ("hatchopen",   thancomhatch.thanHatchOpen),
   ("help",        thancomvar.thanHelpHelp),
+  ("highlightzero", thancomvar.thanHighlightZero),
   ("hull",        thancomtool.thanToolHull),
   ("id",          thancomtool.thanToolId),
   ("imageattach", lambda w, cl=thandr.ThanImage, dr=dr: dr(w, cl)),
@@ -168,12 +180,15 @@ coms = \
   ("insert",       thancomfile.thanFileMerge),
   ("insertunload",  lambda w: thancomfile.thanFileMerge(w, forceunload=True)),
   ("interpolate", thancomtool.thanToolInterpolate),
+  ("isoclinal",   thancomeng.thanEngIsoclinal),
   ("join",        lambda w: thancommod.thanModJoin(w, 3)),
   ("join2d",      lambda w: thancommod.thanModJoin(w, 2)),
-  ("joingap",     thancommod.thanModJoinGap),
-  ("joingap2d",   thancommod.thanModJoinGap),
+  ("joingap",     lambda w: thancommod.thanModJoinGap(w, -1)),
+  ("joingap2d",   lambda w: thancommod.thanModJoinGap(w, 2)),
+  ("joingap3d",   lambda w: thancommod.thanModJoinGap(w, 3)),
   ("language",    thancomvar.thanVarLang),
-  ("line",        lambda w, cl=thandr.ThanLine,  dr=dr: dr(w, cl)),
+  ("lengthen",    thancommodext.thanModLengthen),
+  ("line",        thancomdraw.thanTkDrawLine),
   ("linin",       thancomfile.thanImpLin),
   ("linout",      thancomfile.thanExpLin),
   ("list",        thancomvar.thanList),
@@ -185,6 +200,12 @@ coms = \
   ("osnap",       thancomtool.thanToolOsnap),
   ("open",        thancomfile.thanFileOpen),
   ("openunload",  lambda w: thancomfile.thanFileOpen(w, forceunload=True)),
+  ("openspreadpoints", thancomfile.thanFileOpenSpreadPoints),
+  ("openspreadlines", thancomfile.thanFileOpenSpreadLines),
+  ("openspreadsurface", thancomfile.thanFileOpenSpreadSurface),
+  ("openspreadtexts", thancomfile.thanFileOpenSpreadTexts),
+  ("optline",     thancomtool.thanToolOptline),
+  ("orthomode",   thancomvar.thanVarOrtho),
   ("panpagedown", lambda win: thancomview.thanPanPage(win,  0, -1)),
   ("panpageleft", lambda win: thancomview.thanPanPage(win, -1,  0)),
   ("panpageright",lambda win: thancomview.thanPanPage(win,  1,  0)),
@@ -198,10 +219,12 @@ coms = \
   ("pline",       lambda w, cl=thandr.ThanLine,  dr=dr: dr(w, cl)),
   ("plot",        thancompr.thanPrPlot),
   ("poedit",      thancommod.thanModPoint),
+  ("pointdistance", thancomtop.thanPointDist),   #######################
   ("point",       thancomdraw.thanTkDrawPoint),
   ("pointnamed",  thancomdraw.thanTkDrawPointNamed),
   ("pointreplace",thancomdraw.thanPointNamedReplace),
-  ("polygon",     thancomdraw.thanTkDrawPolygon),
+  ("polygon",     thancomdraw.thanTkDrawRegularPolygon),
+  ("polygonirregular", thancomdraw.thanTkDrawPolygon),
   ("pnamed",      thancomdraw.thanTkDrawPointNamed),
   ("purge",       thancommod.thanModPurge),
   ("quit",        thancomfile.thanFileExit),
@@ -223,12 +246,12 @@ coms = \
   ("spline",      lambda w, cl=thandr.ThanSpline,dr=dr: dr(w, cl)),
   ("straighten",  thancommod.thanModStraighten),
   ("style",       thancomvar.thanFormTstyle),
-  ("sudup",       thancomvar.thanVarSudup),
   ("sykout",      lambda w: thancomfile.thanFileSaveas(w, ".syk")),
   ("synout",      lambda w: thancomfile.thanFileSaveas(w, ".syn")),
   ("tests",       thancomtest.thanTestLine1),
   ("thancad",     thancomvar.thanHelpVer),
   ("tocurve",     thancomdraw.thanToCurve),
+  ("topolygon",   thancomdraw.thanToPolygon),
   ("tospline",    thancomdraw.thanToSpline),
   ("triangulation", thancomeng.thanEngTri),
   ("trim",        thancommod.thanModTrim),
@@ -245,22 +268,48 @@ coms = \
   ("zoomwin",     thancomview.thanZoomWin),
 ]
 abbrevs = \
-( ("c",  "circle"),
+( ("a",  "arc"),
+  ("aa", "area"),       #thatcad abbreviation
+  ("c",  "circle"),
   ("cl", "continueline"),
+  ("cc", "chelevcontour"),
+  ("co", "copy"),
+  ("cp", "copy"),       #thatcad abbreviation
+  ("d",  "dimstyle"),   #thatcad abbreviation
+  ("di", "dist"),       #thatcad abbreviation
   ("e",  "erase"),
+  ("ed", "ddedit"),     #thatcad abbreviation
+  ("el", "ellipse"),    #thatcad abbreviation
+  ("eng", "enggrid"),   #prevent enggeo reference which is optional (in ThanCadpro)
+  ("engg", "enggrid"),  #prevent enggeo reference which is optional (in ThanCadpro)
+  ("ex", "extend"),
+  ("h",  "bhatch"),     #thatcad abbreviation
+  ("hatch", "bhatch"),
   ("imr", "imagerender"),
-  ("jg", "joingap"),
-  ("l", "line"),              #Prevent l to mean language
-  ("m", "move"),
-  ("mlp","movelinepoint"),
-  ("q", "quit"),
-  ("p", "panrealtime"),
-  ("po", "point"),
-  ("pr", "pointreplace"),
-  ("r",  "redo"),
-  ("re", "regen"),
-  ("x",  "explode"),
-  ("zw", "zoomwin"),
+  ("jg",  "joingap"),
+  ("jg2", "joingap2d"),
+  ("jg3", "joingap3d"),
+  ("l",   "line"),              #Prevent l to mean language
+  ("la",  "layer"),             #Prevent la to mean language
+  ("m",   "move"),
+  ("mlp", "movelinepoint"),
+  ("q",   "quit"),
+  ("p",   "panrealtime"),
+  ("po",  "point"),
+  ("pod",  "pointdistance"),
+  ("podi", "pointdistance"),
+  ("podis","pointdistance"),
+  ("polir", "polygonirregular"),
+  ("pr",  "pointreplace"),
+  ("r",   "redo"),
+  ("ro",  "rotate"),
+  ("re",  "regen"),
+  ("t",   "dtext"),
+  ("te",  "dtext"),
+  ("text", "dtext"),
+  ("tr",  "trim"),
+  ("x",   "explode"),
+  ("zw",  "zoomwin"),
 )
 
 thanComs = {}

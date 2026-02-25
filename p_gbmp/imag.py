@@ -1,7 +1,20 @@
 import sys, base64, io
 from PIL import Image
+try:
+    from PIL.Image import DecompressionBombError
+except ImportError:
+    class DecompressionBombError(Exception): pass    #Support for older versions of PILLOW 
+
 import p_ggen, p_gfil, p_gtkwid
 from p_gtkwid import Twid as T
+
+def imageSetmaxpixels(n=None):   #Thanasis2018_04_05
+    "Change the default max pixel size (int(1024 * 1024 * 1024 // 4 // 3))."
+    if n is None: 
+        Image.MAX_IMAGE_PIXELS = int(1024 * 1024 * 1024 // 4 // 3)  #default
+    else:
+        n = int(n)
+        if n >= 1024: Image.MAX_IMAGE_PIXELS = n
 
 
 def image2Bytes(im, format="jpeg"):
@@ -76,8 +89,8 @@ def imageOpen(fi):
         if im.size[0] < 2 or im.size[1] < 2: raise ValueError(T["Image is probably corrupted: size is less than 2 pixels"])
         if im.mode == "I;16S": im.mode = "I"
         im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised..
-        return im, ""        #..it also slows down the open as it is force to read the image
-    except (IOError, ValueError) as e:
+        return im, ""        #..it will also slow down the open as it is forced to read the image
+    except (IOError, ValueError, RuntimeError, DecompressionBombError) as e:
         im = None                 #This deletes image if it was half loaded
         return im, str(e)
 

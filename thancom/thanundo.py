@@ -1,35 +1,34 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module the do/undo mechanism.
 """
 
 from thantrans import T
-from thanvar import Canc
+from p_ggen import Canc
 
 
 def thanUndoWarn(proj):
@@ -59,7 +58,16 @@ def thanActionUndo(proj, elems, selold, actionfun, *args):
     proj[2].thanGudSetSelElem(selold)
 
 
-def thanReplaceUndo(proj, delelems, newelems, selold=None, oldvars={}, delobjs=(), newobjs=()):
+def thanReplaceUndo2(proj, delelems, newelems, selold=None, crelold=None):
+    "Include crelold in the actions to undo."
+    thanReplaceUndo(proj, delelems, newelems, selold, crelold=crelold)
+
+def thanReplaceRedo2(proj, delelems, newelems, selelems=None, crel=None):
+    "Include crel in the actions to redo."
+    thanReplaceRedo(proj, delelems, newelems, selelems, crel=crel)
+
+
+def thanReplaceUndo(proj, delelems, newelems, selold=None, oldvars={}, delobjs=(), newobjs=(), crelold=None):
     """Undeletes the previously deleted elements, and deletes the previously created new elements.
 
     The order should be: first delete elements then create the elements. This is
@@ -78,9 +86,10 @@ def thanReplaceUndo(proj, delelems, newelems, selold=None, oldvars={}, delobjs=(
     proj[2].thanGudSetSelElem(selold)
     proj[1].thanVar.update(oldvars)
     thanObjsRestore(proj, newobjs, delobjs)
+    proj[1].thanSetLastPoint(crelold)
 
 
-def thanReplaceRedo(proj, delelems, newelems, selelems=None, newvars={}, delobjs=(), newobjs=()):
+def thanReplaceRedo(proj, delelems, newelems, selelems=None, newvars={}, delobjs=(), newobjs=(), crel=None):
     """Redeletes the deleted elements, and recreates the new elements.
 
     The order should be: first delete elements then create the elements. This is
@@ -99,6 +108,7 @@ def thanReplaceRedo(proj, delelems, newelems, selelems=None, newvars={}, delobjs
     proj[2].thanGudSetSelElem(selelems)
     proj[1].thanVar.update(newvars)
     thanObjsRestore(proj, delobjs, newobjs)
+    proj[1].thanSetLastPoint(crel)
 
 
 def thanObjsRestore(proj, delobjs, addobjs):
@@ -120,7 +130,7 @@ def thanLtClone(proj):
     temp = lt.thanRoot.thanClone()
     names = lt.thanCur.thanGetPathname().split("/")
     cl = temp.thanFind(names)
-    assert cl != None, "Current layer should have been found!"
+    assert cl is not None, "Current layer should have been found!"
     return cl, temp
 
 
@@ -133,7 +143,7 @@ def thanLtClone2(cl, root):
     newroot = root.thanClone()
     names = cl.thanGetPathname().split("/")
     newcl = newroot.thanFind(names)
-    assert newcl != None, "Current layer should have been found!"
+    assert newcl is not None, "Current layer should have been found!"
     return newcl, newroot
 
 

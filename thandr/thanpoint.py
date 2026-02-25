@@ -1,32 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the point element.
 """
 
-from __future__ import print_function
 from math import fabs, hypot
 import p_ggen
 from p_gmath import thanNearx
@@ -43,7 +42,7 @@ class ThanPoint(ThanElement):
     "A point."
     thanTkCompound = 100        # The number of Tkinter objects that make the element. 100=compound (Many lines etc.)
     thanElementName = "POINT"   # Name of the element's class
-    psize = 8                   # Pixel size of the point
+    psize = 10                  # Pixel size of the point
 
     def thanSet (self, cc):
         "Sets the coordinates of the point."
@@ -141,8 +140,10 @@ class ThanPoint(ThanElement):
             dc.pointpair(xa, ya, size, iparal, tags=self.thanTags)
             self.wsize, _ = than.ct.local2GlobalRel(size, 0.0)    #Recalculate the size in world coordinates
         else:
+            w = than.tkThick
             temp = than.thanPoints["chi"](than.dc, xa, ya, self.psize,
-                color=than.outline, fill=than.fill, tags=self.thanTags)
+                color=than.outline, fill=than.fill, width=w, tags=self.thanTags)
+            #than.dc.create_rectangle(xa, ya, xa+1, ya+1, outline=than.outline, fill=than.fill, width=w, tags=self.thanTags)
             self.wsize, _ = than.ct.local2GlobalRel(self.psize, 0.0)    #Recalculate the size in world coordinates
         self._setbbox()
 
@@ -161,7 +162,7 @@ class ThanPoint(ThanElement):
 
 
     def thanExpKml(self, than):
-        "Exports the point to syn file."
+        "Exports the point to Google .kml file."
         than.ibr += 1
         cp1 = self.cc
         aa = than.form % (than.ibr,)
@@ -344,7 +345,7 @@ class ThanPointNamed(ThanPoint):
                                              self.validc[0], self.validc[1], self.validc[2]))
 
 
-if __name__ == "__main__":
+def test():
     print(__doc__)
     c = ThanPoint()
     c.thanSet((10.0, 20.0, 0.0))

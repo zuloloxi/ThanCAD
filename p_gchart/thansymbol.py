@@ -1,6 +1,3 @@
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, cos, sin, modf
 from tkinter import ARC, PIESLICE
 from p_ggen import frangec
@@ -180,7 +177,7 @@ def __makeChristarPolygons():
 
     x = y = th = 0.0
     ps = [ ]
-    for i in xrange(10):
+    for i in range(10):
         r1 = 0.5
         if i%2 == 1: r1 *= 0.5
         ps.append((x + r1*cos(th), y + r1*sin(th)))
@@ -200,14 +197,14 @@ def __makeAnalogClock(tim=2.55):
 
     n = 24; dth = pi*2/n
     th = 0.0; r = 0.5; p = []
-    for i in xrange(n+1): p.append((r*cos(th),r*sin(th))); th = th + dth
+    for i in range(n+1): p.append((r*cos(th),r*sin(th))); th = th + dth
     th = 0.0; r *= 0.90
-    for i in xrange(n+1): p.append((r*cos(th),r*sin(th))); th = th + dth
+    for i in range(n+1): p.append((r*cos(th),r*sin(th))); th = th + dth
     pols = [p]
 
 #    lines = [None]*12
 #    th = 0.0; dth = pi/6
-#    for i in xrange(12):
+#    for i in range(12):
 #        r1 = r*0.90
 #        if i%3 == 0: r1 = r*0.70
 #        lines[i] = (r1*cos(th), r1*sin(th)), (r*cos(th), r*sin(th))
@@ -216,7 +213,7 @@ def __makeAnalogClock(tim=2.55):
 
     lines = ()
     th = 0.0; dth = pi/6
-    for i in xrange(12):
+    for i in range(12):
         r1 = r*0.90; dt = dth/15
         if i%3 == 0: r1 = r*0.70; dt = dth/10
         p = (r1*cos(th), r1*sin(th)), (r*cos(th-dt), r*sin(th-dt)),\
@@ -308,6 +305,13 @@ def __makeSnowmanElements():
 
 def __addFontAsSymbols(tfont, points):
         "Import ThanCad's font as symbols."
+        gc8  = "ΪΫΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΆΈΉΊΌΎΏΪΫΣ"
+        gs8  = "ΐΰαβγδεζηθικλμνξοπρστυφχψωάέήίόύώϊϋς"
+        greekiso8897_7 = {}
+        for c in gc8+gs8:
+            c = c.encode("iso8859_7")
+            greekiso8897_7[ord(c)] = c
+        def chriso8859_7(key): return greekiso8897_7.get(key, chr(key))
 
         for key in tfont:
             lines = tfont[key]
@@ -316,7 +320,8 @@ def __addFontAsSymbols(tfont, points):
             for lin in lines:
                 lin1 = [ ((x-2.5)/7.0, (y-3.5)/7.0) for (x, y) in lin ]
                 lines1.append(lin1)
-            points[chr(key)] = ThanSymbol(lines=lines1).thanTkDraw
+            #points[chr(key)] = ThanSymbol(lines=lines1).thanTkDraw
+            points[chriso8859_7(key)] = ThanSymbol(lines=lines1).thanTkDraw
 
 
 ##############################################################################

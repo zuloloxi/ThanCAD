@@ -1,11 +1,9 @@
-# -*- coding: iso-8859-7 -*-
-from p_ggen.py23 import xrange
-
-try: 
+try:
     from math import log2
 except:
     from math import log
     def log2(x): return log(x)/log(2)
+from math import ceil
 
 import random, copy
 import p_ggen
@@ -18,7 +16,7 @@ class GeneticAlgorithm(object):
     def __init__(self, **kw):
         """Initialize genetic algorithm procedure.
 
-        These values are typical. They will be overwritten by genetic()."""
+        These values are typical. They will can be overwritten by genetic()."""
         self.prt = p_ggen.prg
         self.nAnim = None       # (initial?) number of animals
         self.animals = set()    # set of all animals alive
@@ -38,8 +36,8 @@ class GeneticAlgorithm(object):
                                 #If comBiggerIsBetter is False, comFitamx should again be a big value (poor):
                                 #it is used convert small values (which are better) to big values (which the GA
                                 #tries to maximise).
-                                #If zer0, then the biggest fitness of all animals (which are random) at the beginning is taken
-        self.nSample = 10       #Number animals taken is sample in tournamentThanasis(); the least fit of these animals dies.
+                                #If zero, then the biggest fitness of all animals (which are random) at the beginning is taken
+        self.nSample = 10       #Number animals taken in the sample in tournamentThanasis(); the least fit of these animals dies.
         self.comBiggerIsBetter = True    #If true justFitness() returns a number which must be maximised
                                          #If false justFitness() returns a number which must be minimised
         self.config(**kw)
@@ -48,7 +46,7 @@ class GeneticAlgorithm(object):
     def config(self, prt=None, nAnim=None, nGen=None, pmut=None, nValmax=None, nChrom=None, fitmax=None, biggerIsBetter=None):
         "Change default values."
         if prt     is not None: self.prt     = prt
-        if nAnim   is not None: 
+        if nAnim   is not None:
             if nAnim < self.nSample: raise ValueError("At least %d animals are required (for tournamentThanasis())" % (self.nSample,))
             self.nAnim   = nAnim
         if nGen    is not None: self.nGen    = nGen
@@ -57,7 +55,7 @@ class GeneticAlgorithm(object):
         if nChrom  is not None: self.comNchrom = nChrom
         if fitmax  is not None: self.comFitmax= fitmax
         if biggerIsBetter is not None: self.comBiggerIsBetter = biggerIsBetter
-        if self.nAnim is None:    #If bo value, compute it
+        if self.nAnim is None:    #If no value, compute it
             self.nAnimCompute()
         elif nAnim is None:       #If nAnim is not None, then the user wants nAnim (which is already set)
             if nValmax is not None or nChrom is not None:  # If nValmax and nChrom are both None, there is nothing new to compute
@@ -75,7 +73,15 @@ class GeneticAlgorithm(object):
         delete the one with the lowest fitness, until 50% of animals are deleted.
         Thus we must have at least 2*nSample (20) animals, so that when we delete half of them,
         we still have nSample (10) animals to choose a random set."""
-        self.nAnim = int(5 * log2(self.comNvalmax) * self.comNchrom)    # 5 animals per binary chromosome
+        #self.nAnim = int(5 * log2(self.comNvalmax) * self.comNchrom)    # 5 animals per binary chromosome
+
+        #Population size from Matlab (https://www.mathworks.com/help/gads/ga.html)
+        #{50} when numberOfVariables <= 5, {200} otherwise 
+        #{min(max(10*nvars,40),100)} for mixed-integer problems
+        nvars = int( log2(self.comNvalmax) * self.comNchrom )  #Number of binary chromosomes
+        nvars = ceil(nvars/8)                                  #Assume 1 variable per 8 binary chromosomes
+        self.nAnim = 50 if nvars<=5 else 200
+
         self.nAnim = max(self.nAnim, 2*self.nSample)   #At least 2*nSample (20) animals anyway
         self.pmutCompute()
 
@@ -93,7 +99,7 @@ class GeneticAlgorithm(object):
     def fitmaxCompute(self, DisAnimal):
         """Compute a big fitness; in fact it should be the best fitness possible.
 
-        At the beginninbgt the animals aree random. Thus the biggest fitness of all animals is
+        At the begining the animals aree random. Thus the biggest fitness of all animals is
         a reasonable big fitness.
         """
         self.comFitmax = max(anim.justFitness(self) for anim in self.animals)
@@ -103,11 +109,11 @@ class GeneticAlgorithm(object):
         "Execute the genetic algorithm."
         self.animals.clear()
         del self.bests[:]
-        for i in xrange(self.nAnim):
+        for i in range(self.nAnim):
             self.animals.add(DisAnimal(self))
         if self.comFitmax == 0: self.fitmaxCompute(DisAnimal)
         for self.bestall in self.animals: break     # Give a initial value to bestall
-        for self.igen in xrange(self.nGen):
+        for self.igen in range(self.nGen):
 #            print "Generation%4d" % igen
             self.bestIngen(self.igen)
             if self.converged(): break
@@ -125,10 +131,11 @@ class GeneticAlgorithm(object):
             self.prt("%.2f(%.2f)" % (self.bestall.fitness(self), self.bestall.fitnessr(self)))
         else:
             self.prt("%.2f(%.2f)" % (self.comFitmax-self.bestall.fitness(self),  self.comFitmax-self.bestall.fitnessr(self)))
+        return self.bestall, self.bests
 
 
     def converged(self):
-        "Check if the genetic algoithm converged; 20 steps with no optimisation."
+        "Check if the genetic algoÏithm converged; 30 steps with no optimisation."
         if len(self.bests) < 100: return False    #At least 100 generations
         nc = 30
         if len(self.bests) < nc: return False
@@ -148,7 +155,8 @@ class GeneticAlgorithm(object):
             self.prt("generation%4d  best: %.2f(%.2f)" % (igen, best.fitness(self), best.fitnessr(self)))
         else:
             self.prt("generation%4d  best: %.2f(%.2f)" % (igen, self.comFitmax-best.fitness(self),  self.comFitmax-best.fitnessr(self)))
-        self.bests.append(best)
+        #self.bests.append(best)
+        self.bests.append(self.bestall)
 
 
     def breed(self):
@@ -160,11 +168,13 @@ class GeneticAlgorithm(object):
             self.animals.remove(b)
             a.mutate(self)
             b.mutate(self)
-            for i in xrange(4):
+            for i in range(4):
                 ch = a.mate(self, b)
                 anims.add(ch)
+        #print("breed: new animals=", len(anims), "remaining from prev generations=", len(self.animals))
         anims.update(self.animals)
         self.animals = anims
+        #print("breed: new generation animals=", len(self.animals))
 
 
     def tournamentclassic(self):
@@ -172,29 +182,29 @@ class GeneticAlgorithm(object):
         pdie = 0.30
         nkeep = int(self.nAnim*(1-pdie))
         keep = set()
-        for i in xrange(nkeep):
+        for i in range(nkeep):
             pop = self.r.sample(self.animals, 4)
             a = max(pop, key=lambda a:a.fitness(self))
             keep.add(a)
             self.animals.remove(a)
             f = a.fitness(self)
-#            print "%f -> %f -> %.1f  áêüìá æùíôáíüò" % (f, com.fitmax, f/fa*100.0)
+#            print "%f -> %f -> %.1f  Î±ÎºÏŒÎ¼Î± Î¶Ï‰Î½Ï„Î±Î½ÏŒÏ‚" % (f, com.fitmax, f/fa*100.0)
         for a in self.animals:
             f = a.fitness(self)
-#            print "%f -> %f -> %.1f  ðåèáßíåé" % (f, com.fitmax, f/fa*100.0)
+#            print "%f -> %f -> %.1f  Ï€ÎµÎ¸Î±Î¯Î½ÎµÎ¹" % (f, com.fitmax, f/fa*100.0)
 
 
     def tournamentthanasis(self):
         "Select the best part of the population to breed; allow for a bit random selection."
         pdie = 0.50
-        ndie = int(self.nAnim*pdie)
-        for i in xrange(ndie):
+        ndie = int(len(self.animals)*pdie)   #Thanasis2022_11_25
+        for i in range(ndie):
             pop = self.r.sample(self.animals, self.nSample)
             a = min(pop, key=lambda a:a.fitness(self))
             self.animals.remove(a)
-#            print "%.2f(%.2f) <= %.2f  ðåèáßíåé" % (a.fitness(), a.fitnessr(), com.fitmax)
+#            print "%.2f(%.2f) <= %.2f  Ï€ÎµÎ¸Î±Î¯Î½ÎµÎ¹" % (a.fitness(), a.fitnessr(), com.fitmax)
 #        for a in self.animals:
-#            print("%.2f(%.2f) <= %.2f  æåé" % (a.fitness(), a.fitnessr(), com.fitmax))
+#            print("%.2f(%.2f) <= %.2f  Î¶ÎµÎ¹" % (a.fitness(), a.fitnessr(), com.fitmax))
 
 
 class GeneticAnimal(object):
@@ -205,7 +215,7 @@ class GeneticAnimal(object):
         "Create chromosomes for the distribution animal."
         if chrom1 == None:
             self.chrom = [0]*ga.comNchrom
-            for i in xrange(ga.comNchrom): self.chrom[i] = self.comR.randrange(ga.comNvalmax)
+            for i in range(ga.comNchrom): self.chrom[i] = self.comR.randrange(ga.comNvalmax)
         else:
             assert len(chrom1) == ga.comNchrom
             self.chrom = list(chrom1)
@@ -215,7 +225,7 @@ class GeneticAnimal(object):
 
 
     def crhom2Fenotype(self, ga):
-        "Transfer t6he instructions in chromosomes to the physical nature of the animal."
+        "Transfer the instructions in chromosomes to the physical nature of the animal."
         pass
 
 
@@ -229,7 +239,7 @@ class GeneticAnimal(object):
         if r.random() < 0.5:
             i1 = r.randrange(n)
             monkey1 = self.chrom[i1]
-            for i in xrange(10):
+            for i in range(10):
                 i2 = r.randrange(n)
                 monkey2 = self.chrom[i2]
                 if monkey1 != monkey2: break
@@ -241,7 +251,7 @@ class GeneticAnimal(object):
         else:
             i1 = r.randrange(n)
             monkey1 = self.chrom[i1]
-            for i in xrange(10):
+            for i in range(10):
                 monkey2 = r.randrange(ga.comNvalmax)
                 if monkey1 != monkey2: break
             else:
@@ -279,7 +289,7 @@ class GeneticAnimal(object):
         i2 = r.randrange(n2, n+1)
         m = self.chrom[:i1]+other.chrom[i1:i2]+self.chrom[i2:]
         d = 0
-        for i in xrange(i1,i2):
+        for i in range(i1,i2):
             if self.chrom[i] == other.chrom[i]: d += 1
         d = float(d)/(i2-i1)
         if d > 0.5: d = ga.comFitmax*0.1*d

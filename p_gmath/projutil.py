@@ -1,5 +1,4 @@
 "Utilities for projection transformations."
-from __future__ import print_function
 from .proj import (DLTProjection, Rational1Projection, Rational2Projection,
                   Rational15Projection, Polynomial1Projection, Polynomial2Projection,
                   Polynomial1_2DProjection, DLT2Projection, Rational1_2DProjection,

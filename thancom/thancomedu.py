@@ -1,34 +1,31 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes commands for educational/research purposes.
 """
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import thandr, thanobj
 from thanvar import Canc
 from thantrans import T, Tarch
@@ -40,10 +37,10 @@ from thanpackages.biocityplan.thandiabcplan import ThanBcplan
 def thanEduRect(proj):
     "Draws a closed line in the shape of a rectangle associates with text."
     c1 = proj[2].thanGudGetPoint(T["First point: "])
-    if c1 == Canc: return                 # Rectangle cancelled
+    if c1 == Canc: return proj[2].thanGudCommandCan() # Rectangle cancelled
 
     c2 = proj[2].thanGudGetRect(c1, T["Second point: "])
-    if c2 == Canc: return                # Rectangle cancelled
+    if c2 == Canc: return proj[2].thanGudCommandCan() # Rectangle cancelled
     x1, y1 = c1[:2]
     x2, y2 = c2[:2]
     if x2 > x1: x1, x2 = x2, x1
@@ -130,7 +127,7 @@ def thanEdubiocityplan(proj):
         return proj[2].thanGudCommandEnd()
     else:
         if bcp.pc.pol.cache.roadenx is None: return proj[2].thanGudCommandCan(Tarch["Please do preprocessing and retry."])
-        for i in xrange(v.entMult):            #Run multiple times
+        for i in range(v.entMult):            #Run multiple times
             bcp.run(proj)
             bcp.tkDraw(proj, bcp.pc.state)     #thanTouch is implicitly called
             bcp.wrState(proj)

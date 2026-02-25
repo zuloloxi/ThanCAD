@@ -1,6 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, cos, sin
 
 
@@ -146,7 +143,12 @@ class ThanDxfDra:
 
 
     def thanDxfPlotSolid4 (self, xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4):
-        "Plots a solid 4node polygon."
+        """Plots a solid 4node polygon.
+
+        Note that the points must be given in clockwise order, or anti-closkwise order.
+        This method then swaps 3rd and 4th point, so that the resulting dxf file
+        is according to the specifications (with thAtCAD).
+        """
         self.thanDxfWrEntry(0, 'SOLID')
         self.thanDxfWrLayer()
         self.thanDxfWrColor()
@@ -200,13 +202,32 @@ class ThanDxfDra:
         self.thanDxfWrXyzc(3, px, py, zz3)
 
 
+    def thanDxfPlot3dface4(self, xx1, yy1, zz1, xx2, yy2, zz2, xx3, yy3, zz3, xx4, yy4, zz4):
+        "Plots 3dface triangle."
+        self.thanDxfWrEntry(0, '3DFACE')
+        self.thanDxfWrLayer()
+        self.thanDxfWrColor()
+
+        (px, py) = self.thanDxfTop(xx1, yy1)
+        self.thanDxfWrXyz(px, py, zz1)
+
+        (px, py) = self.thanDxfTop(xx2, yy2)
+        self.thanDxfWrXyz1(px, py, zz2)
+
+        (px, py) = self.thanDxfTop(xx3, yy3)
+        self.thanDxfWrXyzc(2, px, py, zz3)
+
+        (px, py) = self.thanDxfTop(xx4, yy4)
+        self.thanDxfWrXyzc(3, px, py, zz4)
+
+
     def thanDxfPlotSolidCircle8(self, x, y, r, i1, i2):
         """Plots integer number of eighths of a solid circle using solid polygons.
 
         It splits the circle in eightths, and approximates one eightth
         with a 4node polygon. It begins with the i1-th eightth and stops
         at i2-th eightth:    1 <= i1 <= i2 <= 8."""
-        for ri in xrange(i1-1, i2):
+        for ri in range(i1-1, i2):
             self.thanDxfPlotSolid4 (x, y,
                 x+r*cos(PI4*ri),        y+r*sin(PI4*ri),
                 x+r*cos(PI4*(ri+0.5)),  y+r*sin(PI4*(ri+0.5)),
@@ -230,7 +251,7 @@ class ThanDxfDra:
         x3 = xc + re
         y3 = yc
 
-        for i in xrange(n):
+        for i in range(n):
             x2   = cost*cosd - sint*sind
             sint = sint*cosd + cost*sind
             cost = x2
@@ -260,7 +281,7 @@ class ThanDxfDra:
         x2 = xc + ri
         y2 = yc
 
-        for i in xrange(n):
+        for i in range(n):
             x3   = cost*cosd - sint*sind
             sint = sint*cosd + cost*sind
             cost = x3

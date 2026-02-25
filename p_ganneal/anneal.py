@@ -1,6 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-from p_ggen.py23 import xrange
 import sys, random
 from math import exp
 import p_ggen, p_gmath
@@ -61,9 +58,9 @@ class SimulatedAnnealing(object):
         eprev = self.e1
         obj.saveMinState()
         self.prt(' ')
-        self.prt('Ανόπτηση', "info")
-        dl = "%3s  %8s  %6s  %6s  %6s  %8s  %8s" % ('α/α', 'Θερμοκρα',
-             'μη μηδ', 'αρνητι', 'Στοχασ', 'Ενεργ.', 'min εν.')
+        self.prt('Ξ‘Ξ½ΟΟ€Ο„Ξ·ΟƒΞ·', "info")
+        dl = "%3s  %8s  %6s  %6s  %6s  %8s  %8s" % ('Ξ±/Ξ±', 'ΞΞµΟΞΌΞΏΞΊΟΞ±',
+             'ΞΌΞ· ΞΌΞ·Ξ΄', 'Ξ±ΟΞ½Ξ·Ο„ΞΉ', 'Ξ£Ο„ΞΏΟ‡Ξ±Οƒ', 'Ξ•Ξ½ΞµΟΞ³.', 'min ΞµΞ½.')
         self.prt(dl, "info1")
 
         #-----Temperature loop-------------------------------------------
@@ -71,11 +68,12 @@ class SimulatedAnnealing(object):
         form = "%3d%10.5f%8d%8d%8d%10.1f%10.1f"
         self.prt(form % (-1, -1.0, -1, -1, -1, self.e1/obj.efact, self.emin/obj.efact))
         izero = 0
-        for iTstep in xrange(self.nTsteps):
+        for iTstep in range(self.nTsteps):
             self.annealTrials(obj)
             self.prt(form % (iTstep, self.t, self.iSch, self.iSchNeg, self.iSch-self.iSchNeg,
                              self.e1/obj.efact, self.emin/obj.efact))
-            obj.analenergy()
+            self.iTstep = iTstep            #Save the temperature steps, in case they are needed (for example research)
+            obj.analenergy(self)
             #print "T=%10.5f  rooms=%d" % (self.t, len(obj.sable))
             if self.iSch == 0:
                 izero += 1
@@ -85,7 +83,6 @@ class SimulatedAnnealing(object):
             self.t *= self.tFactr
             eprev = self.e1
 
-        self.iTstep = iTstep            #Save the temperature steps, in case they are needed (for example research)
         obj.restoreMinState()
         print("minenergy         =", self.emin/obj.efact)
         #print "restored minenergy=", obj.energyState()
@@ -158,7 +155,7 @@ class SAAnnealable(object):
         self.ndimState = 20
         self.stateMin = self.statePrev = None
 
-    def analenergy(self):
+    def analenergy(self, sa):
         "It is called after every temperature step; for debugging."
         pass
 
@@ -217,19 +214,19 @@ class SAAnnealable(object):
         self.efact = 1.0
         ndim = 0.0
         ntries = 10
-        for i in xrange(ntries):              # Try 10 changes in order to estimate the dimension of the problem
+        for i in range(ntries):              # Try 10 changes in order to estimate the dimension of the problem
             self.changeState()
             ndim += self.getDimensions()
         ndim = int(ndim/ntries)               # Average dimension
         ntries = ndim*spSch
-        for i in xrange(ntries):              # Now, randomize a bit
+        for i in range(ntries):              # Now, randomize a bit
             self.changeState()
         e1 = self.energyState()               # Initial energy #Thanasis2011_05_19:This is NOT multiplied by efact
         de = 0.0
         ntries = ndim*spSch
         npos = 0
-        for j in xrange(5):
-            for i in xrange(ntries):
+        for j in range(5):
+            for i in range(ntries):
                 self.changeState()
                 e2 = self.energyState()       #Thanasis2011_05_19:This is NOT multiplied by efact
                 if e2 > e1:
@@ -244,8 +241,8 @@ class SAAnnealable(object):
             return False                    # Could not do calibration
         de /= npos
         self.efact = tempr / de             # Normalise delta energy to tempr (=100): efact*de = tempr
-        #self.prt('Αρχική ενέργεια=%.3f' % e1)
-        #self.prt("Αρχική μέση Δε =%.3f" % de)
+        #self.prt('Ξ‘ΟΟ‡ΞΉΞΊΞ® ΞµΞ½Ξ­ΟΞ³ΞµΞΉΞ±=%.3f' % e1)
+        #self.prt("Ξ‘ΟΟ‡ΞΉΞΊΞ® ΞΌΞ­ΟƒΞ· Ξ”Ξµ =%.3f" % de)
         return True
 
 
@@ -327,5 +324,5 @@ class SAAnimation(object):
         "Save the image of the final solution many times, so that it can be seen for some time in the video."
         if not self.on: return
         e2 = obj.energyState()                  # For animation  #Thanasis2011_05_19:This now returns the real energy (without efact)
-        for i in xrange(self.nframe*100):
+        for i in range(self.nframe*100):
             self.saveImage(obj, 0.0, e2)        # For animation

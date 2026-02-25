@@ -1,8 +1,6 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
 import tkinter
 import p_ggen
-from . import thanwids, thantkutila, thantksimpledialog
+from . import thanwids, thantkutila, thantksimpledialog, poplistdialog
 
 
 def xinpStr(win, mes, douDef=None, width=80):
@@ -120,7 +118,7 @@ def xinpLongR (win, mes, douMin, douMax, douDef):
     tit = "Please enter an integer number"
     mes = p_ggen.thanUnicode(mes)
     if   douDef is None: iv = ""
-    elif douDef == 0.0:  iv = "0.0"      #Work around bug: when initialvalue is zero, it does not show on the widget
+    elif douDef == 0.0:  iv = "0"      #Work around bug: when initialvalue is zero, it does not show on the widget
     else:                iv = str(douDef)
     dou = thantksimpledialog.askinteger(tit, mes, initialvalue=iv, minvalue=douMin, maxvalue=douMax, parent=win)
     if dou is None: return None  #User cancelled
@@ -166,11 +164,11 @@ class XinpFiles(thantksimpledialog.ThanDialog):
 
 
 def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
-    """Gets data files with suffix suf.
+    """Gets data files with suffix suf (see also p_gfil.xinpfiles which automatically gets previous dir).
 
     Examples:
-    1. fils = xinpFiles("Δώστε αρχεία που καταλήγουν σε xx.asc (με ή χωρίς την κατάληξη). Για όλα δώστε * (enter=*) : ", "xx.asc")
-       The above gets all the files in current directory (and recursively in the 
+    1. fils = xinpFiles("Ξ”ΟΟƒΟ„Ξµ Ξ±ΟΟ‡ΞµΞ―Ξ± Ο€ΞΏΟ… ΞΊΞ±Ο„Ξ±Ξ»Ξ®Ξ³ΞΏΟ…Ξ½ ΟƒΞµ xx.asc (ΞΌΞµ Ξ® Ο‡Ο‰ΟΞ―Ο‚ Ο„Ξ·Ξ½ ΞΊΞ±Ο„Ξ¬Ξ»Ξ·ΞΎΞ·). Ξ“ΞΉΞ± ΟΞ»Ξ± Ξ΄ΟΟƒΟ„Ξµ * (enter=*) : ", "xx.asc")
+       The above gets all the files in current directory (and recursively in the
        subdirectories if nest==True)
        which have .asc as a suffix:  a.asc, thanasis.asc, 1.asc, ...
     2. The filenames are transformed to lower, to facilitate windows..
@@ -188,8 +186,10 @@ def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
         print("fentries=", fentries)
         del x
         if fentries is None: return None
-        fentries = fentries.strip()
-        if fentries == "" or p_ggen.path(fentries)/"q1" == initialdir/"q1": fentries = initialdir / "*"+suf   #Work around missing last "/"
+        fentries = p_ggen.path(fentries.strip())
+        print("initialdir=", initialdir)
+        if fentries == "" or fentries/"q1" == initialdir/"q1" or fentries/"q1" == initialdir.abspath()/"q1":
+            fentries = initialdir / "*"+suf   #Work around missing last "/"
         print("fentries=", fentries)
         fildats = []
         for fentry in fentries.split():
@@ -198,7 +198,8 @@ def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
                 cdir = fentry.parent
                 if cdir == "": cdir = initialdir
                 fentry = fentry.basename()
-                if not fentry.lower().endswith(suf): fentry += suf
+                if fentry.ext.lower() == "": fentry += suf
+                #if not fentry.lower().endswith(suf): fentry += suf
                 if nest: f = list(cdir.walkfiles(fentry))      # nested subdirectories
                 else:    f = list(cdir.files(fentry))          # only current directory
 #                if len(f) == 0: prg("Warning: no %s files matches '%s'" % (suf, fentry))
@@ -224,11 +225,11 @@ def xinpDir(win, mes, mustexist=False, mustnotexist=False, default=None):
         f = p_ggen.path(f).expand().abspath()
         if mustnotexist:
             if f.exists():
-                ter = "Ο φάκελλος %s ήδη υπάρχει. Προσπαθείστε πάλι." % f
+                ter = "Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ®Ξ΄Ξ· Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ. Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ." % f
                 thantkutila.thanGudModalMessage(win, ter, "Directory already exists", icon=thantkutila.ERROR)
                 continue
         if f.exists() and not f.isdir():   #In case that both mustexist=False and mustnotexist=False
-            ter="Ο φάκελλος %s δεν είναι φάκελλος (είναι αρχείο). Προσπαθείστε πάλι." % f
+            ter="Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ΄ΞµΞ½ ΞµΞ―Ξ½Ξ±ΞΉ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ (ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΟΟ‡ΞµΞ―ΞΏ). Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ." % f
             thantkutila.thanGudModalMessage(win, ter, "Not a directory", icon=thantkutila.ERROR)
             continue
         return p_ggen.path(p_ggen.thanUnunicode(f))
@@ -240,7 +241,7 @@ def xinpMchoice(win, mes, coms, douDef=1):
     if p_ggen.isString(coms): coms = coms.split()
     w = max(len(com1) for com1 in coms)
     w = max(w, 10+len(mes))
-    win = thanwids.ThanPoplist(win, coms, width=w, height=len(coms), title=p_ggen.thanUnicode(mes), default=douDef-1)
+    win = poplistdialog.ThanPoplist(win, coms, width=w, height=len(coms), title=p_ggen.thanUnicode(mes), default=douDef-1)
     dou = win.result
     if dou is None: return dou
     return coms.index(dou) + 1
@@ -259,21 +260,21 @@ def xinpNo(win, mes, douDef=True):
 def testxinpFiles():
     "Test the xinpFiles() function."
     root = tkinter.Tk()
-    x = xinpFiles(root, mes="Δώστε αρχεία που καταλήγουν σε xx.asc (με ή χωρίς την κατάληξη).\nΓια να επιλεγούν όλα δώστε *", suf="xx.asc", nest=False)
+    x = xinpFiles(root, mes="Ξ”ΟΟƒΟ„Ξµ Ξ±ΟΟ‡ΞµΞ―Ξ± Ο€ΞΏΟ… ΞΊΞ±Ο„Ξ±Ξ»Ξ®Ξ³ΞΏΟ…Ξ½ ΟƒΞµ xx.asc (ΞΌΞµ Ξ® Ο‡Ο‰ΟΞ―Ο‚ Ο„Ξ·Ξ½ ΞΊΞ±Ο„Ξ¬Ξ»Ξ·ΞΎΞ·).\nΞ“ΞΉΞ± Ξ½Ξ± ΞµΟ€ΞΉΞ»ΞµΞ³ΞΏΟΞ½ ΟΞ»Ξ± Ξ΄ΟΟƒΟ„Ξµ *", suf="xx.asc", nest=False)
     print("files found=", x)
 
 
 def testxinpMchoice():
     "Test the xinpFiles() function."
     root = tkinter.Tk()
-    x = xinpMchoice(root, "Διάλεξε γλυκό:", "Δήμητρα Ανδρέας Στέλλα", 3)
+    x = xinpMchoice(root, "Ξ”ΞΉΞ¬Ξ»ΞµΞΎΞµ Ξ³Ξ»Ο…ΞΊΟ:", "Ξ”Ξ®ΞΌΞ·Ο„ΟΞ± Ξ‘Ξ½Ξ΄ΟΞ­Ξ±Ο‚ Ξ£Ο„Ξ­Ξ»Ξ»Ξ±", 3)
     print("answer=", x)
 
 
 def testxinpDir():
     "Test the xinpDir() function."
     root = tkinter.Tk()
-    x = xinpDir(root, "Διάλεξε φάκελλο:", mustexist=False, mustnotexist=False, default=".")
+    x = xinpDir(root, "Ξ”ΞΉΞ¬Ξ»ΞµΞΎΞµ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏ:", mustexist=False, mustnotexist=False, default=".")
     print("answer=", x)
 
 

@@ -1,29 +1,27 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -36,127 +34,127 @@ from p_ggen import Translation
 
 #English to greek translation table
 en2gr = \
-{ "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
-"&Photogrammetry"                                 : u"Φωτογραμμετρία",
-"Image coordinate &system"                        : u"Σύστημα εινονοσυντεταγμένων",
-"Rotate Image &90 deg counterclokwise"            : u"Περιστροφή εικόνας 90 μοίρες ανθωρολογιακά",
-"Rotate Image &180 deg"                           : u"Περιστροφή εικόνας 180 μοίρες",
-"Rotate Image &270 deg counterclokwise"           : u"Περιστροφή εικόνας 270 μοίρες ανθωρολογιακά",
-"&Measure image coordinates"                      : u"Μέτρηση εικονοσυντεταγμένων",
-"&Brighten Image (Gray+)"                         : u"Αύξηση φωτεινότητας εικόνων (Gray+)",
-"&Darken Image (Gray-)"                           : u"Μείωση φωτεινότητας εικόνων (Gray-)",
-"&Reset Image brightness"                         : u"Επαναφορά αρχικής φωτεινότητας εικόνων",
+{ "__TRANSLATION__"     : ("en", "utf_8", "gr", "utf_8"),
+"&Photogrammetry"                                 : u"Ξ¦Ο‰Ο„ΞΏΞ³ΟΞ±ΞΌΞΌΞµΟ„ΟΞ―Ξ±",
+"Image coordinate &system"                        : u"Ξ£ΟΟƒΟ„Ξ·ΞΌΞ± ΞµΞΉΞ½ΞΏΞ½ΞΏΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ο‰Ξ½",
+"Rotate Image &90 deg counterclokwise"            : u"Ξ ΞµΟΞΉΟƒΟ„ΟΞΏΟ†Ξ® ΞµΞΉΞΊΟΞ½Ξ±Ο‚ 90 ΞΌΞΏΞ―ΟΞµΟ‚ Ξ±Ξ½ΞΈΟ‰ΟΞΏΞ»ΞΏΞ³ΞΉΞ±ΞΊΞ¬",
+"Rotate Image &180 deg"                           : u"Ξ ΞµΟΞΉΟƒΟ„ΟΞΏΟ†Ξ® ΞµΞΉΞΊΟΞ½Ξ±Ο‚ 180 ΞΌΞΏΞ―ΟΞµΟ‚",
+"Rotate Image &270 deg counterclokwise"           : u"Ξ ΞµΟΞΉΟƒΟ„ΟΞΏΟ†Ξ® ΞµΞΉΞΊΟΞ½Ξ±Ο‚ 270 ΞΌΞΏΞ―ΟΞµΟ‚ Ξ±Ξ½ΞΈΟ‰ΟΞΏΞ»ΞΏΞ³ΞΉΞ±ΞΊΞ¬",
+"&Measure image coordinates"                      : u"ΞΞ­Ο„ΟΞ·ΟƒΞ· ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ο‰Ξ½",
+"&Brighten Image (Gray+)"                         : u"Ξ‘ΟΞΎΞ·ΟƒΞ· Ο†Ο‰Ο„ΞµΞΉΞ½ΟΟ„Ξ·Ο„Ξ±Ο‚ ΞµΞΉΞΊΟΞ½Ο‰Ξ½ (Gray+)",
+"&Darken Image (Gray-)"                           : u"ΞΞµΞ―Ο‰ΟƒΞ· Ο†Ο‰Ο„ΞµΞΉΞ½ΟΟ„Ξ·Ο„Ξ±Ο‚ ΞµΞΉΞΊΟΞ½Ο‰Ξ½ (Gray-)",
+"&Reset Image brightness"                         : u"Ξ•Ο€Ξ±Ξ½Ξ±Ο†ΞΏΟΞ¬ Ξ±ΟΟ‡ΞΉΞΊΞ®Ο‚ Ο†Ο‰Ο„ΞµΞΉΞ½ΟΟ„Ξ·Ο„Ξ±Ο‚ ΞµΞΉΞΊΟΞ½Ο‰Ξ½",
 
-"Toggle coordinates on/off (F6)"                  : u"Ενεργοποίηση/απενεργοποίηση προβολής συντεταγμένων (F6)",
-"Toggle coordinate system (F7)"                   : u"Εναλλαγή συστήματος προβολής συντεταγμένων (F7)",
+"Toggle coordinates on/off (F6)"                  : u"Ξ•Ξ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·/Ξ±Ο€ΞµΞ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· Ο€ΟΞΏΞ²ΞΏΞ»Ξ®Ο‚ ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ο‰Ξ½ (F6)",
+"Toggle coordinate system (F7)"                   : u"Ξ•Ξ½Ξ±Ξ»Ξ»Ξ±Ξ³Ξ® ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΞΏΟ‚ Ο€ΟΞΏΞ²ΞΏΞ»Ξ®Ο‚ ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ο‰Ξ½ (F7)",
 
-"Please insert an image and retry."               : u"Παρακαλώ εισάγετε μία εικόνα και ξαναπροσπαθείστε.",
-"First (left) point of x-axis: "                  : u"Πρώτο (αριστερά) σημείο του άξονα x: ",
-"Second (right) point of x-axis: "                : u"Δεύτερο (δεξιά) σημείο του άξονα x: ",
-"First (down) point of y-axis: "                  : u"Πρώτο (κάτω) σημείο του άξονα y: ",
-"Second (up) point of y-axis: "                   : u"Δεύτερο (πάνω) σημείο του άξονα y: ",
+"Please insert an image and retry."               : u"Ξ Ξ±ΟΞ±ΞΊΞ±Ξ»Ο ΞµΞΉΟƒΞ¬Ξ³ΞµΟ„Ξµ ΞΌΞ―Ξ± ΞµΞΉΞΊΟΞ½Ξ± ΞΊΞ±ΞΉ ΞΎΞ±Ξ½Ξ±Ο€ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ.",
+"First (left) point of x-axis: "                  : u"Ξ ΟΟΟ„ΞΏ (Ξ±ΟΞΉΟƒΟ„ΞµΟΞ¬) ΟƒΞ·ΞΌΞµΞ―ΞΏ Ο„ΞΏΟ… Ξ¬ΞΎΞΏΞ½Ξ± x: ",
+"Second (right) point of x-axis: "                : u"Ξ”ΞµΟΟ„ΞµΟΞΏ (Ξ΄ΞµΞΎΞΉΞ¬) ΟƒΞ·ΞΌΞµΞ―ΞΏ Ο„ΞΏΟ… Ξ¬ΞΎΞΏΞ½Ξ± x: ",
+"First (down) point of y-axis: "                  : u"Ξ ΟΟΟ„ΞΏ (ΞΊΞ¬Ο„Ο‰) ΟƒΞ·ΞΌΞµΞ―ΞΏ Ο„ΞΏΟ… Ξ¬ΞΎΞΏΞ½Ξ± y: ",
+"Second (up) point of y-axis: "                   : u"Ξ”ΞµΟΟ„ΞµΟΞΏ (Ο€Ξ¬Ξ½Ο‰) ΟƒΞ·ΞΌΞµΞ―ΞΏ Ο„ΞΏΟ… Ξ¬ΞΎΞΏΞ½Ξ± y: ",
 "Y-axis does intersect x-axis (without extension). Try again."
-                                                  : u"Ο άξονας y δεν τέμνει τον άξονα x1 (χωρίς επέκταση). Προσπαθείστε πάλι.",
-"Interior orientation system was defined successfuly." : u"Ο ορισμός του συστήματος εικονοσυντεταγμένων ήταν επιτυχής.",
-"Interior orientation system was not defined"     : u"Ο ορισμός του συστήματος εικονοσυντεταγμένων ήταν ανεπιτυχής",
-"&INTERIOR ORIENTATION (pixels)"                  : u"ΕΣΩΤΕΡΙΚΟΣ ΠΡΟΣΑΝΑΤΟΛΙΣΜΟΣ (pixels)",
-"INTERIOR ORIENTATION (&mm)"                      : u"ΕΣΩΤΕΡΙΚΟΣ ΠΡΟΣΑΝΑΤΟΛΙΣΜΟΣ (mm)",
-"Interior orientation submenu"                    : u"Υπομενού εσωτερικού προσανατολισμού",
-"Inserts an image in a predefined layer in pixels": u"Εισαγωγή εικόνας σε προκαθορισμένη διαφάνεια σε pixels",
-"Load &Camera"                                    : u"Καθορισμός φωτομηχανής",
-"Loads the calibrartion parameters of a metric camera": u"Φορτώνει τις παραμέτρους βαθμονόμησης της φωτομηχανής",
-"Compu&tation"                                    : u"Υπολογισμός",
+                                                  : u"Ξ Ξ¬ΞΎΞΏΞ½Ξ±Ο‚ y Ξ΄ΞµΞ½ Ο„Ξ­ΞΌΞ½ΞµΞΉ Ο„ΞΏΞ½ Ξ¬ΞΎΞΏΞ½Ξ± x1 (Ο‡Ο‰ΟΞ―Ο‚ ΞµΟ€Ξ­ΞΊΟ„Ξ±ΟƒΞ·). Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.",
+"Interior orientation system was defined successfuly." : u"Ξ ΞΏΟΞΉΟƒΞΌΟΟ‚ Ο„ΞΏΟ… ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΞΏΟ‚ ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ο‰Ξ½ Ξ®Ο„Ξ±Ξ½ ΞµΟ€ΞΉΟ„Ο…Ο‡Ξ®Ο‚.",
+"Interior orientation system was not defined"     : u"Ξ ΞΏΟΞΉΟƒΞΌΟΟ‚ Ο„ΞΏΟ… ΟƒΟ…ΟƒΟ„Ξ®ΞΌΞ±Ο„ΞΏΟ‚ ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ο‰Ξ½ Ξ®Ο„Ξ±Ξ½ Ξ±Ξ½ΞµΟ€ΞΉΟ„Ο…Ο‡Ξ®Ο‚",
+"&INTERIOR ORIENTATION (pixels)"                  : u"Ξ•Ξ£Ξ©Ξ¤Ξ•Ξ΅Ξ™ΞΞΞ£ Ξ Ξ΅ΞΞ£Ξ‘ΞΞ‘Ξ¤ΞΞ›Ξ™Ξ£ΞΞΞ£ (pixels)",
+"INTERIOR ORIENTATION (&mm)"                      : u"Ξ•Ξ£Ξ©Ξ¤Ξ•Ξ΅Ξ™ΞΞΞ£ Ξ Ξ΅ΞΞ£Ξ‘ΞΞ‘Ξ¤ΞΞ›Ξ™Ξ£ΞΞΞ£ (mm)",
+"Interior orientation submenu"                    : u"Ξ¥Ο€ΞΏΞΌΞµΞ½ΞΏΟ ΞµΟƒΟ‰Ο„ΞµΟΞΉΞΊΞΏΟ Ο€ΟΞΏΟƒΞ±Ξ½Ξ±Ο„ΞΏΞ»ΞΉΟƒΞΌΞΏΟ",
+"Inserts an image in a predefined layer in pixels": u"Ξ•ΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ® ΞµΞΉΞΊΟΞ½Ξ±Ο‚ ΟƒΞµ Ο€ΟΞΏΞΊΞ±ΞΈΞΏΟΞΉΟƒΞΌΞ­Ξ½Ξ· Ξ΄ΞΉΞ±Ο†Ξ¬Ξ½ΞµΞΉΞ± ΟƒΞµ pixels",
+"Load &Camera"                                    : u"ΞΞ±ΞΈΞΏΟΞΉΟƒΞΌΟΟ‚ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚",
+"Loads the calibrartion parameters of a metric camera": u"Ξ¦ΞΏΟΟ„ΟΞ½ΞµΞΉ Ο„ΞΉΟ‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ Ξ²Ξ±ΞΈΞΌΞΏΞ½ΟΞΌΞ·ΟƒΞ·Ο‚ Ο„Ξ·Ο‚ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚",
+"Compu&tation"                                    : u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΟΟ‚",
 "Computes the photogrammetric interior orientation of a metric image":
-                                                    u"Υπολογίζει το φωτογραμμετρικό εσωτερικό προσανατολισμό μετρικής εικόνας",
-"&Camera management"                              : u"Διαχείριση φωτομηχανών",
-"Edit/create photogrammetric camera parameters"   : u"Επεξεργασία/δημιουργία παραμέτρων φωτομηχανών",
+                                                    u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³Ξ―Ξ¶ΞµΞΉ Ο„ΞΏ Ο†Ο‰Ο„ΞΏΞ³ΟΞ±ΞΌΞΌΞµΟ„ΟΞΉΞΊΟ ΞµΟƒΟ‰Ο„ΞµΟΞΉΞΊΟ Ο€ΟΞΏΟƒΞ±Ξ½Ξ±Ο„ΞΏΞ»ΞΉΟƒΞΌΟ ΞΌΞµΟ„ΟΞΉΞΊΞ®Ο‚ ΞµΞΉΞΊΟΞ½Ξ±Ο‚",
+"&Camera management"                              : u"Ξ”ΞΉΞ±Ο‡ΞµΞ―ΟΞΉΟƒΞ· Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½ΟΞ½",
+"Edit/create photogrammetric camera parameters"   : u"Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±/Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΟ‰Ξ½ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½ΟΞ½",
 
-"Photogrammetric Camera Parameters"               : u"Φωτογραμμετρικές Παράμετροι Φωτομηχανής",
-"CAMERA ID:"                                      : u"ΤΑΥΤΟΤΗΤΑ ΦΩΤΟΜΗΧΑΝΗΣ:",
-"Camera Name"                                     : u"Ονομασία φωτομηχανής",
-"Focus Length c (mm)"                             : u"Εστιακή απόσταση c (mm)",
-"CAMERA FIDUCIALS:"                               : u"ΕΙΚΟΝΟΣΗΜΑΤΑ ΦΩΤΟΜΗΧΑΝΗΣ:",
-"Fiducial x (mm)"                                 : u"Εικονόσημα x (mm)",
-"Fiducial y (mm)"                                 : u"Εικονόσημα y (mm)",
-"Clears all camera parameters"                    : u"Διαγράφει όλες τις παραμέτρους της φωτομηχανής",
-"Opens an existing camera file"                   : u"Ανοίγει ένα υφιστάμενο αρχείο φωτομηχανής",
-"Saves camera parameters into current file"       : u"Αποθηκεύει παραμέτρους φωτομηχανής στο υφιστάμενο αρχείο",
-"Saves camera parameters into another file"       : u"Αποθηκεύει παραμέτρους φωτομηχανής σε διαφορετικό αρχείο",
-"Closes camera dialog discarding parameters"      : u"Κλείνει το διάλογο φωτομηχανής διαγράφοντας τις παραμέτρους",
+"Photogrammetric Camera Parameters"               : u"Ξ¦Ο‰Ο„ΞΏΞ³ΟΞ±ΞΌΞΌΞµΟ„ΟΞΉΞΊΞ­Ο‚ Ξ Ξ±ΟΞ¬ΞΌΞµΟ„ΟΞΏΞΉ Ξ¦Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚",
+"CAMERA ID:"                                      : u"Ξ¤Ξ‘Ξ¥Ξ¤ΞΞ¤Ξ—Ξ¤Ξ‘ Ξ¦Ξ©Ξ¤ΞΞΞ—Ξ§Ξ‘ΞΞ—Ξ£:",
+"Camera Name"                                     : u"ΞΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ± Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚",
+"Focus Length c (mm)"                             : u"Ξ•ΟƒΟ„ΞΉΞ±ΞΊΞ® Ξ±Ο€ΟΟƒΟ„Ξ±ΟƒΞ· c (mm)",
+"CAMERA FIDUCIALS:"                               : u"Ξ•Ξ™ΞΞΞΞΞ£Ξ—ΞΞ‘Ξ¤Ξ‘ Ξ¦Ξ©Ξ¤ΞΞΞ—Ξ§Ξ‘ΞΞ—Ξ£:",
+"Fiducial x (mm)"                                 : u"Ξ•ΞΉΞΊΞΏΞ½ΟΟƒΞ·ΞΌΞ± x (mm)",
+"Fiducial y (mm)"                                 : u"Ξ•ΞΉΞΊΞΏΞ½ΟΟƒΞ·ΞΌΞ± y (mm)",
+"Clears all camera parameters"                    : u"Ξ”ΞΉΞ±Ξ³ΟΞ¬Ο†ΞµΞΉ ΟΞ»ΞµΟ‚ Ο„ΞΉΟ‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ Ο„Ξ·Ο‚ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚",
+"Opens an existing camera file"                   : u"Ξ‘Ξ½ΞΏΞ―Ξ³ΞµΞΉ Ξ­Ξ½Ξ± Ο…Ο†ΞΉΟƒΟ„Ξ¬ΞΌΞµΞ½ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚",
+"Saves camera parameters into current file"       : u"Ξ‘Ο€ΞΏΞΈΞ·ΞΊΞµΟΞµΞΉ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ ΟƒΟ„ΞΏ Ο…Ο†ΞΉΟƒΟ„Ξ¬ΞΌΞµΞ½ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ",
+"Saves camera parameters into another file"       : u"Ξ‘Ο€ΞΏΞΈΞ·ΞΊΞµΟΞµΞΉ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ ΟƒΞµ Ξ΄ΞΉΞ±Ο†ΞΏΟΞµΟ„ΞΉΞΊΟ Ξ±ΟΟ‡ΞµΞ―ΞΏ",
+"Closes camera dialog discarding parameters"      : u"ΞΞ»ΞµΞ―Ξ½ΞµΞΉ Ο„ΞΏ Ξ΄ΞΉΞ¬Ξ»ΞΏΞ³ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ Ξ΄ΞΉΞ±Ξ³ΟΞ¬Ο†ΞΏΞ½Ο„Ξ±Ο‚ Ο„ΞΉΟ‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚",
 "Closes camera dialog and saves parameters into current file":
-                                                    u"Κλείνει το διάλογο φωτομηχανής αποθηκεύοντας τις παραμέτρους στο υφιστάμενο αρχείο",
+                                                    u"ΞΞ»ΞµΞ―Ξ½ΞµΞΉ Ο„ΞΏ Ξ΄ΞΉΞ¬Ξ»ΞΏΞ³ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ Ξ±Ο€ΞΏΞΈΞ·ΞΊΞµΟΞΏΞ½Ο„Ξ±Ο‚ Ο„ΞΉΟ‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ ΟƒΟ„ΞΏ Ο…Ο†ΞΉΟƒΟ„Ξ¬ΞΌΞµΞ½ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ",
 "The x, y coordinates of a fiducial must be both numbers or blank":
-                                                    u"Οι συντεταγμένες x, y ενός εικονοσήματος πρέπει αν είναι και οι δύο είτε αριθμοί είτε κενές",
+                                                    u"ΞΞΉ ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½ΞµΟ‚ x, y ΞµΞ½ΟΟ‚ ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΞ®ΞΌΞ±Ο„ΞΏΟ‚ Ο€ΟΞ­Ο€ΞµΞΉ Ξ±Ξ½ ΞµΞ―Ξ½Ξ±ΞΉ ΞΊΞ±ΞΉ ΞΏΞΉ Ξ΄ΟΞΏ ΞµΞ―Ο„Ξµ Ξ±ΟΞΉΞΈΞΌΞΏΞ― ΞµΞ―Ο„Ξµ ΞΊΞµΞ½Ξ­Ο‚",
 "Coordinates are not permitted after a blank fiducial.":
-                                                    u"Δεν επιτρέπονται συντεταγμένες μετά από ένα κενό εικονόσημα",
+                                                    u"Ξ”ΞµΞ½ ΞµΟ€ΞΉΟ„ΟΞ­Ο€ΞΏΞ½Ο„Ξ±ΞΉ ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½ΞµΟ‚ ΞΌΞµΟ„Ξ¬ Ξ±Ο€Ο Ξ­Ξ½Ξ± ΞΊΞµΞ½Ο ΞµΞΉΞΊΞΏΞ½ΟΟƒΞ·ΞΌΞ±",
 
 "1 or more images are already present.\n\nOK to replace?":
-                                                    u"1 ή περισσότερες εικόνες υπάρχουν ήδη.\n\nΕντάξει να αντικατασταθούν;",
-"Choose Photogrammetric camera file to open"      : u"Επιλογή αρχείου φωτομηχανής για άνοιγμα",
-"Syntax error while reading focus length"         : u"Συντακτικό λάθος κατά την ανάγνωση της εστιακής απόστασης",
-"Camera file"                                     : u"Αρχείο φωτομηχανής",
-"Camera file was successfuly loaded."             : u"Το αρχείο φωτομηχανής φορτώθηκε επιτυχώς.",
-"Photogrammetric Interior Orientation"            : u"Φωτογραμμετρικός Εσωτερικός Προσανατολισμός",
-"IMAGE PARAMETERS:"                               : u"ΠΑΡΑΜΕΤΡΟΙ ΕΙΚΟΝΑΣ:",
-"FIDUCIALS:"                                      : u"ΕΙΚΟΝΟΣΗΜΑΤΑ:",
-"COMPUTATION:"                                    : u"ΥΠΟΛΟΓΙΣΜΟΣ:",
-"Compute"                                         : u"Υπολογισμός",
-"Overall error"                                   : u"Συνολικό σφάλμα",
-"At least 3 fiducials should be given"            : u"Χρειάζονται τουλάχιστον 3 εικονοσήματα",
-"Error in computation"                            : u"Λάθος κατά τον υπολογισμό",
-"Digitize fiducial"                               : u"Ψηφιοποίηση εικονοσήματος",
-"Move to and digitize fiducial"                   : u"Μετακίνηση προς, και ψηφιοποίηση εικονοσήματος",
-"Clear pixel coordinates"                         : u"Διαγραφή συντεταγμένων pixel",
-"Mark as invalid"                                 : u"Σημείωση ως άκυρο",
-"Accept as valid"                                 : u"Αποδοχή ως έγκυρο",
-"Please click on the center of fiducial"          : u"Παρακαλώ, κλικάρετε στο κέντρο του εικονοσήματος",
-"Camera X (mm)"                                   : u"X φωτομηχανής (mm)",
-"Camera Y (mm)"                                   : u"Y φωτομηχανής (mm)",
-"Photo x (pixel)"                                 : u"x εικόνας (pixel)",
-"Photo y (pixel)"                                 : u"y εικόνας (pixel)",
-"Reject"                                          : u"Απόρριψη",
-"Computed X (mm)"                                 : u"Υπολογισμένο X (mm)",
-"Computed Y (mm)"                                 : u"Υπολογισμένο Y (mm)",
-"Error X (mm)"                                    : u"Σφάλμα X (mm)",
-"Error Y (mm)"                                    : u"Σφάλμα Y (mm)",
-"Computation not performed, OK to close dialog?"  : u"Δέν έχει γίνει ακόμα υπολογισμός, Εντάξει να κλείσει ο διάλογος;",
+                                                    u"1 Ξ® Ο€ΞµΟΞΉΟƒΟƒΟΟ„ΞµΟΞµΟ‚ ΞµΞΉΞΊΟΞ½ΞµΟ‚ Ο…Ο€Ξ¬ΟΟ‡ΞΏΟ…Ξ½ Ξ®Ξ΄Ξ·.\n\nΞ•Ξ½Ο„Ξ¬ΞΎΞµΞΉ Ξ½Ξ± Ξ±Ξ½Ο„ΞΉΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ±ΞΈΞΏΟΞ½;",
+"Choose Photogrammetric camera file to open"      : u"Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ Ξ³ΞΉΞ± Ξ¬Ξ½ΞΏΞΉΞ³ΞΌΞ±",
+"Syntax error while reading focus length"         : u"Ξ£Ο…Ξ½Ο„Ξ±ΞΊΟ„ΞΉΞΊΟ Ξ»Ξ¬ΞΈΞΏΟ‚ ΞΊΞ±Ο„Ξ¬ Ο„Ξ·Ξ½ Ξ±Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· Ο„Ξ·Ο‚ ΞµΟƒΟ„ΞΉΞ±ΞΊΞ®Ο‚ Ξ±Ο€ΟΟƒΟ„Ξ±ΟƒΞ·Ο‚",
+"Camera file"                                     : u"Ξ‘ΟΟ‡ΞµΞ―ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚",
+"Camera file was successfuly loaded."             : u"Ξ¤ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ Ο†ΞΏΟΟ„ΟΞΈΞ·ΞΊΞµ ΞµΟ€ΞΉΟ„Ο…Ο‡ΟΟ‚.",
+"Photogrammetric Interior Orientation"            : u"Ξ¦Ο‰Ο„ΞΏΞ³ΟΞ±ΞΌΞΌΞµΟ„ΟΞΉΞΊΟΟ‚ Ξ•ΟƒΟ‰Ο„ΞµΟΞΉΞΊΟΟ‚ Ξ ΟΞΏΟƒΞ±Ξ½Ξ±Ο„ΞΏΞ»ΞΉΟƒΞΌΟΟ‚",
+"IMAGE PARAMETERS:"                               : u"Ξ Ξ‘Ξ΅Ξ‘ΞΞ•Ξ¤Ξ΅ΞΞ™ Ξ•Ξ™ΞΞΞΞ‘Ξ£:",
+"FIDUCIALS:"                                      : u"Ξ•Ξ™ΞΞΞΞΞ£Ξ—ΞΞ‘Ξ¤Ξ‘:",
+"COMPUTATION:"                                    : u"Ξ¥Ξ ΞΞ›ΞΞ“Ξ™Ξ£ΞΞΞ£:",
+"Compute"                                         : u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΟΟ‚",
+"Overall error"                                   : u"Ξ£Ο…Ξ½ΞΏΞ»ΞΉΞΊΟ ΟƒΟ†Ξ¬Ξ»ΞΌΞ±",
+"At least 3 fiducials should be given"            : u"Ξ§ΟΞµΞΉΞ¬Ξ¶ΞΏΞ½Ο„Ξ±ΞΉ Ο„ΞΏΟ…Ξ»Ξ¬Ο‡ΞΉΟƒΟ„ΞΏΞ½ 3 ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΞ®ΞΌΞ±Ο„Ξ±",
+"Error in computation"                            : u"Ξ›Ξ¬ΞΈΞΏΟ‚ ΞΊΞ±Ο„Ξ¬ Ο„ΞΏΞ½ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΟ",
+"Digitize fiducial"                               : u"Ξ¨Ξ·Ο†ΞΉΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΞ®ΞΌΞ±Ο„ΞΏΟ‚",
+"Move to and digitize fiducial"                   : u"ΞΞµΟ„Ξ±ΞΊΞ―Ξ½Ξ·ΟƒΞ· Ο€ΟΞΏΟ‚, ΞΊΞ±ΞΉ ΟΞ·Ο†ΞΉΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΞ®ΞΌΞ±Ο„ΞΏΟ‚",
+"Clear pixel coordinates"                         : u"Ξ”ΞΉΞ±Ξ³ΟΞ±Ο†Ξ® ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ο‰Ξ½ pixel",
+"Mark as invalid"                                 : u"Ξ£Ξ·ΞΌΞµΞ―Ο‰ΟƒΞ· Ο‰Ο‚ Ξ¬ΞΊΟ…ΟΞΏ",
+"Accept as valid"                                 : u"Ξ‘Ο€ΞΏΞ΄ΞΏΟ‡Ξ® Ο‰Ο‚ Ξ­Ξ³ΞΊΟ…ΟΞΏ",
+"Please click on the center of fiducial"          : u"Ξ Ξ±ΟΞ±ΞΊΞ±Ξ»Ο, ΞΊΞ»ΞΉΞΊΞ¬ΟΞµΟ„Ξµ ΟƒΟ„ΞΏ ΞΊΞ­Ξ½Ο„ΟΞΏ Ο„ΞΏΟ… ΞµΞΉΞΊΞΏΞ½ΞΏΟƒΞ®ΞΌΞ±Ο„ΞΏΟ‚",
+"Camera X (mm)"                                   : u"X Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ (mm)",
+"Camera Y (mm)"                                   : u"Y Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ (mm)",
+"Photo x (pixel)"                                 : u"x ΞµΞΉΞΊΟΞ½Ξ±Ο‚ (pixel)",
+"Photo y (pixel)"                                 : u"y ΞµΞΉΞΊΟΞ½Ξ±Ο‚ (pixel)",
+"Reject"                                          : u"Ξ‘Ο€ΟΟΟΞΉΟΞ·",
+"Computed X (mm)"                                 : u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞ­Ξ½ΞΏ X (mm)",
+"Computed Y (mm)"                                 : u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞ­Ξ½ΞΏ Y (mm)",
+"Error X (mm)"                                    : u"Ξ£Ο†Ξ¬Ξ»ΞΌΞ± X (mm)",
+"Error Y (mm)"                                    : u"Ξ£Ο†Ξ¬Ξ»ΞΌΞ± Y (mm)",
+"Computation not performed, OK to close dialog?"  : u"Ξ”Ξ­Ξ½ Ξ­Ο‡ΞµΞΉ Ξ³Ξ―Ξ½ΞµΞΉ Ξ±ΞΊΟΞΌΞ± Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΟΟ‚, Ξ•Ξ½Ο„Ξ¬ΞΎΞµΞΉ Ξ½Ξ± ΞΊΞ»ΞµΞ―ΟƒΞµΞΉ ΞΏ Ξ΄ΞΉΞ¬Ξ»ΞΏΞ³ΞΏΟ‚;",
 
 "ThanCad found that the image was changed. Any previous computations "\
 "have probably become invalid and must be redone.\n\nOK to continue?":
-                                                    u"Το ThanCad πρόσεξε ότι η εικόνα έχει αλλάξει. "\
-                                                    u"Οποιοιδήποτε προηγούμενοι υπολογισμοί πιθανότατα "\
-                                                    u"δεν ισχύουν και πρέπει να ξαναγίνουν.\n\nΕντάξει για συνέχεια;",
+                                                    u"Ξ¤ΞΏ ThanCad Ο€ΟΟΟƒΞµΞΎΞµ ΟΟ„ΞΉ Ξ· ΞµΞΉΞΊΟΞ½Ξ± Ξ­Ο‡ΞµΞΉ Ξ±Ξ»Ξ»Ξ¬ΞΎΞµΞΉ. "\
+                                                    u"ΞΟ€ΞΏΞΉΞΏΞΉΞ΄Ξ®Ο€ΞΏΟ„Ξµ Ο€ΟΞΏΞ·Ξ³ΞΏΟΞΌΞµΞ½ΞΏΞΉ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞΏΞ― Ο€ΞΉΞΈΞ±Ξ½ΟΟ„Ξ±Ο„Ξ± "\
+                                                    u"Ξ΄ΞµΞ½ ΞΉΟƒΟ‡ΟΞΏΟ…Ξ½ ΞΊΞ±ΞΉ Ο€ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± ΞΎΞ±Ξ½Ξ±Ξ³Ξ―Ξ½ΞΏΟ…Ξ½.\n\nΞ•Ξ½Ο„Ξ¬ΞΎΞµΞΉ Ξ³ΞΉΞ± ΟƒΟ…Ξ½Ξ­Ο‡ΞµΞΉΞ±;",
 "A camera file is already loaded. "\
 "If a new camera file is loaded, "\
 "any previous computations will probably become invalid "\
 "and must be redone.\n\nOK to load new camera file?":
-                                                    u"Ένα αρχείο φωτομηχανής έχει ήδη φορτωθεί. "\
-                                                    u"Αν φορτωθεί νέο αρχείο φωτομηχανής, "\
-                                                    u"οποιοιδήποτε προηγούμενοι υπολογισμοί πιθανότατα "\
-                                                    u"δεν θα ισχύουν και πρέπει να ξαναγίνουν.\n\n"\
-                                                    u"Εντάξει να φορτωθεί νέο αρχείο φωτομηχανής;",
-"&Model definition"                               : u"Ορισμός μοντέλων",
-"Defines the images which make a photogrammetric model": "Ορισμός εικόνων που απαρτίζουν φωτογραμμετρικό μοντέλο",
-"&Stereo toggle"                                  : u"Ενεργοποίηση/απενεργοποίηση στερεοσκοπικής",
-"Sets stereo (blue/red) mode on and off"          : u"Ενεργοποίηση και απενεργοποίηση στερεοσκοπικής όρασης (κόκκινο/κυανό)",
-"&Stereo average"                                 : u"Μέσος όρος στερεοσκοπικής",
-"Zooms the z coordinates so that they are easily visible": u"Εστιάζει τις συντεταγμένες z έτσι ώστε να είναι πιο εύκολα ορατές",
-"&Stereo grid"                                    : u"Κάναβος στερεοσκοπικής",
+                                                    u"ΞΞ½Ξ± Ξ±ΟΟ‡ΞµΞ―ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚ Ξ­Ο‡ΞµΞΉ Ξ®Ξ΄Ξ· Ο†ΞΏΟΟ„Ο‰ΞΈΞµΞ―. "\
+                                                    u"Ξ‘Ξ½ Ο†ΞΏΟΟ„Ο‰ΞΈΞµΞ― Ξ½Ξ­ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚, "\
+                                                    u"ΞΏΟ€ΞΏΞΉΞΏΞΉΞ΄Ξ®Ο€ΞΏΟ„Ξµ Ο€ΟΞΏΞ·Ξ³ΞΏΟΞΌΞµΞ½ΞΏΞΉ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΞΏΞ― Ο€ΞΉΞΈΞ±Ξ½ΟΟ„Ξ±Ο„Ξ± "\
+                                                    u"Ξ΄ΞµΞ½ ΞΈΞ± ΞΉΟƒΟ‡ΟΞΏΟ…Ξ½ ΞΊΞ±ΞΉ Ο€ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± ΞΎΞ±Ξ½Ξ±Ξ³Ξ―Ξ½ΞΏΟ…Ξ½.\n\n"\
+                                                    u"Ξ•Ξ½Ο„Ξ¬ΞΎΞµΞΉ Ξ½Ξ± Ο†ΞΏΟΟ„Ο‰ΞΈΞµΞ― Ξ½Ξ­ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ Ο†Ο‰Ο„ΞΏΞΌΞ·Ο‡Ξ±Ξ½Ξ®Ο‚;",
+"&Model definition"                               : u"ΞΟΞΉΟƒΞΌΟΟ‚ ΞΌΞΏΞ½Ο„Ξ­Ξ»Ο‰Ξ½",
+"Defines the images which make a photogrammetric model": "ΞΟΞΉΟƒΞΌΟΟ‚ ΞµΞΉΞΊΟΞ½Ο‰Ξ½ Ο€ΞΏΟ… Ξ±Ο€Ξ±ΟΟ„Ξ―Ξ¶ΞΏΟ…Ξ½ Ο†Ο‰Ο„ΞΏΞ³ΟΞ±ΞΌΞΌΞµΟ„ΟΞΉΞΊΟ ΞΌΞΏΞ½Ο„Ξ­Ξ»ΞΏ",
+"&Stereo toggle"                                  : u"Ξ•Ξ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·/Ξ±Ο€ΞµΞ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΟƒΟ„ΞµΟΞµΞΏΟƒΞΊΞΏΟ€ΞΉΞΊΞ®Ο‚",
+"Sets stereo (blue/red) mode on and off"          : u"Ξ•Ξ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΞΊΞ±ΞΉ Ξ±Ο€ΞµΞ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΟƒΟ„ΞµΟΞµΞΏΟƒΞΊΞΏΟ€ΞΉΞΊΞ®Ο‚ ΟΟΞ±ΟƒΞ·Ο‚ (ΞΊΟΞΊΞΊΞΉΞ½ΞΏ/ΞΊΟ…Ξ±Ξ½Ο)",
+"&Stereo average"                                 : u"ΞΞ­ΟƒΞΏΟ‚ ΟΟΞΏΟ‚ ΟƒΟ„ΞµΟΞµΞΏΟƒΞΊΞΏΟ€ΞΉΞΊΞ®Ο‚",
+"Zooms the z coordinates so that they are easily visible": u"Ξ•ΟƒΟ„ΞΉΞ¬Ξ¶ΞµΞΉ Ο„ΞΉΟ‚ ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½ΞµΟ‚ z Ξ­Ο„ΟƒΞΉ ΟΟƒΟ„Ξµ Ξ½Ξ± ΞµΞ―Ξ½Ξ±ΞΉ Ο€ΞΉΞΏ ΞµΟΞΊΞΏΞ»Ξ± ΞΏΟΞ±Ο„Ξ­Ο‚",
+"&Stereo grid"                                    : u"ΞΞ¬Ξ½Ξ±Ξ²ΞΏΟ‚ ΟƒΟ„ΞµΟΞµΞΏΟƒΞΊΞΏΟ€ΞΉΞΊΞ®Ο‚",
 "Sets a grid at the reference elevation on and off to aid stereo viewing":
-                                                    u"Ενεργοποίηση/απενεργοποίηση κάναβου στο υψόμετρο αναφοράς για διευκόλυνση στερεσοκπικής όρασης",
-"Photogrammetric Model Definition"                : u"Ορισμός Φωτογραμμετρικού Μοντέλου",
-"MODEL DEFINITION:"                               : u"ΟΡΙΣΜΟΣ ΜΟΝΤΕΛΟΥ",
-"Model Name"                                      : u"Ονομασία μοντέλου",
-"Model Description"                               : u"Περιγραφή μοντέλου",
-"Left image file"                                 : u"Αρχείο αριστερής εικόνας",
-"Right image file"                                : u"Αρχείο δεξιάς εικόνας",
+                                                    u"Ξ•Ξ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·/Ξ±Ο€ΞµΞ½ΞµΟΞ³ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΞΊΞ¬Ξ½Ξ±Ξ²ΞΏΟ… ΟƒΟ„ΞΏ Ο…ΟΟΞΌΞµΟ„ΟΞΏ Ξ±Ξ½Ξ±Ο†ΞΏΟΞ¬Ο‚ Ξ³ΞΉΞ± Ξ΄ΞΉΞµΟ…ΞΊΟΞ»Ο…Ξ½ΟƒΞ· ΟƒΟ„ΞµΟΞµΟƒΞΏΞΊΟ€ΞΉΞΊΞ®Ο‚ ΟΟΞ±ΟƒΞ·Ο‚",
+"Photogrammetric Model Definition"                : u"ΞΟΞΉΟƒΞΌΟΟ‚ Ξ¦Ο‰Ο„ΞΏΞ³ΟΞ±ΞΌΞΌΞµΟ„ΟΞΉΞΊΞΏΟ ΞΞΏΞ½Ο„Ξ­Ξ»ΞΏΟ…",
+"MODEL DEFINITION:"                               : u"ΞΞ΅Ξ™Ξ£ΞΞΞ£ ΞΞΞΞ¤Ξ•Ξ›ΞΞ¥",
+"Model Name"                                      : u"ΞΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ± ΞΌΞΏΞ½Ο„Ξ­Ξ»ΞΏΟ…",
+"Model Description"                               : u"Ξ ΞµΟΞΉΞ³ΟΞ±Ο†Ξ® ΞΌΞΏΞ½Ο„Ξ­Ξ»ΞΏΟ…",
+"Left image file"                                 : u"Ξ‘ΟΟ‡ΞµΞ―ΞΏ Ξ±ΟΞΉΟƒΟ„ΞµΟΞ®Ο‚ ΞµΞΉΞΊΟΞ½Ξ±Ο‚",
+"Right image file"                                : u"Ξ‘ΟΟ‡ΞµΞ―ΞΏ Ξ΄ΞµΞΎΞΉΞ¬Ο‚ ΞµΞΉΞΊΟΞ½Ξ±Ο‚",
 
-"&Rectify Map"                                    : u"Ορθοαναγωγή χάρτη",
-"Rectifies a raster topographic map"              : u"Κάνει ορθοαναγωγή τοπογραφικού χάρτη (raster)",
-"G&eoreference Image"                             : u"Γεωαναφορά εικόνας",
-"Image georeferencing with control points"        : u"Κάνει γεωαναφορά εικόνας με φωτοσταθερά σημεία",
-"&Orthoimage GDEM"                                : u"Ορθοφωτογραφία ΠΨΜΕ",
-"Image orthorectification using global DEM"       : u"Ορθοαναγωγή φωτογραφίας με χρήση παγκόσμιου ΨΜΕ",
+"&Rectify Map"                                    : u"ΞΟΞΈΞΏΞ±Ξ½Ξ±Ξ³Ο‰Ξ³Ξ® Ο‡Ξ¬ΟΟ„Ξ·",
+"Rectifies a raster topographic map"              : u"ΞΞ¬Ξ½ΞµΞΉ ΞΏΟΞΈΞΏΞ±Ξ½Ξ±Ξ³Ο‰Ξ³Ξ® Ο„ΞΏΟ€ΞΏΞ³ΟΞ±Ο†ΞΉΞΊΞΏΟ Ο‡Ξ¬ΟΟ„Ξ· (raster)",
+"G&eoreference Image"                             : u"Ξ“ΞµΟ‰Ξ±Ξ½Ξ±Ο†ΞΏΟΞ¬ ΞµΞΉΞΊΟΞ½Ξ±Ο‚",
+"Image georeferencing with control points"        : u"ΞΞ¬Ξ½ΞµΞΉ Ξ³ΞµΟ‰Ξ±Ξ½Ξ±Ο†ΞΏΟΞ¬ ΞµΞΉΞΊΟΞ½Ξ±Ο‚ ΞΌΞµ Ο†Ο‰Ο„ΞΏΟƒΟ„Ξ±ΞΈΞµΟΞ¬ ΟƒΞ·ΞΌΞµΞ―Ξ±",
+"&Orthoimage GDEM"                                : u"ΞΟΞΈΞΏΟ†Ο‰Ο„ΞΏΞ³ΟΞ±Ο†Ξ―Ξ± Ξ Ξ¨ΞΞ•",
+"Image orthorectification using global DEM"       : u"ΞΟΞΈΞΏΞ±Ξ½Ξ±Ξ³Ο‰Ξ³Ξ® Ο†Ο‰Ο„ΞΏΞ³ΟΞ±Ο†Ξ―Ξ±Ο‚ ΞΌΞµ Ο‡ΟΞ®ΟƒΞ· Ο€Ξ±Ξ³ΞΊΟΟƒΞΌΞΉΞΏΟ… Ξ¨ΞΞ•",
 }
 Tphot = Translation(en2gr)
 #Tarch.thanLangSet("en", thancadconf.thanTranslateTo)

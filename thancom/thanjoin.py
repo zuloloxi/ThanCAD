@@ -1,28 +1,28 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes the line join command.
@@ -113,23 +113,28 @@ def thanJoinGapn(proj, elems, disx):
     disx is a function which find the distance of 2 points in 2
     or 3 dimensions. The running time grows as n**3. Thus it is
     not practical for big n, for example n > 50"""
-    elems = set(elems)
+    elems = list(elems)
     while len(elems) > 1:
         d = []
-        for e1 in elems:
-            for e2 in elems:
-                if e2 is e1: continue
+        nelems = len(elems)
+        for k1 in range(nelems):
+            e1 = elems[k1]
+            for k2 in range(k1+1, nelems):
+                e2 = elems[k2]
                 for i in 0,-1:
                     for j in 0,-1:
-                        d.append((disx(e1.cp[i], e2.cp[j]), i, j, e1, e2))
-        dm, i, j, e1, e2 = min(d)
-        en = e1.thanClone()
+                        d.append((disx(e1.cp[i], e2.cp[j]), i, j, k1, k2))
+        print("thanJoinGapn(): d = ")
+        for temp in d: print(temp)
+        dm, i, j, k1, k2 = min(d)
+        en = elems[k1].thanClone()
+        e2 = elems[k2]
 #        en.thanTags = e1.thanTags
 #        en.handle = e1.handle
         if i == 0: en.cp.reverse()
         if j == 0: en.cp.extend(e2.cp)
         else     : en.cp.extend(reversed(e2.cp))
-        elems.remove(e1)
-        elems.remove(e2)
-        elems.add(en)
+        del elems[k2]    #Note k2>k1 and thus k2 is the first to delete
+        del elems[k1]
+        elems.append(en)
     return elems

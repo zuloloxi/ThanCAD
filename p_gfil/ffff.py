@@ -1,14 +1,16 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import p_ggen
 import base64
+try:  #Support olfer versions of python
+    base64.encodestring
+except:
+    base64.encodestring = base64.encodebytes
+    base64.decodestring = base64.decodebytes
+
 k = []
 
 
 def than():
-    f = '  ахамасиос сталос - коцислийо циа лгвамийоус '
+    f = '  н▒н≤н▒н²н▒нён≥н÷нё нён╓н▒н°н÷нё - н⌡н÷н⌠н≥нён°н≥н н÷ н⌠н≥н▒ н°н≈н╖н▒н²н≥н н÷н╔нё '
     f = ffff(f)
     print(f)
     f = b'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
@@ -20,7 +22,7 @@ def than():
 def pre():
     from math import pi
     a = pi - int(pi)
-    for i in xrange(8):
+    for i in range(8):
         a *= 10.0
         k.append(int(a))
         a = a - int(a)

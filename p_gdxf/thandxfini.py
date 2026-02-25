@@ -1,8 +1,5 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
 from os.path import splitext
 from math import fabs
-from p_ggen import path
 
 from .thandxflin import ThanDxfLin
 from .thandxfsym import ThanDxfSym
@@ -12,10 +9,8 @@ from .thandxfatt import ThanDxfAtt
 
 from .thandxfext import thanCadCodes
 
-#############################################################################
-#############################################################################
-
 _idatFil = 0
+
 
 class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
                     ThanDxfGeo, ThanDxfAtt):
@@ -347,9 +342,9 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
 #        fpath = '\\50SAMBA\RUNPROGS\EXE\PHUT\'
 #        fpath = '\\\\50SAMBA\\RUNPROGS\\EXE\\PHUT\\'
-        fpath = path("//50samba") / "runprogs" / "exe" / "phut"
+        fpath = "//50samba/runprogs/exe/phut/"
 
-        try:            fBlo = open(fpath/(bFileName+".dxf"), "r")
+        try:            fBlo = open(fpath+bFileName+".dxf", "r")
         except IOError: fBlo = None
         if fBlo is None:
             try:            fBlo = open(bFileName+".dxf", "r")
@@ -479,14 +474,6 @@ def defthanlayers(dxf):
     dxf.thanDxfCrThanLayer('AER_MOD',    color= 3, linetype='CONTINUOUS')
 
 
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL FUNCTIONS
-
-#===========================================================================
-
-
 def test():
     "Creates a small drawing and saves it to .dxf format."
     dxf = ThanDxfPlot()
@@ -504,10 +491,5 @@ def test():
 
     dxf.thanDxfPlot(0, 0, 999)
 
-
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
 
 if __name__ == "__main__": test()

@@ -1,21 +1,20 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
 # ThanCad 0.1.2 "Free": 2dimensional CAD with raster support for engineers.
-# 
+#
 # Copyright (c) 2001-2010 Thanasis Stamos,  December 23, 2010
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,7 +27,6 @@ This module defines a separate windows which shows active error messages. In the
 future, if the user doubleclicks an error message, appropriate action will be
 carried out, to correct the error (with the user's help).
 """
-from __future__ import print_function
 import time, tkinter
 import p_gtkwid, p_ggen
 
@@ -129,20 +127,20 @@ class ThanShellError:
 
 def test(mes):
     root = tkinter.Tk()
-    e = ThanTkWinError(root, mes, "Μήτσα")
+    e = ThanTkWinError(root, mes, "ΞΞ®Ο„ΟƒΞ±")
     e.thanPrt("\n\nAndreas\tStella\n", "info1")
     e.thanPrt("\tChildren\n", "info")
     e.thanPrt("Warning:\txxx\n", "can")
     e.thanPrt("\tyyy\n", "can1")
 
-    e.thanPrt("\n\nΑνδρέας\tΣτέλλα\n", "com")
-    e.thanPrt("\tΠαιδιά")
-    e.thanPrt("\n\nΑνδρέας\tΣτέλλα\n", "mes")
-    e.thanPrt("\tΠαιδιά")
-    e.thanPrt("Μήτσα", "thancad")
+    e.thanPrt("\n\nΞ‘Ξ½Ξ΄ΟΞ­Ξ±Ο‚\tΞ£Ο„Ξ­Ξ»Ξ»Ξ±\n", "com")
+    e.thanPrt("\tΞ Ξ±ΞΉΞ΄ΞΉΞ¬")
+    e.thanPrt("\n\nΞ‘Ξ½Ξ΄ΟΞ­Ξ±Ο‚\tΞ£Ο„Ξ­Ξ»Ξ»Ξ±\n", "mes")
+    e.thanPrt("\tΞ Ξ±ΞΉΞ΄ΞΉΞ¬")
+    e.thanPrt("ΞΞ®Ο„ΟƒΞ±", "thancad")
     del e
     root.mainloop()
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     test(__doc__)

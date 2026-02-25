@@ -89,11 +89,11 @@ c     text for decimal exponent
 #     draw tick marks and annotation
       ntic=ixs+1
       #do 20 i=1,ntic
-      for i in xrange(1, ntic+1):
+      for i in range(1, ntic+1):
             dxf.thanDxfPlot(xn,yn,3)
             dxf.thanDxfPlot(xn+dxt,yn+dyt,2)
-            #if i-(i/2)*2 != 0: dxf.thanDxfPlotNumber(xn+ddx1,yn+ddy1,sizen,x0,theta,2)
-            if i-(i/2)*2 != 0: dxf.thanDxfPlotNumber(xn+ddx1,yn+ddy1,sizen,x0,theta,-1)      ########
+            if i-(i//2)*2 != 0: dxf.thanDxfPlotNumber(xn+ddx1,yn+ddy1,sizen,x0,theta,2)
+            #if i-(i//2)*2 != 0: dxf.thanDxfPlotNumber(xn+ddx1,yn+ddy1,sizen,x0,theta,-1)      ########
             xn=xn+rcth
             yn=yn+rsth
             x0=x0+radx

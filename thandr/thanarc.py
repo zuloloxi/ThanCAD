@@ -1,45 +1,41 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the circular arc element.
 """
 
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import atan2, tan, pi, fabs, cos, sin, hypot
 import bisect
 import tkinter
-from p_ggen import prg, thanUnicode
-from p_gmath import PI2, thanintersect, thanNearx
-from thanvar import Canc
+from p_ggen import prg, thanUnicode, Canc
+from p_gmath import PI2, thanintersect, thanNearx, thanNear2, circle2Line
+from thanvar import thanExtendNodeDims, thanPilArc
 from thantrans import T
 from . import thanintall
 from .thanelem import ThanElement
 
-############################################################################
-############################################################################
 
 class ThanArc(ThanElement):
     "A circular arc."
@@ -63,7 +59,7 @@ class ThanArc(ThanElement):
         The min and max x and y occur at angles 0, 90, 180, 270 degrees, _if_
         the arc contains these angles. Of course the arc can not contain all these
         angles - it would be a circle if it did. Thus the ends of the arc are also
-        candidate for min or max x or y.
+        candidates for min or max x or y.
         """
         xx = [self.cc[0]+self.r*cos(self.theta1), self.cc[0]+self.r*cos(self.theta2)]
         yy = [self.cc[1]+self.r*sin(self.theta1), self.cc[1]+self.r*sin(self.theta2)]
@@ -83,6 +79,17 @@ class ThanArc(ThanElement):
         if thanNearx(self.cc[0], self.cc[0]+self.r): return False # Degenerate arc
         if thanNearx(self.cc[1], self.cc[1]+self.r): return False # Degenerate arc
         return not thanNearx(self.theta1, self.theta2)       # Degenerate arc
+
+
+    def than2Line(self, dt=0.0, ta=None, tb=None):
+        "Represent the arc with straight line segments."
+        if dt is None: return True               #than2Line IS implemented
+        if ta is None:
+            ta = self.theta1
+            tb = self.theta2
+        cp, tp = circle2Line(self.cc[0], self.cc[1], self.r, ta, tb, dt)
+        cp = thanExtendNodeDims(cp, self.cc)
+        return cp, tp    #The caller may mutate these lists without problem
 
 
     def thanRotate(self):
@@ -198,7 +205,8 @@ class ThanArc(ThanElement):
         "Finds the nearest point of this arc to a point and its angle."
         a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
         aa = hypot(a[0], a[1])
-        if thanNearx(aa, 0.0): thet = 0.0
+        #if thanNearx(aa, 0.0): thet = 0.0   #Thanasis2024_11_28:commented out
+        if thanNearx(aa+self.r, 0.0+self.r): thet = 0.0  #Thanasis2024_11_28: more robust condition
         else:                  thet = atan2(a[1], a[0]) % PI2
         in_, _ = self.thanThetain(thet)
         if not in_: return None, None, None
@@ -212,7 +220,8 @@ class ThanArc(ThanElement):
         "Find the angular distance of point ccu from a endpoint of the arc."
         a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
         aa = hypot(a[0], a[1])
-        if thanNearx(aa, 0.0): return 1.0e30
+        #if thanNearx(aa, 0.0): return 1.0e30  #Thanasis2024_11_28:commented out
+        if thanNearx(aa, 0.0): return 1.0e30   #Thanasis2024_11_28: more robust condition
         thet = atan2(a[1], a[0]) % PI2
         if self.thanThetain(thet)[0]:
             if iend == 0: return (thet-self.theta1) % PI2     #From first point
@@ -226,7 +235,8 @@ class ThanArc(ThanElement):
         "Finds the perpendicular points from ccu to the arc."
         a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
         aa = hypot(a[0], a[1])
-        if thanNearx(aa, 0.0): thet = 0.0
+        #if thanNearx(aa, 0.0): thet = 0.0               #Thanasis2024_11_28:commented out
+        if thanNearx(aa+self.r, 0.0+self.r): thet = 0.0  #Thanasis2024_11_28: more robust condition
         else:                  thet = atan2(a[1], a[0]) % PI2
         ps = []
         in_, thet1 = self.thanThetain(thet)
@@ -254,7 +264,7 @@ class ThanArc(ThanElement):
             else:             roff = self.r+distance
         if roff <= 0.0: return None      # Element can not be offset (degenerate)
         e = ThanArc()
-        e.thanSet(self.cc, roff, self.theta1, self.theta2)
+        e.thanSet(self.cc, roff, self.theta1, self.theta2, self.thanSpin())
         if e.thanIsNormal(): return e
         return None                      # Element can not be offset (degenerate)
 
@@ -269,7 +279,7 @@ class ThanArc(ThanElement):
 
     def thanLength(self):
         "Returns the length of the arc."
-        return pi*(self.theta2-self.theta1)
+        return self.r * (self.theta2-self.theta1)
 
 
     def thanArea(self):
@@ -300,17 +310,17 @@ class ThanArc(ThanElement):
             cp.append((thet%PI2, c1))
         for c in ct:
             cn, _, t = self.thanPntNearest2(c)
-            cp.append((t, c))
-            assert cn != None, "It should have been checked (that ct are indeed near the arc)!"
+            cp.append((t, cn))   #Thanasis2024_11_28: check if points are identical, not that
+            assert cn is not None, "It should have been checked (that ct are indeed near the arc)!"
         cp.sort()
         i = 0
         while i < len(cp) and len(cp) > 1:
-            if self.thanThetaEQ(cp[i][0], cp[i-1][0]): del cp[i]
+            if thanNear2(cp[i][1], cp[i-1][1]): del cp[i] #Thanasis2024_11_28: check if points are identical, not that thetas are identical
             else: i += 1
         if len(cp) < 2: return None, None               # Degenerate arc?, or full circle?
         cn, _, t = self.thanPntNearest2(cnear)
         cpnear = t, cn
-        assert cn != None, "It should have been checked (that cnear are indeed near the arc)!"
+        assert cn is not None, "It should have been checked (that cnear are indeed near the arc)!"
         if not self.thanThetain(t): return None, None   # No arc at the position the user has selected
         i = bisect.bisect_right(cp, cpnear)
         if i == 0:
@@ -325,9 +335,9 @@ class ThanArc(ThanElement):
         "Breaks an arc to 2 arcs."
         if c1 is None: return True                       # Break IS implemented
         cp1, r1, thet1 = self.thanPntNearest2(c1)
-        assert cp1 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
+        assert cp1 is not None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
         cp2, r2, thet2 = self.thanPntNearest2(c2)
-        assert cp2 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
+        assert cp2 is not None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
 
         _, thet1 = self.thanThetain(thet1)
         _, thet2 = self.thanThetain(thet2)
@@ -343,12 +353,7 @@ class ThanArc(ThanElement):
         return e1, e2
 
 
-    def thanThetaEQ(self, theta1, theta2):
-        "Returns True if theta1 is almost equal to theta2; angles may differ by multiple of 2pi."
-        return thanNearx(0.0, self.r*tan(theta2-theta1))
-
-
-    def thanThetain(self, th):
+    def thanThetainold(self, th):
         """Finds if th is between self.theta1 and self.theta2; th must be 0<=th<2pi.
 
         Note that 0<=self.theta1<2pi and:
@@ -362,13 +367,43 @@ class ThanArc(ThanElement):
         return False, th
 
 
+    def thanThetain(self, th):
+        """Finds if th is between self.theta1 and self.theta2; th must be 0<=th<2pi.
+
+        Note that 0<=self.theta1<2pi and:
+        1. if 0=<self.theta2<2pi and self.theta1 <= self.theta2 OK
+        2. else 2pi<=self.theta2<4pi (and of course self.theta1 < self.theta2)
+        """
+        if self.theta1 <= th      <= self.theta2: return True, th
+        if self.theta1 <= th+PI2  <= self.theta2: return True, th+PI2
+
+        #Thanasis2024_11_29:
+        #Check if angle th is close to either end of the arc (angles self.theta1 and self.theta2)
+        #We compute the delta theta (0<=dth<2π). This should be small if th is actually close to
+        #theta1 or theta2. Thus if dth > pi, it means that the actual small angle dth is negative
+        #and we compute it as dth=dth-2pi.
+        #If |dth| ~= zero, the it is close the one end. However this is not
+        #robust if the radius is very small or very large, thus we check that
+        #the length of the corresponding chord s=r*|dth| which is about zero.
+        #Since checking that something is close to zero has little meaning without
+        #context, we check if r+s is close r.
+        dth = (th - self.theta1) % PI2
+        if dth > pi: dth -= PI2
+        if thanNearx(self.r+self.r*fabs(dth), self.r+0.0): return True, self.theta1
+
+        dth = (th - self.theta2) % PI2
+        if dth > pi: dth -= PI2
+        if thanNearx(self.r+self.r*fabs(dth), self.r+0.0): return True, self.theta2
+        return False, th
+
+
     def thanTkGet(self, proj):
         "Gets the attributes of the arc interactively from a window."
         than = proj[2].than
         g2l = than.ct.global2Local
         cc = proj[2].thanGudGetPoint(T["Center: "])
         if cc == Canc: return Canc                # Arc cancelled
-        r = proj[2].thanGudGetCircle(cc, T["Radius: "])
+        r = proj[2].thanGudGetCircle(cc, 1.0, T["Radius: "])
         if r == Canc: return Canc                 # Arc cancelled
         temp = than.dc.create_oval(g2l(cc[0]-r, cc[1]-r), g2l(cc[0]+r, cc[1]+r),
             outline="blue", tags=("e0",), outlinestipple="gray50")
@@ -389,19 +424,28 @@ class ThanArc(ThanElement):
 
     def thanTkDraw1(self, than):
         "Draws the arc to a Tk Canvas."
+        w = than.tkThick
         xc, yc = than.ct.global2Local(self.cc[0], self.cc[1])
         r, temp = than.ct.global2LocalRel(self.r, self.r)
         theta1 = self.theta1 * 180.0/pi
         theta2 = self.theta2 * 180.0/pi
         dth = (theta2-theta1) % 360.0
         temp = than.dc.create_arc(xc-r, yc-r, xc+r, yc+r, start=theta1, extent=dth,
-            style=tkinter.ARC, outline=than.outline, fill=than.fill, dash=than.dash, tags=self.thanTags)
+            style=tkinter.ARC, outline=than.outline, fill=than.fill, dash=than.dash, tags=self.thanTags, width=w)
 
 
     def thanExpDxf(self, fDxf):
         "Exports the arc to dxf file."
         fDxf.thanDxfPlotArc3(self.cc[0], self.cc[1], self.cc[2], self.r,
             self.theta1/pi*180.0, self.theta2/pi*180.0)
+
+
+    def thanExpKml(self, than):
+        "Exports the arc to Google .kml file."
+        than.ibr += 1
+        aa = than.form % (than.ibr,)
+        cp, tp = self.than2Line(dt=than.dt)    #1m resolution is hopefully enough for google maps
+        than.kml.writeLinestring(aa, cp, than.layname, desc="")
 
 
     def thanExpThc1(self, fw):
@@ -423,14 +467,19 @@ class ThanArc(ThanElement):
         self.thanSet(cc, r, t1, t2, spin)
 
 
-    def thanExpPil(self, than):
+    def thanExpPilWorkaround(self, than):
         "Exports the arc to a PIL raster image."
         x1, y1 = than.ct.global2Locali(self.cc[0]-self.r, self.cc[1]+self.r)  # PIL needs left,upper and ..
         x2, y2 = than.ct.global2Locali(self.cc[0]+self.r, self.cc[1]-self.r)  # ..right,lower
         t2 = -int(self.theta1/pi*180.0+0.5)
         t1 = -int(self.theta2/pi*180.0+0.5)
-        for i in xrange(*than.widtharc):
+        for i in range(*than.widtharc):
             than.dc.arc((x1-i, y1-i, x2+i, y2+i), t1, t2, fill=than.outline)
+
+
+    def thanExpPil(self, than):   #Thanasis2022_09_16
+        "Exports the arc to a PIL raster image; respects dashed lines."
+        thanPilArc(than, self.cc, self.r, self.theta1, self.theta2)
 
 
     def thanTransform(self, fun):
@@ -491,7 +540,7 @@ class ThanArc(ThanElement):
         than.write("\n".join(t))
 
 
-if __name__ == "__main__":
+def test():
     prg(__doc__)
     c = ThanArc()
     c.thanSet([10.0, 20.0, -11.0], 3.0, 0.0, pi*0.5)

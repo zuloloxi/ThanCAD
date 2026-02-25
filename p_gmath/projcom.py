@@ -1,7 +1,4 @@
 "Base class for projection transformations and utilities."
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import sqrt, hypot
 from p_ggen import iterby2
 
@@ -123,7 +120,7 @@ class _Projection:
             xx, yy, zz = self.project((xg, yg, zg))
             r.append(xyok*((xx-xr)**2 + (yy-yr)**2))
         er = 0.0
-        for i in xrange(len(fots)-1):
+        for i in range(len(fots)-1):
             er += (r[i]+r[i+1])*0.5*dis[i]
         er = sqrt(er/discom)
         return er, er*gdiscom/discom, discom
@@ -143,7 +140,7 @@ class _Projection:
     def readCoefs(self, fr, n):
         "Reads n real coefficients."
         L = []
-        for i in xrange(n):
+        for i in range(n):
             dl1 = read1(fr)
             dl1 = dl1.replace("d", "e").replace("D", "e") # Allow for Fortran generated file
             L.append(float(dl1))

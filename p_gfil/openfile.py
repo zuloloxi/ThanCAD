@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-
 import sys
 import p_ggen, p_gtkwid
 from . import filmed, ffff, opgui, er
@@ -49,52 +47,53 @@ DLGETPRE = 'Getting prefix from file'
 DLERRPRV = 'Error in the execution of the previous program:'
 DLRETPRV = '(Delete file "mediate.tmp" and retry)'
 DLLOGOST = b'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
-DLLOGOSS = '  ΑΘΑΝΑΣΙΟΣ ΣΤΑΜΟΣ - ΛΟΓΙΣΜΙΚΟ ΓΙΑ ΜΗΧΑΝΙΚΟΥΣ '
+DLLOGOSS = '  Ξ‘ΞΞ‘ΞΞ‘Ξ£Ξ™ΞΞ£ Ξ£Ξ¤Ξ‘ΞΞΞ£ - Ξ›ΞΞ“Ξ™Ξ£ΞΞ™ΞΞ Ξ“Ξ™Ξ‘ ΞΞ—Ξ§Ξ‘ΞΞ™ΞΞΞ¥Ξ£ '
 
 
 def setPar(fun):
-    "Sets the user defined function for reading extended information from mediat.tmp."
+    "Sets the user defined function for reading extended information from mediate.tmp."
     global openFilePar
     openFilePar = fun
 
-def openFile1(un, ext, stat, iPro, desc):
+def openFile1(un, ext, stat, iPro, desc, encoding=None):
     """Requests a file to be opened.
 
-c-----un = 0  : Θέτει αρχικές τιμές στις διάφορες μεταβλητές.
-c               Σε αυτή την περίπτωση, desc είναι το όνομα του προγράμματος.
-c               και αν iPro=-1, τότε δεν τυπώνεται το όνομα Α.ΣΤΑΜΟΣ Α.Ε.
-c     un = 999: Τέλος των ορισμών των αρχείων που θα ανοιχθούν. Ανοιξε
-c               τα αρχεία.
-c     un = 888: Τέλος των ορισμών των αρχείων που θα ανοιχθούν. Ανοιξε
-c               τα αρχεία. Σώσε το πρόθεμα στο αρχείο FILNAMMED
-c     un > 0  : File unit. Πρέπει uArx<un<uTel. Αν δεν ισχύει και δεν το un
-c               είναι διαφορετικό από 0, 888, 999 τότε δημιουργείται λάθος.
+c-----un = 0  : ΞΞ­Ο„ΞµΞΉ Ξ±ΟΟ‡ΞΉΞΊΞ­Ο‚ Ο„ΞΉΞΌΞ­Ο‚ ΟƒΟ„ΞΉΟ‚ Ξ΄ΞΉΞ¬Ο†ΞΏΟΞµΟ‚ ΞΌΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ­Ο‚.
+c               Ξ£Ξµ Ξ±Ο…Ο„Ξ® Ο„Ξ·Ξ½ Ο€ΞµΟΞ―Ο€Ο„Ο‰ΟƒΞ·, desc ΞµΞ―Ξ½Ξ±ΞΉ Ο„ΞΏ ΟΞ½ΞΏΞΌΞ± Ο„ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚.
+c               ΞΊΞ±ΞΉ Ξ±Ξ½ iPro=-1, Ο„ΟΟ„Ξµ Ξ΄ΞµΞ½ Ο„Ο…Ο€ΟΞ½ΞµΟ„Ξ±ΞΉ Ο„ΞΏ ΟΞ½ΞΏΞΌΞ± Ξ‘ΞΈΞ±Ξ½Ξ¬ΟƒΞΉΞΏΟ‚ Ξ£Ο„Ξ¬ΞΌΞΏΟ‚.
+c     un = 999,998: Ξ¤Ξ­Ξ»ΞΏΟ‚ Ο„Ο‰Ξ½ ΞΏΟΞΉΟƒΞΌΟΞ½ Ο„Ο‰Ξ½ Ξ±ΟΟ‡ΞµΞ―Ο‰Ξ½ Ο€ΞΏΟ… ΞΈΞ± Ξ±Ξ½ΞΏΞΉΟ‡ΞΈΞΏΟΞ½. Ξ‘Ξ½ΞΏΞΉΞΎΞµ
+c               Ο„Ξ± Ξ±ΟΟ‡ΞµΞ―Ξ±. Ξ‘Ξ½ ΞµΞ―Ξ½Ξ±ΞΉ 998 Ξ¬Ξ½ΞΏΞΉΞΎΞµ ΞΌΞµ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞ±.
+c     un = 888,887: Ξ¤Ξ­Ξ»ΞΏΟ‚ Ο„Ο‰Ξ½ ΞΏΟΞΉΟƒΞΌΟΞ½ Ο„Ο‰Ξ½ Ξ±ΟΟ‡ΞµΞ―Ο‰Ξ½ Ο€ΞΏΟ… ΞΈΞ± Ξ±Ξ½ΞΏΞΉΟ‡ΞΈΞΏΟΞ½. Ξ‘Ξ½ΞΏΞΉΞΎΞµ
+c               Ο„Ξ± Ξ±ΟΟ‡ΞµΞ―Ξ±. Ξ£ΟΟƒΞµ Ο„ΞΏ Ο€ΟΟΞΈΞµΞΌΞ± ΟƒΟ„ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ FILNAMMED.  Ξ‘Ξ½ ΞµΞ―Ξ½Ξ±ΞΉ 887
+                Ξ¬Ξ½ΞΏΞΉΞΎΞµ ΞΌΞµ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞ±.
+c     un > 0  : File unit. Ξ ΟΞ­Ο€ΞµΞΉ uArx<un<uTel. Ξ‘Ξ½ Ξ΄ΞµΞ½ ΞΉΟƒΟ‡ΟΞµΞΉ ΞΊΞ±ΞΉ Ξ΄ΞµΞ½ Ο„ΞΏ un
+c               ΞµΞ―Ξ½Ξ±ΞΉ Ξ΄ΞΉΞ±Ο†ΞΏΟΞµΟ„ΞΉΞΊΟ Ξ±Ο€Ο 0, 888, 999 Ο„ΟΟ„Ξµ Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³ΞµΞ―Ο„Ξ±ΞΉ Ξ»Ξ¬ΞΈΞΏΟ‚.
 c
-c     ext : Κατάληξη του αρχείου
+c     ext : ΞΞ±Ο„Ξ¬Ξ»Ξ·ΞΎΞ· Ο„ΞΏΟ… Ξ±ΟΟ‡ΞµΞ―ΞΏΟ…
 c
-c     stat = 'old' : Το αρχείο πρέπει αν υπάρχει και θεωρείται ότι περιέχει
-c                    δεδομένα.
-c     stat = ' '   : Το αρχείο θεωρείται ότι περιέχει αποτελέσματα.
-c     stat = 'opt' : Το αρχείο θεωρείται ότι περιέχει δεδομένα. Αν δεν μπορεί
-c                    να προσπελαστεί δεν δημιουργείται λάθος (optional).
-c                    Αν όλα τα αρχεία που έχουν συγκεκριμένο πρόθεμα είναι
-c                    optional, τότε το πρόθεμα αυτό μπορεί να δοθεί και ως
-c                    κενό (δηλαδή να μην ανοιχτεί κανένα αρχείο με αυτό
-c                    το πρόθεμα).
-c     stat = 'opt+': Το αρχείο είναι κατ'επιλογή υποχρεωτικό. Ότι και
-c                    το 'opt' αλλά είναι εγγυημένο ότι κάποιο από τα
-c                    opt+ πρέπει υποχρεωτικά να υπάρχει. Για χρήση στο
+c     stat = 'old' : Ξ¤ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ Ο€ΟΞ­Ο€ΞµΞΉ Ξ±Ξ½ Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ ΞΊΞ±ΞΉ ΞΈΞµΟ‰ΟΞµΞ―Ο„Ξ±ΞΉ ΟΟ„ΞΉ Ο€ΞµΟΞΉΞ­Ο‡ΞµΞΉ
+c                    Ξ΄ΞµΞ΄ΞΏΞΌΞ­Ξ½Ξ±.
+c     stat = ' '   : Ξ¤ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ ΞΈΞµΟ‰ΟΞµΞ―Ο„Ξ±ΞΉ ΟΟ„ΞΉ Ο€ΞµΟΞΉΞ­Ο‡ΞµΞΉ Ξ±Ο€ΞΏΟ„ΞµΞ»Ξ­ΟƒΞΌΞ±Ο„Ξ±.
+c     stat = 'opt' : Ξ¤ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ ΞΈΞµΟ‰ΟΞµΞ―Ο„Ξ±ΞΉ ΟΟ„ΞΉ Ο€ΞµΟΞΉΞ­Ο‡ΞµΞΉ Ξ΄ΞµΞ΄ΞΏΞΌΞ­Ξ½Ξ±. Ξ‘Ξ½ Ξ΄ΞµΞ½ ΞΌΟ€ΞΏΟΞµΞ―
+c                    Ξ½Ξ± Ο€ΟΞΏΟƒΟ€ΞµΞ»Ξ±ΟƒΟ„ΞµΞ― Ξ΄ΞµΞ½ Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³ΞµΞ―Ο„Ξ±ΞΉ Ξ»Ξ¬ΞΈΞΏΟ‚ (optional).
+c                    Ξ‘Ξ½ ΟΞ»Ξ± Ο„Ξ± Ξ±ΟΟ‡ΞµΞ―Ξ± Ο€ΞΏΟ… Ξ­Ο‡ΞΏΟ…Ξ½ ΟƒΟ…Ξ³ΞΊΞµΞΊΟΞΉΞΌΞ­Ξ½ΞΏ Ο€ΟΟΞΈΞµΞΌΞ± ΞµΞ―Ξ½Ξ±ΞΉ
+c                    optional, Ο„ΟΟ„Ξµ Ο„ΞΏ Ο€ΟΟΞΈΞµΞΌΞ± Ξ±Ο…Ο„Ο ΞΌΟ€ΞΏΟΞµΞ― Ξ½Ξ± Ξ΄ΞΏΞΈΞµΞ― ΞΊΞ±ΞΉ Ο‰Ο‚
+c                    ΞΊΞµΞ½Ο (Ξ΄Ξ·Ξ»Ξ±Ξ΄Ξ® Ξ½Ξ± ΞΌΞ·Ξ½ Ξ±Ξ½ΞΏΞΉΟ‡Ο„ΞµΞ― ΞΊΞ±Ξ½Ξ­Ξ½Ξ± Ξ±ΟΟ‡ΞµΞ―ΞΏ ΞΌΞµ Ξ±Ο…Ο„Ο
+c                    Ο„ΞΏ Ο€ΟΟΞΈΞµΞΌΞ±).
+c     stat = 'opt+': Ξ¤ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ ΞµΞ―Ξ½Ξ±ΞΉ ΞΊΞ±Ο„'ΞµΟ€ΞΉΞ»ΞΏΞ³Ξ® Ο…Ο€ΞΏΟ‡ΟΞµΟ‰Ο„ΞΉΞΊΟ. ΞΟ„ΞΉ ΞΊΞ±ΞΉ
+c                    Ο„ΞΏ 'opt' Ξ±Ξ»Ξ»Ξ¬ ΞµΞ―Ξ½Ξ±ΞΉ ΞµΞ³Ξ³Ο…Ξ·ΞΌΞ­Ξ½ΞΏ ΟΟ„ΞΉ ΞΊΞ¬Ο€ΞΏΞΉΞΏ Ξ±Ο€Ο Ο„Ξ±
+c                    opt+ Ο€ΟΞ­Ο€ΞµΞΉ Ο…Ο€ΞΏΟ‡ΟΞµΟ‰Ο„ΞΉΞΊΞ¬ Ξ½Ξ± Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ. Ξ“ΞΉΞ± Ο‡ΟΞ®ΟƒΞ· ΟƒΟ„ΞΏ
 c                    opgui.py
 c
-c     iPro = 1 ή 2   : Αριθμός προθέματος (μπορούν να δοθούν δύο προθέματα: 1 ή 2)
-c     iPro = -1 ή -2 : Αριθμός προθέματος. Το πρόσημο σημαίνει ότι Θα γίνει
-c                      έλεγχος αν μπορεί να ανοιχτεί το αρχείο
-c                      και στη συνέχεια θα κλείσει. Επίσης δεν θα εμφανιστεί
-c                      στο μήνυμα που εκτυπώνεται στην οθόνη.
-c                      Είναι για επόμενα προγράμματα που θα τρέξουν αυτόματα
+c     iPro = 1 Ξ® 2   : Ξ‘ΟΞΉΞΈΞΌΟΟ‚ Ο€ΟΞΏΞΈΞ­ΞΌΞ±Ο„ΞΏΟ‚ (ΞΌΟ€ΞΏΟΞΏΟΞ½ Ξ½Ξ± Ξ΄ΞΏΞΈΞΏΟΞ½ Ξ΄ΟΞΏ Ο€ΟΞΏΞΈΞ­ΞΌΞ±Ο„Ξ±: 1 Ξ® 2)
+c     iPro = -1 Ξ® -2 : Ξ‘ΟΞΉΞΈΞΌΟΟ‚ Ο€ΟΞΏΞΈΞ­ΞΌΞ±Ο„ΞΏΟ‚. Ξ¤ΞΏ Ο€ΟΟΟƒΞ·ΞΌΞΏ ΟƒΞ·ΞΌΞ±Ξ―Ξ½ΞµΞΉ ΟΟ„ΞΉ ΞΞ± Ξ³Ξ―Ξ½ΞµΞΉ
+c                      Ξ­Ξ»ΞµΞ³Ο‡ΞΏΟ‚ Ξ±Ξ½ ΞΌΟ€ΞΏΟΞµΞ― Ξ½Ξ± Ξ±Ξ½ΞΏΞΉΟ‡Ο„ΞµΞ― Ο„ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ
+c                      ΞΊΞ±ΞΉ ΟƒΟ„Ξ· ΟƒΟ…Ξ½Ξ­Ο‡ΞµΞΉΞ± ΞΈΞ± ΞΊΞ»ΞµΞ―ΟƒΞµΞΉ. Ξ•Ο€Ξ―ΟƒΞ·Ο‚ Ξ΄ΞµΞ½ ΞΈΞ± ΞµΞΌΟ†Ξ±Ξ½ΞΉΟƒΟ„ΞµΞ―
+c                      ΟƒΟ„ΞΏ ΞΌΞ®Ξ½Ο…ΞΌΞ± Ο€ΞΏΟ… ΞµΞΊΟ„Ο…Ο€ΟΞ½ΞµΟ„Ξ±ΞΉ ΟƒΟ„Ξ·Ξ½ ΞΏΞΈΟΞ½Ξ·.
+c                      Ξ•Ξ―Ξ½Ξ±ΞΉ Ξ³ΞΉΞ± ΞµΟ€ΟΞΌΞµΞ½Ξ± Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„Ξ± Ο€ΞΏΟ… ΞΈΞ± Ο„ΟΞ­ΞΎΞΏΟ…Ξ½ Ξ±Ο…Ο„ΟΞΌΞ±Ο„Ξ±
 c                      (batch file).
 c
-c     desc : Εξήγηση του περιεχομένου του αρχείου
+c     desc : Ξ•ΞΎΞ®Ξ³Ξ·ΟƒΞ· Ο„ΞΏΟ… Ο€ΞµΟΞΉΞµΟ‡ΞΏΞΌΞ­Ξ½ΞΏΟ… Ο„ΞΏΟ… Ξ±ΟΟ‡ΞµΞ―ΞΏΟ…
     """
 #     hhhh()
     global descp, dispLogo, files1, fylPro, lang
@@ -128,6 +127,8 @@ c     desc : Εξήγηση του περιεχομένου του αρχείου
             stopErr1()
         file1 = p_ggen.Struct()
         file1.ext = ext; file1.stat = stat[:4].strip().lower(); file1.desc = desc; file1.iPro = iPro
+        file1.encoding = encoding
+        if encoding is None: file1.encoding = p_ggen.thanGetFileEncoding()
         file1.fun = None
         file1.linesf = 0             # It signals that the file unit is used
         files1.append(file1)
@@ -161,24 +162,24 @@ def reopenUniqFile1(frw, exts):
         frw[ext] = frw[ext, file1.iPro] = file1.fun
 
 
-def opFile1e(un, ext, stat, pro, desc, iPro=1):
+def opFile1e(un, ext, stat, pro, desc, iPro=1, encoding=None):
     "Opens the file and fails if it can not open it."
 #---It is assumed that stat1 is at least 3 characters long
-    di, why = opFile1(un, ext, stat, pro, desc, iPro)
+    di, why = opFile1(un, ext, stat, pro, desc, iPro, encoding)
     if di is not None: return di
-    stat = stat[:4].lower().strip()
-    if stat[:3] == 'opt': return {ext:None}   # Optional data
     er.er1s("Error while opening file %s:\n%s" % (pro+"."+ext, why))
 
 
-def opFile1(un, ext, stat1, pro, desc, iPro=1):
+def opFile1(un, ext, stat1, pro, desc, iPro=1, encoding=None):
     "Opens file immediately."
     global files1
     stat = stat1[:4].strip().lower()
     if ext == "": fn = pro
     else:         fn = pro+"."+ext
-    fr, why = _opFile1(fn, stat)   # Try to open file
-    if fr is None: return None, why
+    fr, why = _opFile1(fn, stat, encoding)   # Try to open file
+    if fr is None:
+        if stat[:3].lower() == 'opt': return {ext:None, (ext, iPro):None}, None   # Optional data
+        return None, why
     file1 = p_ggen.Struct()
     file1.ext = ext; file1.stat = stat; file1.desc = desc; file1.iPro = iPro
     file1.linesf = 0             # It signals that the file unit is used
@@ -187,7 +188,7 @@ def opFile1(un, ext, stat1, pro, desc, iPro=1):
     return {ext:fr, (ext, iPro):fr}, None
 
 
-def inpFile1(mhn, kat, stat):
+def inpFile1(mhn, kat, stat, encoding=None):
     """This sr opens a file with the a prefix supplied by user and suffix kat.
 
       If a wrong file is given, it is asked again.
@@ -212,13 +213,13 @@ def inpFile1(mhn, kat, stat):
         else:
             if kat != "": filnam = filnam.parent / filnam.namebase
             if kat[:1] == ".": kat = kat[1:]                 #Delete dot
-            frw, terr = opFile1(1, kat, stat, filnam, "")
+            frw, terr = opFile1(1, kat, stat, filnam, "", encoding=encoding)
             if frw is not None: return frw
             prg("\n%s: %s" % (filnam+kat, DLFILACC), "can")  # Can't access file
             prg(DLTRYAGA, "can")
 
 
-def xinpFile1(win, mhn, kat, stat):
+def xinpFile1(win, mhn, kat, stat, encoding=None):
     """This sr opens a file with the a prefix supplied by user and suffix kat.
 
     If a wrong file is given, it is asked again.
@@ -241,28 +242,28 @@ def xinpFile1(win, mhn, kat, stat):
 #        fn = fn.parent / fn.namebase
 #        if kat[:1] == ".": kat = kat[1:]
         f.close()
-        frw, terr = opFile1(1, kat, stat, fn, "")
+        frw, terr = opFile1(1, kat, stat, fn, "", encoding=encoding)
         if frw is not None: return frw
         p_gtkwid.thanGudModalMessage(win, "%s: %s" % (fn+kat, DLFILACC), "Error opening file", p_gtkwid.ERROR)
 
 
-def medFile1(iun, mes, kat, stat):
+def medFile1(iun, mes, kat, stat, encoding=None):
     """This sr opens a file with the a prefix supplied by opend file unit iun and suffix kat.
 
     If kat == ' ', then the user may supply and the suffix. Else he can't
     This routine is used to read values from file "mediate.tmp". See
     library fildat."""
     try:                  filnam = next(iun).rstrip()
-    except StopIteration: er.er1s('Απροσδόκητο τέλος αρχείου %s' % (filmed.FILNAMMED,))
-    if filnam == "": er.er1s('Σφάλμα κατά την ανάγνωση αρχείου %s:\n%s κενό αρχείο' % (filmed.FILNAMMED, mes))
+    except StopIteration: er.er1s('Ξ‘Ο€ΟΞΏΟƒΞ΄ΟΞΊΞ·Ο„ΞΏ Ο„Ξ­Ξ»ΞΏΟ‚ Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s' % (filmed.FILNAMMED,))
+    if filnam == "": er.er1s('Ξ£Ο†Ξ¬Ξ»ΞΌΞ± ΞΊΞ±Ο„Ξ¬ Ο„Ξ·Ξ½ Ξ±Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s:\n%s ΞΊΞµΞ½Ο Ξ±ΟΟ‡ΞµΞ―ΞΏ' % (filmed.FILNAMMED, mes))
 
     if kat != "": filnam = filnam.parent / filnam.namebase     #Delete dot
     if kat[:1] == ".": kat = kat[1:]
-    frw, terr = opFile1(1, kat, stat, filnam, "")
+    frw, terr = opFile1(1, kat, stat, filnam, "", encoding=encoding)
     if frw is not None:
         prg('FILE %s= %s' % (mes, filnam))
         return frw
-    er.er1s('Σφάλμα κατά την ανάγνωση αρχείου %s:\n%s\n%s: %s' % (filmed.FILNAMMED, mes, filnam, DLFILACC))
+    er.er1s('Ξ£Ο†Ξ¬Ξ»ΞΌΞ± ΞΊΞ±Ο„Ξ¬ Ο„Ξ·Ξ½ Ξ±Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s:\n%s\n%s: %s' % (filmed.FILNAMMED, mes, filnam, DLFILACC))
 
 #===========================================================================
 
@@ -296,13 +297,13 @@ def openFiles1(gui=False):
                 proth[1] = openfilepro(DLPREFI2, prothem1Opt(1))
         filmed.openFileWrmed(nPro, proth)  # Gets ready for errors
         openFileOpen()
-        if gui: openFilePar(3, root)       # Διαβάζει άλλες παραμέτρους του προγράμματος από GUI
-        else  : openFilePar(0, 0)          # Διαβάζει άλλες παραμέτρους του προγράμματος από πληκτρολόγιο
-        filmed.openFileWrmed(nPro, proth)  # Include παραμέτρους
+        if gui: openFilePar(3, root)       # Ξ”ΞΉΞ±Ξ²Ξ¬Ξ¶ΞµΞΉ Ξ¬Ξ»Ξ»ΞµΟ‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ Ο„ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚ Ξ±Ο€Ο GUI
+        else  : openFilePar(0, 0)          # Ξ”ΞΉΞ±Ξ²Ξ¬Ξ¶ΞµΞΉ Ξ¬Ξ»Ξ»ΞµΟ‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚ Ο„ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚ Ξ±Ο€Ο Ο€Ξ»Ξ·ΞΊΟ„ΟΞΏΞ»ΟΞ³ΞΉΞΏ
+        filmed.openFileWrmed(nPro, proth)  # Include Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚
     else:
         filmed.openFileWrmed(nProm, proth) # Gets ready for errors
         openFileOpen()
-        filmed.openFileWrmed(nProm, proth) # Include παραμέτρους
+        filmed.openFileWrmed(nProm, proth) # Include Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚
     return openedFiles()
 
 
@@ -310,7 +311,11 @@ def openedFiles():
     "Return a dictionary of opened files."
     d = {}
     for file1 in files1:
-        d[file1.ext] = d[file1.ext,file1.iPro] = file1.fun
+        ip = abs(file1.iPro)
+        if ip == 1:                                        #Thanasis2024_02_18
+            d[file1.ext] = d[file1.ext, ip] = file1.fun    #Thanasis2024_02_18
+        else:
+            d[file1.ext, ip] = file1.fun                   #Thanasis2024_02_18
     return d
 
 #===========================================================================
@@ -318,10 +323,10 @@ def openedFiles():
 def openfileMhn(nPro):
     "Prints message for the user."
     pay = "=" * (len(ffff.gggg(DLLOGOST))+1)
-    if dispLogo: prg("%s\n%s" % (ffff.gggg(DLLOGOST), pay), "thancad") # Ονομασία γραφείου
+    if dispLogo: prg("%s\n%s" % (ffff.gggg(DLLOGOST), pay), "thancad") # ΞΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ± Ξ³ΟΞ±Ο†ΞµΞ―ΞΏΟ…
     np = max(len(x.strip()) for x in descp.split("\n"))
-    prg("\n\n %s\n%s" % (descp, "-"*(np+2)), "mes")            # Μήνυμα στην οθόνη
-    openFilePar(lang, lambda t, tags="info1": prg(t, tags))    # Τυχόν οδηγίες του προγράμματος στην οθόνη
+    prg("\n\n %s\n%s" % (descp, "-"*(np+2)), "mes")            # ΞΞ®Ξ½Ο…ΞΌΞ± ΟƒΟ„Ξ·Ξ½ ΞΏΞΈΟΞ½Ξ·
+    openFilePar(lang, lambda t, tags="info1": prg(t, tags))    # Ξ¤Ο…Ο‡ΟΞ½ ΞΏΞ΄Ξ·Ξ³Ξ―ΞµΟ‚ Ο„ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚ ΟƒΟ„Ξ·Ξ½ ΞΏΞΈΟΞ½Ξ·
     prg("")
     if nPro == 0: return
 
@@ -329,9 +334,9 @@ def openfileMhn(nPro):
     if nPro == 1: prg("\n".join((DLMES03, DLMES04, ""))) # Example for 1 prefix
     else:         prg("\n".join((DLMES05, DLMES04, ""))) # Example for 2 prefixes
 
-#-----Εμφάνισε τα ονόματα των αρχείων στην οθόνη
+#-----Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞµ Ο„Ξ± ΞΏΞ½ΟΞΌΞ±Ο„Ξ± Ο„Ο‰Ξ½ Ξ±ΟΟ‡ΞµΞ―Ο‰Ξ½ ΟƒΟ„Ξ·Ξ½ ΞΏΞΈΟΞ½Ξ·
 
-    n = max([len(file1.desc) for file1 in files1])          # Βρες μεγαλύτερη περιγραφή αρχείου
+    n = max([len(file1.desc) for file1 in files1])          # Ξ’ΟΞµΟ‚ ΞΌΞµΞ³Ξ±Ξ»ΟΟ„ΞµΟΞ· Ο€ΞµΟΞΉΞ³ΟΞ±Ο†Ξ® Ξ±ΟΟ‡ΞµΞ―ΞΏΟ…
     form = "%s.%s: FILE %-" + str(n) + "s %s"
     for file1 in files1:
         ded = DLFILDAT                                    # data
@@ -345,9 +350,9 @@ def openfileMhn(nPro):
 #===========================================================================
 
 def openfilepro(mes, icod):
-    """Διαβάζει το πρόθεμα που δίνει ο χρήστης.
-    Αν icod=0 δεν επιτρέπεται ο χρήστης να δώσει κενό πρόθεμα.
-    Αν icod=1  επιτρέπεται.
+    """Ξ”ΞΉΞ±Ξ²Ξ¬Ξ¶ΞµΞΉ Ο„ΞΏ Ο€ΟΟΞΈΞµΞΌΞ± Ο€ΞΏΟ… Ξ΄Ξ―Ξ½ΞµΞΉ ΞΏ Ο‡ΟΞ®ΟƒΟ„Ξ·Ο‚.
+    Ξ‘Ξ½ icod=0 Ξ΄ΞµΞ½ ΞµΟ€ΞΉΟ„ΟΞ­Ο€ΞµΟ„Ξ±ΞΉ ΞΏ Ο‡ΟΞ®ΟƒΟ„Ξ·Ο‚ Ξ½Ξ± Ξ΄ΟΟƒΞµΞΉ ΞΊΞµΞ½Ο Ο€ΟΟΞΈΞµΞΌΞ±.
+    Ξ‘Ξ½ icod=1  ΞµΟ€ΞΉΟ„ΟΞ­Ο€ΞµΟ„Ξ±ΞΉ.
     """
     from p_ggen.py23 import input
     while True:
@@ -362,18 +367,18 @@ def openfilepro(mes, icod):
 def openFileOpen():
     "Open all the requested files."
 
-#---Ανοιξε αρχεία
+#---Ξ‘Ξ½ΞΏΞΉΞΎΞµ Ξ±ΟΟ‡ΞµΞ―Ξ±
 
     for file1 in files1:
         i = abs(file1.iPro)
         if len(proth[i-1]) > 0:                         # Check if prefix is optional
             filnam = proth[i-1] + "." + file1.ext
-            file1.fun = _opFile1e(filnam, file1.stat)
+            file1.fun = _opFile1e(filnam, file1.stat, file1.encoding)
         else:
             file1.fun = None
 
-#---Κλείσε τα files για χρήση άλλων προγραμμάτων
-#   στο ίδιο batch file.
+#---ΞΞ»ΞµΞ―ΟƒΞµ Ο„Ξ± files Ξ³ΞΉΞ± Ο‡ΟΞ®ΟƒΞ· Ξ¬Ξ»Ξ»Ο‰Ξ½ Ο€ΟΞΏΞ³ΟΞ±ΞΌΞΌΞ¬Ο„Ο‰Ξ½
+#   ΟƒΟ„ΞΏ Ξ―Ξ΄ΞΉΞΏ batch file.
 
     for file1 in files1:
         if  file1.iPro < 0 and file1.fun is not None: file1.fun.close(); file1.fun = None
@@ -381,7 +386,7 @@ def openFileOpen():
 #===========================================================================
 
 def prothem1():
-    "Βρίσκει πόσα προθέματα πρέπει να οριστούν"
+    "Ξ’ΟΞ―ΟƒΞΊΞµΞΉ Ο€ΟΟƒΞ± Ο€ΟΞΏΞΈΞ­ΞΌΞ±Ο„Ξ± Ο€ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± ΞΏΟΞΉΟƒΟ„ΞΏΟΞ½"
     nPro = 0
     for file1 in files1:
         i1 = abs(file1.iPro)
@@ -391,7 +396,7 @@ def prothem1():
 #===========================================================================
 
 def prothem1Opt(iPro):
-    "Βρίσκει αν το πρόθεμα είναι optional."
+    "Ξ’ΟΞ―ΟƒΞΊΞµΞΉ Ξ±Ξ½ Ο„ΞΏ Ο€ΟΟΞΈΞµΞΌΞ± ΞµΞ―Ξ½Ξ±ΞΉ optional."
     for file1 in files1:
         if abs(file1.iPro)-1 == iPro:
             if file1.stat != 'opt': return 0    # not optional (here opt+ is different and it means that iPro is not optional)
@@ -435,18 +440,18 @@ def stopErr1():
     sys.exit(1)     #This stops the program after the user has closed the GUI window (if present)
 
 
-def _opFile1(filnam1, stat1):
+def _opFile1(filnam1, stat1, encoding):
     stat = stat1.lower().strip()
     if stat == '':          stat = 'w'    # unknown -> write
     elif stat[:3] == 'old': stat = 'r'    # read
     elif stat[:3] == 'app': stat = 'a'    # append
     elif stat[:3] == 'opt': stat = 'r'    # Optional data
-    try: return open(filnam1, stat), None # Try to open file
+    try: return open(filnam1, stat, encoding=encoding), None # Try to open file
     except IOError as why: return None, why
 
-def _opFile1e(filnam1, stat1):
+def _opFile1e(filnam1, stat1, encoding):
     "Opens a file with status stat1; fail if error."
-    f, why = _opFile1(filnam1, stat1)
+    f, why = _opFile1(filnam1, stat1, encoding)
     if f is not None: return f
     stat1 = stat1.lower().strip()
     if stat1[:3] == 'opt': return f       # Optional data
@@ -464,23 +469,26 @@ def runMediate(app, pexpectline=True, popen=False):
 
     It is the responsibility of the caller to ensure that mediate.tmp exists in pdir
     and that it is valid."""
-    p_ggen.thanSetEncoding("iso-8859-7")   #Thanasis2016_07_17
+    print("inside runMediate")
+    p_ggen.thanSetEncoding("utf8")   #Thanasis2017_01_29
     out, _, _ = opgui.openfileWinget()
     assert out != None, "runMediate() should be called in GUI mode!"
     try:
         fn = p_ggen.path(proth[0]).abspath()
         pdir = fn.parent
         closeFiles2()
-#        p_gtkwid.thanGudModalMessage(out, "wait", "wait")    #for debugging
+        #p_gtkwid.thanGudModalMessage(out, str(pdir), "wait")    #for debugging
         try:
             p_grun.runExec(app, pdir, out, pexpectline, popen)
         except BaseException as e:
+            raise
             dl = "%s '%s'" % (p_ggen.Tgui["Error while executing external program"], app)
             out.thanPrt("\n%s:\n%s" % (dl, e), "can")
             p_gtkwid.thanGudModalMessage(out, "%s.\n%s." % (dl, p_ggen.Tgui["Details were recorded on output window"]),
                                           "%s %s" % (p_ggen.Tgui["ERROR executing"], app))
 #          out.thanTkSetFocus()
     except BaseException as e:
+        raise
         out.thanPrt("Exception: %s" % (e,))
 
 
@@ -490,5 +498,8 @@ def runExec2(openFiles, executable):
         subprocess.call(executable)
     else:
         openFiles()
-        runMediate(executable)
+        try:
+            runMediate(executable)
+        except BaseException as e:
+            er.er1s("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
         closeFiles1()

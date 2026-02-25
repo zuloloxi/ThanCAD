@@ -1,6 +1,3 @@
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import hypot
 from p_ggen import iterby2
 from p_gmath import thanLineSeg3, thanNear2
@@ -78,17 +75,22 @@ class ThanDTMDEM(object):
     def thanGetWin(self, xymm):
         """Load the frames of the DEM inside xymm.
 
-        Global DEMs should oveeride this function and load their fra,mes which are
+        Global DEMs should override this function and load their frames which are
         inside or intersect xymm.
         For local DEMs (without frames) this function has no meaning and does nothing.
         """
         pass
 
 
+    def exportToPython(self, dtmname="dtm1", dir="."):
+        "Create a python module which recreates this DEM."
+        return 1, "This DEM/DTM ({}) does not support export to Python code".format(self.__class__)
+
+
 def thanPolygonLine(cpol, pn, n):
     "Finds the intersection between convex polygon segment and line perpendicular to n, whose projection on n axis is pn."
     cts = []
-    for i in xrange(len(cpol)):
+    for i in range(len(cpol)):
         ct = thanLineSeg3(pn, n, cpol[i-1], cpol[i])
         if ct is not None: cts.append(ct)
     if len(cts) == 0: return None, None
@@ -125,21 +127,21 @@ def thanPolygonLine(cpol, pn, n):
 def interpolatez(cp):
     "Interpolate the z coordinate to the points which have none; return number of interpolations."
     n = len(cp)
-    for j in xrange(n):
+    for j in range(n):
         if cp[j][2] is not None: break
     else:
         return -1            # No z at all!
     zj = cp[j][2]
-    for i in xrange(j):      # Points from 0 to j-1 do not have valid z
+    for i in range(j):      # Points from 0 to j-1 do not have valid z
         cp[i][2] = zj
     ni = j                   # Number of interpolated points
 
     while True:
-        for i in xrange(j+1, n):
+        for i in range(j+1, n):
             if cp[i][2] is None: break
         else:
             return ni        # All points, from j to end, have valid z
-        for j in xrange(i+1, n):
+        for j in range(i+1, n):
             if cp[j][2] is not None: break
         else:
             break            # No point, from j to end, has valid z
@@ -147,7 +149,7 @@ def interpolatez(cp):
         ni += j-i-1
 
     zj = cp[i-1][2]
-    for j in xrange(i, n):
+    for j in range(i, n):
         cp[j][2] = zj
         ni += 1
     return ni
@@ -157,12 +159,12 @@ def __interp2(cp):
         "Interpolate the z coordinate to the points which have none."
         d = [0.0]
         j = len(cp) - 1
-        for k in xrange(1, j+1):
+        for k in range(1, j+1):
             d.append(d[-1] + hypot(cp[k][1]-cp[k-1][1], cp[k][0]-cp[k-1][0]))
         zj = cp[j][2]        # We access list in order, so we are fast
         zi = cp[0][2]
         fact = (zj - zi)/d[j]
-        for k in xrange(1, j):
+        for k in range(1, j):
             cp[k][2] = zi + fact*d[k]
 
 

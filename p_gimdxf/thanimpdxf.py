@@ -10,10 +10,9 @@ class ThanImportBase:
     """A producer class to import a drawing saved on syk,mhk,brk,syn,xyz files.
 
     The class is based on the importation of dxf files; it works like the class
-    ThanImportDxf of the p_gimdxf library.
+    ThanImportDxf defined below.
     The class sends drawing commands to the drawing object dr (self.thanDr)
     which is a receiver class instance.
-    Here the receiver class is the ThanCadDrSave class.
     """
 
     def __init__(self, fDxf, dr, defaultLayer="0"):

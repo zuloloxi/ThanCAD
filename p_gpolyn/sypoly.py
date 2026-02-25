@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 class SyFactor:
     """Implements a symbolic factor.
 
@@ -18,7 +20,7 @@ class SyFactor:
                 self.var = sorted(other.var)
         else:
             try: fnum+0.0
-            except: raise TypeError, "Dont't know how to create SyFactor from %s" % (type(fnum),)
+            except: raise TypeError( "Dont't know how to create SyFactor from %s" % (type(fnum),))
             self.fnum = fnum
             if fnum == 0.0:
                 self.var = []
@@ -26,7 +28,7 @@ class SyFactor:
                 self.var = sorted(var)
                 for v in self.var:
                     try: v+"a"
-                    except: raise TypeError, "Symbols bust be string like; instead %s was found" % (type(v),)
+                    except: raise TypeError("Symbols bust be string like; instead %s was found" % (type(v),))
 
     def __mul__(self, other):
         if isinstance(other, SyFactor):
@@ -34,7 +36,7 @@ class SyFactor:
         try:
             other+0.0        # Check if it is number like
         except:
-            raise TypeError, "Don't know how to multiply SyFactor with %s" % type(other)
+            raise TypeError("Don't know how to multiply SyFactor with %s" % type(other))
         return SyFactor(self.fnum*other, *self.var)
 
 
@@ -60,7 +62,7 @@ class SyFactor:
         elif self.fnum == 1.0:
             return " ".join(self.var)
         else:
-            return "%s %s" % (self.fnum, " ".join(self.var)) 
+            return "%s %s" % (self.fnum, " ".join(self.var))
 
 
 class SumFactor:
@@ -87,12 +89,12 @@ class SumFactor:
                 i += 1
         i = 0
         while i < len(self.facts):             #Delete zero SyFactors
-#            print "compact: fnum=", self.facts[i].fnum,
+#            print("compact: fnum=", self.facts[i].fnum,)
             if abs(self.facts[i].fnum) < 1.0e-10:
-#                print ": deleted"
+#                print(": deleted")
                 del self.facts[i]
             else:
-#                print ": not deleted"
+#                print(": not deleted")
                 i += 1
         if len(self.facts) == 0:
             self.facts.append(SyFactor())      #Must have at least one SyFactor (=zero)
@@ -122,6 +124,12 @@ class SumFactor:
         self.compact()
         return self
 
+    def __neg__(self):
+        "Return negative self."
+        s = SumFactor(self)
+        for i, f in enumerate(s.facts):
+            s.facts[i] = -f
+        return s
 
     def __sub__(self, other):
         "Subtract 2 sumfactors."
@@ -131,7 +139,7 @@ class SumFactor:
 
     def __rsub__ (self, other):
         "Subtraction other-polynomial."
-        raise ValueError, "Not implemented"
+        raise ValueError("Not implemented")
         return (-self)+other
 
     def __isub__(self, other):
@@ -178,7 +186,7 @@ class SumFactor:
             else:
                 ss.append("+")
                 ss.append(str(f))
-        return " ".join(ss) 
+        return " ".join(ss)
 
 
 
@@ -187,54 +195,58 @@ class SumFactor:
 def test1():
     from poly import Polynomial
     a = SyFactor()
-    print "a=", a
+    print("a=", a)
     b = SyFactor(5.0, "a", "b")
-    print "b=", b
-    print "a*b=", a*b
+    print("b=", b)
+    print("a*b=", a*b)
     a = SyFactor(500.0, "a", "c", "d")
-    print "a=", a
-    print "a*b=", a*b
-    print
+    print("a=", a)
+    print("a*b=", a*b)
+    print()
     a = SumFactor(a)
     b = SumFactor(b)
-    print "a+b+a*b=", a+b+a*b
-    print "a-b=", a-b
-    print
+    print("a+b+a*b=", a+b+a*b)
+    print("a-b=", a-b)
+    print()
     pa = Polynomial((a, b))
-    print "pa=", pa
+    print("pa=", pa)
 
 #---Real example
 
     s = Polynomial((SumFactor(1.0, "a0"), SumFactor(1.0, "a1"), SumFactor(1.0, "a2"), SumFactor(1.0, "a3")))
-    print "s=", s
+    print("s=", s)
     v = s.derivative()
-    print "v=", v
+    print("v=", v)
     P = Polynomial((SumFactor(1.0, "Xp"),))
-    print "P=", P
+    print("P=", P)
+    print("s-P=", s-P)
+    print("P=", P)
+    print("s=", s)
+    print("P-s=", P-s)
     fivex = v * (P-s)
-    print "fivex=", fivex
+    print("fivex=", fivex)
 
     s = Polynomial((SumFactor(1.0, "b0"), SumFactor(1.0, "b1"), SumFactor(1.0, "b2"), SumFactor(1.0, "b3")))
     v = s.derivative()
     P = Polynomial((SumFactor(1.0, "Yp"),))
     fivey = v * (P-s)
-    print "fivey=", fivey
+    print("fivey=", fivey)
 
     s = Polynomial((SumFactor(1.0, "c0"), SumFactor(1.0, "c1"), SumFactor(1.0, "c2"), SumFactor(1.0, "c3")))
     v = s.derivative()
     P = Polynomial((SumFactor(1.0, "Zp"),))
     fivez = v * (P-s)
-    print "fivez=", fivez
+    print("fivez=", fivez)
 
     five = fivex + fivey + fivez
-    print
-    print "five=", five
-#    print "five[0]=", five[0]
+    print()
+    print("five=", five)
+#    print("five[0]=", five[0])
 #    mu = five[0].facts[0]
-#    print "mu=five[0].facts[0]=", mu
-#    print "mu.fnum=", mu.fnum, "  mu.var=", mu.var
+#    print("mu=five[0].facts[0]=", mu)
+#    print("mu.fnum=", mu.fnum, "  mu.var=", mu.var)
 #    five[0].compact()
-#    print "after compact five[0]=", five[0]
+#    print("after compact five[0]=", five[0])
 
 
 if __name__ == "__main__":

@@ -1,10 +1,9 @@
-from __future__ import print_function
 from math import fabs
 from tkinter import Tk, Toplevel, Canvas, Frame, Button, Menu, ALL, GROOVE, Image
 from PIL import Image as Imagepil
 from p_ggen import thanUnicode
 from p_gtkwid import (thanicon, thanGudOpenReadFile, thanGudGetSaveFile, thanGudModalMessage,
-    thanGudAskOkCancel)
+    thanGudAskOkCancel, can2im)
 from p_gtkem import dxfinter, pilinter
 import p_gfil
 from .thanopt import ThanOptions
@@ -142,7 +141,10 @@ class ThanZoomPanCoor:
 ##############################################################################
 
 class ChartWinx:
+    "Base chart window."
+
     def thanInit(self, toplevel, thanZoomPanCoor, thanOptions, chart, title, *args, **kw):
+        "Common initialization of chart windows."
         bg = kw.pop("bg")
         width  = kw.pop("width", 320)
         height = kw.pop("height", 240)
@@ -449,13 +451,38 @@ class ChartWinx:
     def thanIsModified(self): return self.__modified
     def thanFocus(self): self.focus_set()
 
+    def thanSaveasPostscript(self, psfile, width=None, height=None):   #Thanasis2024_09_14
+        "Plot the chart as postscript, and write the postscript to file fn."
+        self.thanCanvas.postscript(file=psfile, width=width, height=height)
+
+    def thanSaveasImage(self, imfile, width=None, height=None, bg="black"):   #Thanasis2024_09_16
+        "Plot the chart as PIL image."
+        im = can2im(self.thanCanvas, bg=bg, width=width, height=height)
+        im.save(imfile)
+
+
 class ChartWin1(Toplevel, ThanZoomPanCoor, ThanOptions, ChartWinx):
+    "Secondary chart window."
+
     def __init__(self, chart, title, *args, **kw):
+        "Initialise as Toplevel."
         self.thanInit(Toplevel, ThanZoomPanCoor, ThanOptions, chart, title, *args, **kw)
 
+    def thanWait(self):     #Thanasis2024_09_14
+        "Wait until the chart window is closed."
+        self.wait_window()
+
+
 class ChartWin(Tk, ThanZoomPanCoor, ThanOptions, ChartWinx):
+    "Main chart window."
+
     def __init__(self, chart, title, *args, **kw):
+        "Initialise as Tk."
         self.thanInit(Tk, ThanZoomPanCoor, ThanOptions, chart, title, *args, **kw)
+
+    def thanWait(self):     #Thanasis2024_09_14
+        "Wait until the chart window is closed."
+        self.mainloop()
 
 
 class ChartDxf(dxfinter.Tk, ThanZoomPanCoor):
@@ -499,28 +526,36 @@ class ChartPil(pilinter.Tk, ThanZoomPanCoor):
 #############################################################################
 #############################################################################
 
-def vis(*charts, **kw):
+def vis(*charts, wait=True, **kw):
     bg = kw.pop("bg", "black")
     root = ChartWin(charts[0], thanUnicode(charts[0].title+" (Main)"), bg=bg, **kw)
+    wins = [root]
+    if not wait: root.update()
     for ch in charts[1:]:
         c = ChartWin1(ch, thanUnicode(ch.title), root, bg=bg, **kw)
-    root.mainloop()
+        if not wait: c.update()
+        wins.append(c)           #Thanasis2024_09_14
+    if wait: root.thanWait()     #Thanasis2024_09_14
+    return wins
 
-def viswin(root, *charts, **kw):
+def viswin(root, *charts, wait=True, **kw):
     "The caller has already started tk."
     bg = kw.pop("bg", "black")
+    wins = []
     for ch in charts:
         c = ChartWin1(ch, thanUnicode(ch.title), root, bg=bg, **kw)
-    c.wait_window()
-
+        if not wait: c.update()
+        wins.append(c)       #Thanasis2024_09_14
+    if wait: c.thanWait()    #Thanasis2024_09_14
+    return wins
 
 def visfil(*charts, **kw):
     "The caller may already started tk with library p_gfil, or not."
     winmain, _, _ = p_gfil.openfileWinget()
     if winmain is not None:
-        viswin(winmain, *charts, **kw)
+        return viswin(winmain, *charts, **kw)
     else:
-        vis(*charts, **kw)
+        return vis(*charts, **kw)
 
 
 def visdxf(*charts):

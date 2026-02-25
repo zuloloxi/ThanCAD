@@ -1,6 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import cos, sin, sqrt, pi
 from p_gnum import zeros, Float
 import p_gmath
@@ -51,10 +48,10 @@ class TrigonometricInterpolation(object):
         j += 1
 
         cpoint = zeros((ndim,), Float)
-        for idim in xrange(ndim):
+        for idim in range(ndim):
             c = 0.5*L[j]
             j += 1
-            for n in xrange(1, nterms+1):
+            for n in range(1, nterms+1):
                 phi = 2.0*pi*n*t / Tper
                 c += L[j]*cos(phi) + L[j+1]*sin(phi)
                 j += 2
@@ -95,12 +92,12 @@ class TrigonometricInterpolation(object):
 
         A = zeros((npoints, 2*nterms+1), Float)
         B = zeros((npoints,), Float)
-        for idim in xrange(ndim):
+        for idim in range(ndim):
             for i, (t, cpoint) in enumerate(fotsr):
                 #FIXME       ??????????WEIGHTS??????????????
                 j = 0
                 A[i, j] = 0.5
-                for n in xrange(1, nterms+1):
+                for n in range(1, nterms+1):
                     phi = 2.0*pi*n*t / Tper
                     j += 1
                     A[i, j] = cos(phi)
@@ -142,8 +139,8 @@ class TrigonometricInterpolation(object):
         fw.write("""\
 #Trigonometric interpolation in multiple dimensions Nd
 #
-#       a0     M            2ðn           2ðn
-# x =  ---- +  Ó  [ an cos(-----t) + sin(-----t) ]
+#       a0     M            2Ï€n           2Ï€n
+# x =  ---- +  Î£  [ an cos(-----t) + sin(-----t) ]
 #       2     n=1            T             T
 #
 # y, z, ..  accordingly
@@ -161,15 +158,15 @@ class TrigonometricInterpolation(object):
         fw.write("%27.20e    #Period\n"                        % (self.L[2], ))
         j = 3
 
-        for idim in xrange(ndim):
+        for idim in range(ndim):
             fw.write("%27.20e    #cmin%d\n" % (self.L[j], idim))
             j += 1
         fw.write("%27.20e    #am%d\n" % (self.L[j], idim))
         j += 1
 
-        for idim in xrange(ndim):
+        for idim in range(ndim):
             fw.write("%27.20e    #a0\n" % (self.L[j], ))
-            for i in xrange(1, nterms+1):
+            for i in range(1, nterms+1):
                 j += 1
                 fw.write("%27.20e    #a%d\n" % (self.L[j], i))
                 j += 1
@@ -195,7 +192,7 @@ class TrigonometricInterpolation(object):
         #print "fots[0]=", fots[0][:ndim]
         cmin[:] = fots[0][1][:ndim]
         for t, c in fots:
-            for i in xrange(ndim):
+            for i in range(ndim):
                 csum[i] += c[i]
                 if c[i] < cmin[i]: cmin[i] = c[i]
         n = len(fots)

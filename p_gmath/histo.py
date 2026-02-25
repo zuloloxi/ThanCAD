@@ -1,7 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import p_ggen, p_gnum
 
 
@@ -21,7 +17,7 @@ def histogram(band, hmin, hmax, n=100):
     hmax += 0.0     #Convert to real
     print("hmin=", hmin, "hmax=", hmax)
     dh = (hmax-hmin)/n
-    bins = p_ggen.frangec(hmin, hmax, dh)
+    bins = list(p_ggen.frangec(hmin, hmax, dh))
     print("number of bins=", len(bins))
     fre, _ = p_gnum.histogram(band, bins, (hmin, hmax))
     #freq = zip(range(n), h)
@@ -38,12 +34,12 @@ def approx(freq, per=0.01):
     fmax = max(f for h,f in freq)
     fmin = per*fmax       #Elevations with smaller frequency than this are of no importance
     print("frequency threshold=", fmin)
-    for i in xrange(len(freq)):
+    for i in range(len(freq)):
         h, f = freq[i]
         if f >= fmin: break  #Note that this condition will be true for at least once (for f=fmax)
     h1 = h            #Smallest eleveation with frequence larger or equal to the frequency threshold
     print("h1, frequency", h1, f)
-    for i in xrange(len(freq)-1, -1, -1):
+    for i in range(len(freq)-1, -1, -1):
         h, f = freq[i]
         if f >= fmin: break
     h2 = h            #Smallest eleveation with frequence larger or equal to the frequency threshold

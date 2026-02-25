@@ -1,34 +1,32 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 It implements ThanCad command line window.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
+from math import cos, sin
 import tkinter
 import p_gtkwid, p_ggen
 import thancom, thantk
@@ -36,16 +34,7 @@ from thanvers import tcver
 from thanopt import thancadconf
 from thanvar import Canc, thanLogTk, thanfiles, DEFMES
 from thantrans import T
-from .thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT,
-    THAN_STATE_POINT1, THAN_STATE_LINE, THAN_STATE_TEXT,
-    THAN_STATE_LINE2, THAN_STATE_RECTANGLE, THAN_STATE_MOVE, THAN_STATE_ROADP,
-    THAN_STATE_SPLINEP, THAN_STATE_POLAR, THAN_STATE_CIRCLE, THAN_STATE_ARC,
-    THAN_STATE_ELLIPSEB, THAN_STATE_RECTRATIO, THAN_STATE_SNAPELEM, THAN_STATE_ZOOMDYNAMIC,
-    THAN_STATE_PANDYNAMIC)
-
-# self.__crel: These are the coordinates of the previous points defined by the user.
-#              IT is used to aid the relative coordinates system. But what happens
-#              if the previous point were defined by the GUI, and not the command line?????
+from .thantkguilowget.thantkconst import THAN_STATE
 
 
 #class ThanTkCmd(p_gtkwid.ThanScrolledText1):
@@ -107,7 +96,6 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             self.thanAppend("(Please type ", "info1")
             self.thanAppend("lang", "can1")
             self.thanAppend(" if you want to change the language.)\n", "info1")
-        self.__crel = [0.0]*self.__proj[1].thanVar["dimensionality"]
         self.thanCleanup()
         self.thanPrevCom = ""
         self.__oncharPreempt = False
@@ -123,6 +111,9 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         "Prints ThanCad's version."
         self.thanAppend("%s %s" % (tcver.name, tcver.version), "thancad")
         self.thanAppend("\n%s\n" % (tcver.copyright,))
+        #self.thanAppend("0.6.5: Algorithm for regular polygons contributed by Spyros Nikolaou\n")
+        #self.thanAppend("0.7.1: The contribution of Nikos Papandreou in bug hunting is greatly appreciated\n")
+        self.thanAppend("The contribution of Dr Dimitra Vassilaki is greatly appreciated.\n")
 
 
     def thanPrompt(self, mes=DEFMES):
@@ -139,55 +130,65 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def thanOnChar(self, event):
         "Well, here is what should be done when user presses a key."
+        ret = None
         if self.__oncharPreempt:
             thanLogTk.error("ThanTkCmd.thanOnChar: preemptive call: character(s) lost. It shouldn't happen.")
-            return
+            if len(event.char) == 1:
+                m = ord(event.char)
+                if m == 27:
+                    self.thanOnCharEsc(event)
+                    self.__oncharPreempt = False
+            return ret
         self.__oncharPreempt = True
 #        print "len(event.char)=", len(event.char)
 #        print "key code=", event.keycode
 #        print "key sym=", event.keysym
         if len(event.char) == 1:
             m = ord(event.char)
-            if m == 27:              self.thanOnCharEsc(event)
-            elif m == 13 or m == 32: self.__onCharRet(event)
-#            elif m == 13: self.__onCharRet(event)
+            if m == 27:
+                self.thanOnCharEsc(event)
+            elif m == 13 or m == 32 and self.thanState != THAN_STATE.TEXTRAW:
+                self.__onCharRet(event)
+                self.thanAppend("\n")   #Change line
+                ret = "break"           #break propagation of space or enter
         self.__oncharPreempt = False
+        return ret
 
 
     def __onPageup(self, event):
         "Pageup pressed; if idle, pan drawing 1 page up."
-        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        if self.thanState != THAN_STATE.NONE: return    # Page-up goes to the command window
         self.thanEnter("panpageup", "com")
         return "break"                                  # Pageup does not go to the command window
 
 
     def __onPagedown(self, event):
         "Pagedown pressed; if idle, pan drawing 1 page up."
-        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        if self.thanState != THAN_STATE.NONE: return    # Page-up goes to the command window
         self.thanEnter("panpagedown", "com")
         return "break"                                  # Pageup does not go to the command window
 
     def __onPageleft(self, event):
         "Page left pressed; if idle, pan drawing 1 page up."
-        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        if self.thanState != THAN_STATE.NONE: return    # Page-up goes to the command window
         self.thanEnter("panpageleft", "com")
         return "break"                                  # Pageup does not go to the command window
 
     def __onPageright(self, event):
         "Page right pressed; if idle, pan drawing 1 page up."
-        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        if self.thanState != THAN_STATE.NONE: return    # Page-up goes to the command window
         self.thanEnter("panpageright", "com")
         return "break"                                  # Pageup does not go to the command window
 
     def __onCtrlGrayplus(self, event):
         "Gray plus pressed; if idle, zoom in 2 times."
-        if self.thanState != THAN_STATE_NONE: return    # Grayplus goes to the command window
+        if self.thanState != THAN_STATE.NONE: return    # Grayplus goes to the command window
         self.thanEnter("zoomin2", "com")
         return "break"                                  # Grayplus does not go to the command window
 
     def __onCtrlGrayminus(self, event):
         "Gray minus pressed; if idle, zoom out 2 times."
-        if self.thanState != THAN_STATE_NONE: return    # Grayminus goes to the command window
+        if self.thanState != THAN_STATE.NONE: return    # Grayminus goes to the command window
         self.thanEnter("zoomout2", "com")
         return "break"                                  # Grayminus does not go to the command window
 
@@ -277,11 +278,11 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def thanOnCharEsc(self, evt):
         "Quits current task."
-        if self.thanState != THAN_STATE_NONE:
+        if self.thanState != THAN_STATE.NONE:
             self.thanCleanup()
             return
         dc = self.__proj[2].thanCanvas
-        if dc.thanState != THAN_STATE_NONE:
+        if dc.thanState != THAN_STATE.NONE:
             dc.thanCleanup()
             self.thanCleanup(T["\nThanTkGuiGet was cleared for debugging reasons."], "can")
             self.thanPrompt()
@@ -321,12 +322,17 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             self.set_insert(tkinter.END+"-1c")
         else:
             t = self.thanGetPart(tkinter.END+"-1l", tkinter.END)
-        t = t.strip()
-        n = -1; n1 = t.find(":")
-        while n1 >= 0:
-            n = n1; n1 = t.find(":", n+1)
-        if n >= 0: t = t[n+1:].strip()
+
+        if self.thanState == THAN_STATE.TEXTRAW:
+            t = t.rstrip("\n") #for text entry strip only newline at the end
+        else:
+            t = t.strip()
+            n = -1; n1 = t.find(":")
+            while n1 >= 0:
+                n = n1; n1 = t.find(":", n+1)
+            if n >= 0: t = t[n+1:].strip()
         self.after(100, self.__processEntry, t)
+
 
     def thanEnter(self, com, tags=()):
         "Simulate keyboard and return immediately."
@@ -334,21 +340,21 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         self.thanAppend("%s\n" % com, tags)
         self.after(100, self.__processEntry, com)
 
-    PNTSTATES = frozenset((THAN_STATE_POINT, THAN_STATE_LINE, THAN_STATE_LINE2,
-        THAN_STATE_RECTANGLE, THAN_STATE_MOVE, THAN_STATE_ROADP, THAN_STATE_SPLINEP,
-        THAN_STATE_POLAR,
-        THAN_STATE_CIRCLE, THAN_STATE_ARC, THAN_STATE_ELLIPSEB))
+    PNTSTATES = frozenset((THAN_STATE.POINT, THAN_STATE.LINE, THAN_STATE.LINE2,
+        THAN_STATE.RECTANGLE, THAN_STATE.MOVE, THAN_STATE.ROADP, THAN_STATE.SPLINEP,
+        THAN_STATE.POLAR, THAN_STATE.AZIMUTH,
+        THAN_STATE.CIRCLE, THAN_STATE.CIRCLE2, THAN_STATE.CIRCLE3, THAN_STATE.ARC, THAN_STATE.ELLIPSEB))
 
     def __processEntry(self, t):
         "Deals with the text the user entered."
         s = self.thanState
-        if self.thanState == THAN_STATE_NONE:
+        if self.thanState == THAN_STATE.NONE:
             self.__beginCommand(t)
         elif t[:1] == "'":
             c, fun = thancom.thanComFun(t[1:])
             if fun is not None:
                 self.thanLastResult = "'"+c
-                self.thanState = THAN_STATE_NONE
+                self.thanState = THAN_STATE.NONE
             else:
                 self.thanAppend(T["Invalid nested command. Try again.\n"], "can")
                 self.__reprompt()
@@ -356,28 +362,23 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             try:
                 nd   = self.__proj[1].thanVar["dimensionality"]
                 elev = self.__proj[1].thanVar["elevation"]
-                if t[0] == "@":
-                    if len(t) == 1:
+                if t[0] == "@":            #relative coordinates
+                    if len(t) == 1:        #If relative coordinates are missing, then [0,0] are assumed
                         cc = [0.0] * nd
                     else:
-                        cc = [float(c1) for c1 in t[1:].split(",")]
-                        if len(cc) > nd: raise ValueError("Too many dimensions")
-                        if len(cc) < 2:  raise ValueError("Too few dimensions")
-                        cc.extend(elev[len(cc):])
-                    for i in xrange(nd): cc[i] += self.__crel[i]
+                        cc = self.getCartOrPolar(t[1:], nd, elev)
+                    crel = self.__proj[1].thanGetLastPoint()
+                    for i in range(nd): cc[i] += crel[i]
                 else:
-                    cc = [float(c1) for c1 in t.split(",")]
-                    if len(cc) > nd: raise ValueError("Too many dimensions")
-                    if len(cc) < 2:  raise ValueError("Too few dimensions")
-                    cc.extend(elev[len(cc):])
+                    cc = self.getCartOrPolar(t, nd, elev)
             except (IndexError,ValueError):
                 self.thanLastResult = t
             else:
-                self.__crel = tuple(cc)
+                self.__proj[1].thanSetLastPoint(cc)
                 self.thanLastResult = cc
                 print("cmd: last result point: ", cc)
-            self.thanState = THAN_STATE_NONE
-        elif s == THAN_STATE_RECTRATIO:
+            self.thanState = THAN_STATE.NONE
+        elif s == THAN_STATE.RECTRATIO:
             try: r = float(t)
             except (IndexError,ValueError):
                 self.thanAppend(T["Invalid real number. Try again.\n"], "can")
@@ -388,11 +389,11 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             cc[0] += r
             cc[1] += r*self.__t1
             self.thanLastResult = cc
-            self.thanState = THAN_STATE_NONE
-        elif s == THAN_STATE_TEXT or s == THAN_STATE_SNAPELEM:
+            self.thanState = THAN_STATE.NONE
+        elif s == THAN_STATE.TEXT or s == THAN_STATE.TEXTRAW or s == THAN_STATE.SNAPELEM:
             self.thanLastResult = t
-            self.thanState = THAN_STATE_NONE
-        elif s == THAN_STATE_ZOOMDYNAMIC or s == THAN_STATE_PANDYNAMIC:
+            self.thanState = THAN_STATE.NONE
+        elif s == THAN_STATE.ZOOMDYNAMIC or s == THAN_STATE.PANDYNAMIC:
             pass       # no keyboard entry by definition
 
         else:
@@ -400,9 +401,23 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         self.thanWaitingInput = True
 
 
-    def thanLastPoint(self, cc):
-        "Sets last point set by gui for relative coords."
-        self.__crel = list(cc)
+    def getCartOrPolar(self, t, nd, elev):
+        "Get cartesian or polar coordinates; tansform polar to cartesian."
+        if "<" in t:
+            cc = [float(c1) for c1 in t.split("<")]
+            if len(cc) > 2: raise ValueError("Too many dimensions in polar coordinates")
+            if len(cc) < 2:  raise ValueError("Too few dimensions")
+            r, phi = cc
+            un = self.__proj[1].thanUnits
+            phi = un.unit2rad(phi)           #Tranform angle from user units to rads
+            cc[0] = r*cos(phi)
+            cc[1] = r*sin(phi)
+        else:
+            cc = [float(c1) for c1 in t.split(",")]
+            if len(cc) > nd: raise ValueError("Too many dimensions")
+            if len(cc) < 2:  raise ValueError("Too few dimensions")
+        cc.extend(elev[len(cc):])
+        return cc
 
 
     def thanPrepare(self, state, cc1=None, cc2=None, r1=None, t1=None):
@@ -412,14 +427,14 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         self.__rr1 = r1
         self.__t1 = t1
         self.thanState = state
-        if state == THAN_STATE_POINT1: self.thanState = THAN_STATE_POINT
+        if state == THAN_STATE.POINT1: self.thanState = THAN_STATE.POINT
         self.thanWaitingInput = True
 
 
     def thanCleanup(self, message="", mesmode="info1"):
         "User cancelled or gave the results in other way (e.g. gui)."
         if message != "": self.thanAppend("%s\n" % message, mesmode)
-        self.thanState = THAN_STATE_NONE
+        self.thanState = THAN_STATE.NONE
         self.thanLastResult = Canc
         self.thanWaitingInput = True
 
@@ -438,8 +453,8 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             return
         c, fun = thancom.thanComFun(t)
         if fun is not None:
-            if t != c: self.thanAppend("%s\n" % c, "com")
-            w.thanScheduler.thanSchedule(fun, self.__proj)   # A command will run immediately; thanWaitingInput remains False
+            if t != c: self.thanAppend("%s\n" % c, "com")    #Show the full name of the command
+            w.thanScheduler.thanSchedule(fun, self.__proj)   #A command will run immediately; thanWaitingInput remains False
             self.thanPrevCom = c
         else:
             self.thanAppend(T["Unrecognized command\n"], "can")

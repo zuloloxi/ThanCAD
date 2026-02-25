@@ -1,34 +1,34 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines line states, i.e. as the user moves the mouse, a road
 (which is a line with circular arcs) is drawn from a given point to mouse
 cursor, continuously.
 """
 from thanvar import calcRoadNode, tkRoadNode, tkRoadNodeR
-from .thantkconst import THAN_STATE_NONE
+from .thantkconst import THAN_STATE
 from .thantkguigeneric import ThanStateGeneric
 
 
@@ -61,7 +61,7 @@ class ThanStateRoadp(ThanStateGeneric):
         x, y = dc.thanOrtho.orthoxy(x, y)
         draggedp = self.__dragged
         self.__dragged, ct = tkRoadNode(self.__x1, self.__y1, self.__x2, self.__y2,
-                             x, y, self.__r1, dc, fill="blue", dash=(), tags=())
+                             x, y, self.__r1, dc, fill="blue", dash=(), width=1, tags=())
         for i1 in draggedp:
             dc.delete(i1)
             dc.thanTempItems.remove(i1)
@@ -76,7 +76,7 @@ class ThanStateRoadp(ThanStateGeneric):
             dc.delete(i1)
             dc.thanTempItems.remove(i1)
         dc.thanLastResult = cc, None
-        dc.thanState = THAN_STATE_NONE
+        dc.thanState = THAN_STATE.NONE
         dc.thanOState = ThanStateGeneric(self.thanProj)
 
 
@@ -87,7 +87,7 @@ class ThanStateRoadp(ThanStateGeneric):
             dc.delete(i1)
             dc.thanTempItems.remove(i1)
         dc.thanLastResult = cc, "r"
-        dc.thanState = THAN_STATE_NONE
+        dc.thanState = THAN_STATE.NONE
         dc.thanOState = ThanStateGeneric(self.thanProj)
 
 
@@ -121,7 +121,7 @@ class ThanStateRoadr(ThanStateGeneric):
         ct = self.thanProj[2].thanCt
         draggedp = self.__dragged
         self.__dragged, ct = tkRoadNodeR(self.__x1, self.__y1, self.__x2, self.__y2,
-                                         self.__x3, self.__y3, x, y, dc, ct, fill="blue", dash=(), tags=())
+                                         self.__x3, self.__y3, x, y, dc, ct, fill="blue", dash=(), width=1, tags=())
         for i1 in draggedp:
             dc.delete(i1)
             dc.thanTempItems.remove(i1)
@@ -136,7 +136,7 @@ class ThanStateRoadr(ThanStateGeneric):
             dc.delete(i1)
             dc.thanTempItems.remove(i1)
         dc.thanLastResult = cc, None
-        dc.thanState = THAN_STATE_NONE
+        dc.thanState = THAN_STATE.NONE
         dc.thanOState = ThanStateGeneric(self.thanProj)
 
 

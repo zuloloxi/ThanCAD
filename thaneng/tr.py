@@ -1,36 +1,33 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module implements semiautomatic tracing of curves of a raster image.
 Specifically, it is intended to help the digitising of contour lines
 of topographic maps.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import hypot
 import p_gimage
 
@@ -50,8 +47,8 @@ class _RasterTracker:
     def traceAll(self):
         "Find and digitize all the possible lines."
         self.visited.clear()
-        for ia in xrange(self.height):
-#        for ia in xrange(100):
+        for ia in range(self.height):
+#        for ia in range(100):
             print(ia, "/", self.height)
             ja = 0
             while ja < self.width:
@@ -174,12 +171,12 @@ class _RasterTracker:
         jj1, jj2 = max(j1-1, 0), min(j2+2, self.width)
         while jj1 > 0 and self[jj1,i]: jj1 -= 1    #Find blank until start of current raster line
         while True:
-            for jj in xrange(jj1, jj2):            #Find nonblank character beginning from from previous blank
+            for jj in range(jj1, jj2):            #Find nonblank character beginning from from previous blank
                 if self[jj, i]: break
             else:
                 return todo                        #No more nonblanks in current raster line;finish
             jj1 = jj                               #Found nonblank; it is the beginning of non-blank segment
-            for jj in xrange(jj1, self.width):     #Find thickness of nonblank segment
+            for jj in range(jj1, self.width):     #Find thickness of nonblank segment
                 if not self[jj, i]: jj -= 1; break
             jc = int((jj1+jj)/2)                   #Center of gravity of segment; if not visited...
             if not self.visited.in_((i,jc)): todo.append((i,jc))    #...append it to the todo list
@@ -188,9 +185,9 @@ class _RasterTracker:
 
     def thickx(self, i, j):
         "Finds the thickness of a line at point i,j in the x direction."
-        for j1 in xrange(j, -1, -1):
+        for j1 in range(j, -1, -1):
             if not self[j1, i]: j1 += 1; break
-        for j2 in xrange(j, self.width):
+        for j2 in range(j, self.width):
             if not self[j2, i]: j2 -= 1; break
         return j1, j2
 
@@ -208,7 +205,7 @@ class _RasterTracker:
         while gaptolmax1 >= self.GAPTOLMIN:
             gapmax = 0
             jg1 = j                          # First blank pixel
-            for j1 in xrange(j, -1, -1):
+            for j1 in range(j, -1, -1):
                 if self[j1, i]:
                     jg1 = j1
                 else:
@@ -217,7 +214,7 @@ class _RasterTracker:
                     if gap > gapmax: gapmax = gap
 
             jg2 = j
-            for j2 in xrange(j, self.width):
+            for j2 in range(j, self.width):
                 if self[j2, i]:
                     jg2 = j2
                 else:
@@ -234,13 +231,13 @@ class _RasterTracker:
 
     def thick(self, i, j):
         "Finds the thickness of a line at point i,j in the x and y directions."
-        for i1 in xrange(i, -1, -1):
+        for i1 in range(i, -1, -1):
             if not self[j, i1]: i1 += 1; break
-        for i2 in xrange(i, self.height):
+        for i2 in range(i, self.height):
             if not self[j, i2]: i2 -= 1; break
-        for j1 in xrange(j, -1, -1):
+        for j1 in range(j, -1, -1):
             if not self[j1, i]: j1 += 1; break
-        for j2 in xrange(j, self.width):
+        for j2 in range(j, self.width):
             if not self[j2, i]: j2 -= 1; break
         return i1, i2, j1, j2
 
@@ -316,8 +313,8 @@ class ThanPilRasterTracker(_RasterTracker):
 
     def makeAsc(self, fw):
         "Saves the image as an ascii file."
-        for i in xrange(self.height):
-            for j in xrange(self.width):
+        for i in range(self.height):
+            for j in range(self.width):
                 if self[j, i]: fw.write("o")
                 else:          fw.write(" ")
             fw.write("\n")

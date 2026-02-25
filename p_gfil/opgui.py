@@ -1,8 +1,6 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-import time
-try: from configparser import SafeConfigParser
-except: from ConfigParser import SafeConfigParser
+import sys, time
+try: from configparser import SafeConfigParser     #python3.9
+except: from configparser import ConfigParser as SafeConfigParser  #python3.12
 import tkinter
 import p_ggen, p_gtkwid
 Tgui = p_ggen.Tgui
@@ -102,10 +100,10 @@ def thanTxtopen(win, mes, suf=".txt", mode="r", initialfile=None, initialdir=Non
     if initialfile is None: initialfile = prevpref.namebase
     if "w" in mode:
         fildxf, frw = p_gtkwid.thanGudOpenSaveFile(win, suf, mes, mode,
-            initialfile, initialdir)
+            initialfile, initialdir, errors="replace")
     else:
         fildxf, frw = p_gtkwid.thanGudOpenReadFile(win, suf, mes, mode,
-            initialfile, initialdir)
+            initialfile, initialdir, errors="replace")
     if frw is None: return p_ggen.Canc, p_ggen.Canc     # File open cancelled
     return p_ggen.path(fildxf), frw
 
@@ -124,12 +122,21 @@ def openfileWinget():
     if root is None: return root, None,         prevdir
     else:            return root, root.thanPrt, prevdir
 
+
+def openfileSetprev(prevdir1=None, prevpref1=None):
+    "Set previous directory and previous prefix."
+    global prevdir, prevpref
+    if root is None and prevdir == ".": thanOptsGet()        #In case we need prevdir without the gui mechanism
+    if prevdir1  is not None: prevdir  = p_ggen.path(prevdir1).abspath()
+    if prevpref1 is not None: prevpref = p_ggen.path(prevpref1).abspath()
+
+
 def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
     """Gets data files with suffix suf.
 
     Examples:
-    1. fils = xinpFiles("Δώστε αρχεία που καταλήγουν σε xx.asc (με ή χωρίς την κατάληξη). Για όλα δώστε * (enter=*) : ", "xx.asc")
-       The above gets all the files in current directory (and recursively in the 
+    1. fils = xinpFiles("Ξ”ΟΟƒΟ„Ξµ Ξ±ΟΟ‡ΞµΞ―Ξ± Ο€ΞΏΟ… ΞΊΞ±Ο„Ξ±Ξ»Ξ®Ξ³ΞΏΟ…Ξ½ ΟƒΞµ xx.asc (ΞΌΞµ Ξ® Ο‡Ο‰ΟΞ―Ο‚ Ο„Ξ·Ξ½ ΞΊΞ±Ο„Ξ¬Ξ»Ξ·ΞΎΞ·). Ξ“ΞΉΞ± ΟΞ»Ξ± Ξ΄ΟΟƒΟ„Ξµ * (enter=*) : ", "xx.asc")
+       The above gets all the files in current directory (and recursively in the
        subdirectories if nest==True)
        which have .asc as a suffix:  a.asc, thanasis.asc, 1.asc, ...
     2. The filenames are transformed to lower, to facilitate windows..
@@ -197,6 +204,17 @@ def thanOptGeometryGet(c):
 def thanOptFilesGet(c):
     "Read directories and files."
     global prevdir
+    #thanasis2017_06_05: directory in command line arguments supersedes prevdir
+    t = None
+    if len(sys.argv) > 1:
+        t = sys.argv[1]
+        if t == "--commandline":
+            if len(sys.argv) > 2: t = sys.argv[2]
+            else:                 t = None
+    if t is not None:
+        prevdir = t
+        return
+
     try:
         prevdir1 = c.get("files", "previous directory")
     except:

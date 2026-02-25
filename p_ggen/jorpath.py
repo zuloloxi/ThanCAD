@@ -13,6 +13,8 @@ This module requires Python 2.2 or later.
 URL:     http://www.jorendorff.com/articles/python/path
 Author:  Jason Orendorff <jason@jorendorff.com> (and others - see the url!)
 Date:    23 Feb 2003
+
+03 December, 2016: New URL by other maintainer: https://pypi.python.org/pypi/path.py
 """
 
 
@@ -63,17 +65,17 @@ class path(_base):
 
 #    def __init__(self, a=""):                       #Thanasis2009_06_16
 #        if issubclass(self.__class__, unicode):
-#	    from .gen import thanUnicode
-#	    #print "path is unicode:"
-#	    a = thanUnicode(a)
-#	    #print "path is unicode: path.__init__:",  a, type(a)
-#	else:
-#	    from .gen import thanUnunicode
-#	    #print "path is str:"
-#	    a = thanUnunicode(a)
-#	    #print "path is str: path.__init__:",  a, type(a)
-#	
-#	_base.__init__(self, a)
+#            from .gen import thanUnicode
+#            #print "path is unicode:"
+#            a = thanUnicode(a)
+#            #print "path is unicode: path.__init__:",  a, type(a)
+#        else:
+#            from .gen import thanUnunicode
+#            #print "path is str:"
+#            a = thanUnunicode(a)
+#            #print "path is str: path.__init__:",  a, type(a)
+#
+#        _base.__init__(self, a)
 
 
     # --- Special Python methods.
@@ -128,7 +130,7 @@ class path(_base):
     def dirname(self):       return path(os.path.dirname(self))
 
     #basename = os.path.basename                                  #Thanasis2015_10_28commented out
-    def basename(self):      return path(os.path.basename(self))  #Thanasis2015_10_28commented out
+    def basename(self):      return path(os.path.basename(self))  #Thanasis2015_10_28
 
 
     def expand(self):
@@ -146,7 +148,7 @@ class path(_base):
         otherseps = [sep for sep in "/\\" if sep != os.sep]
         if os.sep in self: return self      #Probably the separator is OK (insane if "/" is in a pathname in windows
         for sep in otherseps:
-            if sep in self: break           #Othger separator found
+            if sep in self: break           #Other separator found
         else:
             return self                     #No separators at all
         return path(self.replace(sep, os.sep))
@@ -369,7 +371,6 @@ class path(_base):
         whose names match the given pattern.  For example,
         d.files('*.pyc').
         """
-        
         return [p for p in self.listdir(pattern) if p.isfile()]
 
     def walk(self, pattern=None):
@@ -621,53 +622,53 @@ class path(_base):
 
     # --- Methods for querying the filesystem.
 
-    exists = os.path.exists
-    isabs = os.path.isabs
-#    isdir = os.path.isdir                         #Thanasis2012_05_09:Does not work with python7.3 for windows
-    def isdir(self): return os.path.isdir(self)    #Thanasis2012_05_09
-    isfile = os.path.isfile
-    islink = os.path.islink
-    ismount = os.path.ismount
+    def exists(self):  return os.path.exists(self)  #Thanasis2023_11_06:windoze python 3.12 support
+    def isabs(self):   return os.path.isabs(self)   #Thanasis2023_11_06:windoze python 3.12 support
+#    isdir = os.path.isdir                          #Thanasis2012_05_09:Does not work with python2.7.3 for windows
+    def isdir(self):   return os.path.isdir(self)   #Thanasis2012_05_09
+    def isfile(self):  return os.path.isfile(self)  #Thanasis2023_11_06:windoze python 3.12 support
+    def islink(self):  return os.path.islink(self)  #Thanasis2023_11_06:windoze python 3.12 support
+    def ismount(self): return os.path.ismount(self) #Thanasis2023_11_06:windoze python 3.12 support
 
     if hasattr(os.path, 'samefile'):
-        samefile = os.path.samefile
+        def samefile(self, path2): return os.path.samefile(self, path2) #Thanasis2023_11_30:windoze python 3.12 support
 
-    getatime = os.path.getatime
+    def getatime(self): return os.path.getatime(self)   #Thanasis2023_11_06:windoze python 3.12 support
     atime = property(
         getatime, None, None,
         """ Last access time of the file. """)
 
-    getmtime = os.path.getmtime
+    def getmtime(self): return os.path.getmtime(self)   #Thanasis2023_11_06:windoze python 3.12 support
     mtime = property(
         getmtime, None, None,
         """ Last-modified time of the file. """)
 
     if hasattr(os.path, 'getctime'):
-        getctime = os.path.getctime
+        def getctime(self): return os.path.getctime(self)  #Thanasis2023_11_06:windoze python 3.12 support
         ctime = property(
             getctime, None, None,
             """ Creation time of the file. """)
 
-    getsize = os.path.getsize
+    def getsize(self): return os.path.getsize(self)  #Thanasis2023_11_06:windoze python 3.12 support
     size = property(
         getsize, None, None,
         """ Size of the file, in bytes. """)
 
     if hasattr(os, 'access'):
-        def access(self, mode):
+        def access(self, mode, **kw):   #Thanasis2023_12_01:more optional arguments
             """ Return true if current user has access to this path.
 
             mode - One of the constants os.F_OK, os.R_OK, os.W_OK, os.X_OK
             """
-            return os.access(self, mode)
+            return os.access(self, mode, **kw)
 
     def stat(self):
         """ Perform a stat() system call on this path. """
         return os.stat(self)
 
-    def lstat(self):
+    def lstat(self, **kw):
         """ Like path.stat(), but do not follow symbolic links. """
-        return os.lstat(self)
+        return os.lstat(self, **kw)   #Thanasis2023_12_01:more optional arguments
 
     if hasattr(os, 'statvfs'):
         def statvfs(self):
@@ -685,7 +686,7 @@ class path(_base):
         """ Set the access and modified times of this file. """
         os.utime(self, times)
 
-    def chmod(self, mode):
+    def chmod(self, mode, **kw):   #Thanasis2023_12_01:more optional arguments
         """Changes the permission bits of path.
 
         Usage of .chmod() function
@@ -701,14 +702,14 @@ class path(_base):
         r = 0 subjects have no read permission
         r = 1 subjects have read permission
         """
-        os.chmod(self, mode)
+        os.chmod(self, mode, **kw)
 
     if hasattr(os, 'chown'):
-        def chown(self, uid, gid):
-            os.chown(self, uid, gid)
+        def chown(self, uid, gid, **kw):   #Thanasis2023_12_01:more optional arguments
+            os.chown(self, uid, gid, **kw)
 
-    def rename(self, new):
-        os.rename(self, new)
+    def rename(self, new, **kw):   #Thanasis2023_12_01:more optional arguments
+        os.rename(self, new, **kw)
 
     def renames(self, new):
         os.renames(self, new)
@@ -716,19 +717,19 @@ class path(_base):
 
     # --- Create/delete operations on directories
 
-    def mkdir(self, mode=0o777):
-        os.mkdir(self, mode)
+    def mkdir(self, mode=0o777, **kw):   #Thanasis2023_12_01:more optional arguments
+        os.mkdir(self, mode, **kw)
 
-    def makedirs(self, mode=0o777):
-        os.makedirs(self, mode)
+    def makedirs(self, mode=0o777, **kw):   #Thanasis2023_12_01:more optional arguments
+        os.makedirs(self, mode, **kw)
 
-    def makedirs1(self, mode=0o777):  #Thanasis2011_02_23:new method
-        try: 
-            os.makedirs(self, mode)
+    def makedirs1(self, mode=0o777, **kw):  #Thanasis2011_02_23:new method
+        try:
+            os.makedirs(self, mode, **kw)   #Thanasis2023_12_01:more optional arguments
         except:
             pass
-        if not self.exists(): raise    #makedirs did not succeed to make directory
-        if not self.isdir(): raise     #makedirs did not succeed because a file with this name exists
+        if not self.exists(): os.makedirs(self, mode, **kw) #makedirs did not succeed to make directory -> this raises exception
+        if not self.isdir(): os.makedirs(self, mode, **kw)  #makedirs did not succeed because a file with this name exists - this raises exception
 
 #    def makeparentdirs(self, mode="0777"):  #Thanasis2011_02_23:new method #Thanasis2015_04_05:DELETED as it is not used anywhere
 #        try: os.makedirs(self.parent, mode)
@@ -736,8 +737,8 @@ class path(_base):
 #        if not self.exists(): raise    #makedirs did not suceed to make directory
 #        if not self.isdir(): raise     #makedirs did not succed because a file with this name exists
 
-    def rmdir(self):
-        os.rmdir(self)
+    def rmdir(self, **kw):   #Thanasis2023_12_01:more optional arguments
+        os.rmdir(self, **kw)
 
     def removedirs(self):
         os.removedirs(self)
@@ -753,39 +754,39 @@ class path(_base):
         os.close(fd)
         os.utime(self, None)
 
-    def remove(self):
-        os.remove(self)
+    def remove(self, **kw):   #Thanasis2023_12_01:more optional arguments
+        os.remove(self, **kw)
 
-    def unlink(self):
-        os.unlink(self)
+    def unlink(self, **kw):   #Thanasis2023_12_01:more optional arguments
+        os.unlink(self, **kw)
 
 
     # --- Links
 
     if hasattr(os, 'link'):
-        def link(self, newpath):
+        def link(self, newpath, **kw):   #Thanasis2023_12_01:more optional arguments
             """ Create a hard link at 'newpath', pointing to this file. """
-            os.link(self, newpath)
+            os.link(self, newpath, **kw)
 
     if hasattr(os, 'symlink'):
-        def symlink(self, newlink):
+        def symlink(self, newlinkk, **kw):   #Thanasis2023_12_01:more optional arguments
             """ Create a symbolic link at 'newlink', pointing here. """
-            os.symlink(self, newlink)
+            os.symlink(self, newlink, **kw)
 
     if hasattr(os, 'readlink'):
-        def readlink(self):
+        def readlink(self, **kw):   #Thanasis2023_12_01:more optional arguments
             """ Return the path to which this symbolic link points.
 
             The result may be an absolute or a relative path.
             """
-            return path(os.readlink(self))
+            return path(os.readlink(self, **kw))
 
-        def readlinkabs(self):
+        def readlinkabs(self, **kw):   #Thanasis2023_12_01:more optional arguments
             """ Return the path to which this symbolic link points.
 
             The result is always an absolute path.
             """
-            p = self.readlink()
+            p = self.readlink(**kw)
             if p.isabs():
                 return p
             else:
@@ -794,26 +795,23 @@ class path(_base):
 
     # --- High-level functions from shutil
 
-    copyfile = shutil.copyfile
-    copymode = shutil.copymode
-    copystat = shutil.copystat
-    copy = shutil.copy
-    copy2 = shutil.copy2
-    copytree = shutil.copytree
+    def ismount(self):  return os.path.ismount(self)  #Thanasis2023_11_06:windoze python 3.12 support
+    def copyfile(self, dst, **kw): return shutil.copyfile(self, dst, **kw)  #Thanasis2023_11_30:windoze python 3.12 support
+    def copymode(self, dst, **kw): return shutil.copymode(self, dst, **kw)  #Thanasis2023_11_30:windoze python 3.12 support
+    def copystat(self, dst, **kw): return shutil.copystat(self, dst, **kw)  #Thanasis2023_11_30:windoze python 3.12 support
+    def copy(self, dst, **kw):     return shutil.copy(self, dst, **kw)      #Thanasis2023_11_30:windoze python 3.12 support
+    def copy2(self, dst, **kw):    return shutil.copy2(self, dst, **kw)     #Thanasis2023_11_30:windoze python 3.12 support
+    def copytree(self, dst, *args, **kw): return shutil.copytree(self, dst, *args, **kw)  #Thanasis2023_11_30:windoze python 3.12 support
     if hasattr(shutil, 'move'):
-        move = shutil.move
-    rmtree = shutil.rmtree
+        def move(self, *args, **kw): return shutil.move(self, *args, **kw)      #Thanasis2023_11_30:windoze python 3.12 support
+    def rmtree(self, *args, **kw):   return shutil.rmtree(self, *args, **kw)    #Thanasis2023_11_30:windoze python 3.12 support
 
-    def chdir(self):              #Thanasis2006_03_12:new method
-        os.chdir(self)
+    def chdir(self): os.chdir(self)            #Thanasis2006_03_12:new method
 
     # --- Special stuff from os
 
     if hasattr(os, 'chroot'):
-        def chroot(self):
-            os.chroot(self)
+        def chroot(self): os.chroot(self)
 
     if hasattr(os, 'startfile'):
-        def startfile(self):
-            os.startfile(self)
-
+        def startfile(self, *args): os.startfile(self, *args)   #Thanasis2023_12_01:more optional arguments

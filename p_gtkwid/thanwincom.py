@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
 from tkinter import (Tk, Toplevel, Frame, Text, Label, GROOVE, END,
     StringVar)
 from .thanfontresize import ThanFontResize

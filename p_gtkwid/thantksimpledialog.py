@@ -26,10 +26,10 @@ askfloat -- get a float from the user
 askstring -- get a string from the user
 '''
 
-from __future__ import print_function
 import tkinter
 from .thantkutilb import thanGrabSet, thanGrabRelease               # Stamos Aug 12, 2004
 from .thanwidstrans import T as Twid
+from . import thanwids
 
 class ThanDialog(tkinter.Toplevel):
     '''Class to open dialogs.
@@ -147,10 +147,10 @@ class ThanDialog(tkinter.Toplevel):
         n = max(len(t) for t in self._butLabs)
         n = max((n, 12))
         box = tkinter.Frame(self)
-        w = tkinter.Button(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",   # Stamos 2007_03_21
+        w = thanwids.ThanButton(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",   # Stamos 2007_03_21
             width=n, command=self.ok, default=tkinter.ACTIVE)   # Stamos Feb 26, 2006
         w.grid(row=0, column=0, padx=5, pady=5, sticky="w")     # Stamos Aug 12, 2004
-        w = tkinter.Button(box, text=self._butLabs[1], bg="pink", activebackground="red",            # Stamos 2007_03_21
+        w = thanwids.ThanButton(box, text=self._butLabs[1], bg="pink", activebackground="red",            # Stamos 2007_03_21
             width=n, command=self.cancel)                       # Stamos Feb 26, 2006
         w.grid(row=0, column=1, padx=5, pady=5, sticky="e")     # Stamos Aug 12, 2004
 
@@ -221,13 +221,13 @@ class ThanDialog(tkinter.Toplevel):
         n = max(len(t) for t in self._butLabs)
         n = max((n, 12))
         box = tkinter.Frame(self)
-        w = tkinter.Button(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",  # Stamos 2007_03_21
+        w = thanwids.ThanButton(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",  # Stamos 2007_03_21
             width=n, command=self.ok, default=tkinter.ACTIVE)   # Stamos Feb 26, 2006
         w.grid(row=0, column=0, padx=5, pady=5, sticky="w")     # Stamos Aug 12, 2004
-        w = tkinter.Button(box, text=self._butLabs[1], bg="gold", activebackground="yellow",       # Stamos 2007_03_21
+        w = thanwids.ThanButton(box, text=self._butLabs[1], bg="gold", activebackground="yellow",       # Stamos 2007_03_21
             width=n, command=self.apply2)                       # Stamos Jan 7, 2011
         w.grid(row=0, column=1, padx=5, pady=5, sticky="w")     # Stamos Jul 15, 2005
-        w = tkinter.Button(box, text=self._butLabs[2], bg="pink", activebackground="red",          # Stamos 2007_03_21
+        w = thanwids.ThanButton(box, text=self._butLabs[2], bg="pink", activebackground="red",          # Stamos 2007_03_21
             width=n, command=self.cancel)                       # Stamos Feb 26, 2006
         w.grid(row=0, column=2, padx=5, pady=5, sticky="e")     # Stamos Aug 12, 2004
 
@@ -270,10 +270,12 @@ class _QueryDialog(ThanDialog):
         ThanDialog.destroy(self)
 
     def body(self, master):
-        w = tkinter.Label(master, text=self.prompt, justify=tkinter.LEFT)
-        w.grid(row=0, padx=5, sticky=tkinter.W)
-        self.entry = tkinter.Entry(master, name="entry", **self.entrykw)
-        self.entry.grid(row=1, padx=5, sticky=tkinter.W+tkinter.E)
+        w = thanwids.ThanLabel(master, text=self.prompt, justify=tkinter.LEFT, #Thanasis2025_01_20: label->ThanLabel ...
+            relief=tkinter.FLAT, width=None)   #... override ThanLabel's default relief/width
+        w.grid(row=0, column=0, padx=5, sticky=tkinter.W)
+        self.entry = thanwids.ThanEntry(master, name="entry", **self.entrykw)   #thanasis2025_01_20:Entry->ThanEntry
+        self.entry.grid(row=1, column=0, padx=5, sticky=tkinter.W+tkinter.E)
+        master.columnconfigure(0, weight=1)   #Thanasis2020_05_19
         if self.initialvalue:
             self.entry.insert(0, self.initialvalue)
             self.entry.select_range(0, tkinter.END)

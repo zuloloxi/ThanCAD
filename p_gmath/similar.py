@@ -1,6 +1,4 @@
-# -*- coding: iso-8859-7 -*-
 "Similar transformation in 2D and 3D."
-from __future__ import print_function
 from p_gnum import (array, matrixmultiply, transpose, zeros, Float)
 from math import cos, sin, fabs, atan2
 from .var import dpt
@@ -74,21 +72,15 @@ class SimilarTransformation(Transformation):
 #        if fabs(s) > fabs(c): phi = atan2(-tra.rxyz[0,2], tra.rxyz[1,2]/s)   # Avoid zero division
 #        else:                 phi = atan2(-tra.rxyz[0,2], tra.rxyz[2,2]/c)   # Avoid zero division
 #        tra.gon = array((om, phi, kap))
-        tra.gon = array(tra.calcwfk())
+        tra.gon = array(calcwfk(tra.rxyz))
         tra.cu = -tra.am * matrixmultiply(tra.rxyz, self.cu)
         tra.a = tra.cu[0], tra.cu[1], tra.am*cos(tra.gon[2]), tra.am*sin(tra.gon[2])
         return tra
 
 
     def calcwfk(self):
-        "Compute the omega,phi,kapa from the rotation matrix."
-        om  = atan2(self.rxyz[1,2], self.rxyz[2,2])
-        kap = atan2(self.rxyz[0,1], self.rxyz[0,0])
-        s = sin(om)
-        c = cos(om)
-        if fabs(s) > fabs(c): phi = atan2(-self.rxyz[0,2], self.rxyz[1,2]/s)   # Avoid zero division
-        else:                 phi = atan2(-self.rxyz[0,2], self.rxyz[2,2]/c)   # Avoid zero division
-        return dpt(om), dpt(phi), dpt(kap)
+        "Just call calwfk with self.rxyz."
+        return calcwfk(self.rxyz)
 
 
     def calc(self, cp):
@@ -106,7 +98,7 @@ class SimilarTransformation(Transformation):
 
 
 def mhtstr (cosf, sinf, i, j, k):
-    "Rotation matrix for an angle (ù, ö, ê)."
+    "Rotation matrix for an angle (Ï‰, Ï†, Îº)."
     ry = zeros((3, 3), Float)
     ry[i,i] =  cosf
     ry[i,j] =  sinf
@@ -126,12 +118,12 @@ def mhtstr (cosf, sinf, i, j, k):
 def matwfk(gon):
     """Computes the rotation matrix of w,f,k.
 
-    Âéâëßï ÐáôéÜ: "ÅéóáãùãÞ óôç Öùôïãñáììåôñßá, óåë. 104
-    Óôï âéâëßï äßíåôáé ï ðïëëáðëáóéáóìüò ê*ö*ù åíþ åäþ ÷ñçóéìïðïéïýìå
-    ù*ö*ê:
-    cosö cosê                      cosö sinê                     -sinö
-    sinù sinö cosê - cosù sinê     sinù sinö sinê + cosù cosê     sinù cosö
-    cosù sinö cosê + sinù sinê     cosù sinö sinê - sinù cosê     cosù cosö 
+    Î’Î¹Î²Î»Î¯Î¿ Î Î±Ï„Î¹Î¬: "Î•Î¹ÏƒÎ±Î³Ï‰Î³Î® ÏƒÏ„Î· Î¦Ï‰Ï„Î¿Î³ÏÎ±Î¼Î¼ÎµÏ„ÏÎ¯Î±, ÏƒÎµÎ». 104
+    Î£Ï„Î¿ Î²Î¹Î²Î»Î¯Î¿ Î´Î¯Î½ÎµÏ„Î±Î¹ Î¿ Ï€Î¿Î»Î»Î±Ï€Î»Î±ÏƒÎ¹Î±ÏƒÎ¼ÏŒÏ‚ Îº*Ï†*Ï‰ ÎµÎ½ÏŽ ÎµÎ´ÏŽ Ï‡ÏÎ·ÏƒÎ¹Î¼Î¿Ï€Î¿Î¹Î¿ÏÎ¼Îµ
+    Ï‰*Ï†*Îº:
+    cosÏ† cosÎº                      cosÏ† sinÎº                     -sinÏ†
+    sinÏ‰ sinÏ† cosÎº - cosÏ‰ sinÎº     sinÏ‰ sinÏ† sinÎº + cosÏ‰ cosÎº     sinÏ‰ cosÏ†
+    cosÏ‰ sinÏ† cosÎº + sinÏ‰ sinÎº     cosÏ‰ sinÏ† sinÎº - sinÏ‰ cosÎº     cosÏ‰ cosÏ†
     """
     cosw = cos(gon[0])
     sinw = sin(gon[0])
@@ -144,6 +136,17 @@ def matwfk(gon):
     tt = matrixmultiply(rxyz, te)        # = rxy
     te,   t1 = mhtstr(cosk,  sink, 0, 1, 2)      # = rz
     return matrixmultiply(tt, te)        # = rxyz
+
+
+def calcwfk(rxyz):
+    "Compute the omega,phi,kapa from the rotation matrix."
+    om  = atan2(rxyz[1,2], rxyz[2,2])
+    kap = atan2(rxyz[0,1], rxyz[0,0])
+    s = sin(om)
+    c = cos(om)
+    if fabs(s) > fabs(c): phi = atan2(-rxyz[0,2], rxyz[1,2]/s)   # Avoid zero division
+    else:                 phi = atan2(-rxyz[0,2], rxyz[2,2]/c)   # Avoid zero division
+    return dpt(om), dpt(phi), dpt(kap)
 
 
 if __name__ == "__main__":

@@ -1,27 +1,27 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines stateless functionality, i.e. for events (mouse wheel events) which
 are (almost) independent to state. It is used as a mixin to ThanCad's canvas.
@@ -29,7 +29,7 @@ are (almost) independent to state. It is used as a mixin to ThanCad's canvas.
 import tkinter
 from p_ggen import Struct
 from thanvar import thanLogTk, Canc
-from .thantkconst import THAN_STATE_ZOOMDYNAMIC, THAN_STATE_NONE
+from .thantkconst import THAN_STATE
 from .thantkguigeneric import ThanStateGeneric
 
 
@@ -60,7 +60,7 @@ class ThanStateLess:
             return
         x = dc.canvasx(evt.x); y = dc.canvasy(evt.y)        # canvas units
         if self.__wheel.idle == 1:
-            if dc.thanState == THAN_STATE_ZOOMDYNAMIC: return #The user already zooms (RealTime)
+            if dc.thanState == THAN_STATE.ZOOMDYNAMIC: return #The user already zooms (RealTime)
             dc.after_cancel(self.__wheel.task)
             dc.thanCh.thanDisable()                           #Zoom is clearer without croshair
             if self.thanEconoRaster:
@@ -69,6 +69,8 @@ class ThanStateLess:
                         if self.type(item2) != "image": continue
                         self.delete(item2) #  Delete Images (they can't be zoomed), but not rectangles
                         break
+                self.__regenTexts(rectangle=True)
+
 #            self.__prepareZoom(x, y)
             self.__wheel.idle = 2
         dc.after_cancel(self.__wheel.task)
@@ -89,6 +91,38 @@ class ThanStateLess:
         v[:] = w
         if not self.thanEconoRaster:
             self.thanProj[2].thanAutoRegen(regenImages=True)     # Regen images only if zoom realtime is finished
+            self.__regenTexts(rectangle=False)
+
+
+    def __regenTexts(self, rectangle=False):
+        "Regenerate texts because tkinter does not scale (zoom) text size."
+        dc = self.thanProj[2].thanCanvas
+        tagel = self.thanProj[1].thanTagel
+        lt = self.thanProj[1].thanLayerTree
+        than = self.thanProj[2].than
+        dilay = lt.dilay
+        #for item in dc.find_all():      #Thanasis2017_01_02
+        nexist = 0
+        for item in dc.find_withtag("textel"):
+            temp = dc.type(item)
+            if temp is None:       #Tk bug: Thanasis2020_05_17: item is nonexistent; this item has also no tags..
+                dc.delete(item)    #..and the following code fails
+                nexist += 1
+                continue
+            tags = dc.gettags(item)
+            #if len(tags) < 2: continue      # We avoid current (rubber line)
+            titem = tags[0]
+            elem = tagel[titem]
+            #if elem.thanElementName != "TEXT": continue
+            lay = dilay[elem.thanTags[1]]
+            lay.thanTkSet(than)
+            selected = "selall" in tags   #If we pan/zoom inside a selection command, check if image is selected
+            dc.delete(titem)              # Delete Rectangle and image (if not already deleted)
+            elem.thanTkDraw1(than, rectangle)         # Restore this text
+            if selected: dc.addtag_withtag("selall", titem)  # reselect text if it was selected
+        if nexist>0: print(nexist, "nonexistent canvas items deleted.")
+        self.thanProj[2].thanRedraw()     # Text regen probably violated draworder #Not really
+        lt.thanCur.thanTkSet(than)        # set current layer's attributes
 
 
     def __wheelClear(self):
@@ -102,6 +136,7 @@ class ThanStateLess:
         dc.thanCh.thanEnable()
         if self.thanEconoRaster:
             self.thanProj[2].thanAutoRegen(regenImages=True)     # Regen images only if zoom realtime is finished
+            self.__regenTexts(rectangle=False)
         self.__wheel.idle = 0
 
 
@@ -143,5 +178,5 @@ class ThanStateLess:
         if self.thanFloatMenu is not None and self.thanFloatMenu.winfo_ismapped():
             self.thanFloatMenu.unpost()
 
-        self.thanState = THAN_STATE_NONE
+        self.thanState = THAN_STATE.NONE
         self.thanOState = ThanStateGeneric(self.thanProj)

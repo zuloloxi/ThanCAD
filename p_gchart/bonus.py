@@ -1,4 +1,3 @@
-from __future__ import print_function
 from math import sin, cos, pi
 from .thanfonts import thanFontPrime1
 

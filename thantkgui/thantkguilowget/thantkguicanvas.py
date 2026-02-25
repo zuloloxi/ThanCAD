@@ -1,51 +1,46 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for user lowlevel interaction in
 a drawing window.
 """
 
-from __future__ import print_function
 import p_ggen
 import tkinter
 from thanvar import thanLogTk
 from thantrans import T
 from .thantkguicroshair import CrosHair, ThanCrosHairs
-from .thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT1, THAN_STATE_POINT,
-    THAN_STATE_DRAGFOLLOWS,THAN_STATE_MOVE, THAN_STATE_LINE, THAN_STATE_LINE2,
-    THAN_STATE_POLAR, THAN_STATE_CIRCLE, THAN_STATE_ARC, THAN_STATE_RECTANGLE,
-    THAN_STATE_RECTRATIO, THAN_STATE_ROADP, THAN_STATE_ROADR, THAN_STATE_SPLINEP,
-    THAN_STATE_ELLIPSEB, THAN_STATE_SNAPELEM, thanCursor)
+from .thantkconst import THAN_STATE, thanCursor
 from .thantkguiosnap import ThanOsnap, ThanOrtho
 
 from .thantkguistateless import ThanStateLess
 from .thantkguigeneric   import ThanStateGeneric
 from .thantkguidrag      import ThanStateDrag
 from .thantkguimove      import ThanStateMove
-from .thantkguiline      import ThanStateLine, ThanStateLine2, ThanStatePolar
-from .thantkguicircle    import ThanStateCircle, ThanStateArc
+from .thantkguiline      import ThanStateLine, ThanStateLine2, ThanStatePolar, ThanStateAzimuth
+from .thantkguicircle    import ThanStateCircle, ThanStateCircle2, ThanStateCircle3, ThanStateArc
 from .thantkguirect      import ThanStateRectangle, ThanStateRectratio
 from .thantkguiroad      import ThanStateRoadp, ThanStateRoadr
 from .thantkguispline    import ThanStateSplinep
@@ -76,7 +71,7 @@ class ThanTkGuiLowGet(tkinter.Canvas, ThanStateLess):
         dc.bind("<ButtonRelease-1>", self.__onReleaseDrag)
         if p_ggen.Pyos.Windows:
             dc.bind("<MouseWheel>",      self._mouseWheel)
-            proj[2].bind("<MouseWheel>", self._mouseWheelp)   # Hack for Windows: Yeh, Windows "just works", no need for hacks
+            proj[2].bind("<MouseWheel>", self._mouseWheelp)   # Hack for Windows: Yeha, Windows "just works", no need for hacks
             dc.bind("<Shift-MouseWheel>",      self._shiftmouseWheel)
             proj[2].bind("<Shift-MouseWheel>", self._shiftmouseWheelp)   # Hack for Windows: Yeh, Windows "just works", no need for hacks
         else:
@@ -96,7 +91,7 @@ class ThanTkGuiLowGet(tkinter.Canvas, ThanStateLess):
         self.bind("<Control-Right>", self.thanPanpageright)
         self.bind("<F7>", self.__onF7)
 
-        self.thanState = THAN_STATE_NONE
+        self.thanState = THAN_STATE.NONE
         self.thanOState = ThanStateGeneric(proj)
 
         dc.update_idletasks()                 # _idletasks breaks WinDoze (98?) support. Skotistika
@@ -190,7 +185,7 @@ class ThanTkGuiLowGet(tkinter.Canvas, ThanStateLess):
 
         self.thanXcu = x
         self.thanYcu = y
-        if self.thanState != THAN_STATE_NONE and self.thanOsnap.active:
+        if self.thanState != THAN_STATE.NONE and self.thanOsnap.active:
             self.after(10, self.thanOsnap.thanFind)
 
 
@@ -241,7 +236,7 @@ class ThanTkGuiLowGet(tkinter.Canvas, ThanStateLess):
 
         self.thanOState.thanOnClickr(event, x, y, cc)
 
-        if self.thanState == THAN_STATE_NONE:
+        if self.thanState == THAN_STATE.NONE:
             if self.thanFloatMenu is not None and self.thanFloatMenu.winfo_ismapped():
                 self.thanFloatMenu.unpost()
             self.thanFloatMenu = self.__createFloatMenu()
@@ -302,39 +297,45 @@ class ThanTkGuiLowGet(tkinter.Canvas, ThanStateLess):
 
         dc = self
         dc.config(cursor=thanCursor.get(state, ""))
-        if state == THAN_STATE_POINT1: state = THAN_STATE_POINT
+        if state == THAN_STATE.POINT1: state = THAN_STATE.POINT
 
-        if state > THAN_STATE_DRAGFOLLOWS:
+        if state.value > THAN_STATE.DRAGFOLLOWS.value:
             self.thanOState = ThanStateDrag(self.thanProj)
-        elif state == THAN_STATE_MOVE:
-            self.thanOState = ThanStateMove(self.thanProj, x1, y1)
-        elif state == THAN_STATE_LINE:
+        elif state == THAN_STATE.MOVE:
+            self.thanOState = ThanStateMove(self.thanProj, x1, y1, t1)
+        elif state == THAN_STATE.LINE:
             self.thanOState = ThanStateLine(self.thanProj, x1, y1)
-        elif state == THAN_STATE_LINE2:
+        elif state == THAN_STATE.LINE2:
             self.thanOState = ThanStateLine2(self.thanProj, x1, y1, x2, y2)
-        elif state == THAN_STATE_POLAR:
+        elif state == THAN_STATE.POLAR:
             self.thanOState = ThanStatePolar(self.thanProj, x1, y1, r1)
-        elif state == THAN_STATE_CIRCLE:
-            self.thanOState = ThanStateCircle(self.thanProj, x1, y1)
-        elif state == THAN_STATE_ARC:
+        elif state == THAN_STATE.AZIMUTH:
+            self.thanOState = ThanStateAzimuth(self.thanProj, x1, y1, t1)
+        elif state == THAN_STATE.CIRCLE:
+            self.thanOState = ThanStateCircle(self.thanProj, x1, y1, coef=t1)
+        elif state == THAN_STATE.CIRCLE2:
+            self.thanOState = ThanStateCircle2(self.thanProj, x1, y1, coef=t1)
+        elif state == THAN_STATE.CIRCLE3:
+            self.thanOState = ThanStateCircle3(self.thanProj, x1, y1, x2, y2)
+        elif state == THAN_STATE.ARC:
             self.thanOState = ThanStateArc(self.thanProj, x1, y1, r1, t1, clockwise=t2)
-        elif state == THAN_STATE_POINT:
+        elif state == THAN_STATE.POINT:
             self.thanOState = ThanStatePoint(self.thanProj)
-        elif state == THAN_STATE_RECTANGLE:
-            self.thanOState = ThanStateRectangle(self.thanProj, x1, y1, t1)
-        elif state == THAN_STATE_RECTRATIO:
+        elif state == THAN_STATE.RECTANGLE:
+            self.thanOState = ThanStateRectangle(self.thanProj, x1, y1, t1, t2)
+        elif state == THAN_STATE.RECTRATIO:
             self.thanOState = ThanStateRectratio(self.thanProj, x1, y1, t1, cc1)
-        elif state == THAN_STATE_ROADP:
+        elif state == THAN_STATE.ROADP:
             self.thanOState = ThanStateRoadp(self.thanProj, x1, y1, x2, y2,
                                              x3, y3, r1)
-        elif state == THAN_STATE_ROADR:
+        elif state == THAN_STATE.ROADR:
             self.thanOState = ThanStateRoadr(self.thanProj, x1, y1, x2, y2,
                                              x3, y3, r1)
-        elif state == THAN_STATE_SPLINEP:
+        elif state == THAN_STATE.SPLINEP:
             self.thanOState = ThanStateSplinep(self.thanProj, x1, y1, x2, y2)
-        elif state == THAN_STATE_ELLIPSEB:
+        elif state == THAN_STATE.ELLIPSEB:
             self.thanOState = ThanStateEllipseb(self.thanProj, x1, y1, r1, t1)
-        elif state == THAN_STATE_SNAPELEM:
+        elif state == THAN_STATE.SNAPELEM:
             self.thanOState = ThanStateSelem(self.thanProj)
 
         self.thanState = state
@@ -344,7 +345,7 @@ class ThanTkGuiLowGet(tkinter.Canvas, ThanStateLess):
 
     def thanGudIdle(self):
         "Returns true if not in the middle of a command."
-        return self.thanState == THAN_STATE_NONE
+        return self.thanState == THAN_STATE.NONE
 
 
     def thanTkClear(self):

@@ -1,35 +1,32 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module contains a mixin for the various 3d-2d and 2d-2d transformations
 available to ThanCad.
 """
 
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import tkinter
 import p_gtkwid
 import thandr
@@ -83,23 +80,23 @@ class TransfMixin:
         lab.grid(row=0, column=0, sticky="w")
         pc = self.projectcode
         if pro:                           #Professional version with FFLFs
-            for i in xrange(3):
+            for i in range(3):
                 wid = rad.add_button(text=Tmatch[pc[0+i][0]])
                 wid.grid(row=i+1, column=0, sticky="w")
         else:                             #Professional version without FFLFs
-            for i in xrange(3):
+            for i in range(3):
                 wid = rad.add_button(text=Tmatch[pc[0+i][0]])
                 if i > 0: wid.grid(row=i+1, column=0, sticky="w")
-        for i in xrange(4):
+        for i in range(4):
             wid = rad.add_button(text=Tmatch[pc[3+i][0]])
             wid.grid(row=i+1, column=2, sticky="w")
 
         lab = tkinter.Label(rad, text=Tmatch["2D-2D"], fg=self.colfra)
         lab.grid(row=5, column=0, sticky="w")
-        for i in xrange(4, 6):
+        for i in range(4, 6):
             wid = rad.add_button(text=Tmatch[pc[3+i][0]])
             wid.grid(row=i+2, column=0, sticky="w")
-        for i in xrange(4, 6):
+        for i in range(4, 6):
             wid = rad.add_button(text=Tmatch[pc[5+i][0]])
             wid.grid(row=i+2, column=2, sticky="w")
         wid = tkinter.Frame(rad)

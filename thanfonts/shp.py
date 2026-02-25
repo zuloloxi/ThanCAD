@@ -1,37 +1,31 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module imports shape files (.shp).
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-#from builtins import object
-from p_ggen.py23 import xrange, next
 from math import pi, sqrt, atan2, cos, sin, fabs
 import codecs, unicodedata
 from p_gmath import dpt
@@ -336,7 +330,7 @@ class ThanCadShapefile:
         n = fabs(dth)/(0.25*pi)
         n = int(n*nseg)+1
         dth /= n
-        for i in xrange(n):
+        for i in range(n):
             th += dth
             if pendown and len(li) == 0: li.append((xnow, ynow))
             xnow = xc+r*cos(th); ynow = yc+r*sin(th)
@@ -384,9 +378,9 @@ class ThanCadShapefile:
                 x = next(itb); y = next(itb)
                 if x == 0 and y == 0: return
         elif byte == 11:
-            for i in xrange(5): next(itb)
+            for i in range(5): next(itb)
         elif byte == 12:
-            for i in xrange(3): next(itb)
+            for i in range(3): next(itb)
         elif byte == 13:
             while True:
                 x = next(itb); y = next(itb)
@@ -397,7 +391,7 @@ class ThanCadShapefile:
 
     def __resolveSubshapes(self, it):
         "A all subshape definitions."
-        for tries in xrange(10):
+        for tries in range(10):
             allresolved = True
             for shp in self.__shape.values():   #works for python2,3
                 if shp.resolved: continue
@@ -415,7 +409,7 @@ class ThanCadShapefile:
 #           self.__shape[imiss] = shp = Struct()
 #           shp.ord = imiss; shp.name = "?"; shp.bytes = []
 #           shp.lines = [[2,0]]; shp.resolved = True
-#        for i1 in xrange(256):
+#        for i1 in range(256):
 #           if i1 not in self.__shape: lines[i1] = imiss; continue
 #           lines[i1] = self.__shape[i1].lines
         for i1,shp in self.__shape.items():    #works for python2,3
@@ -436,7 +430,7 @@ class ThanCadShapefile:
             t = unicodedata.name(unichr(i), "<none>")
             print("ord=%d   shape_name=%s  unicode_name=%s" % (i, shp.name, t))
             print("     Bytes (with subshapes resolved):")
-            for i in xrange(0, len(shp.bytes), 18):
+            for i in range(0, len(shp.bytes), 18):
                 b1 = shp.bytes[i:i+18]
                 print("    ", (len(b1)*"%3d,") % tuple(b1))
             print("     Deciphered bytes (with subshapes resolved):")

@@ -1,27 +1,27 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines a hierarchical layer structure (class).
 Each layer has a set of attributes. It is very easy to extend this set.
@@ -33,17 +33,15 @@ When an attribute is changed the layer class calls method thanUpdateElements
 to do what is needed (e.g. change the color of the elements).
 thanUpdateElements is inherited by ThanLayAtts.
 """
-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import weakref, copy
 import p_ggen, p_gcol
 from thanvar import ThanLayerError, THANBYPARENT, THANPERSONAL
 from thandefs import ThanId
 from thanopt import thancadconf
 
-from .thanlaycon import *
+from .thanlaycon import THANNAME
+from .thanlayername import checkLayerName, repairLayerUniq, isLayerUniq
+from thanopt.thancon import THANLC
 from . import thanlayatts
 
 
@@ -116,16 +114,34 @@ class ThanLayer(object):
         namlt, unit, scale = ats["linetype"].thanVal
         if namlt not in than.thanLtypes: namlt = "continuous"   #If line type is not found use continuous as default
         than.thanLtypes[namlt].thanTkSet(than, unit, scale)
+        namlt, unit, scale = ats["dimstyle"].thanVal
+        if namlt not in than.thanDimstyles: namlt = "standard"  #If dimension style is not found use standard as default
+        than.thanDimstyles[namlt].thanTkSet(than, unit, scale)
+
         than.pointPlotname   = not ats["hidename"].thanVal
         than.pointPlotheight = not ats["hideheight"].thanVal
 
-#        than.penthick  = ats["penthick"].thanVal    # Note that penthickness in mm is irrelevent
-                                                    # unless we know the dimensions of the screen
+        # Note that penthickness in mm is irrelevent unless we know the dimensions of the screen
+        temp = ats["penthick"].thanVal * than.pixpermm   #Thanasis2018_07_01: pixelpermm is calculated when a new drawing is created
+                                                         #Perhaps it should be update in every regen
         than.tkThick, _ = than.ct.global2LocalRel(ats["linethick"].thanVal, 0.0)
+        than.tkThick = max(than.tkThick, temp)
 
         for a in thanlayatts.thanLayAttsNames[2:]:
             ia = ats[a]
             ia.thanAct = ia.thanVal
+
+
+    def thanDxfSet(self, than):
+        "Sets the drawing attributes for a dxf file according to layer."
+        ats = self.thanAtts
+        than.layname = self.thanGetPathname(THANLC)  #Active layername is needed by namedpoint
+        than.fill = ats["fill"].thanVal   #Needed by ThanLineFilled element
+        t = ats["textstyle"].thanVal
+        than.font = than.thanTstyles[t].thanFont
+        namlt, unit, scale = ats["dimstyle"].thanVal
+        if namlt not in than.thanDimstyles: namlt = "standard"  #If dimension style is not found use standard as default
+        than.thanDimstyles[namlt].thanDxfSet(than, unit, scale)
 
 
     def thanPilSet(self, than, dpi):
@@ -154,7 +170,12 @@ class ThanLayer(object):
         t = ats["textstyle"].thanVal
         than.font = than.thanTstyles[t].thanFont
         namlt, unit, scale = ats["linetype"].thanVal
-        than.thanLtypes[namlt].thanPilSet(than, unit, scale)
+        if namlt not in than.thanLtypes: namlt = "continuous"   #If line type is not found use continuous as default
+        than.thanLtypes[namlt].thanTkSet(than, unit, scale)
+        namlt, unit, scale = ats["dimstyle"].thanVal
+        if namlt not in than.thanDimstyles: namlt = "standard"  #If dimension style is not found use standard as default
+        than.thanDimstyles[namlt].thanTkSet(than, unit, scale)
+
         than.pointPlotname   = not ats["hidename"].thanVal
         than.pointPlotheight = not ats["hideheight"].thanVal
 
@@ -166,7 +187,7 @@ class ThanLayer(object):
     def thanPdfSet(self, than):
         "Sets the drawing attributes for a PIL image according to layer."
         t = self.thanAtts["textstyle"].thanVal
-        than.thanFont = than.thanTstyles[t].thanFont
+        than.font = than.thanTstyles[t].thanFont
         return
         c = self.thanAtts["moncolor"].thanVal
         if   c == (255,255,255): c = 0,0,0            # Invert white and ..
@@ -182,15 +203,32 @@ class ThanLayer(object):
 
     def thanRename(self, name):
         "Renames a layer."
+        root = self
+        while root.thanParent is not None: root = root.thanParent   #find root
+        delnot = set((root, root.thanChildren[0]))   # Layers which must not be deleted/renamed
+        if self in delnot:
+            nameold = self.thanAtts[THANNAME].thanVal.strip()
+            raise ThanLayerError("Can not rename layer '{}'".format(nameold))
+
         name = name.strip()
-        if name=="" or " " in name or name[0]==".":            # Check name
-            raise ThanLayerError("Illegal layer name: "+name)
+        terr = checkLayerName(name)          # Check name
+        if terr != "": raise ThanLayerError("Illegal layer name '{}': {}".format(name, terr))
         if self.thanParent is not None:               # Root layer has no parent and no siblings
             for lay in self.thanParent.thanChildren:
                 if str(lay.thanAtts[THANNAME]) == name:        # Check unique name
-                    raise ThanLayerError("Duplicate layer name: " + name)
+                    raise ThanLayerError("Duplicate layer name '{}'".format(name))
         self.thanAtts[THANNAME].thanVal = name
         self.thanAtts[THANNAME].thanPers = name
+
+
+    def thanRenametest(self, name):
+        "Rename a layer, and return string error message if unsuccessful."
+        try:
+            self.thanRename(name)
+        except ThanLayerError as e:
+            return str(e)
+        return self
+
 
     def thanUnlink(self):
         """Unlinks the hierarchy beginning with self from the children of self's parent."
@@ -202,7 +240,7 @@ class ThanLayer(object):
         Note that the hierarchy is only unlinked; it is not deleted.
         """
         par = self.thanParent
-        assert par != None, "Well we can't delete root layer. How on earth was root accessed?!"
+        assert par is not None, "Well we can't delete root layer. How on earth was root accessed?!"
         i = par.thanChildren.index(self)
         del par.thanChildren[i]
         return self
@@ -232,12 +270,11 @@ class ThanLayer(object):
         names = [str(lay.thanAtts[THANNAME]) for lay in self.thanChildren]
         namen = {}
         for lay in lays:
-            name1 = name = str(lay.thanAtts[THANNAME])
-            i = 0
-            while name1 in names:
-                name1 = name + str(i)
-                i += 1
-                if i > 1000: raise ThanLayerError("Can not rename duplicate layer: "+name+"; try to rename some layers.")
+            name = str(lay.thanAtts[THANNAME]).strip()
+            terr = checkLayerName(name)          # Check name
+            if terr != "": raise ThanLayerError("Illegal layer name '{}': {}".format(name, terr))
+            name1, terr = repairLayerUniq(name, names)
+            if name1 is None: raise ThanLayerError(terr+"; Try to rename some layers.")
             namen[lay] = name1
             names.append(name1)
 
@@ -247,7 +284,7 @@ class ThanLayer(object):
             lay.thanAtts[THANNAME].thanPers = namen[lay]
             self.thanChildren.append(lay)
             lay.thanParent = self
-        return self
+
 
 #===========================================================================
 
@@ -276,8 +313,9 @@ class ThanLayer(object):
         if name is not None:
             names = [str(lay.thanAtts[THANNAME]) for lay in self.thanChildren]
             name = name.strip()
-            if name=="" or " " in name or name[0]==".": raise ThanLayerError("Illegal layer name: " + name)
-            if name in names: raise ThanLayerError("Duplicate layer name: " + name)
+            terr = checkLayerName(name)          # Check name
+            if terr != "": raise ThanLayerError("Illegal layer name '{}': {}".format(name, terr))
+            if not isLayerUniq(name, names): raise ThanLayerError("Duplicate layer name '{}'".format(name))
         else:
             name = self.thanChildUniqName()
 
@@ -290,7 +328,7 @@ class ThanLayer(object):
         lay.thanTag = self.lt.thanIdLay.new()  # In order to exploit TK mechanism
         lay.thanQuad = set()                   # This holds the elements of the layer
 
-        copyinher = atts != None
+        copyinher = atts is not None
         if atts is None: atts = self.thanAtts
         lay.thanAtts = {}
         for a, val in thanlayatts.thanLayAtts.items():   #works for python2,3
@@ -303,15 +341,13 @@ class ThanLayer(object):
         return lay
 
 
-    def thanChildUniqName(self):
+    def thanChildUniqName(self):    #needed by p_gtkwid.thantkcli.py
         "Return a unique child name (not equal to other children)."
         names = [str(lay.thanAtts[THANNAME]) for lay in self.thanChildren]
-        for i in xrange(1000):                 # Try to create unique name
-            name = "newlayer" + str(i)
-            if name not in names: break
-        else:
-            raise ThanLayerError("Can not create unique name 'newlayerxxx'; try to rename some layers.")
+        name, terr = repairLayerUniq("newlayer", names, forcedigit=True)
+        if name is None: raise ThanLayerError(terr+"; Try to rename some layers.")
         return name
+
 
     def thanMove2child(self, name=None, force=False):
         """Move elements to a child.
@@ -339,7 +375,7 @@ class ThanLayer(object):
 #       is not self.lt.thanRoot, but another root layer, created temporarily for the widget.
 #       So we check for root layer with the condition:    lay.thanParent == None
         par = self
-        for i in xrange(THANMRECURS):
+        for i in range(THANMRECURS):
             if par.thanParent  is None: return i
             par = par.thanParent
         return THANMRECURS + 1
@@ -510,7 +546,7 @@ class ThanLayer(object):
             lay.thanExpThc(fw)
 
 
-    def thanImpThc(self, fr, ver):
+    def thanImpThc(self, fr, ver, than):
         "Read the layer attributes from .thcx file."
         fr.readBeg("LAYER")
         if ver < (0,2,0): pname = fr.readAtt("path")[0]
@@ -525,6 +561,12 @@ class ThanLayer(object):
                 next(fr)    #Ignore linetype attribute; use default value ("continuous", mm, 1.0)
                 continue
             self.thanAtts[namatt].thanImpThc(fr, ver, namatt)
+
+            if namatt == "textstyle" and self.thanAtts[namatt].thanVal not in than.thanTstyles:
+                tdef = "standard"
+                than.prt("Substituting '{}' for text style '{}'".format(tdef, self.thanAtts[namatt].thanVal), "can1")
+                self.thanAtts[namatt].__init__(tdef, self.thanAtts[namatt].thanInher)
+
         fr.readEnd("LAYER")
         return pname
 
@@ -668,7 +710,7 @@ class ThanLayerTree:
 
 
     def thanMakeRoot(self, root, name="Root"):
-        "Makes self the root of new layer tree."
+        "Makes root the root of new layer tree."
 #        root.lt = weakref.proxy(self)
         root.lt = self
         root.thanParent = None
@@ -684,6 +726,29 @@ class ThanLayerTree:
         root.thanAtts[THANNAME].__init__(name, False)   #Make sure the name is not inherited
         root.thanAtts["expand"].__init__("-", False)    #So that the first level layers are visible in layer control
         self.thanCur = root.thanChildNew("0")
+
+
+    def thanFindAtt1old(self, att1, name1):
+        "Find a layer of which the linetype name (or dimstyle name) is name1."
+        assert att in ("linetype", "dimstyle"), "thanFindAtt1() only supports linetype and dimstyle attributes."
+        def _findatt(laypar):
+            if laypar.thanAtts[att1].thanVal[0] == name1: return laypar
+            for lay in laypar.thanChildren:
+                if _findatt(lay) is not None: return lay
+            return None
+
+        return findatt(self.thanRoot)
+
+
+    def thanFindAtt1(self, att1, name1):
+        "Find a layer of which the linetype name (or dimstyle name) is name1."
+        assert att1 in ("linetype", "dimstyle"), "thanFindAtt1() only supports linetype and dimstyle attributes."
+        stack = [self.thanRoot]
+        while len(stack) > 0:
+            lay = stack.pop()
+            if lay.thanAtts[att1].thanVal[0] == name1: return lay
+            stack.extend(lay.thanChildren)
+        return None
 
 
     def thanFind(self, pathname):
@@ -717,41 +782,42 @@ class ThanLayerTree:
         fw.writeEnd("LAYERTREE")
 
 
-    def thanImpThc(self, fr, ver):
+    def thanImpThc(self, fr, ver, than):
         "Read the layer from .thcx file."
         fr.readBeg("LAYERTREE")
         if ver < (0,2,0): pcur = fr.readAtt("current")[0]
         else:             pcur = fr.readAttb("current")
 
         lay = self.thanRoot
-        pname = lay.thanImpThc(fr, ver)
-        if pname != "Root": raise ValueError("Invalid root layer pathname: %s" % (pname,))
+        pname = lay.thanImpThc(fr, ver, than)
+        if pname != "Root": raise ValueError("Invalid root layer pathname: '%s'" % (pname,))
         if lay.thanAtts[THANNAME].thanVal != pname: raise ValueError("Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
         lay.thanAtts[THANNAME].__init__(pname, False)   #Make sure the name is not inherited
         lay.thanAtts["expand"].__init__("-", False)     #So that the first level layers are visible in layer control
 
         lay = self.thanRoot.thanChildren[0]
-        pname = lay.thanImpThc(fr, ver)
-        if pname != "0": raise ValueError("Invalid first layer pathname: %s" % (pname,))
-        if lay.thanAtts[THANNAME].thanVal != pname: raise(ValueError, "Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
+        pname = lay.thanImpThc(fr, ver, than)
+        if pname != "0": raise ValueError("Invalid first layer pathname: '%s'. It should be '0'." % (pname,))
+        if lay.thanAtts[THANNAME].thanVal != pname: raise ValueError("Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
         lay.thanAtts[THANNAME].__init__(pname, False)   #Make sure the name is not inherited
 
         while True:
             dl = next(fr).strip()
             fr.unread()
             if dl == "<LAYER>":
-                lay = self.thanRoot.thanChildNew()
-                del self.thanRoot.thanChildren[-1]
-                pname = lay.thanImpThc(fr, ver)
+                lay = self.thanRoot.thanChildNew()   #make an empty layer, calling childnew() on root..
+                del self.thanRoot.thanChildren[-1]   #..which is immediatly removed from root
+                pname = lay.thanImpThc(fr, ver, than)
                 names = pname.split("/")
+                if lay.thanAtts[THANNAME].thanVal != names[-1]: raise ValueError("Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
                 ppar = "/".join(names[:-1]).strip()
                 if ppar == "":
                     laypar = self.thanRoot
                 else:
                     laypar = self.thanFindic(ppar)
                     if laypar is None: raise ValueError("Parent of layer %s was not found" % (pname,))
-                laypar.thanChildAdd([lay])
-                if lay.thanAtts[THANNAME].thanVal != names[-1]: raise ValueError("Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
+                laypar.thanChildAdd([lay])  #May rename the layer name if duplicate, may raise ThanLayerError
+                names[-1] = lay.thanAtts[THANNAME].thanVal   #In case thanChildAdd renamed the layer
                 lay.thanAtts[THANNAME].__init__(names[-1], False)    #MAke sure that the name is not inherited
                 for nam, a in lay.thanAtts.items():   #works for python2,3
                     if a.thanInher:
@@ -855,13 +921,3 @@ def testalter(laytree):
     print("------------------------------------", att, "=", val2)
     ch.thanSetAtts(**{att : val2})
     laytree.thanRoot.pr(att)
-
-
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
-
-if __name__ == "__main__":
-    print(__doc__)
-    test()

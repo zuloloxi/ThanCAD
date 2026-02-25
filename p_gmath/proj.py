@@ -1,7 +1,4 @@
 "Projection transformation functions module."
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import hypot
 from p_gnum import array, matrixmultiply, transpose, solve_linear_equations, LinAlgError
 from .var import thanNear2
@@ -30,7 +27,7 @@ class DLTProjection(_Projection):
                       0.0, 0.0, 1.0             # xpmin, ypmin, am
                      ]
         else:
-            assert len(L) == self.NL, "There should be exactly %d coefficients for the DLT Projection" % self.NL
+            assert len(L) == self.NL, "There should be exactly %d coefficients for the %s" % (self.NL, self.name)
             self.L = L[:]
             self.L.insert(0, None)
 
@@ -115,11 +112,11 @@ class DLTProjection(_Projection):
 #
 """)
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(1, 5):  fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(1, 5):  fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(5, 9):  fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(5, 9):  fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(9, 12): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(9, 12): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
         fw.write("%27.20e    # Xmin\n" % self.L[12])
         fw.write("%27.20e    # Ymin\n" % self.L[13])
@@ -150,7 +147,7 @@ class DLT2Projection(_Projection):
                       0.0, 0.0, 1.0        # xpmin, ypmin, am
                      ]
         else:
-            assert len(L) == self.NL, "There should be exactly %d coefficients for the DLT 2D Projection" % self.NL
+            assert len(L) == self.NL, "There should be exactly %d coefficients for the %s" % (self.NL, self.name)
             self.L = L[:]
             self.L.insert(0, None)
 
@@ -275,11 +272,11 @@ Y = ------------------------------------------------------------------
 #
 """)
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(1, 4): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(1, 4): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(4, 7): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(4, 7): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(7, 9): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(7, 9): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
         fw.write("%27.20e    # Xmin\n" % self.L[9])
         fw.write("%27.20e    # Ymin\n" % self.L[10])
@@ -297,7 +294,7 @@ Y = ------------------------------------------------------------------
 class Rational1Projection(_Projection):
     "This class provides the machinery for the 1st order rational polynomial projection."
     icodp = 2
-    name = "1st order rational"
+    name = "1st order rational projection"
     NL = 20
 
     def __init__(self, L=None):
@@ -311,7 +308,7 @@ class Rational1Projection(_Projection):
                       0.0, 0.0, 1.0             # xpmin, ypmin, am
                      ]
         else:
-            assert len(L) == self.NL, "There should be exactly %d coefficients for the Rational1 Projection" % self.NL
+            assert len(L) == self.NL, "There should be exactly %d coefficients for the %s" % (self.NL, self.name)
             self.L = L[:]
 
 
@@ -397,13 +394,13 @@ class Rational1Projection(_Projection):
 #
 """)
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(0, 4):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(0, 4):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(4, 7):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(4, 7):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(7, 11):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(7, 11):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(11, 14): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(11, 14): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
         fw.write("%27.20e    #Xmin\n" % self.L[14])
         fw.write("%27.20e    #Ymin\n" % self.L[15])
@@ -520,13 +517,13 @@ class Rational1_2DProjection(_Projection):
 #
 """)
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(0, 3):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(0, 3):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(3, 5):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(3, 5):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(5, 8):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(5, 8):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(8, 10): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(8, 10): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
         fw.write("%27.20e    #Xmin\n" % self.L[10])
         fw.write("%27.20e    #Ymin\n" % self.L[11])
@@ -643,13 +640,13 @@ class Rational2Projection(_Projection):
 #
 """)
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(0, 8):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(0, 8):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(8, 15):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(8, 15):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(15, 23): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(15, 23): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(23, 30): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(23, 30): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
         fw.write("%27.20e    #Xmin\n" % self.L[30])
         fw.write("%27.20e    #Ymin\n" % self.L[31])
@@ -766,13 +763,13 @@ class Rational15Projection(_Projection):
 #
 """)
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(0, 8):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(0, 8):   fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(8, 11):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(8, 11):  fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(11, 19): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(11, 19): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
-        for i in xrange(19, 22): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
+        for i in range(19, 22): fw.write("%27.20e    #L%d\n" % (self.L[i], i+1))
         fw.write("\n")
         fw.write("%27.20e    #Xmin\n" % self.L[22])
         fw.write("%27.20e    #Ymin\n" % self.L[23])
@@ -813,7 +810,7 @@ class Polynomial1Projection(_Projection):
 
 
     def invproject(self, xp, yp, z):
-        "Compute object coordinates given pixel coordinates."
+        "Compute object coordinates given pixel coordinates x,y and object coordinate z."
 #        xp = L[0]*x+L[1]*y+L[2]*z+L[3]     =>
 #        yp = L[4]*x+L[5]*y+L[6]*z+L[7]
 #        xp-L[2]*z-L[3] = L[0]*x+L[1]*y
@@ -865,9 +862,9 @@ class Polynomial1Projection(_Projection):
         fw.write("# x = L0 X + L1 Y + L2 Z + L3\n")
         fw.write("# y = L4 X + L5 Y + L6 Z + L7\n")
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(4): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(4): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(4, 8): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(4, 8): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
 
 
 ###############################################################################
@@ -886,7 +883,7 @@ class Polynomial1_2DProjection(_Projection):
                       0.0, 1.0, 0.0,       # Coefs for yr
                      ]
         else:
-            assert len(L) == self.NL, "There should be exactly %d coefficients for the Polynomial 2D Projection of 1st order" % self.NL
+            assert len(L) == self.NL, "There should be exactly %d coefficients for the %s projection" % (self.NL, self.name)
             self.L = L[:]
 
 
@@ -899,7 +896,7 @@ class Polynomial1_2DProjection(_Projection):
         return xp, yp, z      # The last coordinate (z) is not used
 
 
-    def invert(self):
+    def invertold(self):   #Old method: Does not control numerical error
         """Returns the inverse of current transformation which is also a DLT in 2 dimensions."
 
        L5                    -L2                  (L6 L2 - L3 L5)
@@ -921,6 +918,41 @@ Y =   ----------------- x + ---------------- y + -----------------
               L[1] / par,
              (L[4]*L[3] - L[1]*L[6]) / par,
         ]
+        return self.__class__(M)
+
+
+    def invert(self):
+        """Returns the inverse of current transformation which is also a DLT in 2 dimensions."
+
+       L5                    -L2                  (L6 L2 - L3 L5)
+X =   ----------------- x + ---------------- y + -----------------
+       (L1 L5 - L4 L2)       (L1 L5 - L4 L2)      (L1 L5 - L4 L2)
+
+       -L4                   L1                   L4 L3 - L1 L6
+Y =   ----------------- x + ---------------- y + -----------------
+       (L1 L5 - L4 L2)       (L1 L5 - L4 L2)      (L1 L5 - L4 L2)
+
+        If the constant terms L[2] and L[5] are large, then numerical error creeps in.
+        Thus we set L[2]=L[5]=0, which means that x=0,y=0 corresponds to xp=0,yp=0
+        instead of xp=L[2],yp=L[5].
+        We compute the invserse, and then we crorrect the inverse so that xp=L[2],yp=L[5]
+        corresponds to x=0,y=0.
+        """
+        L = list(self.L)
+        L[2] = L[5] = 0.0   #Avoid numerical error
+        L.insert(0, None)
+        par = L[1]*L[5] - L[4]*L[2]
+        M = [ L[5]/par, -L[2]/par,  0.0,
+             -L[4]/par,  L[1]/par,  0.0,
+        ]
+
+        xp = self.L[2]
+        yp = self.L[5]
+        x = M[0]*xp+M[1]*yp+M[2]
+        y = M[3]*xp+M[4]*yp+M[5]
+        #print("invert: x,y=", x, y, "M[2],M[5]=", M[2], M[5])
+        M[2] -= x   #Avoid numerical error
+        M[5] -= y   #Avoid numerical error
         return self.__class__(M)
 
 
@@ -981,16 +1013,73 @@ Y =   ----------------- x + ---------------- y + -----------------
         self.L = self.readCoefs(fr, self.NL)
 
 
+    def readtfw(self, fr):
+        """Reads the coefficients of the affine (2d polynomial) projection from a .tfw/.j2w files.
+
+Does not raise exceptions; it retuenrs error message as text.
+
+Affine transformation for tfw/j2w files; taken from ThanCad::ThanImage::thanTfwGet()."
+Dimitra 2012_04_03
+The relationship between EGSA87 X, Y coordinates and the pixel coordinates
+of the othophotos is the affine transformation:
+X = ax X + bx Y + cx
+Y = ay X + by Y + cy
+The coefficents are written in ascii form in the 6 lines of
+the *.tfw files:
+Line   Coefficient
+1      ax
+2      ay
+3      bx
+4      by
+5      cx
+6      cy
+
+In all cases seen in orthophotos of LIDAR, the coefficents ay and bx are
+zero, rendering the equation in simpler form:
+X = ax X + cx
+Y = by Y + cy
+
+Looking at the coefficients found in *.tfw files, we conclude that the first
+pixel is pixel 0 and not pixel 1. That's why they have put +0.50 in
+cx and cy coefficients:
+
+1.0000000000
+0.0
+0.0
+-1.0000000000
+551884.5000000000
+4176435.5000000000
+
+Using the formulas and the number pixel in the x and y direction, we
+compute the corner points.
+        """
+        try: fn = fr.name
+        except: fn = "<Unknown>"
+        try:
+            ax = float(next(fr))
+            ay = float(next(fr))
+            bx = float(next(fr))
+            by = float(next(fr))
+            cx = float(next(fr))
+            cy = float(next(fr))
+        except StopIteration:
+            return IOError("Incomplete .tfw/.j2w file '{}'".format(fn))
+        except IOError as e:
+            return "Can not access .tfw/.j2w file '{}': {}".format(fn, e)
+        except ValueError as e:
+            return "Invalid .tfw/.j2w file '{}': {}".format(fn, e)
+        self.L[:] = ax, bx, cx, ay, by, cy
+        return ""
+
     def write(self, fw):
         "Write the projection coefficients to a text file."
         fw.write("#First order polynomial projection\n")
         fw.write("# x = L0 X + L1 Y + L2\n")
         fw.write("# y = L3 X + L4 Y + L5\n")
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(3):    fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(3):    fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(3, 6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
-
+        for i in range(3, 6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
 
 
 class Polynomial1_2D_normalisedProjection(_Projection):
@@ -1118,9 +1207,9 @@ Y =   ----------------- x + ---------------- y + -----------------
         fw.write("# x = L0 X + L1 Y + L2\n")
         fw.write("# y = L3 X + L4 Y + L5\n")
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(3):    fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(3):    fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(3, 6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(3, 6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
 
 
 ###############################################################################
@@ -1197,9 +1286,9 @@ class Polynomial2Projection(_Projection):
         fw.write("# x = L0 X + L1 Y + L2  Z + L3  + L4  X^2 + L5  Y^2 + L6  Z^2 + L7  X Y\n")
         fw.write("# y = L8 X + L9 Y + L10 Z + L11 + L12 X^2 + L13 Y^2 + L14 Z^2 + L15 X Y\n")
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(8): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(8): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(8, 16): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(8, 16): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
 
 
 ###############################################################################
@@ -1276,9 +1365,9 @@ class Polynomial2_2DProjection(_Projection):
         fw.write("# x = L0 X + L1 Y + L2 + L3 X^2 + L4  Y^2 + L5  X Y\n")
         fw.write("# y = L6 X + L7 Y + L8 + L9 X^2 + L10 Y^2 + L11 X Y\n")
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
         fw.write("\n")
-        for i in xrange(6, 12): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(6, 12): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
 
 
 ###############################################################################
@@ -1389,7 +1478,7 @@ class NonCartesian(_Projection):
         fw.write("# x = L2 x' + L3 y'\n")
         fw.write("# y = L4 x' + L5 y'\n")
         fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
-        for i in xrange(6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        for i in range(6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
 
 
 if __name__ == "__main__":

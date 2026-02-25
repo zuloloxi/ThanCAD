@@ -1,32 +1,32 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes draw commands.
 """
-from math import cos, sin
+from math import cos, sin, hypot, atan2, pi
 from p_gmath import thanNear2
 import p_ggen
 import thandr
@@ -43,14 +43,130 @@ def thanTkDrawElem(proj, elemClass, fn="thanTkGet", **kw):
     "Draws an element with the help of a GUI and stores it to database."
     elem = elemClass()
     comname = elemClass.thanElementName
+    crelold = proj[1].thanGetLastPoint()
     if getattr(elem, fn)(proj, **kw) == Canc: return proj[2].thanGudCommandCan()
     proj[1].thanElementAdd(elem)             # thanTouch is implicitly called
+    crel = proj[1].thanGetLastPoint()
 #    if elem.thanInbox(proj[1].viewPort): elem.thanTkDraw(proj[2].than)
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
-    proj[1].thanDoundo.thanAdd(comname, thanundo.thanReplaceRedo, ((), newelems),
-                                        thanundo.thanReplaceUndo, ((), newelems))
+    proj[1].thanDoundo.thanAdd(comname, thanundo.thanReplaceRedo2, ((), newelems, (), crel),
+                                        thanundo.thanReplaceUndo2, ((), newelems, (), crelold))
     proj[2].thanGudCommandEnd()
+
+
+def thanTkDrawLine(proj, fn="thanTkGet", **kw):
+    "Draws a line with the help of a GUI and stores it to database."
+    elem = thandr.ThanLine()
+    comname = "line"
+    crelold = proj[1].thanGetLastPoint()
+    if getattr(elem, fn)(proj, **kw) == Canc: return proj[2].thanGudCommandCan()
+    proj[1].thanElementAdd(elem)             # thanTouch is implicitly called
+    crel = proj[1].thanGetLastPoint()
+#    if elem.thanInbox(proj[1].viewPort): elem.thanTkDraw(proj[2].than)
+    elem.thanTkDraw(proj[2].than)
+
+    proj[2].thanLineRecentTag = elem.thanTags[0]      #Most recent created line (so that we may continue it in the future)
+
+    newelems = (elem,)
+    proj[1].thanDoundo.thanAdd(comname, thanundo.thanReplaceRedo2, ((), newelems, (), crel),
+                                        thanundo.thanReplaceUndo2, ((), newelems, (), crelold))
+    proj[2].thanGudCommandEnd()
+
+
+def thanTkDrawDimali(proj, fn="thanTkGet", **kw):
+    "Draws an aligned dimension with the help of a GUI and stores it to database."
+    #proj[1].thanLayerTree.thanCur.thanTkSet(proj[2].than)  #Thanasis2021_11_20:is this needed?
+    comname = "dimali"
+    crelold = proj[1].thanGetLastPoint()
+
+    c1 = proj[2].thanGudGetPoint(T["First dimension point [Continue]: "], options=("Continue",))
+    if c1 == Canc: return proj[2].thanGudCommandCan()   # Aligned dimension cancelled
+    if c1 == "c":
+        def filt2(e): return isinstance(e, thandr.ThanDimali)
+        elem = thanSelect1(proj, T["Select dimension to continue: "], filter=filt2)
+    else:
+        elem = __drawdimali1(proj, c1)
+    if elem is Canc: return proj[2].thanGudCommandCan()   # Aligned dimension cancelled
+
+    newelems = [elem]
+    while True:      #Get continuation of aligned dimension
+        elem = __drawdimali2(proj, newelems[-1])
+        if elem is Canc: break
+        newelems.append(elem)
+
+    crel = proj[1].thanGetLastPoint()
+    proj[1].thanDoundo.thanAdd(comname, thanundo.thanReplaceRedo2, ((), newelems, (), crel),
+                                        thanundo.thanReplaceUndo2, ((), newelems, (), crelold))
+    proj[2].thanGudCommandEnd()
+
+
+def __drawdimali1(proj, c1):
+    "Get and draw a new dimali."
+    geom = p_ggen.Struct()
+    statonce = ""
+    while True:
+        c2 = proj[2].thanGudGetLine(c1, T["Next dimension point: "], statonce=statonce)
+        if c2 == Canc: return Canc      # Aligned dimension cancelled
+        if not thanNear2(c1, c2): break
+        statonce = T["Degenerate dimension. Try again.\n"]
+
+    geom.t = c2[0]-c1[0], c2[1]-c1[1]
+    geom.theta = atan2(geom.t[1], geom.t[0])
+    w = hypot(geom.t[0], geom.t[1])
+    geom.t = geom.t[0]/w, geom.t[1]/w
+    geom.n = -geom.t[1], geom.t[0]
+
+    elem = thandr.ThanDimali()
+    distext = elem.strdis(proj[2].than.dimstyle, w)
+    distype, disnum = elem.guesstype(c1, c2, distext)
+    elem.thanSet(distype, disnum, distext, c1, c2, 0.0)
+    elem.thanTags = ("e0", )                         # So that we know that it is temporary
+    ct = c2  #works for python2,3
+    c3 = proj[2].thanGudGetMovend(ct, T["Perpendicular location: "], elems=[elem], direction=geom.theta+pi/2)
+    if c3 == Canc:  return Canc    # Aligned dimension cancelled
+
+    mes = "%s (enter=%s): " % (T["Dimension text"], distext)
+    distext = proj[2].thanGudGetText(mes, distext)
+    if distext == Canc:  return Canc   # Aligned dimension cancelled
+    print("distext=", distext)
+
+    geom.perp = (c3[0]-ct[0])*geom.n[0] + (c3[1]-ct[1])*geom.n[1]
+
+    distype, disnum = elem.guesstype(c1, c2, distext)
+    elem.thanSet(distype, disnum, distext, c1, c2, geom.perp)
+    proj[1].thanElementAdd(elem)             # thanTouch is implicitly called
+    elem.thanTkDraw(proj[2].than)
+    proj[1].thanSetLastPoint(c2)
+    return elem
+
+
+def __drawdimali2(proj, elemprev):
+    "Get and draw a new dimali as a continuation of previous dimali."
+    c1, c2, c3 = elemprev.cp[:3]
+    if thanNear2(c1, c2): theta = 0.0
+    else:                 theta = atan2(c2[1]-c1[1], c2[0]-c1[0])
+    c1 = c3
+
+    statonce = ""
+    while True:
+        c2 = proj[2].thanGudGetInclined(c1, theta, T["Next dimension point: "], statonce=statonce)
+        if c2 == Canc: return Canc      # Aligned dimension cancelled
+        if not thanNear2(c1, c2): break
+        statonce = T["Degenerate dimension. Try again.\n"]
+    w = hypot(c2[0]-c1[0], c2[1]-c1[1])
+    elem = thandr.ThanDimali()
+    distext = elem.strdis(proj[2].than.dimstyle, w)
+    mes = "%s (enter=%s): " % (T["Dimension text"], distext)
+    distext = proj[2].thanGudGetText(mes, distext)
+    if distext == Canc:  return Canc   # Aligned dimension cancelled
+
+    distype, disnum = elem.guesstype(c1, c2, distext)
+    elem.thanSet(distype, disnum, distext, c1, c2, 0.0)
+    proj[1].thanElementAdd(elem)             # thanTouch is implicitly called
+    elem.thanTkDraw(proj[2].than)
+    proj[1].thanSetLastPoint(c2)
+    return elem
 
 
 def thanTkDrawRect(proj):
@@ -61,15 +177,16 @@ def thanTkDrawRect(proj):
     if c2 == Canc: return proj[2].thanGudCommandCan()      # Rectangle cancelled
     x1, y1 = c1[:2]
     x2, y2 = c2[:2]
-    if x2 > x1: x1, x2 = x2, x1
-    if y2 > y1: y1, y2 = y2, y1
+    if x2 < x1: x1, x2 = x2, x1
+    if y2 < y1: y1, y2 = y2, y1
     elem = thandr.ThanLine()
     c1[:2] = x1, y1
     c2 = list(c1); c2[:2] = x2, y1
     c3 = list(c1); c3[:2] = x2, y2
     c4 = list(c1); c4[:2] = x1, y2
+    c5 = list(c1)
 
-    elem.thanSet([c1, c2, c3, c4, c1])
+    elem.thanSet([c1, c2, c3, c4, c5])
     proj[1].thanElementAdd(elem)
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
@@ -195,6 +312,69 @@ def __housepnamed(proj, cc, name):
     proj[1].thanDoundo.thanAdd("point", thanundo.thanReplaceRedo, ((), newelems),
                                         thanundo.thanReplaceUndo, ((), newelems))
 
+def __regpol(ca, cb, n):
+    "Driver for regpol."
+    a = regpol(n, ca[0], ca[1], cb[0], cb[1])
+    return [ct+ca[2:] for ct in a]
+
+
+def regpol(n,xa,ya,xb,yb):
+    """Compute coordinates of regular polygon.
+
+    Spyros Nikolaou, 1st semester student, School of Civil Engineering, NTUA.
+    Athens December 26, 2021.
+    More professional code with more capabilities in: p_gindplt.regularpolygon.py."""
+    import math
+    a = [None] * 0
+    r = math.sqrt(math.pow((xb - xa) , 2) + math.pow((yb - ya) , 2))
+    om = 2*math.pi/n
+    phi = math.atan2(yb-ya,xb-xa)
+    c = phi + om
+    x = xb
+    y = yb
+
+    a.append([xa,ya])
+    a.append([xb,yb])
+
+    for z in range(2,n):
+        x = x + r * math.cos(c)
+        y = y + r * math.sin(c)
+        c = c + om
+        a.append([x,y])
+
+    a.append([xa,ya])
+
+    return a
+
+
+def thanTkDrawRegularPolygon(proj):
+    """Draws a regular polygon.
+
+    More professional code with more capabilities in: p_gindplt.regularpolygon.py."""
+    #proj[1].thanLayerTree.thanCur.thanTkSet(proj[2].than)  #Thanasis2021_11_20:is this needed?
+    comname = "polreg"
+    crelold = proj[1].thanGetLastPoint()
+
+    n = proj[2].thanGudGetInt2(T["Number of regular polygon corners (enter=6): "],
+        default=6, limits=(3, None))
+    if n == Canc: return proj[2].thanGudCommandCan()  # Polygon cancelled
+    c1 = proj[2].thanGudGetPoint(T["First polygon corner: "])
+    if c1 == Canc: return proj[2].thanGudCommandCan()  # Polygon cancelled
+    c2 = proj[2].thanGudGetLine(c1, T["Second corner: "])
+    if c2 == Canc: return proj[2].thanGudCommandCan()  # Polygon cancelled
+    cp = __regpol(c1, c2, n)
+
+    elem = thandr.ThanLine()
+    elem.thanSet(cp)
+    proj[1].thanElementAdd(elem)             # thanTouch is implicitly called
+    crel = proj[1].thanGetLastPoint()
+
+    elem.thanTkDraw(proj[2].than)
+    newelems = (elem,)
+    proj[1].thanDoundo.thanAdd(comname, thanundo.thanReplaceRedo2, ((), newelems, (), crel),
+                                        thanundo.thanReplaceUndo2, ((), newelems, (), crelold))
+    proj[2].thanGudCommandEnd()
+
 
 def thanTkDrawPolygon(proj):
     "Gets and draws a closed polyline (which is a polygon)."
@@ -262,18 +442,21 @@ def getpol(proj, nmax=-1):
     than = proj[2].than
     g2l = than.ct.global2Local
     c1 = proj[2].thanGudGetPoint(T["First polygon corner: "])
-    if c1 == Canc: return Canc                   # Grid cancelled
+    if c1 == Canc: return Canc                   # Polygon cancelled
     while True:
         c2 = proj[2].thanGudGetLine(c1, T["Second polygon corner: "])
-        if c2 == Canc: return Canc               # Grid cancelled
+        if c2 == Canc: return Canc               # Polygon cancelled
         temp = than.dc.create_line(g2l(c1[0], c1[1]), g2l(c2[0], c2[1]),
             fill="blue", tags=("e0",))
         item = [temp]
         cs = [c1, c2]
         while True:
-            c3 = proj[2].thanGudGetLine2(cs[0], cs[-1], T["Next polygon corner (Undo): "],
-                options=("undo",""))
-            if c3 == Canc: than.dc.delete("e0"); return Canc
+            if len(cs) < 3: opts = ("undo", )
+            else:           opts = ("undo", "")
+            c3 = proj[2].thanGudGetLine2(cs[0], cs[-1], T["Next polygon corner (Undo): "], options=opts)
+            if c3 == Canc:
+                if len(cs) < 3: than.dc.delete("e0"); return Canc # Polygon cancelled
+                c3 = ""    #If len(cs) >=3 then ESC is like if the use pressed enter
             if c3 == "u":
                 if len(cs) == 2: than.dc.delete("e0"); break
                 else: than.dc.delete(item[-1]); del item[-1]; del cs[-1]; continue
@@ -376,7 +559,8 @@ def thanTkDrawText(proj):
     ct = _texset.ct            #This an alias!!
     newelems = []
     while True:
-        text = proj[2].thanGudGetText(T["Text: "], "")
+        #text = proj[2].thanGudGetText(T["Text: "], "")
+        text = proj[2].thanGudGetTextraw(T["Text:\n"], "")
         if text == Canc: break          # Text cancelled
         if text.strip() != "":          # If blank, then advance a line (with no text)
             elem = thandr.ThanText()
@@ -407,7 +591,7 @@ def thanPointNamedReplace(proj):
         nam = elnam.text
         todel.append(elnam)
     while True:
-        elh = thanSelect1(proj, T["Select a text element for point height (t=type height/enter=no z in name): "],
+        elh = thanSelect1(proj, T["Select a text element for point height (t=type height/enter=height of original point): "],
             filter=lambda e:isinstance(e, thandr.ThanText), options=("text", ""))
         if elh == Canc: return thanModCanc(proj)    # Point cancelled
         if elh == "t": break
@@ -419,16 +603,15 @@ def thanPointNamedReplace(proj):
     if elh == "t":
         h = proj[2].thanGudGetFloat(T["Type point height: "], default=0.0)
         if h == Canc: return thanModCanc(proj)      # Point cancelled
-        h = "%s" % (h, )
     elif elh == "":
-        h = ""
+        h = elpnt.cc[2]
     else:
-        h = "%s" % (h, )
         todel.append(elh)
 
     elem = thandr.ThanPointNamed()
-    if h == "": elem.thanSet(elpnt.cc, nam)
-    else:       elem.thanSet(elpnt.cc, "%s/%s" % (nam, h))
+    cc = list(elpnt.cc)
+    cc[2] = h
+    elem.thanSet(cc, nam)
     proj[1].thanElementTag(elem)
     newelems = set((elem,))       #newelems must be set (not list) when its is used as selnew
     thanundo.thanReplaceRedo(proj, todel, newelems, newelems)
@@ -495,3 +678,32 @@ def thanDecurve(proj):
                                           thanundo.thanReplaceUndo, (delelems, newelems, selold))
 #  'Reset color' is not needed. Room for optimisation here
     thanModEnd(proj, T["%d curves were successfully decurved."] % len(newelems))
+
+
+
+def thanToPolygon(proj):
+    "Closes lines and transforms them to polygons (filled lines)."
+    res = thanSelectGen(proj, standalone=False, filter=lambda e, cl=thandr.ThanLine: isinstance(e, cl))
+    if res == Canc: return thanModCanc(proj)    # Curve cancelled
+    selold = proj[2].thanSelold
+    selall = proj[2].thanSelall
+    delelems = []
+    newelems = []
+    for elem in selall:
+        try:
+            elem.cpori
+        except AttributeError:
+            pass
+        else:
+            continue             #Avoid splines
+        eln = thandr.ThanLineFilled()
+        eln.thanSet(elem.cp)
+        eln.thanTags = elem.thanTags
+        delelems.append(elem)
+        newelems.append(eln)
+
+    thanundo.thanReplaceRedo(proj, delelems, newelems, selall)
+    proj[1].thanDoundo.thanAdd("topolygon", thanundo.thanReplaceRedo, (delelems, newelems, selall),
+                                            thanundo.thanReplaceUndo, (delelems, newelems, selold))
+#  'Reset color' is not needed. Room for optimisation here
+    thanModEnd(proj, T["%d lines were successfully transformed to polygons."] % len(newelems))

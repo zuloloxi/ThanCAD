@@ -1,29 +1,29 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the base for the dialogs related to arhitectural algorithms.
 """
@@ -32,6 +32,7 @@ import tkinter
 from p_gtkwid import thanicon
 from thantrans import Tarch
 import p_gtkwid
+import thanvers
 
 
 class ThanArchCom(p_gtkwid.ThanComDialog):
@@ -52,8 +53,9 @@ class ThanArchCom(p_gtkwid.ThanComDialog):
         self.thanValsWriteSec(sec="FLOOR PLAN CONSTRAINTS", keys="entWidth entHeight")
 
 
-    def fraLogo(self, win, ir, theme=Tarch["Automated Floor Plan Design Algorithms"], year=2016):
+    def fraLogo(self, win, ir, theme=Tarch["Automated Floor Plan Design Algorithms"], year=None):
         "Display the logo."
+        if year is None: year = thanvers.tcver.copyrightyear
         fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
         self.fo1 = tkinter.font.Font(family="Liberation Serif", weight="bold", size=18)
@@ -81,8 +83,9 @@ class ThanArchCom(p_gtkwid.ThanComDialog):
         fra.columnconfigure(3, weight=1)
 
 
-    def fraLogo2(self, win, ir, theme=None, year=2016):
+    def fraLogo2(self, win, ir, theme=None, year=None):
         "Display the logo."
+        if year is None: year = thanvers.tcver.copyrightyear
         fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
         self.fo1 = tkinter.font.Font(family="Liberation Serif", weight="bold", size=18)
@@ -92,7 +95,10 @@ class ThanArchCom(p_gtkwid.ThanComDialog):
                                 Tarch["OF GRADUATE STUDIES (DPMS) OF NTUA"],
                                 Tarch["ENVIRONMENT AND DEVELOPMENT"],
                                 Tarch["Applications of environmental design on the built space"]))
-
+            theme =  "\n".join((Tarch["OPTARCH:"],
+                                Tarch["Optimization Driven Architectural Design of Structures"],
+                                Tarch["No 689983 H2020-MSCA-RISE-2015"],
+                                Tarch["Automated floor plan design"]))
         frb = tkinter.Frame(fra)
         frb.grid(row=0, column=0)
         lab = tkinter.Label(frb, image=thanicon.get("ntua3"))

@@ -1,5 +1,3 @@
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import fabs
 
 class Lagrange(object):
@@ -23,7 +21,7 @@ class Lagrange(object):
       ns=1
       dif=fabs(x-xa[1])
       #do 11 i=1,n
-      for i in xrange(1, n+1):
+      for i in range(1, n+1):
           dift=fabs(x-xa[i])
           if dift < dif:
               ns=i
@@ -35,9 +33,9 @@ class Lagrange(object):
       y=ya[ns]
       ns=ns-1
       #do 13 m=1,n-1
-      for m in xrange(1, n):
+      for m in range(1, n):
           #do 12 i=1,n-m
-          for i in xrange(1, n-m+1):
+          for i in range(1, n-m+1):
               ho=xa[i]-x
               hp=xa[i+m]-x
               w=c[i+1]-d[i]

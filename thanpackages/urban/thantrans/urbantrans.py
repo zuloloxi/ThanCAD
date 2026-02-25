@@ -1,28 +1,27 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 The package provides tools and automation for urban analysis/design.
 The subpackage contains translations for urban related procedures.
@@ -33,19 +32,19 @@ import p_ggen
 #English to Greek translation table
 en2gr = \
 { "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
-"Road width (m)"                                  : u"Πλάτος οδού (m)",
-"Left Pavement width (m)"                         : u"Πλάτος αριστερού πεζοδρομίου (m)",
-"Right Pavement width (m)"                        : u"Πλάτος δεξιού πεζοδρομίου (m)",
-"Median strip width (m)"                          : u"Πλάτος νησίδας (m)",
+"Road width (m)"                                  : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ ΞΏΞ΄ΞΏΟ (m)",
+"Left Pavement width (m)"                         : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ±ΟΞΉΟƒΟ„ΞµΟΞΏΟ Ο€ΞµΞ¶ΞΏΞ΄ΟΞΏΞΌΞ―ΞΏΟ… (m)",
+"Right Pavement width (m)"                        : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ΄ΞµΞΎΞΉΞΏΟ Ο€ΞµΞ¶ΞΏΞ΄ΟΞΏΞΌΞ―ΞΏΟ… (m)",
+"Median strip width (m)"                          : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ½Ξ·ΟƒΞ―Ξ΄Ξ±Ο‚ (m)",
 
-"&Locate roads of slope"                          : u"Εύρεση οδών με κλίση",
+"&Locate roads of slope"                          : u"Ξ•ΟΟΞµΟƒΞ· ΞΏΞ΄ΟΞ½ ΞΌΞµ ΞΊΞ»Ξ―ΟƒΞ·",
 "Locates roads (lines) whose slope is less than arbitrary threshold":
-                                                    u"Βρίσκει οδούς (γραμμές) των οποίων η κλίση είναι μικρότερη από ένα αυθαίρετο όριο",
-"Please enter grade threshold (enter=%.1f%%): "   : u"Δώστε όριο κλίσης (enter=%.1f%%): ",
-"Please select lines to search:"                  : u"Επιλογή γραμμών προς εύρεση:",
-"%d roads have elevation zero and were ignored."  : u"%d οδοί έχουν υψόμετρο μηδέν και αγνοήθηκαν.",
-"No suitable roads were found!"                   : u"Δεν βρέθηκαν κατάλληλες οδοί!",
-"%d suitable roads were copied to current layer." : u"%d κατάλληλες οδοί αντιγράφησαν στην τρέχουσα διαφάνεια.",
+                                                    u"Ξ’ΟΞ―ΟƒΞΊΞµΞΉ ΞΏΞ΄ΞΏΟΟ‚ (Ξ³ΟΞ±ΞΌΞΌΞ­Ο‚) Ο„Ο‰Ξ½ ΞΏΟ€ΞΏΞ―Ο‰Ξ½ Ξ· ΞΊΞ»Ξ―ΟƒΞ· ΞµΞ―Ξ½Ξ±ΞΉ ΞΌΞΉΞΊΟΟΟ„ΞµΟΞ· Ξ±Ο€Ο Ξ­Ξ½Ξ± Ξ±Ο…ΞΈΞ±Ξ―ΟΞµΟ„ΞΏ ΟΟΞΉΞΏ",
+"Please enter grade threshold (enter=%.1f%%): "   : u"Ξ”ΟΟƒΟ„Ξµ ΟΟΞΉΞΏ ΞΊΞ»Ξ―ΟƒΞ·Ο‚ (enter=%.1f%%): ",
+"Please select lines to search:"                  : u"Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ξ³ΟΞ±ΞΌΞΌΟΞ½ Ο€ΟΞΏΟ‚ ΞµΟΟΞµΟƒΞ·:",
+"%d roads have elevation zero and were ignored."  : u"%d ΞΏΞ΄ΞΏΞ― Ξ­Ο‡ΞΏΟ…Ξ½ Ο…ΟΟΞΌΞµΟ„ΟΞΏ ΞΌΞ·Ξ΄Ξ­Ξ½ ΞΊΞ±ΞΉ Ξ±Ξ³Ξ½ΞΏΞ®ΞΈΞ·ΞΊΞ±Ξ½.",
+"No suitable roads were found!"                   : u"Ξ”ΞµΞ½ Ξ²ΟΞ­ΞΈΞ·ΞΊΞ±Ξ½ ΞΊΞ±Ο„Ξ¬Ξ»Ξ»Ξ·Ξ»ΞµΟ‚ ΞΏΞ΄ΞΏΞ―!",
+"%d suitable roads were copied to current layer." : u"%d ΞΊΞ±Ο„Ξ¬Ξ»Ξ»Ξ·Ξ»ΞµΟ‚ ΞΏΞ΄ΞΏΞ― Ξ±Ξ½Ο„ΞΉΞ³ΟΞ¬Ο†Ξ·ΟƒΞ±Ξ½ ΟƒΟ„Ξ·Ξ½ Ο„ΟΞ­Ο‡ΞΏΟ…ΟƒΞ± Ξ΄ΞΉΞ±Ο†Ξ¬Ξ½ΞµΞΉΞ±.",
 }
 
 Turban = p_ggen.Translation(en2gr)

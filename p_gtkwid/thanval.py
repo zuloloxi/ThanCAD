@@ -1,5 +1,3 @@
-#!/usr/bin/python
-from __future__ import print_function
 import datetime
 from p_ggen import thanUnicode
 
@@ -51,22 +49,42 @@ class ThanValUni(ThanValidator):
         return thanUnicode(v)
 
 
-class ThanValBlank(ThanValidator):
-    "Validate that text is non blank or that it is not None."
+class ThanValUniqname(ThanValidator):
+    "Validate string that contains no blanks and it is unique among others."
+
+    def __init__(self, allowblank=False, others=(), terr="Name already exists: "):
+        "Just set error messages to no error."
+        super().__init__(allowblank)
+        self.others = others
+        self.terr = terr
 
     def thanValidate(self, v):
         "Validate the value v and return the correct value."
-        v = ThanValidator.thanValidate(self, v)
+        v = str(v).strip()
+        if v == "" or " " in v or "\n" in v or "\t" in v:
+            self.thanSetErr(1, "A string without blanks was expected.")
+            return None
+        if v in self.others:
+            self.thanSetErr(1, self.terr+v)
+            return None
+        return v
+
+
+class ThanValBlank(ThanValidator):
+    "Validates text or object; the text must not be blank, the object must not be None."
+
+    def thanValidate(self, v):
+        "Validate the value v and return the correct value."
+        v = super().thanValidate(v)
         try:
-            print("ThanValBlank: type(v)=", type(v))
-            v1 = v.strip()+""
-#            print "                      ", "stringlike"
+            v1 = v.strip()+""   #Check if it is string like
         except:
-#            print "                      ", "not stringlike"
+#           Not stringlike: thus it is object: check that it is not None
             if v is not None: return v
         else:
+            #Sring like: check that it is not blank (spaces are non-blank)
             if len(v1) > 0: return v
-        self.thanSetErr(1, "Non blank string or object was expected.")
+        self.thanSetErr(1, "A non-blank string, or an object (other than None) was expected.")
         return None
 
 
@@ -75,9 +93,10 @@ class ThanValPIL(ThanValidator):
 
     def thanValidate(self, v):
         "Validate that the raster can be accessed and it is not degenerate."
-        from PIL import Image
+        #from PIL import Image
+        import p_gimage            #24/11/2023
         try:
-            im = Image.open(v)
+            im = p_gimage.open(v)  #24/11/2023
             b,h = im.size
             if b<3 or h<3: raise ValueError("Image size too small")
         except Exception as why:
@@ -282,7 +301,7 @@ class ThanValInt(ThanValFloat):
     tnumbet = "An integer was expected between"
 
 
-if __name__ == "__main__" and 1:
+def test1():
     from tkinter import Tk, Button
     def validates():
         print("a=", b.thanValidate(a.thanGet()),)

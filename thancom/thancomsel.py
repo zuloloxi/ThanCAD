@@ -1,27 +1,27 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides the mechanism for element selection."
@@ -238,7 +238,7 @@ def thanSelect1Gen(proj, stat, filter=None, options=()):
         proj[2].thanCanvas.thanChs.thanSet(-2)               # Set rectangle croshair
         com = proj[2].thanGudGetPoint(stat, statonce, options=options)
         if com == Canc or com == "": break                   # Selection was cancelled or ended
-        if any(com==o1[:1] for o1 in options): break         # Option given
+        if any(com==o1[:1].lower() for o1 in options): break         # Option given
         c1 = com
         res = proj[2].thanGudGetSel1(c1[0], c1[1])       # Try to select 1 element..
         if res[0] == 0:                                  # Selection of 1 element is successful
@@ -267,8 +267,8 @@ def thanSelect1(proj, stat, filter=None, options=()):
     "Wrapper to thanSelect1 to return the selected element explicitly."
     res = thanSelect1Gen(proj, stat, filter=filter, options=options)
     if res == Canc: return Canc                       # Select was cancelled
-    if any(res==o1[:1] for o1 in options): return res # Option given
+    if any(res==o1[:1].lower() for o1 in options): return res # Option given
     c1 = proj[2].thanSel1coor
-    assert c1 != None, "thancomsel.thanSelect1Gen does not work well!"
+    assert c1 is not None, "thancomsel.thanSelect1Gen does not work well!"
     for elem in proj[2].thanSelall: break             # Get the selected element
     return elem                                       # Return the element

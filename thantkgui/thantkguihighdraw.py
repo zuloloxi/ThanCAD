@@ -1,33 +1,32 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for drawing elements on a tkinter
 drawing window.
 """
 
-from __future__ import print_function
 from math import pi, sin, cos, atan2
 from tkinter import ARC
 from p_gmath import PI2
@@ -56,6 +55,11 @@ class ThanTkGuiHighDraw:
             cs = dc.coords(item)
             if t == "line":
                 dc.create_line(cs, fill=col, tags=tags)
+            elif t == "text":
+                te = dc.itemcget(item, "text")
+                an = dc.itemcget(item, "angle")
+                fo = dc.itemcget(item, "font")
+                dc.create_text(cs, text=te, anchor="sw", angle=an, font=fo, fill=col, tags=tags)
             elif t == "polygon":
                 dc.create_polygon(cs, outline=col, tags=tags)
             elif t == "rectangle":
@@ -270,6 +274,7 @@ class ThanTkGuiHighDraw:
         phi = (phi*180.0/pi) % 360.0
 
         dc = self.thanCanvas
+        tagel = self.thanProj[1].thanTagel
         for item in dc.find_withtag("selall"):
             t = dc.type(item)
             c = dc.coords(item)
@@ -292,7 +297,18 @@ class ThanTkGuiHighDraw:
                 ThanElement.thanRotateXypn2(c)
                 c.append(c[0]+dx)     #This is the new upper..
                 c.append(c[1]-dy)     #..right corner
-            else:
+            elif t == "image" or t == "bitmap":   #Thanasis2022_12_20: code for bitmap and image
+                titem = dc.gettags(item)[0]
+                e = tagel[titem]
+                im = e.imagez
+                if im is None:
+                    print("Warning: associated Element of canvas.image, does not have the photoimage!!")
+                    return
+                dy = im.height()                  #c[0],c[1] is always the upper left corner
+                c = [c[0], c[1]+dy]               #This the lower left corner (y axis positive is downwards)
+                ThanElement.thanRotateXypn2(c)
+                c = [c[0], c[1]-dy]               #This is the new upper left corner
+            else:   #line, polygon, text
                 ThanElement.thanRotateXypn2(c)
             dc.coords(item, *c)
 
@@ -483,6 +499,12 @@ class ThanTkGuiHighDraw:
         dc.dtag("all", "selx")
         for e in elems: dc.addtag_withtag("selx", e.thanTags[0])
 
+    def thanGudSetSelDelx(self):
+        """Deletes all canvas items with tag 'selx'.
+
+        It does not interfere with normal selection mechanism."""
+        dc = self.thanCanvas
+        dc.delete("selx")
 
     def thanGudGetSelx(self):
         """Selects as "x" all canvas items with "sel" tag (current selection).
@@ -538,7 +560,7 @@ class ThanTkGuiHighDraw:
         dc.addtag_withtag("nlix", "selx")
         for item in dc.find_withtag("selx"):
             t = dc.type(item)
-            if t == "line":
+            if t == "line" or t == "text":
                 dc.dtag(item, "nlix")
             elif t == "image":
                 dc.dtag(item, "nlix")
@@ -547,6 +569,16 @@ class ThanTkGuiHighDraw:
                 dc.dtag(item, "linx")
         dc.itemconfig("linx", fill=col)
         dc.itemconfig("nlix", outline=col, fill=fillcol)
+
+        if fillcol == "": return
+        #Fill hatch elements which have solid color
+        tagel = self.thanProj[1].thanTagel
+        for item in dc.find_withtag("selx"):
+            titem = dc.gettags(item)[0]
+            e = tagel[titem]
+            if e.thanElementName != "HATCH": continue
+            if e.itype != 0: continue
+            dc.itemconfig(item, outline=col, fill=col)
 
 
     def thanGudSetSelDashx(self, dash=()):

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from math import pi
 from xml.sax.saxutils import escape
 import p_ggen, p_ggeod
@@ -34,6 +33,19 @@ class ThanKmlWriter(object):
            <Point>
                <coordinates>%f,%f,%f</coordinates>
            </Point>
+       </Placemark>
+"""
+    formLinestring = """\
+       <Placemark>
+           <name>%s</name>
+           <description>%s</description>
+           <styleUrl>#%s</styleUrl>
+           <LineString>
+               <tessellate>1</tessellate>
+               <coordinates>
+                   %s
+               </coordinates>
+           </LineString>
        </Placemark>
 """
     footer = """\
@@ -77,9 +89,23 @@ class ThanKmlWriter(object):
         al, phi = self.projcur.en2geodetGRS80(cp[0], cp[1])
         al  *= 180.0/pi
         phi *= 180.0/pi
-        aa = p_ggen.griso2utf(aa)
-        desc =  p_ggen.griso2utf(desc)
+        #aa = p_ggen.griso2utf(aa)
+        #desc =  p_ggen.griso2utf(desc)
         self.fw.write(self.formPlacemark % (escape(aa), escape(desc), escape(layer), al, phi, cp[2]))
+
+
+    def writeLinestring(self, aa, cp, layer=dfn, desc=""):
+        "Write a line consisitng of 3d points as a linestring to a google Keyhole Markup Language file."
+        temp = []
+        for cpa in cp:
+            al, phi = self.projcur.en2geodetGRS80(cpa[0], cpa[1])
+            al  *= 180.0/pi
+            phi *= 180.0/pi
+            temp.append("%.14f,%.14f,%.14f" % (al, phi, cpa[2]))
+        t = " ".join(temp)
+        #aa = p_ggen.griso2utf(aa)
+        #desc =  p_ggen.griso2utf(desc)
+        self.fw.write(self.formLinestring % (escape(aa), escape(desc), escape(layer), t))
 
 
     def close(self):

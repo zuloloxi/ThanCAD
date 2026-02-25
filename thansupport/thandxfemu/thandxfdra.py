@@ -1,33 +1,30 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This package emulates the dxf library in ThanCad.
 """
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, cos, sin
 from .thandxfext import ZDEFAULT
 
@@ -132,7 +129,7 @@ class ThanDxfDra:
         with a 4node polygon. It begins with the i1-th eighth and stops
         at i2-th eighth:    1 <= i1 <= i2 <= 8."""
 
-        for ri in xrange(i1-1, i2):
+        for ri in range(i1-1, i2):
             self.thanDxfPlotSolid4 (x, y,
                 x+r*cos(PI4*ri),        y+r*sin(PI4*ri),
                 x+r*cos(PI4*(ri+0.5)),  y+r*sin(PI4*(ri+0.5)),
@@ -155,7 +152,7 @@ class ThanDxfDra:
         x3 = xc + re
         y3 = yc
 
-        for i in xrange(n):
+        for i in range(n):
             x2   = cost*cosd - sint*sind
             sint = sint*cosd + cost*sind
             cost = x2
@@ -185,7 +182,7 @@ class ThanDxfDra:
         x2 = xc + ri
         y2 = yc
 
-        for i in xrange(n):
+        for i in range(n):
             x3   = cost*cosd - sint*sind
             sint = sint*cosd + cost*sind
             cost = x3

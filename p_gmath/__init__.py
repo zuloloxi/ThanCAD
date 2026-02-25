@@ -1,6 +1,7 @@
-from .var import (dpt, avgtheta, linint, bilinint, sign, fsign, roundlog, roundStep,
-    linintc, thanErNear2, thanNear2, thanNear3, thanNearx, isZero, pollap,
-    ICPconverged, converged3, dfridr, rootBisection, partialder, lsmsolve)
+from .var import (dpt, avgtheta, rmse, linint, polylinint, bilinint,
+    sign, fsign, roundlog, roundStep, linintc, thanErNear2, thanNear2,
+    thanNear3, thanNearx, thanNearzero, isZero, pollap, ICPconverged,
+    converged3, dfridr, rootBisection, rootBracket, partialder, lsmsolve)
 
 from .func import fresnel, klotXy, erf, phiNormalUnit, phiNormal, phiNormalUnitInv, erfinvapprox
 from .chebev import Chebyshev
@@ -20,11 +21,13 @@ from .lineq import lineq, linEq2
 from .integration import lgaus
 
 from .thanintersect import (thanSegSeg, thanSegSeguw, thanLineSeguw, thanSegSegGen,
-    thanLineSeg2, thanLineSeg3, thanSegCir, thanSegCirGen, thanCirCir)
+    thanLineSeg2, thanLineSeg3, thanSegCir, thanSegCirGen, thanCirCir, pdis)
 
-from .ellipse import (ellipse5Fit, ellipse4Fit, ellipse5Lsm, ellipse4Lsm, 
+from .ellipse import (ellipse5Fit, ellipse4Fit, ellipse5Lsm, ellipse4Lsm,
                      ellipseLength, ellipseArea, ellipse2Line, circle3Lsm,
                     )
+from .circle import (circle3, circle2Line, circletttlines, circletttlinesnear,
+    circlettrlines, circlettrlinesnear)
 from .similar import (Transformation, TranslationTransformation, SimilarTransformation,
                      mhtstr)
 
@@ -32,3 +35,5 @@ from .pp import ParaboloidProjection
 
 from .histo import histogram, histogramAuto, histogramShow
 from . import statis
+
+from .rotator import Rotator2d

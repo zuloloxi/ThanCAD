@@ -1,34 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module implements symbols for point elements.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, cos, sin
 from tkinter import ARC, PIESLICE
 from p_ggen import frangec
@@ -48,25 +45,25 @@ class ThanSymbol:
         self.circles  = circles
 
 
-    def thanTkDraw(self, dc, x, y, r, color, fill, tags):
+    def thanTkDraw(self, dc, x, y, r, color, fill, width, tags):
         "Plots the symbol to canvas dc."
 
         for xc, yc, rc in self.circles:
             xc, yc = (x+xc*r, y-yc*r)
             rc *= r
             dc.create_arc(xc-rc, yc+rc, xc+rc, yc-rc, start=0.0, extent=359.99999,
-                style=PIESLICE, outline=color, fill=fill, tags=tags)
+                style=PIESLICE, outline=color, fill=fill, width=width, tags=tags)
         for pol in self.polygons:
             pol1 = [ (x+x1*r,y-y1*r) for (x1,y1) in pol ]
-            dc.create_polygon(pol1, outline=color, fill=fill, tags=tags)
+            dc.create_polygon(pol1, outline=color, fill=fill, width=width, tags=tags)
         for lin in self.lines:
             lin1 = [ (x+x1*r,y-y1*r) for (x1,y1) in lin ]
-            dc.create_line(lin1, fill=color, tags=tags)
+            dc.create_line(lin1, fill=color, width=width, tags=tags)
         for xc, yc, rc, th1, dth in self.arcs:
             xc, yc = (x+xc*r, y-yc*r)
             rc *= r
             dc.create_arc(xc-rc, yc+rc, x+rc, yc-rc, start=th1, extent=dth,
-                style=ARC, outline=color, tags=tags)
+                style=ARC, outline=color, width=width, tags=tags)
 
 
     def thanPilDraw(self, dc, x, y, r, color, fill, tags):
@@ -89,59 +86,59 @@ class ThanSymbol:
                 style=ARC, outline=color, tags=tags)
 
 
-def __pcircle(dc, x, y, r, color, fill, tags):
+def __pcircle(dc, x, y, r, color, fill, width, tags):
             r *= 0.5
             dc.create_arc(x-r, y+r, x+r, y-r, start=90.0, extent=359.99999,
-                style=PIESLICE, outline=color, fill=fill, tags=tags)
+                style=PIESLICE, outline=color, fill=fill, width=width, tags=tags)
 
 
-def __pelips(dc, x, y, r, color, fill, tags):
+def __pelips(dc, x, y, r, color, fill, width, tags):
             r *= 0.5
             dc.create_arc(x-r*0.5, y+r, x+r*0.5, y-r, start=0.0, extent=359.99999,
-                style=ARC, outline=color, fill=fill, tags=tags)
+                style=ARC, outline=color, fill=fill, width=width, tags=tags)
 
 
-def __pcross(dc, x, y, r, color, fill, tags):
+def __pcross(dc, x, y, r, color, fill, width, tags):
             r *= 0.5
-            dc.create_line(x-r, y, x+r, y, fill=color, tags=tags)
-            dc.create_line(x, y-r, x, y+r, fill=color, tags=tags)
+            dc.create_line(x-r, y, x+r, y, fill=color, width=width, tags=tags)
+            dc.create_line(x, y-r, x, y+r, fill=color, width=width, tags=tags)
 
 
-def __pchi(dc, x, y, r, color, fill, tags):
+def __pchi(dc, x, y, r, color, fill, width, tags):
             r *= 0.5
-            dc.create_line(x-r, y-r, x+r, y+r, fill=color, tags=tags)
-            dc.create_line(x-r, y+r, x+r, y-r, fill=color, tags=tags)
+            dc.create_line(x-r, y-r, x+r, y+r, fill=color, width=width, tags=tags)
+            dc.create_line(x-r, y+r, x+r, y-r, fill=color, width=width, tags=tags)
 
 
-def __pstar(dc, x, y, r, color, fill, tags):
+def __pstar(dc, x, y, r, color, fill, width, tags):
             r *= 0.5
             r1 = r * 0.5
             r2 = r * 0.866025
-            dc.create_line(x-r, y, x+r, y, fill=color, tags=tags)
-            dc.create_line(x-r1, y-r2, x+r1, y+r2, fill=color, tags=tags)
-            dc.create_line(x+r1, y-r2, x-r1, y+r2, fill=color, tags=tags)
+            dc.create_line(x-r, y, x+r, y, fill=color, width=width, tags=tags)
+            dc.create_line(x-r1, y-r2, x+r1, y+r2, fill=color, width=width, tags=tags)
+            dc.create_line(x+r1, y-r2, x-r1, y+r2, fill=color, width=width, tags=tags)
 
 
-def __psquare(dc, x, y, r, color, fill, tags):
+def __psquare(dc, x, y, r, color, fill, width, tags):
     r *= 0.5
-    dc.create_rectangle(x-r, y-r, x+r, y+r, outline=color, fill=fill, tags=tags)
+    dc.create_rectangle(x-r, y-r, x+r, y+r, outline=color, fill=fill, width=width, tags=tags)
 
 
-def __ptriangle(dc, x, y, r, color, fill, tags):
+def __ptriangle(dc, x, y, r, color, fill, width, tags):
     r *= 0.5
     r1 = r * 0.5
     r2 = r * 0.866025
     dc.create_polygon((x-r2, y-r1), (x+r2, y-r1), (x, y+r),
-        outline=color, fill=fill, tags=tags)
+        outline=color, fill=fill, width=width, tags=tags)
 
 
-def __ptristar(dc, x, y, r, color, fill, tags):
+def __ptristar(dc, x, y, r, color, fill, width, tags):
     r *= 0.5
     r1 = r * 0.5
     r2 = r * 0.866025
-    dc.create_line(x, y, x-r2, y-r1, fill=color, tags=tags)
-    dc.create_line(x, y, x+r2, y-r1, fill=color, tags=tags)
-    dc.create_line(x, y, x, y+r, fill=color, tags=tags)
+    dc.create_line(x, y, x-r2, y-r1, fill=color, width=width, tags=tags)
+    dc.create_line(x, y, x+r2, y-r1, fill=color, width=width, tags=tags)
+    dc.create_line(x, y, x, y+r, fill=color, width=width, tags=tags)
 
 
 def __makeGkiPolygons():
@@ -206,7 +203,7 @@ def __makeChristarPolygons():
 
     x = y = th = 0.0
     ps = [ ]
-    for i in xrange(10):
+    for i in range(10):
         r1 = 0.5
         if i%2 == 1: r1 *= 0.5
         ps.append((x + r1*cos(th), y + r1*sin(th)))

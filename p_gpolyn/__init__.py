@@ -1,2 +1,2 @@
-from poly import Polynomial
-from sypoly import SumFactor
+from .poly import Polynomial
+from .sypoly import SumFactor

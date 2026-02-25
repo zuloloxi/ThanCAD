@@ -1,45 +1,42 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
-This module defines an object which reads a .syk, .brk, .syn, .lin  file and it
-creates the appropriate ThanCad's elements to represent it in ThanCad.
+This module defines an object which reads a .syk, .brk, .syn, .lin, .lcad,
+Intergrapfh .xyz, kml, kmz file. It creates the appropriate ThanCad's elements
+to represent the file in ThanCad.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
-try:    import pickle
-except: import cPickle as pickle
-from math import fabs
+import pickle
+from math import fabs, radians
 from p_gimdxf import ThanImportBase
-import p_gimgeo
+import p_gimgeo, p_gcol
 from thantrans import T
 
 
 class ThanImportSyk(ThanImportBase):
-    "A class to import a syk file."
+    "A producer class to import a syk file."
 
     def thanImport(self):
         "Imports a dxf file."
@@ -87,7 +84,7 @@ class ThanImportSyk(ThanImportBase):
 
 
 class ThanImportBrk(ThanImportBase):
-    "A class to import a brk file."
+    "A producer class to import a brk file."
 
     def thanImport(self):
         "Imports a dxf file."
@@ -125,7 +122,7 @@ class ThanImportBrk(ThanImportBase):
 
 
 class ThanImportSyn(ThanImportBase):
-    "A class to import 3d points from a .syn file."
+    "A producer class to import 3d points from a .syn file."
 
     def thanImport(self):
         "Imports a dxf file."
@@ -157,12 +154,18 @@ class ThanImportSyn(ThanImportBase):
             else:
                 nzn += 1
                 self.thanDr.dxfPoint(xx, yy, zz, nzLay,       handle, None, aa, validc)
+        lay = self.thanDr._dr.thanLayerTree.thanFindic(self.defLay)
+        if lay is not None:   #If self.defLay != "0" and no points were added, self.defLay has not been created
+            lay.thanAtts["hidename"].thanValSet(False)
+            lay.thanAtts["hideheight"].thanValSet(False)
         if nzn > 0:
-            self.prt(T["%d points with invalid z were put into layer %s."] % (nzn, nzLay), "info1")
+            lay = self.thanDr._dr.thanLayerTree.thanFindic(nzLay)
+            lay.thanAtts["hidename"].thanValSet(False)
+            self.thanDr.prt(T["%d points with invalid z were put into layer %s."] % (nzn, nzLay), "info1")
 
 
 class ThanImportLin(ThanImportBase):
-    "A class to import elements from a Linicad file."
+    "A producer class to import elements from a Linicad .lin file."
 
     def thanImport(self):
         "Imports a LiniCad file."
@@ -178,27 +181,22 @@ class ThanImportLin(ThanImportBase):
                 try: typ = pickle.load(self.fDxf)
                 except EOFError: break
                 coords = pickle.load(self.fDxf)
-                n = len(coords)
-                if n % 2 != 0: n -= 1
-                xx = []
-                yy = []
-                zz = []
-                for i in xrange(0, n, 2):
-                    xx.append(float(coords[i]))
-                    yy.append(float(coords[i+1]))
-                    zz.append(0.0)
+                xx, yy, zz = self._toxyz(coords)
                 if typ == "line":
-                    if n < 4: continue
+                    if len(coords) < 4: continue
                     self.thanDr.dxfLine(xx, yy, zz, "lines", handle, 3)
                 elif typ == "oval":
-                    if n != 4: continue
+                    if len(coords) != 4: continue
                     r = fabs(yy[1]-yy[0]) / 2.0
                     xc = (xx[0]+xx[1])*0.5
                     yc = (yy[0]+yy[1])*0.5
                     self.thanDr.dxfCircle(xc, yc, 0.0, "circles", handle, 1, r)
                 elif typ == "text":
                     ttext, stext = pickle.load(self.fDxf)
-                    self.thanDr.dxfText(xx[0], yy[0], zz[0], "texts", handle, 2, ttext, stext, 0.0)
+                    ttext = ttext.rstrip()
+                    dx = len(ttext) * (stext*5/7) / 2   #length x is 5/7 of length y
+                    dy = stext / 2
+                    self.thanDr.dxfText(xx[0]-dx, yy[0]-dy, zz[0], "texts", handle, 2, ttext, stext, 0.0)
                 else:
                     nzn += 1
             except Exception as why:
@@ -207,8 +205,69 @@ class ThanImportLin(ThanImportBase):
             self.thanWarn(T["%d unknown elements were not imported"] % nzn)
 
 
+    @staticmethod
+    def _toxyz(coords):
+        "Convert linicad coordinates to x, y, z."
+        n = len(coords)
+        if n % 2 != 0: n -= 1
+        xx = []
+        yy = []
+        zz = []
+        for i in range(0, n, 2):
+            xx.append(float(coords[i]))
+            yy.append(float(coords[i+1]))
+            zz.append(0.0)
+        return xx, yy, zz
+
+
+class ThanImportLcad(ThanImportLin):
+    "A producer class to import elements from a Linicad .lcad file."
+    def _getElems(self):
+        "Reads all elements from .lcad file."
+        nzn = 0
+        handle = ""
+        fr = self.fDxf
+        try:
+            while True:
+                try: typ = pickle.load(fr)
+                except EOFError: break
+                col = pickle.load(fr)
+                coords = pickle.load(fr)
+                xx, yy, zz = self._toxyz(coords)
+                if typ == "text":
+                    ttext, stext = pickle.load(fr)
+                    ttext = ttext.rstrip()
+                    dx = len(ttext) * (stext*5/7) / 2   #length x is 5/7 of length y
+                    dy = stext / 2
+                    self.thanDr.dxfText(xx[0]-dx, yy[0]-dy, zz[0], "texts", handle, self._toicol(col), ttext, h=stext, theta=0.0)
+                elif typ == "oval":
+                    outl = pickle.load(fr)         #The outline is used in ThanCad. col is the fill color which is not used
+                    if len(coords) != 4: continue
+                    r = fabs(yy[1]-yy[0]) / 2.0
+                    xc = (xx[0]+xx[1])*0.5
+                    yc = (yy[0]+yy[1])*0.5
+                    self.thanDr.dxfCircle(xc, yc, 0.0, "circles", handle, self._toicol(outl), r)
+                elif typ == "line":
+                    if len(coords) < 4: continue
+                    self.thanDr.dxfLine(xx, yy, zz, "lines", handle, self._toicol(col))
+                else:
+                    nzn += 1
+        except Exception as e:
+            self.thanEr1s(why)
+        if nzn > 0:
+            self.thanWarn(T["%d unknown elements were not imported"] % nzn)
+
+    @staticmethod
+    def _toicol(col):
+        "Convert linicad color to dxf integer code."
+        rgb = p_gcol.thanTk2Rgb(col)
+        print (col, rgb, p_gcol.thanRgb2DxfColCodeApprox(rgb))
+        return p_gcol.thanRgb2DxfColCodeApprox(rgb)
+        #def          thanRgb2DxfColCodeApprox(rgb):
+
+
 class ThanImportXyzIntermap(ThanImportBase):
-    """A class to import lines in xyz intergraph format.
+    """ producerA class to import lines in xyz intergraph format.
 
     Sample file:
 4.82389617, 43.70650056, 6.03, 1, 0, 2,  65, 3, 205, 4,  64
@@ -230,11 +289,11 @@ class ThanImportXyzIntermap(ThanImportBase):
     """
 
     def thanImport(self):
-        "Imports a dxf file."
+        "Imports a xyz file."
         self._getPolylines()
 
     def _getPolylines(self):
-        "Reads all polylines from .brk file."
+        "Reads all polylines from .xyz file."
         handle = ""
         while 1:
             xx = []
@@ -262,32 +321,55 @@ class ThanImportXyzIntermap(ThanImportBase):
 
 
 class ThanImportKml(ThanImportBase):
-    """A class to import lines in Google Keyhole Markup Language format, .kml filenames."""
+    """A producer class to import lines in Google Keyhole Markup Language format, .kml filenames.
+
+    The import procedure converts the GRS80 geodetic coordinates λ,φ of
+    the .kml file to the easting, northing of the geodetic projection
+    defined in the ThanCad drawing. The elevation z is not changed at
+    all, and it may be orthometric or geometric as defined in the .kml
+    file.
+    """
 
     def thanImport(self):
-        "Imports a dxf file."
-        pnts, terr = p_gimgeo.readKml(self.fDxf, greece=True)
+        "Imports a kml file."
+        pnts, terr = p_gimgeo.readKml(self.fDxf, greece=False)
         if pnts is None: self.thanEr2s(terr)
         self._getPoints(pnts)
 
 
     def _getPoints(self, pnts):
-        "Reads all points from .syn file."
+        "Reads all points from .kml file."
+        dr = self.thanDr._dr    #This is the ThanDrawing object
+        geodp = dr.geodp        #This is the geodetic projection of the drawing
         handle = ""
         validc = [True, True, True]
-        for aa, xx, yy, zz, col, desc in pnts:
-            self.thanDr.dxfPoint(xx, yy, zz, self.defLay, handle, None, aa, validc)
+
+        nzn = 0
+        for p in pnts:
+            if p.KMLTYPE == "point":
+                xen, yen = geodp.geodetGRS802en(radians(p.al), radians(p.phi))
+                if p.col is None: icol = None
+                else:             icol = p_gcol.thanRgb2DxfColCodeApprox(p.col)
+                self.thanDr.dxfPoint(xen, yen, p.z, p.lay, handle, icol, p.name, validc)
+            elif p.KMLTYPE == "polygon" or p.KMLTYPE == "path":
+                for i in range(len(p.al)):
+                    p.al[i], p.phi[i] = geodp.geodetGRS802en(radians(p.al[i]), radians(p.phi[i]))
+                if p.col is None: icol = None
+                else:             icol = p_gcol.thanRgb2DxfColCodeApprox(p.col)
+                if len(p.al) < 3: self.thanWarn(T["KML polygon with 1 or 0 vertices."])
+                self.thanDr.dxfPolyline(p.al, p.phi, p.z, p.lay, handle, icol)
+            else:
+                #assert 0, "Unknown KML object type '{}'".format(p.KMLTYPE)
+                nzn += 1
+        if nzn > 0:
+            self.thanWarn(T["%d unknown KML objects were not imported"] % nzn)
 
 
 class ThanImportKmz(ThanImportKml):
-    """A class to import lines in Google Keyhole Markup Language format, .kml filenames."""
+    """A producer class to import lines in zipped Google Keyhole Markup Language format, .kmz filenames."""
 
     def thanImport(self):
-        "Imports a dxf file."
-        pnts, terr = p_gimgeo.readKmz(self.fDxf.name, greece=True)
+        "Imports a kmz file."
+        pnts, terr = p_gimgeo.readKmz(self.fDxf.name, greece=False)
         if pnts is None: self.thanEr2s(terr)
         self._getPoints(pnts)
-
-
-if __name__ == "__main__":
-    print(__doc__)

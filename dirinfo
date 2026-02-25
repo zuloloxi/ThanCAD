@@ -1,0 +1,19 @@
+Τρι 20 Μαΐ 2025 06:50:28 μμ EEST
+Version 0.9.1, May 20, 2025
+
+Bug fixes της προηγούμενης έκδοσης 0.9.0 και διάφορες προσθήκες:
+a. The optline commands was implemented. It computes and draws the optimum line that
+     passes through selected points, linesm splines.
+b. The simplify command can now use 3 methods of simplifying:
+   "Least deviation (Stamos-Vassilaki)", "Max distance (Ramer–Douglas–Peucker)", and
+   "First fit (Reumann–Witkam)".
+c. ThanCad opens spreadsheets (currenty xls/xlsx) with points, lines, texts and surfaces.
+   Now, if a cell of the first column begins with a #, the whole line is considered a comment.
+   The spreadshet with points, must now have x, y, z, name, in the first 4 columns of the
+   spreadsheet. If the cell of the 3rd column (z) is blank, then zero is assumed.
+   If the cell of the 4rd column (name) is blank, then a standard point is assumed. Otherwise
+   a named point is assumed.
+
+Είναι το ίδιο με το thancad091 (με διαφορά ότι έχει κάποιους περισσότερους υποφακέλους).
+Επίσης είναι αυτό που ανέβασα στο helios.ntua.gr για του μαθητές μου
+στο μάθημα "Σχεδίαση Τεχνικών Έργων με Η/Υ".

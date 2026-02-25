@@ -1,37 +1,34 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines base class for ThanCad fonts made by straight lines.
 """
 
-from __future__  import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, cos, sin
 import copy
-from p_ggen import Pyos, thanGetEncoding
+#from p_ggen import Pyos, thanGetEncoding
 
 class ThanFont:
     "Base class for all ThanCad fonts - well perhaps not all."
@@ -40,6 +37,10 @@ class ThanFont:
     def __init__(self, name):
         "Initialisation: just sets the name."
         self.thanName = name
+
+    def thanGetCodes(self):
+        "Return the implemented codes in this font."
+        raise AttributeError("getCodes() should be overriden")
 
 
 class ThanFontLine(ThanFont):
@@ -94,7 +95,7 @@ class ThanFontLine(ThanFont):
         fw.write("%s\n" % (("fixed", "proportional")[self.thanProp],))
         tfont = self.thanDilines
         linesdef = tfont[self.thanImiss]
-        for i in xrange(256):                          # Loop of all the characters
+        for i in range(256):                          # Loop of all the characters
             fw.write("%d\n" % i)
             lines = tfont.get(i, linesdef)
             for pl in lines:                           # Loop of all polylines of a char
@@ -118,23 +119,19 @@ class ThanFontLine(ThanFont):
 #-------Transform the coordinates
 
         dc = tk.dc
+        w = tk.tkThick
         col = tk.outline
         for c in a:                                    # Loop over all the characters in text
             for pl in self.lines1(c):                  # Loop over all polylines of a char
                 plr = [ (xz+xx*bx-yy*by, yz-(xx*by+yy*bx)) for (xx, yy) in pl ]
-                if len(plr) > 1: dc.create_line(plr, fill=col, tags=tags)
+                if len(plr) > 1: dc.create_line(plr, fill=col, width=w, tags=tags)
             if self.thanProp: xz, yz = plr[0]          # Next character position is defined within current char
             else:             xz += hx2; yz += hy2     # Advance to next fixed character position
 
 
     def lines1(self, c1):
         "Find the ascii value of 1 character and return the lines that correspond to it."
-        if Pyos.Python3:
-            c2 = c1.encode(encoding=thanGetEncoding(), errors="replace")
-            #print("thanfontline.lines1(): encoding=%s   c1=%s   c2=%s" % (thanGetEncoding(), c1, c2))
-            k = ord(c2)
-        else:
-            k = ord(c1)
+        k = ord(c1)
         lines = self.thanDilines.get(k)
         if lines is None: lines = self.thanDilines[self.thanImiss]
         return lines
@@ -231,6 +228,11 @@ class ThanFontLine(ThanFont):
             if self.thanProp: xz, yz = plr[0]          # Next character position is defined within current char
             else:             xz += hx2; yz += hy2     # Advance to next fixed character position
 
+
+    def thanGetCodes(self):
+        "Return the implemented codes in this font."
+        return self.thanDilines.keys()
+
 #=============================================================================
 
     def thanMakepairs(self):
@@ -244,12 +246,12 @@ class ThanFontLine(ThanFont):
                 if len(li) < 1: continue
                 c = li[0]
                 try:    c[0]; c[1]
-                except: li[:] = [((li[i]-xor)*scale, (li[i+1]-yor)*scale) for i in xrange(0, len(li), 2)]
+                except: li[:] = [((li[i]-xor)*scale, (li[i+1]-yor)*scale) for i in range(0, len(li), 2)]
                 else:   li[:] = [((x-xor)*scale, (y-yor)*scale) for x,y in li]
 
         self.thanDilines.setdefault(self.thanImiss, [(self.thanBnorm*0.5, 0.0)] )
 
-        for i in xrange(10): # De-index font
+        for i in range(10): # De-index font
             again = False
             for key,lines in self.thanDilines.items():  #works for python2,3
                 if type(lines) != int: continue

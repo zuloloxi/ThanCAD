@@ -1,8 +1,4 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from builtins import input
-from p_ggen.py23 import input
-from .gen import ing, prg, tog, isString, thanUnunicode
+from .gen import ing, prg, tog, isString, thanUnunicode, inte
 from .jorpath import path
 
 
@@ -13,7 +9,7 @@ def inpDouble(mes, douDef=None):
         if dline == '' and douDef is not None: return douDef     # Default value
         try: return float(dline)
         except: pass
-        prg("\nΑναμένεται πραγματικός αριθμός\nΠροσπαθείστε πάλι.\n")
+        prg("\nΞ‘Ξ½Ξ±ΞΌΞ­Ξ½ΞµΟ„Ξ±ΞΉ Ο€ΟΞ±Ξ³ΞΌΞ±Ο„ΞΉΞΊΟΟ‚ Ξ±ΟΞΉΞΈΞΌΟΟ‚\nΞ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.\n")
 
 
 def inpLong(mes, douDef=None):
@@ -23,7 +19,7 @@ def inpLong(mes, douDef=None):
         if dline == '' and douDef is not None: return douDef     # Default value
         try: return int(dline)
         except: pass
-        prg("\nΑναμένεται ακέραιος αριθμός\nΠροσπαθείστε πάλι.\n")
+        prg("\nΞ‘Ξ½Ξ±ΞΌΞ­Ξ½ΞµΟ„Ξ±ΞΉ Ξ±ΞΊΞ­ΟΞ±ΞΉΞΏΟ‚ Ξ±ΟΞΉΞΈΞΌΟΟ‚\nΞ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.\n")
 
 
 def inpNo(mes, douDef=None):
@@ -33,9 +29,9 @@ def inpNo(mes, douDef=None):
         if dline == '' and douDef is not None: return douDef     # Default value
         dl = ing(dline[:2])
 #-------Check what We read
-        if dl in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): return True
-        if dl in ('οχ', 'ΟΧ', 'ox', 'OX', 'no', 'NO', '0'): return False
-        prg('\nΑναμένεται ΝΑΙ (ΝΑ, να, na, ye, YE, 1) ή ΟΧΙ (ΟX, οχ, οx, no, NO, 0)\nΠροσπαθείστε πάλι.\n')
+        if dl in ('Ξ½Ξ±', 'ΞΞ‘', 'na', 'NA', 'ye', 'YE', '1'): return True
+        if dl in ('ΞΏΟ‡', 'ΞΞ§', 'ox', 'OX', 'no', 'NO', '0'): return False
+        prg('\nΞ‘Ξ½Ξ±ΞΌΞ­Ξ½ΞµΟ„Ξ±ΞΉ ΞΞ‘Ξ™ (ΞΞ‘, Ξ½Ξ±, na, ye, YE, 1) Ξ® ΞΞ§Ξ™ (ΞX, ΞΏΟ‡, ΞΏx, no, NO, 0)\nΞ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.\n')
 
 
 def inpStr(mes, douDef=None):
@@ -46,14 +42,14 @@ def inpStr(mes, douDef=None):
         return dline
 
 
-def inpFiles(mes, suf="", nest=False):
+def inpFiles(mes, suf="", nest=False, allownone=False):
     """Gets data files with suffix suf.
 
     Examples:
-    1. fils = inpFiles("Δώστε αρχεία που καταλήγουν σε xx.asc (με ή χωρίς την κατάληξη). Για όλα δώστε * (enter=*) : ", "xx.asc")
-       The above gets all the files in current directory (and recursively in the 
+    1. fils = inpFiles("Ξ”ΟΟƒΟ„Ξµ Ξ±ΟΟ‡ΞµΞ―Ξ± Ο€ΞΏΟ… ΞΊΞ±Ο„Ξ±Ξ»Ξ®Ξ³ΞΏΟ…Ξ½ ΟƒΞµ xx.asc (ΞΌΞµ Ξ® Ο‡Ο‰ΟΞ―Ο‚ Ο„Ξ·Ξ½ ΞΊΞ±Ο„Ξ¬Ξ»Ξ·ΞΎΞ·). Ξ“ΞΉΞ± ΟΞ»Ξ± Ξ΄ΟΟƒΟ„Ξµ * (enter=*) : ", "xx.asc")
+       The above gets all the files in current directory (and recursively in the
        subdirectories if nest==True)
-       which have .asc as a suffix:  a.asc, thanasis.asc, 1.asc, ...
+       which have xx.asc as a suffix:  axx.asc, thanasisxx.asc, 1xx.asc, ...
     2. The filenames are transformed to lower, to facilitate windows..
     """
     initialdir = path(".")
@@ -75,7 +71,7 @@ def inpFiles(mes, suf="", nest=False):
             else:
                 if fentry.ext.lower() == "": fentry += suf
                 fildats.append(fentry)
-        if len(fildats) > 0: return fildats
+        if len(fildats) > 0 or allownone: return fildats
         prg("Error: No %s files defined or found." % suf)
         prg("Try again.")
 
@@ -103,23 +99,23 @@ def inpDir(mes, mustexist=False, mustnotexist=False, default=None):
         f = ing(input(tog(mes)).strip())
         if f == '' and default is not None: f = default       # Default value
         if f.strip() == '':
-            prg('\nΑναμένεται όνομα φακέλλου (μη κενό)\nΠροσπαθείστε πάλι.\n', "can1")
+            prg('\nΞ‘Ξ½Ξ±ΞΌΞ­Ξ½ΞµΟ„Ξ±ΞΉ ΟΞ½ΞΏΞΌΞ± Ο†Ξ±ΞΊΞ­Ξ»Ξ»ΞΏΟ… (ΞΌΞ· ΞΊΞµΞ½Ο)\nΞ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.\n', "can1")
             continue
         f = path(f).expand().abspath()
         if mustexist:
             if f.exists():
                 if not f.isdir():
-                    prg("Ο φάκελλος %s δεν είναι φάκελλος (είναι αρχείο). Προσπαθείστε πάλι." % f)
+                    prg("Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ΄ΞµΞ½ ΞµΞ―Ξ½Ξ±ΞΉ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ (ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΟΟ‡ΞµΞ―ΞΏ). Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ." % f)
                     continue
             else:
-                prg("Ο φάκελλος %s δεν υπάρχει. Προσπαθείστε πάλι." % f)
+                prg("Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ΄ΞµΞ½ Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ. Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ." % f)
                 continue
         if mustnotexist:
             if f.exists():
-                prg("Ο φάκελλος %s ήδη υπάρχει. Προσπαθείστε πάλι." % f)
+                prg("Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ®Ξ΄Ξ· Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ. Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ." % f)
                 continue
         if f.exists() and not f.isdir():   #In case that both mustexist=False and mustnotexist=False
-            prg("Ο φάκελλος %s δεν είναι φάκελλος (είναι αρχείο). Προσπαθείστε πάλι." % f)
+            prg("Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ΄ΞµΞ½ ΞµΞ―Ξ½Ξ±ΞΉ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ (ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΟΟ‡ΞµΞ―ΞΏ). Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ." % f)
             continue
         return f
 
@@ -130,7 +126,7 @@ def inpStrB(mes, douDef=None):
         dline = ing(input(tog(mes)).strip())
         if dline == '' and douDef is not None: dline = douDef         # Default value
         if dline.strip() != '': return dline
-        prg('\nΑναμένεται κείμενο (μη κενό)\nΠροσπαθείστε πάλι.\n')
+        prg('\nΞ‘Ξ½Ξ±ΞΌΞ­Ξ½ΞµΟ„Ξ±ΞΉ ΞΊΞµΞ―ΞΌΞµΞ½ΞΏ (ΞΌΞ· ΞΊΞµΞ½Ο)\nΞ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.\n')
 
 
 def inpDoubleR (mes, douMin, douMax, douDef):
@@ -138,9 +134,9 @@ def inpDoubleR (mes, douMin, douMax, douDef):
     while True:
         dou = inpDouble(mes, douDef)
         if douMin <= dou <= douMax: return dou
-        prg('\nΑναμένεται πραγματικός αριθμός εντός των ορίων:')
-        prg('%.3f και %.3f' % (douMin, douMax))
-        prg('\nΠροσπαθείστε πάλι.\n')
+        prg('\nΞ‘Ξ½Ξ±ΞΌΞ­Ξ½ΞµΟ„Ξ±ΞΉ Ο€ΟΞ±Ξ³ΞΌΞ±Ο„ΞΉΞΊΟΟ‚ Ξ±ΟΞΉΞΈΞΌΟΟ‚ ΞµΞ½Ο„ΟΟ‚ Ο„Ο‰Ξ½ ΞΏΟΞ―Ο‰Ξ½:')
+        prg('%.3f ΞΊΞ±ΞΉ %.3f' % (douMin, douMax))
+        prg('\nΞ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.\n')
 
 
 def inpLongR (mes, douMin, douMax, douDef):
@@ -148,9 +144,9 @@ def inpLongR (mes, douMin, douMax, douDef):
     while True:
         dou = inpLong(mes, douDef)
         if douMin <= dou <= douMax: return dou
-        prg('\nΑναμένεται ακέραιος αριθμός εντός των ορίων:')
-        prg('%d και %d' % (douMin, douMax))
-        prg('\nΠροσπαθείστε πάλι.\n')
+        prg('\nΞ‘Ξ½Ξ±ΞΌΞ­Ξ½ΞµΟ„Ξ±ΞΉ Ξ±ΞΊΞ­ΟΞ±ΞΉΞΏΟ‚ Ξ±ΟΞΉΞΈΞΌΟΟ‚ ΞµΞ½Ο„ΟΟ‚ Ο„Ο‰Ξ½ ΞΏΟΞ―Ο‰Ξ½:')
+        prg('%d ΞΊΞ±ΞΉ %d' % (douMin, douMax))
+        prg('\nΞ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ.\n')
 
 
 def inpMchoice(mes, coms, douDef=1):
@@ -190,8 +186,8 @@ def medNo(un, mes, douDef):
     if dline != "":                  # not end of file
         dl = dline[:2]
 #-------Check what We read
-        if dl in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): return True
-        if dl in ('οχ', 'ΟΧ', 'ox', 'OX', 'no', 'NO', '0'): return False
+        if dl in ('Ξ½Ξ±', 'ΞΞ‘', 'na', 'NA', 'ye', 'YE', '1'): return True
+        if dl in ('ΞΏΟ‡', 'ΞΞ§', 'ox', 'OX', 'no', 'NO', '0'): return False
     return douDef      # Default value
 
 
@@ -255,6 +251,28 @@ def medStr(un, mes, douDef):
     return douDef
 
 
+def medFiles(un, mes, suf, nest=False, allownone=False):
+    """
+    This routine tries to read filenames from unit iun.
+
+    If it does and dou is not blank -> OK.
+    If dou can not be read or is blank,
+    dou takes the default value, and warning message mes is printed.
+    This routine is used to read values from file "mediate.tmp". See
+    library fildat
+    """
+    dline = un.readline()
+    if dline == "": return []   #end of file; no files
+    n = inte(dline)
+    if n is None or n <= 0: return []   #error or zero number: no files
+    fils = []
+    for i in range(n):
+        dline = un.readline()
+        if dline == "": break    #End of file
+        fils.append(path(dline))
+    return fils
+
+
 def medDir(un, mes, mustexist=False, mustnotexist=False, default=None):
     "Inputs a non-blank directory name with default value."
     if default is not None:
@@ -270,13 +288,13 @@ def medDir(un, mes, mustexist=False, mustnotexist=False, default=None):
             break
         if mustexist:
             if f.exists():
-                if not f.isdir(): break   #Ο φάκελλος %s δεν είναι φάκελλος (είναι αρχείο)
+                if not f.isdir(): break   #Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ΄ΞµΞ½ ΞµΞ―Ξ½Ξ±ΞΉ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ (ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΟΟ‡ΞµΞ―ΞΏ)
             else:
-                break                     #Ο φάκελλος %s δεν υπάρχει
+                break                     #Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ΄ΞµΞ½ Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ
         if mustnotexist:
-            if f.exists(): break          #Ο φάκελλος %s ήδη υπάρχει. Προσπαθείστε πάλι
+            if f.exists(): break          #Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ®Ξ΄Ξ· Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ. Ξ ΟΞΏΟƒΟ€Ξ±ΞΈΞµΞ―ΟƒΟ„Ξµ Ο€Ξ¬Ξ»ΞΉ
         if f.exists() and not f.isdir():      #In case that both mustexist=False and mustnotexist=False
-            break                         #Ο φάκελλος %s δεν είναι φάκελλος (είναι αρχείο).
+            break                         #Ξ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ %s Ξ΄ΞµΞ½ ΞµΞ―Ξ½Ξ±ΞΉ Ο†Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚ (ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΟΟ‡ΞµΞ―ΞΏ).
         return f
     prg("%s %s" % (mes, default))          # Use the default value and print message
     return f
@@ -290,15 +308,15 @@ def medMchoice(un, mes, coms, douDef=1):
 
 def test():
     "Tests the functions."
-    akl = inpDoubleR('ΚΛΙΜΑΚΑ ΤΕΛΙΚΟΥ ΣΧΕΔΙΟΥ (return=500) : ', 1.0e-10, 1.0e10, 500.0)
+    akl = inpDoubleR('ΞΞ›Ξ™ΞΞ‘ΞΞ‘ Ξ¤Ξ•Ξ›Ξ™ΞΞΞ¥ Ξ£Ξ§Ξ•Ξ”Ξ™ΞΞ¥ (return=500) : ', 1.0e-10, 1.0e10, 500.0)
     print("akl=", akl)
 
 def testd():
     "Tests the functions."
-#    d = inpDir('Φάκελλος: ', mustexist=True, mustnotexist=False, default=".")
-#    d = inpDir('Φάκελλος: ', mustexist=False, mustnotexist=True, default=".")
+#    d = inpDir('Ξ¦Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚: ', mustexist=True, mustnotexist=False, default=".")
+#    d = inpDir('Ξ¦Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚: ', mustexist=False, mustnotexist=True, default=".")
 #    print("directory=", d)
-    d = inpDir('Φάκελλος: ', mustexist=False, mustnotexist=False, default=".")
+    d = inpDir('Ξ¦Ξ¬ΞΊΞµΞ»Ξ»ΞΏΟ‚: ', mustexist=False, mustnotexist=False, default=".")
     print("directory=", d)
 
 

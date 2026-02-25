@@ -1,6 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import sin, cos, atan, atan2, sqrt, hypot, pi
 import p_gmath
 
@@ -38,7 +35,7 @@ class Ellipsoid(object):
         "Return the geodetic coordinates and height of an ellipsoid given the geocentric."
         par = hypot(xt, yt)
         phi = atan(zt*(1.0+self.et2) / par)
-        for i in xrange(4):
+        for i in range(4):
             N = self.a / sqrt(1.0 - self.e2*sin(phi)**2)
             phi = atan((zt+self.e2*N*sin(phi))/par)
         N = self.a / sqrt(1.0 - self.e2*sin(phi)**2)
@@ -77,7 +74,7 @@ class Ellipsoid(object):
 #a=6378137.00 m (semi-major axis of WGS 84 ellipsoid)
 #f=1/298.257223563 (flattening of WGS 84 ellipsoid)
 #GM=3.986004418 x 1014 m3s-2 (Product of the Earth's mass and the Gravitational Constant)
-#˘=7292115 x 10-11 radians/sec (Earth's angular velocity)
+#œâ=7292115 x 10-11 radians/sec (Earth's angular velocity)
 
 WGS84 = Ellipsoid(a=6378137.0, b=6356752.314245, name="WGS84")
 WGS84.setIdentity()
@@ -85,9 +82,9 @@ GRS80 = Ellipsoid(a=6378137.0, b=6356752.314140, name="GRS80")
 GRS80.setIdentity()
 
 
-dc = -199.723, 74.030, 246.018    #From program ew.f and we.f, (Paper ”ı„„ÒÔ˝ Í·È √È·ÌÌﬂÔı)
+dc = -199.723, 74.030, 246.018    #From program ew.f and we.f, (Paper Œ£œÖŒ≥Œ≥œÅŒøœç Œ∫Œ±Œπ ŒìŒπŒ±ŒΩŒΩŒØŒøœÖ)
 #dc = -199.652, 74.759, 246.057    #FROM NTUA:SCHOOL OF SURVEYING:2007: http://ecourses.dbnet.ntua.gr/geodaisia1
-#                                  #  ALSO FROM BOOK: ¡ÕŸ‘≈—« √≈Ÿƒ¡…”…¡ ‘œ’ Ã–≈« (1989)
+#                                  #  ALSO FROM BOOK: ŒëŒùŒ©Œ§ŒïŒ°Œó ŒìŒïŒ©ŒîŒëŒôŒ£ŒôŒë Œ§ŒüŒ• ŒúŒ†ŒïŒó (1989)
 #dc = -199.870, 74.790, 246.620    #http://trac.osgeo.org/proj/wiki/GenParms, http://proj.maptools.org/gen_parms.html
 Greek1987 = Ellipsoid(a=6378137.0, b=6356752.314140, name="Greek1987")
 Greek1987.setTranslation(-dc[0], -dc[1], -dc[2])
@@ -102,14 +99,14 @@ Greek1987.setTranslation(-dc[0], -dc[1], -dc[2])
 #For later WGS84 measurements the, translations are increased with rate:
 # x=0.0007 m/year  y=-0.0007/year   z=0.0005 m/year
 #The rotations with rate:
-# Âx=0.067 mas/year Ây=-0.757 mas/year Âz=-0.051 mas/year  (mas=mili-arc-second)
+# Œµx=0.067 mas/year Œµy=-0.757 mas/year Œµz=-0.051 mas/year  (mas=mili-arc-second)
 #The scale rate:
 # s=-0.18E-9 /year
 #The translations rate are too small to make a practical difference:
 #in 20 years (2017) the differences are:
 # dx=0.0007*20=0.014m   dy=-0.0007*20=-0.014m   dz=0.0005*20=0.01m
 NAD83_1997 = Ellipsoid(a=6378137.0, b=6356752.314245, name="NAD83")
-NAD83_1997.setBursaWolf(0.9956, -1.9013, -0.5215, 
+NAD83_1997.setBursaWolf(0.9956, -1.9013, -0.5215,
     25.915/3600000.0*pi/180.0, 9.426/3600000.0*pi/180.0, 11.599/3600000.0*pi/180.0,
     1.0+0.62e-9)
 
@@ -136,18 +133,18 @@ _ellipsoid = {0: ('Clarke 1866', 6378206.4000000004, 6356583.7999999998),
              }
 
 """From http://trac.osgeo.org/proj/wiki/GenParms
-The following predeclared prime meridian names are supported. These can be listed using the cs2cs argument -lm. 
-   greenwich 0dE                           
-      lisbon 9d07'54.862"W                 
-       paris 2d20'14.025"E                 
-      bogota 74d04'51.3"E                  
-      madrid 3d41'16.48"W                  
-        rome 12d27'8.4"E                   
-        bern 7d26'22.5"E                   
-     jakarta 106d48'27.79"E                
-       ferro 17d40'W                       
-    brussels 4d22'4.71"E                   
-   stockholm 18d3'29.8"E                   
-      athens 23d42'58.815"E                
-        oslo 10d43'22.5"E  
+The following predeclared prime meridian names are supported. These can be listed using the cs2cs argument -lm.
+   greenwich 0dE
+      lisbon 9d07'54.862"W
+       paris 2d20'14.025"E
+      bogota 74d04'51.3"E
+      madrid 3d41'16.48"W
+        rome 12d27'8.4"E
+        bern 7d26'22.5"E
+     jakarta 106d48'27.79"E
+       ferro 17d40'W
+    brussels 4d22'4.71"E
+   stockholm 18d3'29.8"E
+      athens 23d42'58.815"E
+        oslo 10d43'22.5"E
 """

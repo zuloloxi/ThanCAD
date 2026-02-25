@@ -1,6 +1,3 @@
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import atan2, cos, sin, pi
 from p_gmath import thanThresholdx
 from p_gvec import Vector3
@@ -68,23 +65,23 @@ def thanDxfExtrusionVectors(az):
     y = Vector3(0.0, 1.0, 0.0)
     z = Vector3(0.0, 0.0, 1.0)
     vzr = Vector3(az[0], az[1], az[2]).unit()     #2011_04_03thanasis:added .unit()
-    vyr = vzr - (z*vzr)*z                         #Projection of vzr to the xy plane
-    vyr = vyr - (vzr*vyr)*vzr                     #Component of the projection normal to vzr
+    vyr = vzr - (z|vzr)*z                         #Projection of vzr to the xy plane
+    vyr = vyr - (vzr|vyr)*vzr                     #Component of the projection normal to vzr
     vyr = -vyr                                    #It seems that it is on the other direction
     a = abs(vyr)
     if a < thanThresholdx:
         return (tuple(x), tuple(y), tuple(z)) * 2   # Identity transformation
     vyr /= a
     vxr = vyr.cross(vzr)
-    wx = (x*vxr, x*vyr, x*vzr)
-    wy = (y*vxr, y*vyr, y*vzr)
-    wz = (z*vxr, z*vyr, z*vzr)
+    wx = (x|vxr, x|vyr, x|vzr)
+    wy = (y|vxr, y|vyr, y|vzr)
+    wz = (z|vxr, z|vyr, z|vzr)
     return tuple(vxr), tuple(vyr), tuple(vzr), wx, wy, wz
 
 
 def thanDxfExtrusion2World(wx, wy, wz, xx, yy, zz):
     "Transform local coordinates (extrusion system) to world coordinates."
-    for i in xrange(len(xx)):
+    for i in range(len(xx)):
         x1 = xx[i]
         y1 = yy[i]
         z1 = zz[i]
@@ -110,10 +107,10 @@ THC0000005        -28.489         20.352         -1.401"""
   -4.9154    34.6915    -0.3399"""
     ccw = []
     for dline in dataworld.split("\n"):
-        ccw.append(map(float, dline.split()[0:]))
+        ccw.append( list( map(float, dline.split()[0:]) ) )
     ccl = []
     for dline in datalocal.split("\n"):
-        ccl.append(map(float, dline.split()[1:]))
+        ccl.append( list( map(float, dline.split()[1:]) ) )
 
     testaz(az, ccw, ccl)
     print()
@@ -169,7 +166,7 @@ def testaz(az, ccw, ccl):
     yy = [c[1] for c in ccl]
     zz = [c[2] for c in ccl]
     thanDxfExtrusion2World(wx, wy, wz, xx, yy, zz)
-    for i in xrange(len(ccl)):
+    for i in range(len(ccl)):
         x, y, z = ccl[i]
         print(form % (x, y, z, xx[i], yy[i], zz[i]))
 

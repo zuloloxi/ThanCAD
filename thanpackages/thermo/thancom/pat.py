@@ -1,36 +1,34 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 The package automates the data input of the diploma thesis of Xaris Patounis
 and Nikos Simos of the School of Civil Engineering, National Technical
 University of Athens.
 The subpackage implements architecture related procedures.
 """
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
+#from past.builtins import range
 import sys, csv
 import p_ggen, p_gfil, p_gmath
 frw = {}
@@ -66,9 +64,9 @@ def thanCadMain(proj):
     from thanvar import Canc
     global prg
     prg = proj[2].thanPrt
-    prg("Εισαγωγή μετρήσεων θερμοϋγρομέτρου.", "info")
-    prg("Διπλωματική εργασία Χάρη Πατούνη, Νίκου Σίμου, Σχολή Πολ. Μηχανικών, ΕΜΠ, 2012", "info")
-    fn, fr = thanTxtopen(proj, mes='Επιλογή αρχείου μετρήσεων .csv (από .xls)', suf=".csv", mode="r", initialfile=None, initialdir=None)
+    prg("Ξ•ΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ® ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ….", "info")
+    prg("Ξ”ΞΉΟ€Ξ»Ο‰ΞΌΞ±Ο„ΞΉΞΊΞ® ΞµΟΞ³Ξ±ΟƒΞ―Ξ± Ξ§Ξ¬ΟΞ· Ξ Ξ±Ο„ΞΏΟΞ½Ξ·, ΞΞ―ΞΊΞΏΟ… Ξ£Ξ―ΞΌΞΏΟ…, Ξ£Ο‡ΞΏΞ»Ξ® Ξ ΞΏΞ». ΞΞ·Ο‡Ξ±Ξ½ΞΉΞΊΟΞ½, Ξ•ΞΞ , 2012", "info")
+    fn, fr = thanTxtopen(proj, mes='Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ .csv (Ξ±Ο€Ο .xls)', suf=".csv", mode="r", initialfile=None, initialdir=None)
     if fr == Canc: return proj[2].thanGudCommandCan()
     fn = fn.parent / fn.namebase.replace(".", "_") + ".thcx"
     thanRenameHouse(proj, fn)
@@ -83,29 +81,29 @@ def thanCadMain(proj):
         prg("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
         try: fr.close()
         except: pass
-        proj[2].thanGudCommandEnd("(Μπορεί νά έχει γινει μερική εισαγωγή σημείων)")
+        proj[2].thanGudCommandEnd("(ΞΟ€ΞΏΟΞµΞ― Ξ½Ξ¬ Ξ­Ο‡ΞµΞΉ Ξ³ΞΉΞ½ΞµΞΉ ΞΌΞµΟΞΉΞΊΞ® ΞµΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ® ΟƒΞ·ΞΌΞµΞ―Ο‰Ξ½)")
     else:
         fr.close()
-        proj[2].thanGudCommandEnd("Δημιουργήθηκαν 4 διαφάνειες.", "info")
+        proj[2].thanGudCommandEnd("Ξ”Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ®ΞΈΞ·ΞΊΞ±Ξ½ 4 Ξ΄ΞΉΞ±Ο†Ξ¬Ξ½ΞµΞΉΞµΟ‚.", "info")
 
 
 def letinit():
     "Initialize letter to number dictionary."
     ia = ord("A")-1
-    for i in xrange(ia+1, ord("Z")+1):
+    for i in range(ia+1, ord("Z")+1):
         let2num[chr(i)] = i-ia
     let2num["ZA"] = 27
     let2num["ZB"] = 28
 
 
 def thermgen():
-    "Ανάγνωση και εγγραφή γενικών δεδομένων θερμοϋγρομέτρου."
+    "Ξ‘Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· ΞΊΞ±ΞΉ ΞµΞ³Ξ³ΟΞ±Ο†Ξ® Ξ³ΞµΞ½ΞΉΞΊΟΞ½ Ξ΄ΞµΞ΄ΞΏΞΌΞ­Ξ½Ο‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ…."
     global date
-    prg("Ανάγνωση και εγγραφή γενικών δεδομένων θερμοϋγρομέτρου.", "info1")
+    prg("Ξ‘Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· ΞΊΞ±ΞΉ ΞµΞ³Ξ³ΟΞ±Ο†Ξ® Ξ³ΞµΞ½ΞΉΞΊΟΞ½ Ξ΄ΞµΞ΄ΞΏΞΌΞ­Ξ½Ο‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ….", "info1")
     fn = frw["csv"].name
     frw["csv"].seek(0)
     fr = csv.reader(frw["csv"], delimiter=";")
-    r = [next(fr) for i in xrange(6)]
+    r = [next(fr) for i in range(6)]
     try:
         r[4][0], r[4][2], r[4][3], r[2][2], r[3][2], r[5][1]
     except:
@@ -153,12 +151,12 @@ def com1Csv(com1, found, fn, irow, icol):
 
 
 def therm():
-    "Ανάγνωση και εγγραφή μετρήσεων θερμοϋγρομέτρου."
-    prg("Ανάγνωση και εγγραφή μετρήσεων θερμοϋγρομέτρου.", "info1")
+    "Ξ‘Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· ΞΊΞ±ΞΉ ΞµΞ³Ξ³ΟΞ±Ο†Ξ® ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ…."
+    prg("Ξ‘Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· ΞΊΞ±ΞΉ ΞµΞ³Ξ³ΟΞ±Ο†Ξ® ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ….", "info1")
     fn = frw["csv"].name
     frw["csv"].seek(0)
     fr = csv.reader(frw["csv"], delimiter=";")
-    for i in xrange(5): next(fr)
+    for i in range(5): next(fr)
     temphum.clear()
     meas.clear()
     i = 0
@@ -170,9 +168,9 @@ def therm():
             com1Csv(date, dat, fn, i+5, 1)
             tim1 = time2sec(tim)
         except (IndexError, ValueError) as e:
-            er1sCsv(fn, i+5, 1, "Συντακτικό λάθος:\n%s" % (e,))
+            er1sCsv(fn, i+5, 1, "Ξ£Ο…Ξ½Ο„Ξ±ΞΊΟ„ΞΉΞΊΟ Ξ»Ξ¬ΞΈΞΏΟ‚:\n%s" % (e,))
 
-        com1Csv("°C", r[2][-2:], fn, i+5, 2)
+        com1Csv("Β°C", r[2][-2:], fn, i+5, 2)
         try:
             temp = float(r[2][:-2].replace(",", "."))
         except ValueError as e:
@@ -182,13 +180,13 @@ def therm():
             hum = float(r[3][:-3].replace(",", "."))
         except ValueError as e:
             er1sCsv(fn, i+5, 3, "Syntax error: %s" % (e,))
-        if tim in temphum: er1sCsv(fn, i+5, 1, "Ο χρόνος %d έχει ξαναβρεθεί." % (tim,))
+        if tim in temphum: er1sCsv(fn, i+5, 1, "Ξ Ο‡ΟΟΞ½ΞΏΟ‚ %d Ξ­Ο‡ΞµΞΉ ΞΎΞ±Ξ½Ξ±Ξ²ΟΞµΞΈΞµΞ―." % (tim,))
         temphum[tim1] = temp, hum, i
 
 
 def gridgen(proj, syn):
-    "Ανάγνωση και εγγραφή δεδομένων κανάβου."
-    prg("Ανάγνωση και εγγραφή κανάβου.", "info1")
+    "Ξ‘Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· ΞΊΞ±ΞΉ ΞµΞ³Ξ³ΟΞ±Ο†Ξ® Ξ΄ΞµΞ΄ΞΏΞΌΞ­Ξ½Ο‰Ξ½ ΞΊΞ±Ξ½Ξ¬Ξ²ΞΏΟ…."
+    prg("Ξ‘Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· ΞΊΞ±ΞΉ ΞµΞ³Ξ³ΟΞ±Ο†Ξ® ΞΊΞ±Ξ½Ξ¬Ξ²ΞΏΟ….", "info1")
     fn = frw["csv"].name
     frw["csv"].seek(0)
     fr = csv.reader(frw["csv"], delimiter=";")
@@ -196,15 +194,15 @@ def gridgen(proj, syn):
     irow = -1
     for r in fr:
         irow += 1
-        if r[8] == "Έναρξη": break
+        if r[8] == "ΞΞ½Ξ±ΟΞΎΞ·": break
     else:
-        raise ValueError("Δεν βρέθηκε η λέξη 'Έναρξη' στη στήλη %s του αρχείου %s" % (colnam(8), fn))
+        raise ValueError("Ξ”ΞµΞ½ Ξ²ΟΞ­ΞΈΞ·ΞΊΞµ Ξ· Ξ»Ξ­ΞΎΞ· 'ΞΞ½Ξ±ΟΞΎΞ·' ΟƒΟ„Ξ· ΟƒΟ„Ξ®Ξ»Ξ· %s Ο„ΞΏΟ… Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s" % (colnam(8), fn))
     for i in 8, 11, 15:
-        if i >= len(r): er1sCsv(fn, irow, i, "Αναμενόταν: 'Έναρξη'")
-        com1Csv("Έναρξη", r[i], fn, irow, i)
+        if i >= len(r): er1sCsv(fn, irow, i, "Ξ‘Ξ½Ξ±ΞΌΞµΞ½ΟΟ„Ξ±Ξ½: 'ΞΞ½Ξ±ΟΞΎΞ·'")
+        com1Csv("ΞΞ½Ξ±ΟΞΎΞ·", r[i], fn, irow, i)
     for i in 9, 12, 16:
-        if i >= len(r): er1sCsv(fn, irow, i, "Αναμενόταν: 'Τερματισμός'")
-        com1Csv("Τερματισμός", r[i], fn, irow, i)
+        if i >= len(r): er1sCsv(fn, irow, i, "Ξ‘Ξ½Ξ±ΞΌΞµΞ½ΟΟ„Ξ±Ξ½: 'Ξ¤ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚'")
+        com1Csv("Ξ¤ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚", r[i], fn, irow, i)
 
     for r in fr:
         irow += 1
@@ -217,12 +215,12 @@ def gridgen(proj, syn):
             tt1 = time2sec(r[12])
             te2 = time2sec(r[15])
             tt2 = time2sec(r[16])
-            syn(proj, "temp1", icole, irowe, icolt, irowt, te1, tt1, 0)     #1η μέτρηση, θερμοκρασία
-            syn(proj, "hum1",  icole, irowe, icolt, irowt, te1, tt1, 1)     #1η μέτρηση, υγρασία
-            syn(proj, "temp2", icole, irowe, icolt, irowt, te2, tt2, 0)     #2η μέτρηση, θερμοκρασία
-            syn(proj, "hum2",  icole, irowe, icolt, irowt, te2, tt2, 1)     #2η μέτρηση, υγρασία
+            syn(proj, "temp1", icole, irowe, icolt, irowt, te1, tt1, 0)     #1Ξ· ΞΌΞ­Ο„ΟΞ·ΟƒΞ·, ΞΈΞµΟΞΌΞΏΞΊΟΞ±ΟƒΞ―Ξ±
+            syn(proj, "hum1",  icole, irowe, icolt, irowt, te1, tt1, 1)     #1Ξ· ΞΌΞ­Ο„ΟΞ·ΟƒΞ·, Ο…Ξ³ΟΞ±ΟƒΞ―Ξ±
+            syn(proj, "temp2", icole, irowe, icolt, irowt, te2, tt2, 0)     #2Ξ· ΞΌΞ­Ο„ΟΞ·ΟƒΞ·, ΞΈΞµΟΞΌΞΏΞΊΟΞ±ΟƒΞ―Ξ±
+            syn(proj, "hum2",  icole, irowe, icolt, irowt, te2, tt2, 1)     #2Ξ· ΞΌΞ­Ο„ΟΞ·ΟƒΞ·, Ο…Ξ³ΟΞ±ΟƒΞ―Ξ±
         except (ValueError, IndexError) as e:
-            raise ValueError("Συντακτικό λάθος στην γραμμή %s του αρχείου %s:\n%s" % (irow+1, fn, e))
+            raise ValueError("Ξ£Ο…Ξ½Ο„Ξ±ΞΊΟ„ΞΉΞΊΟ Ξ»Ξ¬ΞΈΞΏΟ‚ ΟƒΟ„Ξ·Ξ½ Ξ³ΟΞ±ΞΌΞΌΞ® %s Ο„ΞΏΟ… Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s:\n%s" % (irow+1, fn, e))
     for fw in meas.values(): fw.close()   #works for python2,3
     for r in fr:
         irow += 1
@@ -237,7 +235,7 @@ def time2sec(tim):
         h, m, s = map(int, tim.split(":"))   #works for python2,3
         tim1 = s + 60 * (m + 60*h)
     except (ValueError, IndexError) as e:
-        raise ValueError("Συντακτικό λάθος κατά την ανάγνωση χρόνου: %s\n%s" % (tim, e))
+        raise ValueError("Ξ£Ο…Ξ½Ο„Ξ±ΞΊΟ„ΞΉΞΊΟ Ξ»Ξ¬ΞΈΞΏΟ‚ ΞΊΞ±Ο„Ξ¬ Ο„Ξ·Ξ½ Ξ±Ξ½Ξ¬Ξ³Ξ½Ο‰ΟƒΞ· Ο‡ΟΟΞ½ΞΏΟ…: %s\n%s" % (tim, e))
     return tim1
 
 
@@ -265,7 +263,7 @@ def wrSyn(proj, fn, icole, irowe, icolt, irowt, time_e, time_t, j):
     ye = -(irowe-1)*step
     xt =  (icolt-1)*step
     yt = -(irowt-1)*step
-    for tim1 in xrange(time_e, time_t+1):
+    for tim1 in range(time_e, time_t+1):
         ipoint = temphum[tim1][2]
         v = temphum[tim1][j]
         x = p_gmath.linint(time_e, xe, time_t, xt, tim1)
@@ -285,7 +283,7 @@ def thancadSyn(proj, fn, icole, irowe, icolt, irowt, time_e, time_t, j):
     ye = -(irowe-1)*step
     xt =  (icolt-1)*step
     yt = -(irowt-1)*step
-    for tim1 in xrange(time_e, time_t+1):
+    for tim1 in range(time_e, time_t+1):
         ipoint = temphum[tim1][2]
         c[2] = temphum[tim1][j]
         c[0] = p_gmath.linint(time_e, xe, time_t, xt, tim1)
@@ -299,8 +297,8 @@ def thancadSyn(proj, fn, icole, irowe, icolt, irowt, time_e, time_t, j):
 def openFiles():
     "Opens files for the program."
     global frw, winmain, prg, pro
-    p_gfil.openFile1(0, ' ', ' ', 0, 'ΕΜΠ διπλωματική Χάρη Πατούνη, Νίκου Σίμου:\n Μετατροπή μετρήσεων θερμοϋγρομέτρου σε text')
-    p_gfil.openFile1(1, 'csv', 'old', 1, 'μετρήσεων σε μορφή .csv (από .xls)')
+    p_gfil.openFile1(0, ' ', ' ', 0, 'Ξ•ΞΞ  Ξ΄ΞΉΟ€Ξ»Ο‰ΞΌΞ±Ο„ΞΉΞΊΞ® Ξ§Ξ¬ΟΞ· Ξ Ξ±Ο„ΞΏΟΞ½Ξ·, ΞΞ―ΞΊΞΏΟ… Ξ£Ξ―ΞΌΞΏΟ…:\n ΞΞµΟ„Ξ±Ο„ΟΞΏΟ€Ξ® ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ… ΟƒΞµ text')
+    p_gfil.openFile1(1, 'csv', 'old', 1, 'ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ ΟƒΞµ ΞΌΞΏΟΟ†Ξ® .csv (Ξ±Ο€Ο .xls)')
     frw = p_gfil.openFile1(887, ' ', ' ', 0, ' ')
     winmain, prg1, _ = p_gfil.openfileWinget()
     if winmain is not None: prg = prg1

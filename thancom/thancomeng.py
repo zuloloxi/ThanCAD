@@ -1,56 +1,61 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes commands related to engineering.
 """
 
 from math import hypot, fabs
-import weakref
-import p_ggen, p_gtkwid, p_gtri, p_gvec, p_gearth, p_ggeod, p_gvarcom
-import thaneng, thandr, thanobj
+import copy, weakref
+import p_ggen, p_gtkwid, p_gtri, p_gvec, p_gearth, p_ggeod, p_gvarcom, p_godop
+import thaneng, thandr, thanobj, thantkdia
 from thanopt import thancadconf
-from thanvar import Canc, thanfiles
+from thanvar import Canc, thanfiles, ThanLayerError, thanNearElev
 from thantrans import T
-from thansupport import thanTextSize, thanToplayerCurrent, thanLayerCurrent
+from thansupport import thanTextSize, thanToplayerCurrent
 from . import thancomsel, thancomview, thanundo, thancomfile
-from .thancommod import thanModEnd, thanModCanc
+from .thancommod import thanModEnd, thanModCanc, thanModCancSel
+from .selutil import thanSelMultquads
 
 
 def thanGreecePerimeter(proj):
     "Draw the perimeter of Greece."
-    thanToplayerCurrent(proj, "greece", current=True, moncolor="cyan")
-    thanLayerCurrent(proj, "perimeter", current=True)
+    try:
+        thanToplayerCurrent(proj, "greece", current=False, moncolor="cyan")
+        thanToplayerCurrent(proj, "greece/perimeter", current=True)
+        thanToplayerCurrent(proj, "greece/points", current=True, moncolor="yellow", hidename=False, hideheight=False)
+    except (ThanLayerError, ValueError) as e:
+        terr = T["Could not create or set current layer 'greece/perimeter' or layer 'greece/points':\n{}"].format(str(e))
+        return proj[2].thanGudCommandCan(terr)
+    thanToplayerCurrent(proj, "greece/perimeter", current=True)
     for cp in thaneng.thanIterGreece(proj[1].geodp):
         e = thandr.ThanLine()
         e.thanSet(cp)
         proj[1].thanElementAdd(e)
         e.thanTkDraw(proj[2].than)
-    thanToplayerCurrent(proj, "greece/points", current=True, moncolor="yellow", hidename=False, hideheight=False)
+    thanToplayerCurrent(proj, "greece/points", current=True)
     for (nam, cp) in thaneng.thanPoints(proj[1].geodp):
         e = thandr.ThanPointNamed()
         e.thanSet(cp, nam)
@@ -63,11 +68,14 @@ def thanEngGrid(proj):
     "Makes a set of crosses which indicate a grid."
     scale = proj[2].thanGudGetPosFloat(T["Engineering scale 1:x (enter=500): "], 500.0)
     if scale == Canc: return proj[2].thanGudCommandCan()                 # Grid cancelled
-    c1 = proj[2].thanGudGetPoint(T["First grid corner (Quadrilateral): "], options=("quadrilateral",))
+    c1 = proj[2].thanGudGetPoint(T["First grid corner (Quadrilateral/Elements): "], options=("quadrilateral","elements"))
     if c1 == Canc: return proj[2].thanGudCommandCan()                    # Grid cancelled
     if c1 == "q":
         cp = getquad(proj)
         if cp == Canc: return proj[2].thanGudCommandCan()                # Grid cancelled
+    elif c1 == "e":
+        __gridinelements(proj, scale)
+        return
     else:
         c3 = proj[2].thanGudGetRect(c1, T["Other grid corner: "])
         if c3 == Canc: return proj[2].thanGudCommandCan()                # Grid cancelled
@@ -75,7 +83,7 @@ def thanEngGrid(proj):
         c4 = list(c3); c4[0] = c1[0]
         cp = [c1, c2, c3, c4]
     grid = thaneng.ThanGrid()
-    grid.thanDo(proj, scale, 0.0, 0.0, 1, cp)
+    newelems = grid.thanDo(proj, scale, 0.0, 0.0, 1, cp)
     ans = proj[2].thanGudGetYesno(T["Keep grid boundary (Yes/No/<Yes>): "], default="yes")
     if ans == Canc: return proj[2].thanGudCommandCan()
     if ans:
@@ -84,6 +92,11 @@ def thanEngGrid(proj):
         e.thanSet(cp)
         proj[1].thanElementAdd(e)
         e.thanTkDraw(proj[2].than)
+        newelems.append(e)
+
+    delelems = ()
+    proj[1].thanDoundo.thanAdd("enggrid", thanundo.thanReplaceRedo, (delelems, newelems, None),
+                                          thanundo.thanReplaceUndo, (delelems, newelems, None))
     proj[2].thanGudCommandEnd()
 
 
@@ -116,6 +129,27 @@ def getquad(proj):
         if c3 == "u": continue
 
 
+def __gridinelements(proj, scale):
+    "Select existing (closed) quadrilaterals and draw grids in them."
+    pinakides = thanSelMultquads(proj, 1, T["Select at least 1 or more quadrilaterals to draw grid into:\n"], strict=False)
+    if pinakides == Canc: return thanModCanc(proj)                       # Grid cancelled
+    selold = proj[2].thanSelold
+
+    grid = thaneng.ThanGrid()
+    newelems = []
+    for pin in pinakides:
+        elems = grid.thanDo(proj, scale, 0.0, 0.0, 1, pin.cp)
+        newelems.extend(elems)
+
+    delelems = ()
+    selelems = set(pinakides)
+    proj[1].thanDoundo.thanAdd("enggrid", thanundo.thanReplaceRedo, (delelems, newelems, selelems),
+                                          thanundo.thanReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)    # 'Reset color' is not needed since the grids and numbers..
+                        # are already drawn. So if a large number of elements..
+                        # There is room for optimisation!
+
+
 def thanEngTrace(proj):
     "Traces semiautomatically a curve in a bitmap image."
     im, cw = proj[2].thanGudGetImPoint(T["Start point of trace: "],
@@ -138,7 +172,7 @@ def __filter3(e):
     ab = ab / abs(ab)
     bc = c-b
     bc = bc / abs(bc)
-    t = fabs(ab*bc)
+    t = fabs(ab|bc)
     return t < 0.90       #Angle should be > acos(0.9) = 25 deg
 
 
@@ -154,8 +188,10 @@ def thanEngInterchange(proj):
 
 def thanEngDem(proj):
     "Manage DEMs."
-    mes = T["DEM: Load/Arcinfo adf directory load/load Global dem/draw Boundary/draw Nodes/draw Contours/Export nodes (enter=L): "]
-    res = proj[2].thanGudGetOpts(mes, default="L", options=("Load", "Arcinfo", "Global", "Boundary", "Nodes", "Contours", "Export"))
+    mes = T["DEM: Load/Arcinfo adf directory load/load Global dem/draw Boundary/"
+            "draw Nodes/draw Contours/Export nodes/eXport to code (enter=L): "]
+    res = proj[2].thanGudGetOpts(mes, default="L", options=("Load", "Arcinfo", "Global",
+        "Boundary", "Nodes", "Contours", "Export", "Xport"))
     if res == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
     if res == "l":
         return thanDemLoad(proj)
@@ -226,6 +262,16 @@ def thanEngDem(proj):
                     fw.write("%-10d%15.3f%15.3f%15.3f\n" % (n, cc[0], cc[1], cc[2]))
         fw.close()
         return proj[2].thanGudCommandEnd("%d points were exported to %s." % (n, fn), "info")
+    elif res == "x":
+        filnams = []
+        for i,dtmobj in enumerate(iterDtmdems(proj, iterdem=False)):
+            filnam = "dtm{}".format(i+1)
+            icod, terr = dtmobj.dtm.thanExportToPython(dtmname=filnam, dir=proj[0].parent)
+            if icod == 0:
+                filnams.append(filnam)
+                continue
+            proj[2].thanPrt(T["Warning: {}"].format(terr), "can1")
+        return proj[2].thanGudCommandEnd("{} dtms were exported to Python code.".format(len(filnams)), "info")
     else:
         assert 0, "Unknown option!"
 
@@ -462,22 +508,36 @@ def thanDemLoadSrtmold(proj):
 
 def thanDemLoadGdem(proj):
     "Loads many parts of the SRTM as USGS DEM stored in geotif format and draws them."
-    mes = T["Load global DEM: Srtm/Aster/Greekc/Vlsogreekc/tandem-xIdem/tandem-xHem (enter=S): "]
-    res = proj[2].thanGudGetOpts(mes, default="S", options=("Srtm", "Aster", "Greekc", "VLSO", "Idem", "Hem"))
+    mes = T["Load global DEM: Srtm/srtM1usgs/Aster/aW3d30/Greekc/Vlsogreekc/tandem-xIdem/tandem-xiHem/tandem-Xdem (enter=S): "]
+    res = proj[2].thanGudGetOpts(mes, default="S", options=("Srtm", "M1usgs", "W3d30", "Aster", "Greekc", "VLSO", "Idem", "Hem", "Xdem"))
     if res == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
     if   res == "s":
         name = "SRTM"
         #geodp = p_ggeod.UTMercator(EOID=p_ggeod.NAD83_1997, zone=10, north=True)
+    elif res == "m":
+        name = "SRTM1USGS"
     elif res == "a":
         name = "ASTER"
+    elif res == "w":
+        name = "AW3D30"
     elif res == "g":
         name = "GREEKC"
     elif res == "v":
         name = "VLSO_GREEKC"
     elif res == "i":
         name = "TANIDEM"
-    else:
+    elif res == "h":
         name = "TANIDEMHEM"
+    else:
+        mes = T["tandem-Xdem resolution: 90m/30m/12m (enter=9): "]
+        res = proj[2].thanGudGetOpts(mes, default="9", options=("90", "30", "12"))
+        if res == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
+        if   res == "9":
+            name = "TANXDEM90"
+        elif res == "3":
+            name = "TANXDEM30"
+        else:
+            name = "TANXDEM12"
     dtm = p_gearth.gdem(name)    #This is empty initially so that it doesn't cost much memory and time
     for demobj in proj[1].thanObjects["DEMUSGS"]:
         if isinstance(demobj.dtm, dtm.__class__):
@@ -541,7 +601,7 @@ def thanEngDtmmake(proj):
     dext = proj[2].thanGudGetPosFloat(T["Extension length (max horiz. distance of contour lines) (enter=200m): "], default=200.0)
     if dext == Canc: return thanModCanc(proj)    # DTM lines was cancelled
 
-    dtm = p_gtri.ThanDTMlines(dext=dext)
+    dtm = p_gtri.ThanDTMlines(dxmax=dext/5, dext=dext)
     thanAddLines(dtm, proj[2].thanSelall)
     ok, ter = dtm.thanRecreate()
     if not ok: return thanModCanc(proj, T["Error creating DTM: %s"]%ter)
@@ -659,13 +719,30 @@ def thanEngDtmpoints(proj):
     return thanModEnd(proj, T["%d/%d points were transformed to 3d."]%(nlin, len(proj[2].thanSelall)), "info")
 
 
+__qpst = p_ggen.Struct(name="ThanCad quick profile settings", akly=10.0)
 def thanEngQuickprofile(proj):
     "Creates a (3D) line profile into a new drawing."
-    proj[2].thanCom.thanAppend(T["Select 3d lines to make quick profiles:\n"], "info1")
-    res = thancomsel.thanSelectGen(proj, standalone=False, filter=lambda e: isinstance(e, thandr.ThanLine))
-    if res == Canc: return thanModCanc(proj)           # Profile was cancelled
+    s = __qpst
+    strd = proj[1].thanUnits.strdis
+    while True:
+        proj[2].thanPrt(T["Select 3d lines to make quick profiles:"], "info1")
+        proj[2].thanPrt("Elevation scale factor={}".format(strd(s.akly)))
+        res = thancomsel.thanSelectOr(proj, standalone=False, filter=lambda e: isinstance(e, thandr.ThanLine),
+            optionname="settings", optiontext="s=settings")
+        if res == Canc: return thanModCanc(proj)           # Profile was cancelled
+        if res == "s":
+            thanModCancSel(proj)   #The user did not select anything so cancel current (empty) selection
+            t = T["Elevation scale factor (enter={}): "].format(strd(s.akly))
+            res = proj[2].thanGudGetPosFloat(t, s.akly)
+            if res == Canc:
+                 proj[2].thanPrt("")   #If use pressed ESQ, then change line from the message ("Elevation scale factor ..")
+            else:
+                 s.akly = res
+            proj[2].thanPrt("")   #Make a blank line sepration line
+            continue
+        break
     for e in proj[2].thanSelall:
-        projnew = thaneng.thanCommonProfile(proj, [e.cp])
+        projnew = thaneng.thanCommonProfile(proj, [e.cp], dscale=s.akly, layers=["p1"], colors=[2])
         cb = e.cp[0]
         j = 1
         aa = ["S"+str(j)]
@@ -678,7 +755,7 @@ def thanEngQuickprofile(proj):
             hed.append(cb[2])
         cori = list(projnew[1].thanVar["elevation"])
         cori[:2] = 0.0, 0.0
-        pf = thanobj.ThanProfile(aa, xth, hed, cori)
+        pf = thanobj.ThanProfile(aa, xth, hed, cori, dscale=s.akly)
         pfs = projnew[1].thanObjects["PROFILE"][:] = [pf]
     return thanModEnd(proj, T["%d profiles were created."]%len(proj[2].thanSelall), "info")
 
@@ -710,7 +787,7 @@ def thanEngTri(proj):
         try:
             fw = open(fn, "w")
         except Exception as why:
-            return thanModCanc(proj, "Can not write to %s:\%s" % (fn, why))
+            return thanModCanc(proj, "Can not write to %s:\n%s" % (fn, why))
         tris[0].writetri(fw)
         fw.close()
         return thanModEnd(proj, "Triangulation was saved in %s" % fn, "info")
@@ -841,11 +918,13 @@ def __tridraw(proj, edges=False, triangles=False, centroids=False, aa=False):
 
 
 def thanEngGeodp(proj):
-    "Prompt the user to enter the geodetic projection."
+    """Prompt the user to enter the geodetic projection.
+
+    Please update thandwg.thanExpKml code when adding/modifying geodetic projections to ThanCad."""
     proj[2].thanPrts(T["Current geodetic projection is "], "info1")
     proj[2].thanPrt(proj[1].geodp.pname, "info")
-    mes = T["Select geodetic projection: Utm/transverse Mercator/Egsa87/Htrs07/Identity (enter=E): "]
-    res = proj[2].thanGudGetOpts(mes, default="E", options=("Utm", "Mercator", "Egsa87", "Htrs07", "Identity"))
+    mes = T["Select geodetic projection: Utm/transverse Mercator/Egsa87/Htrs07 or\nLambert conformal conic/ePsg3294/Identity (enter=E): "]
+    res = proj[2].thanGudGetOpts(mes, default="E", options=("Utm", "Mercator", "Egsa87", "Htrs07", "Lambert", "P", "Identity"))
     if res is Canc: return proj[2].thanGudCommandCan()     # Geod operation was cancelled
     if res == "u":
         zone = proj[2].thanGudGetInt2(T["UTM zone (1-60) (enter=34): "], default=34, limits=(1, 60), statonce="", strict=True)
@@ -862,10 +941,14 @@ def thanEngGeodp(proj):
         Lgeodpnew = p_ggeod.params.fromEgsa87()
     elif res == "h":
         Lgeodpnew = p_ggeod.params.fromHtrs07()
+    elif res == "l":
+        return proj[2].thanGudCommandCan("Not yet implemented :(")
+    elif res == "p":
+        Lgeodpnew = p_ggeod.params.fromEpsg3294()
     else:
         icodEOID = selEllips(proj)
         if icodEOID is Canc: return proj[2].thanGudCommandCan()     # Geod operation was cancelled
-        Lgeodpnew = p_ggeod.params.fromGeodetic(icodEOID)
+        Lgeodpnew = p_ggeod.params.fromGeodetic(icodEOID, angleunit=1)  #Decimal degrees)
     geodpnew = p_ggeod.params.toProj(Lgeodpnew)
     proj[1].Lgeodp = Lgeodpnew
     proj[1].geodp = geodpnew
@@ -882,7 +965,7 @@ def thanEngGeodp(proj):
 
 
 def selEllips(proj):
-    "Promptthe user to select geodetic ellipsoid."
+    "Prompt the user to select geodetic ellipsoid."
     res = proj[2].thanGudGetOpts(T["Select ellipsoid: g=GRS80/w=WGS84/r=Greek87/n=NAD83 (enter=g): "], default="g", options=("g", "w", "r", "n"))
     if res is Canc: return Canc     # Geod operation was cancelled
     if   res == "g": icodEOID = 1
@@ -890,3 +973,101 @@ def selEllips(proj):
     elif res == "r": icodEOID = 101
     else:            icodEOID = 102
     return icodEOID
+
+
+def thanEngIsoclinal(proj):
+    "Create an isoclinal line for road design."
+    from .thancommod import thanModEnd, thanModCanc, thanModCancSel
+    ThanLine = thandr.ThanLine
+    objname = "ISOCLINAL"                  #name of object which holds the parameters
+    temp = proj[1].thanObjects[objname]    #Get list of current objects (only 1 object is allowed in the list)
+    if len(temp) == 0:                  #No current objects
+        namobjsold = []
+        obj = thanobj.ThanIsoclinal()   #New object
+    else:
+        namobjsold = [(objname, temp[0])]     #old list of (name, object) tuples (only 1 is allowed)
+        obj = copy.deepcopy(temp[0])    #New object, copy of old
+    namobjsnew = [(objname, obj)]             #new list of (name, object) tuples (only 1 is allowed)
+
+    __isokPrintInfo(proj, obj)
+    while True:
+        ca = proj[2].thanGudGetPoint(T["Icoclinal start point [Settings/Close and save settings]: "], "",
+            options=("Settings","Close"))
+        if ca == Canc:
+            return proj[2].thanGudCommandCan()   # Isoclinal cancelled
+        elif ca == "s":    #New settings
+            w = thantkdia.ThanDialogIsoclinal(proj[2], vals=obj.toDialog(), cargo=proj)
+            if w.result is None:
+                proj[2].thanPrtCan()  #Inform user that the dialog was cancelled
+            else:
+                temp = __isokProcessContours(proj, obj, w.result)
+                if temp:
+                    obj.fromDialog(w.result)
+                    obj.cprocessed = temp
+                    __isokPrintInfo(proj, obj)
+        elif ca == "c":
+            break
+        else:
+            cb = proj[2].thanGudGetLine(ca, T["Isoclinal Target point: "])
+            if cb == Canc: proj[2].thanPrtCan(); continue
+            #if ca[2] == 0.0 or cb[2] == 0.0:
+            if thanNearElev(ca[2], 0.0) or thanNearElev(cb[2], 0.0):
+                proj[2].thanPrt(T["Warning: start or target point has zero elevation. Isoclinal may fail."], "can1")
+
+            if not obj.cprocessed:
+                temp = __isokProcessContours(proj, obj, obj.toDialog())
+                if not temp: continue
+                obj.cprocessed = temp
+            isok = p_godop.Isoclinal(obj.syks, obj.entEps)
+            diad1, grade1, d1 = isok.findGrade(ca, cb, obj.entStart, obj.entEnd, obj.entStep)
+            if d1 < 1e100: break
+            proj[2].thanPrt(T["No solution found. Please try again."], "can1")
+
+    if ca == "c":
+        newelems = set()   #No isoclinal line will be created
+    else:
+        proj[2].thanPrt("Best grade={:.2f} %, distance to target={:.2f}".format(grade1, d1))
+        #create the isoclinal line
+        lin2 = ThanLine()
+        lin2.thanSet(diad1)
+        proj[1].thanElementTag(lin2)
+        newelems = set([lin2])
+
+    delelems = set()
+    thanundo.thanReplaceRedo(proj, delelems, newelems, None, {}, namobjsold, namobjsnew)
+    proj[1].thanDoundo.thanAdd("isoclinal",
+        thanundo.thanReplaceRedo, (delelems, newelems, None, {}, namobjsold, namobjsnew),
+        thanundo.thanReplaceUndo, (delelems, newelems, None, {}, namobjsold, namobjsnew))
+    print("ThanObjects", proj[1].thanObjects[objname])
+    print("namobjsold=", namobjsold)
+    print("namobjsnew=", namobjsnew)
+    thanModEnd(proj)
+
+
+def __isokPrintInfo(proj, obj):
+    "Print information of isoclinal settings."
+    strd = proj[1].thanUnits.strdis
+    stra = proj[1].thanUnits.strang
+    statonce = "{}={}\n{}={} / {}={}\n{}={}% / {}={}% / {}={}%".format(
+        T["Contour lines' layers"], obj.labLaynames,
+        T["Distance tolerance to target"], strd(obj.entEps),
+        T["Maximum direction change"], stra(obj.entAngle),
+        T["Grade search start"],       strd(obj.entStart),
+        T["Grade search end"],         strd(obj.entEnd),
+        T["Grade search step"],        strd(obj.entStep))
+    proj[2].thanPrt(statonce)
+
+
+def __isokProcessContours(proj, obj, s):
+    "Check layers and contours and save to object if successful."
+    proj[2].thanPrt(T["Prosessing contour lines.."], "info1")
+    lt = proj[1].thanLayerTree
+    t = s.labLaynames
+    lays = []
+    for name1 in t.split(", "):
+        lay1 = lt.thanFind(name1)
+        if lay1 is None:
+            proj[2].thanPrt(T["Error: could not find layer {}"].format(name1), "can")
+            return False
+        lays.append(lay1)
+    return obj.setContoursFromlayers(lays, thandr.ThanLine, T, proj[2].thanPrt)

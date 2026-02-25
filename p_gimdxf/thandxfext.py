@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-
 """Extensions to the dxf format.
 
 These are needed because of the dreadful and unnecessary complexity of the

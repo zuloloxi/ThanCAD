@@ -1,9 +1,4 @@
-#!/usr/bin/python
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
-import bisect
+import bisect, time
 from tkinter import (Menu, Listbox, Menubutton, Scrollbar, Checkbutton,
     Frame, Radiobutton, Button, Text, Entry, Label,
     IntVar, Toplevel,
@@ -14,8 +9,7 @@ from p_ggen import thanUnicode, thanUnunicode, prg, path, Struct, rdict
 import p_gcol
 from .thantkutila import (thanGudGetSaveFile, thanGudGetReadFile,
     thanGudGetDir, thanGudOpenSaveFile, thanAbsrelPath, thanGudPosition,
-    thanGudModalMessage as mm)
-from .thantksimpledialog import ThanDialog
+    thanGudModalMessage as mm, correctForeground, blackorwhite)
 from .thantkutilb import thanFontRefSave
 from .thanwidstrans import T
 
@@ -52,7 +46,7 @@ class ThanMenu(Menu):
         if self.__ypos is None:
             yp = [self.yposition(0)]
             if yp[0] == 0: return
-            for i in xrange(1, 100):
+            for i in range(1, 100):
                 yp1 = self.yposition(i)
                 if yp1 == yp[-1]: break
                 yp.append(yp1)
@@ -69,6 +63,7 @@ class ThanMenu(Menu):
         cnf.update(kw)
         self.__statText.append(cnf.pop("help", ""))
         cnf = self.__entryparse(cnf)
+        self.__correctForeground(itemType, cnf)   #Thanasis2021_09_26
         Menu.add(self, itemType, cnf)
 
 
@@ -78,7 +73,16 @@ class ThanMenu(Menu):
         assert i < len(self.__statText), "Index missing in ThanMenu!!"
         cnf.update(kw)
         self.__statText.insert(i, cnf.pop("help", ""))
-        Menu.insert(self, index, itemType, self.__entryparse(cnf))
+        cnf = self.__entryparse(cnf)              #Thanasis2021_09_26
+        self.__correctForeground(itemType, cnf)   #Thanasis2021_09_26
+        Menu.insert(self, index, itemType, cnf)   #Thanasis2021_09_26
+
+
+    def __len__(self):
+        "Return the number of entries in the menu (command, separator, submenu etc)."
+        n = self.index(END)  #This is the last index; because the first index is zero,
+        if n is None: return 0  #This is before tk has had a chance to intialize
+        return n+1           #the total number of entries is n+1
 
 
     def delete(self, index1, index2=None):
@@ -88,7 +92,7 @@ class ThanMenu(Menu):
         else:               i2 = index2+1     # Tkinter deletes index1:index2 (INCLUDING index2)
         del self.__statText[i1:i2]
         self.__ypos = None
-        Menu.delete(self, index1, index2)
+        super().delete(index1, index2)
 
 
     def entryconfig(self, index, **kw):
@@ -121,10 +125,35 @@ class ThanMenu(Menu):
         self.__stat = self.__condition = None  #2008_09_12: Python 2.6rc1 calls destroy and..
         self.unbind("<Motion>")                #.. then entryconfig which accesses __condition!!
         self.unbind("<Leave>")
-        self.delete(0, END)
+        #self.delete(0, END)   #Thanasis2018_05_09:Probably Menu.destroy() calls delete(), thus if we call it here it crashes
         Menu.destroy(self)
 
     def __del__(self): print("ThanMenu", self, "is deleted")
+
+    def __correctForeground(self, itemType, kw):  #Thanasis2021_09_26
+        "Correct foregound color for menus, according to background color."
+        if itemType in ("separator",): return
+        for act in "", "active":
+            fg = kw.pop(act+"fg", None)
+            if fg is None: fg = kw.get(act+"foreground", None)
+            fgcol = self.__correct1(fg, act+"background")
+            kw[act+"foreground"] = fgcol
+
+    def __correct1(self, fg, bg="background"):
+        if fg is None:
+            return blackorwhite(self, bg)   #This may be None
+        fgcol = blackorwhite(self, bg="background")   #This may be None
+        if fgcol is None:
+            return fg    #Could not decipher background; return original color
+        elif fgcol == "white":
+            if fg in ("red",  "darkred"):  return "pink"
+            if fg in ("blue", "darkblue"): return "lightblue"
+            return fg     #Uknown color; return original color
+        else:
+            if fg in ("red", "pink"):       return "darkred"
+            if fg in ("blue", "lightblue"): return "darkblue"
+            return fg     #Uknown color; return original color
+
 
 
 def thanTkGuiCreateMenus(self, mlist):
@@ -272,43 +301,51 @@ def __menu(mlist, menuBar, i, statcommand, condition, submenus):
 ##############################################################################
 
 class ThanListbox(Listbox):
-    "A standard listbox with unicode capabilities."
+    "A standard listbox with thanSet/thanGet."
 
     def __init__(self, *args, **kw):
         "Save selection mode."
-        self.__selectionmode = kw.get("selectmode", SINGLE)
-        Listbox.__init__(self, *args, **kw)
+        self.__selectmode = kw.get("selectmode", SINGLE)
+        super().__init__(*args, **kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self)   #Thanasis2024_06_28
 
-    def thanGet(self, *args):
-        "Transform to string and then get."
-        a = self.get(*args)
-        try:    a+"s"
-        except: return [thanUnunicode(x) for x in a]
-        else:   return thanUnunicode(a)
+    def thanGetitem(self, *args): return self.get(*args)
 
-
-    def thanInsert(self, i, items):
-        "Transform to unicode and then insert."
-        try: items+"s"
-        except: self.insert(i, [thanUnicode(x) for x in items])
-        else:   self.insert(i, thanUnicode(items))
-
-
-    def thanSet(self, items):
-        "Empty list and set new values to the listbox."
-        self.delete(0, END)
-        for i,item in enumerate(items):
-            self.thanInsert(i, item)
+    def thanInsert(self, i, items): self.insert(i, items)
 
     def thanAppend(self, items):
         "Append new values to the end of the listbox."
-        self.thanInsert(END, items)
+        self.insert(END, items)
 
-    def thanGetSelection(self):
+    def thanSetitems(self, items):
+        "Empty list and set new values to the listbox."
+        self.delete(0, END)
+        for item in items:
+            self.insert(END, item)
+
+
+    def thanSet(self, indexm):
+        "Set selected indexes."
+        self.select_clear(0, END)
+        isiterable = False
+        try:
+            iter(indexm)
+            isiterable = True
+        except:
+            pass
+        if isiterable:
+            for i in indexm: self.select_set(i)
+        else:
+            self.select_set(indexm)
+
+
+    def thanGet(self):
         "Gets the chosen value and returns it."
         indexes = self.curselection()
-        if len(indexes) < 1: result = [self.thanGet(ACTIVE)]
-        else: result = [self.thanGet(int(i)) for i in indexes]
+        if len(indexes) < 1:
+            result = [ self.index(ACTIVE) ]   #Tranform index to integer
+        else:
+            result = [self.index(i) for i in indexes]  #Tranform indexes to integer
         if self.__selectmode == SINGLE: return result[0]
         else:                           return result
 
@@ -321,7 +358,7 @@ class ThanChoice(Menubutton):
 
     def __init__(self, master, **kw):
         Menubutton.__init__(self, master)
-        self.thanMenu = Menu(self, tearoff=0)
+        self.thanMenu = Menu(self, tearoff=0, activebackground="green")
         self["menu"] = self.thanMenu                #Thanasis2009_10_27
         kw.setdefault("labels", ("",))
         kw.setdefault("command", lambda i, lab: None)
@@ -332,6 +369,7 @@ class ThanChoice(Menubutton):
         kw.setdefault("activebackground", "cyan")
         self.thanChoice = 0
         self.config(**kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self)
 
     def config(self, **kw):
         "Adds labels and command support to standard config, and propagates some attributes to menu."
@@ -343,7 +381,7 @@ class ThanChoice(Menubutton):
         except KeyError: pass
         else:
             del kw["labels"]
-            m = Menu(self, tearoff=0)
+            m = Menu(self, tearoff=0, activebackground="green")
             self["menu"] = m
             self.thanMenu.destroy()
             self.thanMenu = m
@@ -406,6 +444,7 @@ class ThanChoiceRef(Menubutton):
         kw.setdefault("activebackground", "cyan")
         self.thanChoice = 0      #chosen index
         self.config(**kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self)
 
     def config(self, **kw):
         "Adds objects and command support to standard config, and propagates some attributes to menu."
@@ -464,204 +503,6 @@ class ThanChoiceRef(Menubutton):
 
     def __del__(self):print("ThanChoiceRef", self, "is deleted")
 
-
-##############################################################################
-##############################################################################
-
-class ThanPoplist(ThanDialog):
-    "Displays a popup window with a list of choices; cancel/ok buttons are not required."
-
-    def __init__(self, master, val, width=20, height=10, selectmode=SINGLE, default=0, font=None, *args, **kw):
-        "Extract initial draw order."
-        self.__val = val
-        self.__opts = dict(width=width, height=height)
-        self.__selectmode = selectmode
-        self.__default = default
-        self.__font = font
-#        self.result = None
-        ThanDialog.__init__(self, master, *args, **kw)
-
-
-    def body(self, fra):
-        "Create dialog widgets."
-        if self.__font is not None: self.option_add("*%s*font" % (self.winfo_name(),), self.__font)
-        self.__listForm(fra, 0, 0)
-        self.__filist()
-        return self.__li                      # This widget has the focus
-
-
-    def __listForm(self, fra, ir, ic):
-        "Creates and shows list."
-        fra.columnconfigure(0, weight=1)
-        fra.rowconfigure(0, weight=1)
-        self.__li = Listbox(fra, selectmode=self.__selectmode, exportselection=0)
-        self.__li.grid(row=ir, column=ic, sticky="wesn")
-        sc = Scrollbar(fra, orient=VERTICAL, command=self.__li.yview)
-#           Change the color of inactive indicator to the color of active indicator
-#           because it was confusing to change color when you pressed the button
-        sc.config(background=sc["activebackground"])
-        sc.grid(row=ir, column=ic+1, sticky="sn")
-        self.__li.config(yscrollcommand=sc.set)
-        self.__li.bind("<Button-1>", lambda evt: self.__li.after(100, self.__onListClick))
-
-
-    def __filist(self):
-        "Fills the list with the user supplied values."
-        self.__opts["height"] = min(self.__opts["height"], len(self.__val))
-        self.__li.config(**self.__opts)
-        for val in self.__val:
-            self.__li.insert(END, thanUnicode(val))
-        self.__li.activate(self.__default)
-        del self.__opts, self.__default
-
-
-    def buttonbox(self):
-        "Do not display the default buttons in single mode."
-        if self.__selectmode == SINGLE:
-            self.bind("<Return>", self.__onListClick)
-            self.bind("<Escape>", self.cancel)
-        else:
-            ThanDialog.buttonbox(self)
-
-
-    def __onListClick(self, evt=None):
-        "Gets the chosen valure and returns it."
-        if self.__selectmode == SINGLE: self.ok()
-
-
-    def apply(self):
-        "Gets the chosen value and returns it."
-        indexes = self.__li.curselection()
-        if len(indexes) < 1:
-            i = self.__li.index(ACTIVE)
-            self.result1 = [i]
-            self.result = [self.__val[i]]
-        else:
-            self.result1 = [int(i) for i in indexes]
-            self.result = [self.__val[i] for i in self.result1]
-        if self.__selectmode == SINGLE:
-            self.result = self.result[0]
-            self.result1 = self.result1[0]
-        del self.__val
-
-
-    def destroy(self):
-        "Deletes references to widgets, so that it breaks circular references."
-        del self.__li
-        ThanDialog.destroy(self)
-
-#    def __del__(self):
-#        print "ThanPoplist ThanDialog", self, "dies.."
-
-
-##############################################################################
-##############################################################################
-
-class ThanPoplistCol(ThanDialog):
-    "Displays a popup window with a list of choices; cancel/ok buttons are not required."
-
-    def __init__(self, master, val, width=20, height=10, selectmode=SINGLE, *args, **kw):
-        "Extract initial draw order."
-        self.__val = val
-        self.__opts = dict(width=width, height=height)
-        self.__selectmode = selectmode
-#        self.result = None
-        ThanDialog.__init__(self, master, *args, **kw)
-
-
-    def body(self, fra):
-        "Create dialog widgets."
-        self.__listForm(fra, 0, 0)
-        self.__filist()
-        return self.__li                      # This widget has the focus
-
-
-    def __listForm(self, fra, ir, ic):
-        "Creates and shows list."
-        fra.columnconfigure(0, weight=1)
-        fra.rowconfigure(0, weight=1)
-        self.__li = ThanScrolledText(fra)
-        self.__li.grid(row=ir, column=ic, sticky="wesn")
-
-
-    def __filist(self):
-        "Fills the list with the user supplied values."
-        self.__opts["height"] = min(self.__opts["height"], len(self.__val))
-        self.__opts.setdefault("cursor", "arrow")
-        self.__li.config(**self.__opts)
-        for name, col in self.__val:
-            tag = "t%03d%03d%03d" % col
-            if p_gcol.thanRgb2Gray(col) < 127: fg = "white"
-            else:                              fg = "black"
-            bg = p_gcol.thanFormTkcol % col
-            self.__li.tag_config(tag, foreground=fg, background=bg)
-            self.__li.tag_bind(tag, "<1>", lambda evt, name=name: self.__onclick(evt, name))
-            self.__li.thanAppend(thanUnicode(name)+"\n", tag)
-        del self.__opts
-
-
-    def __filist2(self):
-        "Fills the list with the user supplied values."
-        self.__opts["height"] = min(self.__opts["height"], 2*len(self.__val))
-        self.__opts.setdefault("cursor", "arrow")
-        self.__li.config(**self.__opts)
-        tt = self.__li.thanText
-        for name, col in self.__val:
-            if p_gcol.thanRgb2Gray(col) < 127: fg = "white"
-            else:                              fg = "black"
-            bg = p_gcol.thanFormTkcol % col
-            but = ThanButton(tt, width=20, height=1, anchor="e", text=name, foreground=fg, background=bg,
-            activebackground="green", command=lambda name=name: self.__onclick(name))
-            tt.window_create(END, window=but, align=BASELINE)
-        del self.__opts
-
-
-    def buttonbox(self):
-        "Do not display the default buttons in single mode."
-        if self.__selectmode == SINGLE:
-            self.bind("<Return>", self.__onListClick)
-            self.bind("<Escape>", self.cancel)
-        else:
-            ThanDialog.buttonbox(self)
-
-#    def __onListClickOld(self, evt=None):
-#        "Gets the chosen valure and returns it."
-#        indexes = self.__li.curselection()
-#        if len(indexes) < 1: i = ACTIVE
-#        else:                i = int(indexes[0])
-#        self.result = self.__li.get(i)
-#        self.ok()
-
-
-    def __onclick(self, evt, name):
-        "The user chose something."
-        prg("ThanPoplistCol: user clicked: %s" % name)
-
-
-    def __onListClick(self, evt=None):
-        "Gets the chosen value and returns it."
-        if self.__selectmode == SINGLE: self.ok()
-
-
-    def apply(self):
-        "Gets the chosen value and returns it."
-        indexes = self.__li.curselection()
-        print("ThanPopList: ACTIVE=", ACTIVE, "type=", type(ACTIVE))
-        if len(indexes) < 1: self.result = [self.__val[self.__li.index(ACTIVE)]]
-        else: self.result = [self.__val[int(i)] for i in indexes]
-        if self.__selectmode == SINGLE: self.result = self.result[0]
-        del self.__val
-
-
-    def destroy(self):
-        "Deletes references to widgets, so that it breaks circular references."
-        del self.__li
-        ThanDialog.destroy(self)
-
-#    def __del__(self):
-#        print "ThanPoplist ThanDialog", self, "dies.."
-
-
 ##############################################################################
 ##############################################################################
 
@@ -684,20 +525,37 @@ class ThanYesno(ThanChoice):
         else: return False
 
 
-class ThanCheck(Checkbutton):
-    "A Tkinter Checkbutton with ThanSet/ThanGet support."
+class ThanCheckold(Checkbutton):
+    "A Tkinter Checkbutton with ThanSet/ThanGet support and color correction."
 
     def __init__(self, *args, **kw):
-        "Automatically create control variable."
-        self.thanVar = IntVar()
-        assert "variable" not in kw, "ThanCheck automatically creates private control variable!"
-        kw["variable"] = self.thanVar
-        if "command" in kw: self.thanCommand = kw["command"]    #Create a reference to the command
-        else: self.thanCommand = None
-        Checkbutton.__init__(self, *args, **kw)
+        "Automatically create control variable if one does not exist."
+        if "variable" in kw:
+            print("You can avoid the hassle of defining a control variable:")
+            print("ThanCheck automatically creates private control variable, if not defined!")
+            self.thanVar = kw["variable"]
+        else:
+            self.thanVar = IntVar()
+            kw["variable"] = self.thanVar
+
+        self.thanCommand = kw.get("command")   #Get a reference to the user defined command (or None)
+
+        super().__init__(*args, **kw)
+
+        if "fg" not in kw and "foreground" not in kw:
+            correctForeground(self)  #This color correction for the text of the button
+        if "selectcolor" not in kw:
+            bgcol = self.cget("background")  #This is for the correction of the background...
+            #print("ThanCheck: bgcol=", bgcol)
+            self.config(selectcolor=bgcol)   #...color of the indicator: selectcolor is the ...
+                                             #...background for the indicator (at least in SuSE/Linux)
+                                             #The foreground of indicator is the foreground of the text
+            self.update_idletasks()
 
     def thanSet(self, val):
-        "Set the value as bool."
+        """Set the value as bool.
+
+        Curiously the user defined command is not invoked, so we invoke it here explicitely."""
         self.thanVar.set(bool(val))
         if self.thanCommand: self.thanCommand()     #Invoke command if it exists
 
@@ -707,12 +565,117 @@ class ThanCheck(Checkbutton):
 
     def config(self, **kw):
         if "command" in kw: self.thanCommand = kw["command"]
-        Checkbutton.config(self, **kw)
+        super().config(**kw)
 
     def destroy(self):
         "Make sure that all new class variable are deleted."
         del self.thanVar, self.thanCommand
-        Checkbutton.destroy(self)
+        super().destroy()
+
+
+class ThanCheck(Frame):
+    "A Tkinter Checkbutton with label as text."
+
+    def __init__(self, *args, **kw):
+        "Automatically create control variable."
+        if "variable" in kw:
+            print("You can avoid the hassle of defining a control variable:")
+            print("ThanCheck automatically creates private control variable, if not defined!")
+            self.thanVar = kw["variable"]
+        else:
+            self.thanVar = IntVar()
+            kw["variable"] = self.thanVar
+
+        #kw.setdefault("relief", SUNKEN)  #Thanasis2023_06_22: relief is not needed for checkbutton (it is needed for radio buttons)
+        #if "relief" in kw: kw.setdefault("borderwidth", 1)
+        super().__init__(*args)
+
+        self.thanChk = Checkbutton(self)
+        self.thanChk.grid(row=0, column=0, sticky="w")
+        self.thanLab = Label(self)
+        self.thanLab.grid(row=0, column=1, sticky="w")
+
+        self.config(**kw)
+        self.columnconfigure(1, weight=1)
+
+        if "fg" not in kw and "foreground" not in kw:
+            correctForeground(self.thanChk)  #This color correction for the checkbutton
+            correctForeground(self.thanLab)  #This color correction for the text of the button
+        if "selectcolor" not in kw:
+            bgcol = self.cget("background")  #This is for the correction of the background...
+            #print("ThanCheck: bgcol=", bgcol)
+            self.thanChk.config(selectcolor=bgcol)   #...color of the indicator: selectcolor is the ...
+                                             #...background for the indicator (at least in SuSE/Linux)
+                                             #The foreground of indicator is the foreground of the text
+            self.update_idletasks()
+
+        self.thanLab.bind("<Button-1>", self.__onclick)
+
+
+    def __onclick(self, evt):
+        "Label was clicked: -> toggle checkbutton."
+        self.toggle()
+
+
+    def configure(self, *args, **kw):
+        "Apply different options to different widgets."
+        kwf = {}
+        for key in "relief", "borderwidth":
+            if key in kw: kwf[key] = kw.pop(key)
+        super().config(**kwf)
+
+        kwf = {}
+        for key in "text", "font", "justify", "anchor", "wraplength", "underline":
+            if key in kw: kwf[key] = kw.pop(key)
+        self.thanLab.config(**kwf)
+
+        kwf = {}
+        for key in "command", "variable":
+            if key in kw: kwf[key] = kw.pop(key)
+        self.thanChk.config(**kwf)
+
+        #The remaining options are for both label and checkbutton
+        self.thanChk.config(*args, **kw)
+        self.thanLab.config(*args, **kw)
+
+
+    config = configure   #Code from Base class of all widgets
+    def cget(self, key):
+        """Return the resource value for a KEY given as string."""
+        if key in ("relief", "borderwidth"):
+            return super().cget(key)
+        elif key in ("text", "font", "justify", "anchor", "wraplength", "underline"):
+            return self.thanLab.cget(key)
+        else:
+            return self.thanChk.cget(key)       #thus we get it from the first child
+
+    __getitem__ = cget   #Code from Base class of all widgets
+    #def __setitem__(self, key, value):  #Code from Base class of all widgets
+    #    self.configure({key: value})
+
+
+    def toggle(self):
+        "Toggle, and call command it it exists."
+        self.thanChk.invoke()   #Note that invoke() toggles the checkbutton, and also calls the command
+
+
+    def thanSet(self, val):
+        """Set the value as bool.
+
+        Curiously the user defined command is not invoked, so we invoke it here explicitely."""
+        self.thanVar.set(not bool(val))   #Trick: because invoke toggles the checkbutton. It does not call the command.
+        self.thanChk.invoke()   #Note that invoke() toggles the checkbutton, and also calls the command
+
+
+    def thanGet(self):
+        "Get the value as bool."
+        return bool(self.thanVar.get())
+
+
+    def destroy(self):
+        "Make sure that all new class variable are deleted."
+        del self.thanVar, self.thanChk, self.thanLab
+        super().destroy()
 
 
 class ThanRadio(Frame):
@@ -734,16 +697,43 @@ class ThanRadio(Frame):
         self.ival += 1
         rad = Radiobutton(self, *args, **kw)
         self.thanChildren.append(rad)
+
+        if "fg" not in kw and "foreground" not in kw:
+            correctForeground(rad)  #This color correction for the text of the button
+        if "selectcolor" not in kw:
+            bgcol = self.cget("background")  #This is for the correction of the background...
+            #print("ThanCheck: bgcol=", bgcol)
+            self.config(selectcolor=bgcol)   #...color of the indicator: selectcolor is the ...
+                                             #...background for the indicator (at least in SuSE/Linux)
+                                             #The foreground of indicator is the foreground of the text
+            self.update_idletasks()
+
         return rad
 
-    def config(self, *args, **kw):
-        "Keep something for Frame and propagte the rest to children."
+    def configure(self, *args, **kw):
+        "Keep something for Frame and propagate the rest to children."
         kwf = {}
         for key in "relief", "borderwidth":
             if key in kw: kwf[key] = kw.pop(key)
         Frame.config(self, **kwf)
         for rad in self.thanChildren:
             rad.config(*args, **kw)
+
+    config = configure   #Code from Base class of all widgets
+    def cget(self, key):
+        """Return the resource value for a KEY given as string."""
+        if key in ("relief", "borderwidth"):
+            return super().cget(key)
+        if len(self.thanChildren) > 0:
+            rad = self.thanChildren[0] #All children have the same attribute values,
+            return rad.cget(key)       #thus we get it from the first child
+        else:
+            return None   #No children yet -> no attribute value
+
+    __getitem__ = cget   #Code from Base class of all widgets
+    #def __setitem__(self, key, value):  #Code from Base class of all widgets
+    #    self.configure({key: value})
+
 
     def thanSet(self, val):
         "Set the value as integer."
@@ -859,17 +849,19 @@ class ThanFile(Frame):
 #        print "ThanFile:initialdir=", self.initialdir
         try: self.initialdir.chdir()     #Try to change to this directory
         except OSError as e: print(str(e))
-        Frame.__init__(self, master)
+        super().__init__(master)
         if readonly: self.thanText = ThanLabel(self, justify="right")
         else:        self.thanText = ThanEntry(self, justify="right")
         self.thanText.grid(row=0, column=0, sticky="ew")
-        self.thanMenubutton = Button(self, text=buttontext, relief=FLAT, padx=0, pady=0,
-            bg="lightcyan", activebackground="cyan", command=self.thanOpen)
+        #self.thanMenubutton = Button(self, text=buttontext, relief=FLAT, padx=0, pady=0,
+        #    bg="lightcyan", activebackground="cyan", command=self.thanOpen)
+        self.thanMenubutton = ThanButton(self, text=buttontext, relief=FLAT, padx=0, pady=0, command=self.thanOpen)
         self.thanMenubutton.grid(row=0, column=1, sticky="w")
         self.config(**kw)
         self.columnconfigure(0, weight=1)
 
-    def config(self, **kw):
+
+    def configure(self, **kw):
         "Adds labels and command support to standard config, and propagates some attributes to menu."
         if "extension"  in kw: self.thanExt = kw.pop("extension")
         if "mode"       in kw: self.thanMode = kw.pop("mode")
@@ -877,26 +869,49 @@ class ThanFile(Frame):
         if "command"    in kw: self.thanCommand = kw.pop("command")
         if "beforeopen" in kw: self.thanBeforeopen = kw.pop("beforeopen")
         if "relief"     in kw: kw.setdefault("borderwidth", 1)
-        Frame.config(self,         **rdict(kw, "relief", "borderwidth", "class_"))
-        self.thanText.config(      **rdict(kw, "text", "state", "font", "width", "bg", "background", "foreground", "fg", "class_"))
+        super().config(      **rdict(kw, "relief", "borderwidth", "class_"))
+        self.thanText.config(**rdict(kw, "text", "state", "font", "width", "bg", "background", "foreground", "fg", "class_"))
         if "textvariable" in kw and isinstance(self.thanText, ThanEntry): self.thanText.config(textvariable=kw["textvariable"])
         self.thanMenubutton.config(**rdict(kw, "state", "font", "class_"))
         if "text"       in kw: self.thanSet(kw.pop("text"))
 
 
+    config = configure   #Code from Base class of all widgets
+    def cget(self, key):
+        """Return the resource value for a KEY given as string."""
+        if key == "extension":  return self.thanExt
+        if key == "mode":       return self.thanMode
+        if key == "title":      return self.thanTitle
+        if key == "command":    return self.thanCommand
+        if key == "beforeopen": return self.thanBeforeopen
+        if key in ("relief", "borderwidth", "class_"):
+            return super().cget(key)
+        elif key in ("text", "state", "font", "width", "bg", "background", "foreground", "fg", "class_"):
+            return self.thanText.cget(key)
+        else:
+            return None   #No children yet -> no attribute value
+
+    __getitem__ = cget   #Code from Base class of all widgets
+    #def __setitem__(self, key, value):  #Code from Base class of all widgets
+    #    self.configure({key: value})
+
+
+
     def thanOpen(self):
         "Prompt the user to search for the filename; it may be overwritten."
         print("thanwids: ThanFile: thanOpen(): extension=", self.thanExt)
-        filnam = self.thanGet()              #This absolute path
+        filnam = self.thanGet()              #This is absolute path or ""
+        par = path("")
+        if filnam != "": par = filnam.parent
         if self.thanBeforeopen is not None and not self.thanBeforeopen(filnam): return
         if self.thanMode == "r":
             filnam = thanGudGetReadFile(self, self.thanExt, self.thanTitle,
-                initialdir=filnam.parent, initialfile=filnam.basename())
+                initialdir=par, initialfile=filnam.basename())
         elif self.thanMode == "w":
             filnam = thanGudGetSaveFile(self, self.thanExt, self.thanTitle,
-                initialdir=filnam.parent, initialfile=filnam.basename())
+                initialdir=par, initialfile=filnam.basename())
         else:
-            filnam = thanGudGetDir(self, self.thanTitle, initialdir=filnam.parent)
+            filnam = thanGudGetDir(self, self.thanTitle, initialdir=par)
         if filnam is None: return
         filnam = path(filnam).abspath()
         if self.thanCommand is None or self.thanCommand(filnam):        # Let user do something
@@ -939,9 +954,10 @@ class ThanFile(Frame):
     def thanGet(self):
         "Return the absolute path to the file."
         t = self.thanText.thanGet()
-        if t.strip() == "": return self.initialdir / ""
+        #if t.strip() == "": return self.initialdir / ""  #Thanasis2022_11_29: Commented out
+        if t.strip() == "": return path("")   #Thanasis2022_11_29: Nothing was chosen
         t = path(t).expand()
-        if t != t.abspath(): t = self.initialdir/t  #If not absolute path, then it is relative to ibitialdir
+        if t != t.abspath(): t = self.initialdir/t  #If not absolute path, then it is relative to initialdir
         return t.abspath()
 
     def thanIsEmpty(self):
@@ -955,7 +971,7 @@ class ThanFile(Frame):
     def destroy(self):
         "break circular references."
         del self.thanMenubutton, self.thanText, self.thanCommand, self.thanBeforeopen
-        Frame.destroy(self)
+        super().destroy()
 
     def __del__(self):
         "Print message when deleted, to aid debugging."
@@ -967,15 +983,24 @@ class ThanFile(Frame):
 
 class ThanText(Text):
     "A standard text which copes with greek text and windows/linux iconsistencies."
+    #_SENTINEL = 2_000_000_000
     _SENTINEL = 2000000000
     _keysallowed = frozenset(("Up","Down","Left","Right","Prior","Next","Home","End"))
 
     def __init__(self, master, **kw):
         "Handle resize capability."
-        self.__idResize = None
         self.__maxLines = self._SENTINEL
+        self.__timep = time.time()
+        self.__dtimep = 5.0
         Text.__init__(self, master)
         self.config(**kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self)
+        self.bind("<Control-C>", self.__prop)  #Thanasis2024_04_28:Workaround to allow copy to clipboard work in readonly mode
+        self.bind("<Control-c>", self.__prop)  #Thanasis2024_04_28:Workaround to allow copy to clipboard work in readonly mode
+
+    def __prop(self, evt):                     #Thanasis2024_04_28
+        "Workaround to allow copy to clipboard work in readonly mode."
+        pass #return None, so that the event is propagated
 
     def __format(self, evt):
         "Allow only scrolling."
@@ -1003,9 +1028,15 @@ class ThanText(Text):
         self.__maxLines = n
         self.__resize()                 # Force resize now
 
+
     def thanIndex(self, index1):
         "Return the line.column index corresponding to the given index as two integers."
-        t = str(self.index(index1)).split(".")
+        return self.index2ints(self.index(index1))
+
+
+    def index2ints(self, index1):
+        "Return the line.column index corresponding to the given index as two integers."
+        t = str(index1).split(".")
         return int(t[0]), int(t[1])
 
 
@@ -1036,12 +1067,14 @@ class ThanText(Text):
         self.delete(1.0, END)
         t = thanUnicode(t)
         self.insert(1.0, t, tags)
+        self.__resize()
 
 
     def thanInsert(self, ipos, t, tags=()):
         "Inserts text at position."
         t = thanUnicode(t)
         Text.insert(self, ipos, t, tags)
+        self.__resize()
 
 
     def thanAppend(self, t, tags=()):
@@ -1050,12 +1083,14 @@ class ThanText(Text):
         self.insert(END, t, tags)
         self.set_insert(END+"-1c")
         self.tag_remove(SEL, 1.0, END)  # This is because, often, this method causes unwanted selection of the last line
+        self.__resize()
 
 
     def thanAppendf(self, t, tags=()):
         "Appends text to the widget but it does not make sure that the text is visible."
         t = thanUnicode(t)
         self.insert(END, t, tags)
+        self.__resize()
 
 
     def thanGet(self):
@@ -1087,13 +1122,13 @@ class ThanText(Text):
 
 
     def _rel(self, inda, indb, indc):
-        "Returns index whose relative position with respct to newinda is the same as the relative position of indb with respctto inda."
-        alin, aich = self.thanIndex(inda)  ##map(int, self.index(inda).split("."))
-        blin, bich = self.thanIndex(indb)
+        "Returns index whose relative position with respect to indc, is the same as the relative position of indb with respect to inda."
+        alin, aich = self.index2ints(inda)  ##map(int, self.index(inda).split("."))
+        blin, bich = self.index2ints(indb)
         clin, cich = self.thanIndex(indc)
         if alin == blin:
             dlin = clin
-            dich = cich+ bich-aich
+            dich = cich + bich-aich
         else:
             dlin = clin + blin-alin
             dich = cich
@@ -1103,33 +1138,41 @@ class ThanText(Text):
     def thanInsertFtext(self, fo, ind1="1.0"):
         "Insert text and its format (as tags) at the index position."
 #        self.insert(ind1, thanUnicode(fo.text))
+        ind1 = self.index(ind1)    #In case ind1 is "end" (this would create prooblems later on)
+        print("previous fo.ind1=", fo.ind1, " -> new ind1=", ind1)
         self.insert(ind1, fo.text)
         tagon = {}
-        for key,val,ind in fo.taginfo:
+        for key,val,indb in fo.taginfo:
+            print("thanInsertFtext:", key, val, indb)
             if key == "tagon":
-                tagon[val] = ind
+                tagon[val] = indb
             elif key == "tagoff":
                 inda = tagon.pop(val, None)
                 if inda is None:
                     print("thanInsertFtext: tagoff '%s' without previous tagon." % (val,))
-                    inda = ind1
-                pos1 = self._rel(fo.ind1, ind1, inda)
-                pos2 = self._rel(fo.ind1, ind1, ind)
-                self.tag_add(val, pos1, pos2)
+                    continue
+                posa = self._rel(fo.ind1, inda, ind1)
+                posb = self._rel(fo.ind1, indb, ind1)
+                print("tag_add:", val, ":", inda, indb, " ->", posa, posb)
+                self.tag_add(val, posa, posb)
         for val, inda in tagon.items():   #OK for python 2, 3
             print("thanInsertFtext: tagon '%s' without later tagoff." % (val,))
 #            ind = len(fo.text)  ???!!!
 #            self.tag_add(val, self._rel(fo.ind1, ind1, inda), self._rel(fo.ind1, ind1, ind))
+        self.__resize()
 
 
     def __resize(self):
         "Keep total number of lines less than __maxLines."
-        if self.__maxLines >= self._SENTINEL: return                      # Avoid race conditions
-        if self.__idResize is not None: self.after_cancel(self.__idResize)    # In case thanResize was explicitely called
-        n = self.get("1.0", END).count("\n")
+        timen = time.time()
+        if timen-self.__timep < self.__dtimep: return
+        self.__timep = timen
+        temp = self.count("1.0", END, "lines")
+        n = temp[0]
+        #print("count:", temp, n)
         n = n - self.__maxLines + 1
         if n > 0: self.delete("1.0", "%d.0" % n)
-        self.__idResize = self.after(60000, self.__resize)
+        #print("new count:", self.count("1.0", END, "lines"))
 
 
 #    def __del__(self): print "ThanText", self, "is deleted"
@@ -1201,6 +1244,7 @@ class ThanScrolledText(Frame):
             self.hbar['command'] = self.thanText.xview
 
         self.config(**kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self.thanText)
 
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
@@ -1240,9 +1284,10 @@ class ThanEntry(Entry):
         """Initialise and determine normal and disabled colours.
 
         For some unknown reason, all the instances of ThanEntry share the same
-        text variable and have exactly content. So the caller must set
+        text variable and have exactly the same content. So the caller must set
         a textvariable explicitelly."""
-        Entry.__init__(self, master, **kw)
+        super().__init__(master, **kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self)
         self.__normalforeground = self["foreground"]
         self.__disabledforeground = _disfg(master)
 
@@ -1278,7 +1323,7 @@ class ThanEntry(Entry):
 ##############################################################################
 
 class ThanLabel(Label):
-    "A standard label with thanSet, thanGet and unicode capabilities."
+    "A standard label with thanSet, thanGet and foreground color correction capabilities."
 
     def __init__(self, master, **kw):
         "Some default values."
@@ -1287,17 +1332,18 @@ class ThanLabel(Label):
         kw.setdefault("anchor", W)
         kw.setdefault("width", 10)
         Label.__init__(self, master, **kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self)
 
 
     def thanSet(self, t):
         "Set the text of the widget."
-        self.config(text=thanUnicode(t))
+        self.config(text=t)
         self.update_idletasks()
 
 
     def thanGet(self):
         "Return the text of the widget."
-        return thanUnunicode(self.cget("text"))
+        return self.cget("text")
 
 
 #    def __del__(self): print "ThanLabel", self, "is deleted"
@@ -1342,8 +1388,8 @@ class ThanLabyesno(Label):
         except:                      #Not a string
             t = bool(t)
         else:                        #String
-            if t[:2] in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): t = True
-            elif t[:2] in ('οχ', 'ΟΧ', 'ox', 'OX', 'no', 'NO', '0'): t = False
+            if t[:2] in ('Ξ½Ξ±', 'ΞΞ‘', 'na', 'NA', 'ye', 'YE', '1'): t = True
+            elif t[:2] in ('ΞΏΟ‡', 'ΞΞ§', 'ox', 'OX', 'no', 'NO', '0'): t = False
             else: raise ValueError("Invalid bool value: %s" % (t,))
         if t:
             kw["text"] = self.__yes
@@ -1362,26 +1408,25 @@ class ThanLabyesno(Label):
 ##############################################################################
 
 class ThanButton(Button):
-    "A standard button with thanSet, thanGet and unicode capabilities."
+    "A standard button with thanSet, thanGet and fotreground color corecction capabilities."
 
     def __init__(self, *args, **kw):
         "Make unicode text."
         if "bg" not in kw and "background" not in kw: kw["bg"] = "lightcyan"
         kw.setdefault("activebackground", "cyan")
-        text = kw.pop("text", None)
-        Button.__init__(self, *args, **kw)
-        if text is not None: self.thanSet(text)
+        super().__init__(*args, **kw)
+        if "fg" not in kw and "foreground" not in kw: correctForeground(self)
 
 
     def thanSet(self, t):
         "Set the text of the button and convert to unicode."
-        self.config(text=thanUnicode(t))
+        self.config(text=t)
         self.update_idletasks()
 
 
     def thanGet(self):
         "Get the text of the button and convert to string."
-        return thanUnunicode(self.cget("text"))
+        return self.cget("text")
 
 
 #    def __del__(self): print "ThanButton", self, "is deleted"
@@ -1419,7 +1464,8 @@ class ThanButtonIm(Button):
 
     def thanSetold(self, im):
         "Set the image of the button to the icon created by the pin image."
-        from PIL import Image, ImageTk
+        #from PIL import Image, ImageTk   #24/11/2023
+        import p_gimage                   #24/11/2023
         self._pilimage = im
         if im is None:
             self._tkimage = None
@@ -1430,15 +1476,16 @@ class ThanButtonIm(Button):
                 s = float(self._iconsize) / bhm
                 b = int(b*s+0.5)
                 h = int(h*s+0.5)
-                im = im.resize((b, h), Image.ANTIALIAS)
-            self._tkimage = ImageTk.PhotoImage(im)
+                im = im.resize((b, h), p_gimage.ANTIALIAS)   #24/11/2023
+            self._tkimage = p_gimage.PhotoImage(im)          #24/11/2023
         self.config(image=self._tkimage)
         self.update_idletasks()
 
 
     def thanSet(self, im):
         "Set the image of the button to the icon created by the pin image."
-        from PIL import Image, ImageTk
+        #from PIL import Image, ImageTk   #24/11/2023
+        import p_gimage                   #24/11/2023
         self._pilimage = im
         if im is None:
             self._tkimage = None
@@ -1451,8 +1498,8 @@ class ThanButtonIm(Button):
                 s = min(sb, sh)
                 b = int(b*s+0.5)
                 h = int(h*s+0.5)
-                im = im.resize((b, h), Image.ANTIALIAS)
-            self._tkimage = ImageTk.PhotoImage(im)
+                im = im.resize((b, h), p_gimage.ANTIALIAS)   #24/11/2023
+            self._tkimage = p_gimage.PhotoImage(im)          #24/11/2023
         self.config(image=self._tkimage)
         self.update_idletasks()
 
@@ -1464,13 +1511,14 @@ class ThanButtonIm(Button):
 
     def thanShow(self):
         "Withdraw then build widgets then update and then deiconify helps to paint the window _immediately_ to its correct position."
-        from PIL import ImageTk
+        #from PIL import ImageTk          #24/11/2023
+        import p_gimage                   #24/11/2023
         self.thanUnpost()
         if self._pilimage is None: return None
         win = Toplevel(self)
         win.withdraw()
         thanGudPosition(win, master=self)
-        _tkimage2 = ImageTk.PhotoImage(self.thanGet())
+        _tkimage2 = p_gimage.PhotoImage(self.thanGet())  #24/11/2023
         thanFontRefSave(win, _tkimage2)
         lab = Label(win, image=_tkimage2)
         lab.grid()
@@ -1718,99 +1766,3 @@ def _disfg(master):
         thanDisabledforeground = dummy["disabledforeground"]
         dummy.destroy()
     return thanDisabledforeground
-
-
-##############################################################################
-##############################################################################
-
-import sys
-from tkinter import Tk
-
-def dddd():
-    global mb1
-    mb1.destroy()
-    del mb1
-
-
-def testPoplist():
-    root = Tk()
-    win = ThanPoplist(root, (20*"thanasis dimitra andreas stella").split(), width=30, height=50, title="Choose someone")
-    print(win.result)
-
-def testPoplistextented():
-    root = Tk()
-    win = ThanPoplist(root, (20*"thanasis dimitra andreas stella").split(), width=30, height=50, selectmode=EXTENDED, title="Choose someone")
-    print(win.result)
-
-
-
-if __name__ == "__main__":
-    def testpop(evt=None):
-#        win = ThanPoplist(mb31, (20*"Θανάσης dimitra andreas stella").split(), width=30, height=50, title="Choose someone")
-        win = ThanPoplistCol(mb31, 2*(("Θανάσης", (255,0,0)),
-                                       ("dimitra", (0,255,0)),
-                                       ("andreas", (0,0,255)),
-                                       ("stella",  (255,255,0)),
-                                      ), width=30, height=50, title="Choose someone")
-        print("ThanPoplist result =", win.result)
-
-    def testpopext(evt=None):
-        win = ThanPoplist(mb31, (20*"thanasis dimitra ανδρέας stella").split(), width=30, height=50, selectmode=EXTENDED, title="Choose someone")
-        print("ThanPoplist result =", win.result)
-
-    def pr(a): print(a)
-
-    root = Tk()
-    if sys.platform == "win32":
-        root.option_add("*font", "Arial 10")
-    else:
-        import tkinter
-        f=tkinter.font.Font(family="Thorndale AMT", size=12)
-#        f=tkFont.Font(family="monospace", size=12)
-        root.option_add("*font", f)
-
-    mb1 = ThanMenu(root)
-    m = ThanMenu(mb1, tearoff=False, statcommand=pr)
-    m.add_command(label="a", help="Well.. a")
-    m.add_command(label="b", help="Well.. b")
-    mb1.add_cascade(label="ab", menu=m)
-    root["menu"] = mb1
-    del m
-
-    labs = ("Thanasis", "Δήμητρα", "Andreas")*10
-    print(labs)
-    mb2 = ThanChoice(root, labels=labs, relief=RAISED)
-    mb2.grid()
-    mb3 = ThanYesno(root, relief=RAISED)
-    mb3.grid()
-#    mb31 = Button(root, text="Try ThanPoplist", command=testpop)
-    mb31 = Button(root, text="Try ThanPoplist", command=testPoplist)
-    mb31.grid()
-    mb32 = Button(root, text="Try ThanPoplist Extended", command=testpopext)
-    mb32.grid()
-    mb4 = ThanCombo(root, labels=("Thanasis", "Dimitra", "Andreas"), relief=RAISED)
-    mb4.grid()
-    mb5 = ThanFile(root, text="no file", extension=".gan", mode="r", title="Define gan file", relief=RAISED)
-    mb5.grid()
-    mb6 = ThanFile(root, text="no dir",  extension="",     mode="d", title="Define dir file", relief=RAISED)
-    mb6.grid()
-    mb7 = ThanText(root, width=20, height=8, maxlines=4)
-    mb7.grid()
-    mb8 = ThanEntry(root)
-    mb8.grid()
-    mb8.thanSet("This should be disabled")
-    mb8.config(state=DISABLED)
-    mb9 = ThanToolButton(root, text="Press", help="Show the working of ThanToolButton", command=dddd)
-    mb9.grid()
-    mb10 = ThanRadio(root)
-    mb10.grid()
-    rad = mb10.add_button(text="AA")
-    rad.grid(row=0, column=0)
-    rad = mb10.add_button(text="BB")
-    rad.grid(row=0, column=1)
-    rad = mb10.add_button(text="CC")
-    rad.grid(row=1, column=0)
-    rad = mb10.add_button(text="DD")
-    rad.grid(row=1, column=1)
-
-    root.mainloop()

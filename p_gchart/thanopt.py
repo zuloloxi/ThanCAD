@@ -1,7 +1,6 @@
-from __future__ import print_function
 import sys, os.path
-try:    from configparser import SafeConfigParser
-except: from ConfigParser import SafeConfigParser
+try: from configparser import SafeConfigParser     #python3.9
+except: from configparser import ConfigParser as SafeConfigParser  #python3.12
 import tkinter
 
 

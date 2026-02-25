@@ -1,34 +1,31 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines a Tkinter window to display ThanCad's main window.
 """
 
-from __future__ import print_function
 import sys, weakref
 import tkinter
 import p_gtkwid, p_ggen
@@ -81,9 +78,18 @@ class ThanTkGuiWinMain(tkinter.Tk):
 
 
     def __openargs(self, proj):
-        "Open files given as arguments (if any)."
+        """Open files given as arguments (if any).
+
+        If only 1 arguments is present and it is directory, set this directory as default."""
         from thancom.thancomfile import thanFileOpenPaths
-        nopened = thanFileOpenPaths(proj, sys.argv[1:])
+        fns = sys.argv[1:]
+        if len(fns) == 0: return
+        if len(fns) == 1:
+            dn = p_ggen.path(fns[0])
+            if dn.isdir():
+                thanfiles.setFiledir(dn)
+                return
+        nopened = thanFileOpenPaths(proj, fns)
 
 
     def __fonts(self):
@@ -95,8 +101,9 @@ class ThanTkGuiWinMain(tkinter.Tk):
         self.option_add("*Font", self.thanFo)
 
 
+
     def __position(self):
-        "Position main window at top left; Later, add code to remeMber the last ThanCad's position, size etc."
+        "Position main window at top left; Later, add code to remember the last ThanCad's position, size etc."
         xx = yy = 0
         self.thanTkPos = [(xx, yy, weakref.ref(self))]
         self.geometry("%+d%+d" % (50, 50))
@@ -159,9 +166,3 @@ class ThanTkGuiWinMain(tkinter.Tk):
         "Deletes circular references."
         del self.thanFo, self.thanMenu, self.thanTkPos
         tkinter.Tk.destroy(self)
-
-
-if __name__ == "__main__":
-    print(__doc__)
-    tw = ThanTkGuiWinMain()
-    tw.mainloop()

@@ -1,35 +1,30 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This dialog performs photogrammetric interior orientation of a metric image.
 """
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import sys, copy
 import tkinter
 from math import sqrt, fabs
@@ -129,7 +124,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         self.thanChkReject = [None]*n
         val = p_gtkwid.ThanValFloatBlank()
         val2 = p_gtkwid.ThanValidator()
-        for ifid in xrange(n):
+        for ifid in range(n):
             fun = lambda evt, ifid=ifid: self.__onClickr(evt, ifid)
             but = self.butFid[ifid] = p_gtkwid.ThanButton(fra, text="%d " % (ifid+1,), bd=2,
                                       command=lambda ifid=ifid: self.__onClickr(None, ifid))
@@ -188,7 +183,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         self.labYcom = [None]*n
         self.labXer = [None]*n
         self.labYer = [None]*n
-        for ifid in xrange(n):
+        for ifid in range(n):
             lab = tkinter.Label(fra, text="%d " % (ifid+1,))
             lab.grid(row=i+ifid, column=1)
             lab = self.labXcom[ifid] = p_gtkwid.ThanLabel(fra, text="", width=14)
@@ -231,7 +226,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
 
     def __disable(self):
         "Disable all rejected."
-        for ifid in xrange(len(self.other.camera.x)):
+        for ifid in range(len(self.other.camera.x)):
             if self.thanChkReject[ifid].thanGet():
                 self.entXpix[ifid].config(state=tkinter.DISABLED)
                 self.entYpix[ifid].config(state=tkinter.DISABLED)
@@ -361,7 +356,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         n = len(cam.x)
         fots = []
         ifids = []
-        for i in xrange(n):
+        for i in range(n):
             rej = self.thanChkReject[i].thanGet()
             if not rej:                              #Fiducial is not rejected
                 fx = "labXpix%d" % (i+1,)

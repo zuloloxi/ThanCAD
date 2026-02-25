@@ -1,7 +1,9 @@
-from __future__ import print_function
 from math import sqrt
 import weakref
 import tkinter, tkinter.font
+
+__grabWins = []    #Global list for assisting thanGrabSet(), thanGrabRelease
+__fonts = weakref.WeakKeyDictionary()   #global dict to assist thanFontRefSave()
 
 
 def thanFontGet(wid):
@@ -54,28 +56,23 @@ def thanFontRefSave(obj, font):
     the font. Thus when the routine which created the widget goes out of scope, its local
     reference of font is destroyed, and with it, the font is destroyed.
     This routine keeps a strong reference to the font. The font lives forever, unless:
-    1. the widget is destroyed 2. Another font is defined for the widget.
+    1. the widget is destroyed
+    2. Another font is defined for the widget.
     The variable font may actually be anything, such as tuple of fonts, a list of fonts,
     an image etc.
     WE SHOULD NOT SAVE A FONT IF obj is the root window, i.e. Tk(). Because when Tk()
     dies the font (if it is alive) is in illegal state. The font can be handled only if
     Tk() is active. 
     """
-    global __fonts
-    try: __fonts
-    except: __fonts = weakref.WeakKeyDictionary()
     __fonts[obj] = font
 
 
 def thanFontRefGet(obj):
     "Returns the font saved for the object obj."
-    global __fonts
-    try: return __fonts[obj]
-    except: return None
+    return __fonts.get(obj)   #returns None if obj is not found
 
 #=============================================================================
 
-__grabWins = []
 def thanGrabSet(win):
     "Perform a nested grab_set."
     if len(__grabWins) > 0:
@@ -86,6 +83,7 @@ def thanGrabSet(win):
     win.grab_set()
     win1 = weakref.ref(win, __grabWinDied)
     __grabWins.append(win1)
+
 
 def __grabWinDied(weakwin):
     "This is called when the window which has the grab dies."
@@ -134,14 +132,14 @@ def thanRobustDim(self=None):
     heightmm = float(self.winfo_screenmmheight())  # mm
 
     if widthmm < 2.0:
-#        thanLogTk.warning("TkCoor:robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+#        thanLogTk.warning("TkCoor:robustDim: Tkinter reported illegal screen dimensions: %fmm x %fmm", widthmm, heightmm)
         if heightmm < 2.0:
             widthmm = MON*25.4 / sqrt(1+RATIO**2)
             heightmm = widthmm * RATIO
         else:
             widthmm = heightmm / RATIO
     elif heightmm < 2.0:
-#        thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+#        thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %fmm x %fmm", widthmm, heightmm)
         heightmm = widthmm * RATIO
 
     if width < 2:

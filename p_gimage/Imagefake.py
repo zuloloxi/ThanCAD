@@ -9,6 +9,12 @@ ANTIALIAS = 1 # 3-lobed lanczos
 LINEAR = BILINEAR = 2
 CUBIC = BICUBIC = 3
 
+# Limit to around a quarter gigabyte for a 24 bit (3 bpp) image
+MAX_IMAGE_PIXELS = int(1024 * 1024 * 1024 // 4 // 3)
+
+class DecompressionBombError(Exception):
+    pass
+
 
 class ThanImageMissing(object):
     "This class represents a fake image object of the fake Image module."
@@ -44,6 +50,9 @@ class ThanImageMissing(object):
 
     def convert(self, mode, matrix=None):
         return ThanImageMissing(self.size, mode)
+
+    def load(self, *args, **kw):
+        pass
 
 
 def open(fi):

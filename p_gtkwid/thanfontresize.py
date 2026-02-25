@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-7 -*-
 import tkinter
 
 
@@ -7,10 +6,10 @@ class ThanFontResize:
 
     def thanResizeFont(self, font=None):
         "Creates and sets font."
-        if font is not None: 
+        if font is not None:
             if isinstance(font, tkinter.font.Font): font1 = font
             else:                             font1 = tkinter.font.Font(name=font)
-        else:            font1 = tkinter.font.Font(name="TkFixedFont", exists=True, size=10)   # Negative size means size in pixels
+        else:            font1 = tkinter.font.Font(name="TkFixedFont", exists=True, size=14)   # Negative size means size in pixels
         font2 = font1.copy()
         font2.config(weight=tkinter.font.BOLD)
         font3 = font2.copy()
@@ -68,8 +67,8 @@ class ThanFontResize:
             b("<Control-KP_Add>",      self.thanResizeInc)
             b("<Control-minus>",       self.thanResizeDec)
             b("<Control-KP_Subtract>", self.thanResizeDec)
-#        prt("Πατείστε Control+ για αύξηση μεγέθους γραμματοσειράς")
-#        prt("Πατείστε Control- για μείωση μεγέθους γραμματοσειράς")
+#        prt("Ξ Ξ±Ο„ΞµΞ―ΟƒΟ„Ξµ Control+ Ξ³ΞΉΞ± Ξ±ΟΞΎΞ·ΟƒΞ· ΞΌΞµΞ³Ξ­ΞΈΞΏΟ…Ο‚ Ξ³ΟΞ±ΞΌΞΌΞ±Ο„ΞΏΟƒΞµΞΉΟΞ¬Ο‚")
+#        prt("Ξ Ξ±Ο„ΞµΞ―ΟƒΟ„Ξµ Control- Ξ³ΞΉΞ± ΞΌΞµΞ―Ο‰ΟƒΞ· ΞΌΞµΞ³Ξ­ΞΈΞΏΟ…Ο‚ Ξ³ΟΞ±ΞΌΞΌΞ±Ο„ΞΏΟƒΞµΞΉΟΞ¬Ο‚")
 
 
     def thanDestroy(self):

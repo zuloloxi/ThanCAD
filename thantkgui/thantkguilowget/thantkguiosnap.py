@@ -1,27 +1,27 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the object snap functionality.
 """
@@ -49,7 +49,7 @@ class ThanOsnap:
         self.tcol = ThanAttCol(thancadconf.thanColOsn).thanTk
         self.selems = proj[2].thanSelems # Elements which may be snapped to.
         self.selem = None                # Snapable element which is near cursor.
-        self.cc1 = None
+        self.cc1 = None   #This is the first point of a line, when we prompt the user to enter the other point (and dragging the line)
 
 
     def thanClear(self):
@@ -125,7 +125,11 @@ class ThanOsnap:
             self.items = ()
             self.preempt = False
             return
-        p = min(ps)
+        try:
+            p = min(ps)
+        except:
+            print("ps=\n", ps)
+            raise
         b, h = ct.global2LocalRel(p[0], p[0])
         if b > 10*self.BSEL:
             self.items = ()

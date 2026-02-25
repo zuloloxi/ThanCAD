@@ -1,4 +1,4 @@
-from .opgui import openfileWinget, openfileWinmain, thanTxtopen, xinpFiles
+from .opgui import openfileWinget, openfileWinmain, thanTxtopen, xinpFiles, openfileSetprev
 from .datlin import Datlin
 from .er import wa1, er1s
 from .openfile import (setPar, openFile1, opFile1e, opFile1, inpFile1, xinpFile1, medFile1,

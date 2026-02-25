@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-7 -*-
 from math import pi, cos, sin, tan, sqrt
 from p_gmath import dpt
 from .ellipsoid import GRS80, Greek1987
@@ -63,12 +62,16 @@ class GeodProjection(object):
         return lam, phi, h
 
     def geodet2cenGRS80(self, lam, phi, h=0.0, hgme=0.0):
-        """Compute geocentric GRS80 coordinates given EGSA87 ë, ö.
+        """Compute geocentric GRS80 coordinates given EGSA87 Î», Ï†.
 
         hgme=hgeometric-horthometric. Hgeometric= elevation with respect to Greek ellipsoid surface."""
         xt, yt, zt = self.EOID.geodet2cen(lam, phi, h, hgme)
         xt, yt, zt = self.EOID.geocen2geocenGRS80(xt, yt, zt)
         return xt, yt, zt
+
+    def writeAsc(self, fw):
+        "Write the name/definition of the projection to an opened ascii file."
+        fw.write("Î“Î•Î©Î”Î‘Î™Î¤Î™ÎšÎ— Î Î¡ÎŸÎ’ÎŸÎ›Î—: {}\n".format(self.pname))
 
 
 class TMercator(GeodProjection):
@@ -89,7 +92,6 @@ class TMercator(GeodProjection):
             self.pname %= (self.lam0*180.0/pi, self.EOID.name)
         else:
             self.pname = name
-
 
     def geodet2en (self, lam, phi):
         "Compute the Easting Northing of the projection given the geodetic coordinates."
@@ -121,7 +123,7 @@ class TMercator(GeodProjection):
                      beta*(-28.0*(1.0-6.0*t2) + \
                      beta*8.0*(11.0-24.0*t2))))
         w8 = 1385.0 - t2*(-3111.0 + t2*(543.0 - t2))
-        x = self.k0*v*lc*(1.0 + lc2/6.0*(w3 + 
+        x = self.k0*v*lc*(1.0 + lc2/6.0*(w3 +
             lc2/20.0*(w5+lc2/42.0*w7)))
         y = self.k0*(mf + lc2*v*t/2.0*(1.0 + lc2/12.0*(w4 + \
             lc2/30.0*(w6 + lc2/56.0*w8))))
@@ -174,29 +176,45 @@ class TMercator(GeodProjection):
 
 
 class GeodetGRS80(GeodProjection):
-    """A "projection" whose easting, northing are the GRS80 geodetic coordinates (ë, ö)."""
+    """A "projection" whose easting, northing are the GRS80 geodetic coordinates (Î», Ï†)."""
 
-    def __init__(self, EOID=GRS80, name=None):
+    def __init__(self, EOID=GRS80, angleunit=0, name=None):
         """Define the ellipsoid and name of the geodetic coordinates "projection"."""
+        if angleunit == 0   :  #radians
+            self.frad2en = 1.0
+            t = "radians"
+        elif angleunit == 1:   #decimal degrees
+            self.frad2en = 180.0/pi
+            t = "decimal degrees"
+        elif angleunit == 2:   #gradians
+            self.frad2en = 200.0/pi
+            t = "gradians"
+        else:
+            raise ValueError("angleunit may be 0 (radians), 1 (decimal degrees), or 2 (gradians)")
         self.EOID = EOID
+        self.angleunit = angleunit
         if name is None:
-            self.pname = "Geodetic coordinates of %s" % self.EOID.name
+            self.pname = "Geodetic coordinates of %s in %s" % (self.EOID.name, t)
         else:
             self.pname = name
 
     def geodet2en (self, lam, phi):
         "Compute the Easting Northing of the projection given the geodetic coordinates."
-        return lam, phi
+        return lam*self.frad2en, phi*self.frad2en #Convert rad to EN
 
     def en2geodet (self, x, y):
         "Compute the geodetic coordinates given Easting Northing of the projection."
-        return x, y
+        return x/self.frad2en, y/self.frad2en     #Convert EN to rad
 
 
 def computeUTMzone(alam, phi):
-    "Find the Universal transverse Mercatoric projection zone from geodetic coordinates in radians."
+    """Find the Universal transverse Mercatoric projection zone from geodetic coordinates in radians.
+
+    alam is positive when it is to the east of greenwhich.
+    phi is positive when it is to the north of the equator"""
     assert phi -pi*0.5 <= phi <= pi*0.5, "Error: phi should be between -pi/2 and pi/2"
     alam = dpt(alam)*180.0/pi
+    if alam > 180: alam -= 360     #Thanasis2019_11_07
     zone = (177.0 + alam) / 6.0 + 1.0
     zone = int(round(zone))
     north = phi >= 0.0
@@ -215,58 +233,15 @@ class UTMercator(TMercator):
         self.zone = int(zone)
         if not north: self.zone = -self.zone
         if name is None:
-            name = "Universal Transverse Mercator, zone=%d %s, ellipsoid=%s" 
+            name = "Universal Transverse Mercator, zone=%d %s, ellipsoid=%s"
             name %= (abs(self.zone), "North" if north else "South", EOID.name)
         TMercator.__init__(self, EOID=EOID, k0=0.9996, lam0=lam0,
             falseeasting=500000.0, falsenorthing=falsenorthing, name=name)
 
-
-class Htrs07old(TMercator):
-    "The HTRS07 used by Greek cadastre agency is like EGSA87 but without translating the ellipsoid."
-
-    def __init__(self):
-        "Automatically define parameters."
-        TMercator.__init__(self, EOID=GRS80, k0=0.9996, lam0=24.0*pi/180.0, 
-                           falseeasting=500000.0, falsenorthing=-2000000.0, name="Greek HTRS07")
-
-
-    def geodetGRS802en(self, lam, phi):
-        "Compute the Easting Northing of the projection given the GRS80 geodetic coordinates."
-        xt, yt, zt = self.EOID.geodet2cen(lam, phi, 0.0)
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt)
-        return self.geodet2en(lam, phi)
-
-
-    def en2geodetGRS80(self, x, y):
-        "Compute the geodetic coordinates given Easting Northing of the projection."
-        lam, phi = TMercator.en2geodet(self, x, y)
-        xt, yt, zt = self.EOID.geodet2cen(lam, phi, 0.0)
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt)
-        return lam, phi
-
-
-    def geocenGRS802en(self, xt, yt, zt, hgme=0.0):
-        """Compute the Easting Northing of the projection given the GRS80 geocentric coordinates."
-
-        hgme=height of geoid minus height of Greek ellipsoid."""
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt, hgme)
-        x, y = TMercator.geodet2en(self, lam, phi)
-        return x, y, h
-
-
-    def en2geocenGRS80(self, x, y, h, hgme=0.0):
-        """Compute the Easting Northing of the projection given the GRS80 geocentric coordinates."
-
-        hgme=height of geoid minus height of Greek ellipsoid."""
-        lam, phi = self.en2geodet(x, y)
-        xt, yt, zt = self.EOID.geodet2cen(lam, phi, h, hgme)
-        return xt, yt, zt
-
-
-    def geocenGRS802det(self, xt, yt, zt, hgme=0.0):
-        """Compute the EGSA87 geodetic given the GRS80 geocentric coordinates."""
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt, hgme)
-        return lam, phi, h
+    def writeAsc(self, fw):
+        "Write the name/definition of the projection to an opened ascii file."
+        ns = "NORTH" if self.falsenorthing == 0.0 else "SOUTH"
+        fw.write("Î“Î•Î©Î”Î‘Î™Î¤Î™ÎšÎ— Î Î¡ÎŸÎ’ÎŸÎ›Î—: UTM {} {} {}\n".format(self.zone, ns, self.EOID.name))
 
 
 class Htrs07(TMercator):
@@ -274,8 +249,12 @@ class Htrs07(TMercator):
 
     def __init__(self):
         "Automatically define parameters."
-        TMercator.__init__(self, EOID=GRS80, k0=0.9996, lam0=24.0*pi/180.0, 
+        TMercator.__init__(self, EOID=GRS80, k0=0.9996, lam0=24.0*pi/180.0,
                            falseeasting=500000.0, falsenorthing=-2000000.0, name="Greek HTRS07")
+
+    def writeAsc(self, fw):
+        "Write the name/definition of the projection to an opened ascii file."
+        fw.write("Î“Î•Î©Î”Î‘Î™Î¤Î™ÎšÎ— Î Î¡ÎŸÎ’ÎŸÎ›Î—: {}\n".format("HTRS07"))
 
 
 class Egsa87(TMercator):
@@ -287,14 +266,17 @@ class Egsa87(TMercator):
 
     def __init__(self):
         "Automatically define parameters."
-        TMercator.__init__(self, EOID=Greek1987, k0=0.9996, lam0=24.0*pi/180.0, 
+        TMercator.__init__(self, EOID=Greek1987, k0=0.9996, lam0=24.0*pi/180.0,
                            falseeasting=500000.0, falsenorthing=0.0, name="Greek EGSA87")
 
+    def writeAsc(self, fw):
+        "Write the name/definition of the projection to an opened ascii file."
+        fw.write("Î“Î•Î©Î”Î‘Î™Î¤Î™ÎšÎ— Î Î¡ÎŸÎ’ÎŸÎ›Î—: {}\n".format("Î•Î“Î£Î‘87"))
 
     def geodetGRS802h7m80(self, lamgrs80, phigrs80):
         """Compute the elevation difference between EGSA87 ellipsoidal surface and GRS80 ellipsoidal surface.
 
-        hgeometric Egsa87 = h(with respect to Greek Egsa87 ellipsoidal surface) = 
+        hgeometric Egsa87 = h(with respect to Greek Egsa87 ellipsoidal surface) =
             hgeometric GRS80 - h7m80 = h(with respect to GRS80 ellipsoidal surface) - h7m80
         or:
         h7m80 = hgeometric GRS80 - hgeometric EGSA87
@@ -309,7 +291,7 @@ class Egsa87(TMercator):
     def geodet2h7m80(self, lam, phi):
         """Compute the elevation difference between EGSA87 ellipsoidal surface and GRS80 ellipsoidal surface.
 
-        hgeometric Egsa87 = h(with respect to Greek Egsa87 ellipsoidal surface) = 
+        hgeometric Egsa87 = h(with respect to Greek Egsa87 ellipsoidal surface) =
             hgeometric GRS80 - h7m80 = h(with respect to GRS80 ellipsoidal surface) - h7m80
         or:
         h7m80 = hgeometric GRS80 - hgeometric EGSA87
@@ -324,7 +306,7 @@ class Egsa87(TMercator):
     def en2h7m80(self, x, y):
         """Compute the elevation difference between EGSA87 ellipsoidal surface and GRS80 ellipsoidal surface.
 
-        hgeometric Egsa87 = h(with respect to Greek Egsa87 ellipsoidal surface) = 
+        hgeometric Egsa87 = h(with respect to Greek Egsa87 ellipsoidal surface) =
             hgeometric GRS80 - h7m80 = h(with respect to GRS80 ellipsoidal surface) - h7m80
         or:
         h7m80 = hgeometric GRS80 - hgeometric EGSA87
@@ -336,164 +318,4 @@ class Egsa87(TMercator):
         return h
 
 
-class Egsa87old(TMercator):
-    """The EGSA87 mercatoric projection.
-
-    The undulation hgme which appears in many of the methods is the undulation
-    of the Greek ellipsoid:
-    hgme=hgeometric-horthometric. Hgeometric= elevation with respect to Greek ellipsoid surface."""
-
-    def __init__(self):
-        "Automatically define parameters."
-        TMercator.__init__(self, EOID=GRS80, k0=0.9996, lam0=24.0*pi/180.0, 
-                           falseeasting=500000.0, falsenorthing=0.0, name="Greek EGSA87")
-        self.dc = -199.723, 74.030, 246.018    #From program ew.f and we.f, (Paper Óõããñïý êáé Ãéáííßïõ)
-#        self.dc = -199.652, 74.759, 246.057    #FROM NTUA:SCHOOL OF SURVEYING:2007: http://ecourses.dbnet.ntua.gr/geodaisia1
-#                                               #  ALSO FROM BOOK: ÁÍÙÔÅÑÇ ÃÅÙÄÁÉÓÉÁ ÔÏÕ ÌÐÅÇ (1989)
-#        self.dc = -199.870, 74.790, 246.620    #http://trac.osgeo.org/proj/wiki/GenParms, http://proj.maptools.org/gen_parms.html
-
-    def geodetGRS802en(self, lam, phi):
-        "Compute the Easting Northing of the projection given the GRS80 geodetic coordinates."
-        xt, yt, zt = self.EOID.geodet2cen(lam, phi, 0.0)
-        xt -= self.dc[0]
-        yt -= self.dc[1]
-        zt -= self.dc[2]
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt)
-        return self.geodet2en(lam, phi)
-
-
-    def en2geodetGRS80(self, x, y):
-        "Compute the geodetic coordinates given Easting Northing of the projection."
-        lam, phi = TMercator.en2geodet(self, x, y)
-        xt, yt, zt = self.EOID.geodet2cen(lam, phi, 0.0)
-        xt += self.dc[0]
-        yt += self.dc[1]
-        zt += self.dc[2]
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt)
-        return lam, phi
-
-
-    def geocenGRS802en(self, xt, yt, zt, hgme=0.0):
-        """Compute the Easting Northing of the projection given the GRS80 geocentric coordinates."
-
-        hgme=hgeometric-horthometric. Hgeometric= elevation with respect to Greek ellipsoid surface."""
-        xt -= self.dc[0]
-        yt -= self.dc[1]
-        zt -= self.dc[2]
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt, hgme)
-        x, y = TMercator.geodet2en(self, lam, phi)
-        return x, y, h
-
-
-    def en2geocenGRS80(self, x, y, h, hgme=0.0):
-        """Compute the Easting Northing of the projection given the GRS80 geocentric coordinates."
-
-        hgme=hgeometric-horthometric. Hgeometric=elevation with respect to Greek ellipsoid surface."""
-        lam, phi = self.en2geodet(x, y)
-        xt, yt, zt = self.EOID.geodet2cen(lam, phi, h, hgme)
-        xt += self.dc[0]
-        yt += self.dc[1]
-        zt += self.dc[2]
-        return xt, yt, zt
-
-
-    def geocenGRS802det(self, xt, yt, zt, hgme=0.0):
-        """Compute the EGSA87 geodetic given the GRS80 geocentric coordinates.
-
-        hgme=hgeometric-horthometric. Hgeometric= elevation with respect to Greek ellipsoid surface."""
-        xt -= self.dc[0]
-        yt -= self.dc[1]
-        zt -= self.dc[2]
-        lam, phi, h = self.EOID.geocen2det(xt, yt, zt, hgme)
-        return lam, phi, h
-
-
-    def geodet2cenGRS80(self, lam, phi, h=0.0, hgme=0.0):
-        """Compute geocentric GRS80 coordinates given EGSA87 ë, ö.
-
-        hgme=hgeometric-horthometric. Hgeometric= elevation with respect to Greek ellipsoid surface."""
-        xt, yt, zt = self.EOID.geodet2cen(lam, phi, h, hgme)
-        xt += self.dc[0]
-        yt += self.dc[1]
-        zt += self.dc[2]
-        return xt, yt, zt
-
-
 egsa87 = Egsa87()      #Make an instance of the object, since it is heavily used (in Greece :))
-
-
-def testen2lf():
-    "Tests easting northing to lam, phi conversion."
-#   The following are easting northing in EGSA87:
-    dlines = """\
-    60             467715.800    4204812.359        370.510
-    ËÏÖÉÏ          487562.260    4202358.409        235.420
-"""
-    e = Egsa87()
-    hgme = 7.0
-    fw = open("r.lf", "w")
-    fc = open("r.wgs", "w")
-    for dline in dlines.split("\n"):
-        if dline.strip() == "": continue
-        dl = dline.split()
-        aa = dl[0]
-        x, y, h = map(float, dl[1:])
-        lam, phi = e.en2geodet(x, y)
-        fw.write("%-10s%15.8f%15.8f%15.3f\n" % (aa, lam*180/pi, phi*180/pi, h))
-        xt, yt, zt = e.en2geocenGRS80(x, y, h, hgme)
-        fc.write("%-10s%15.3f%15.3f%15.3f\n" % (aa, xt, yt, zt))
-    fw.close()
-    fc.close()
-
-
-def testcen():
-    "Tests almost the whole library with geocentric coordinates."
-#   The following are geocentric coordinates of the GRS80 ellipsoid
-    dlines = """\
-    60            4611067.406    2017787.046    3905081.613
-    ËÏÖÉÏ         4604324.397    2036519.501    3903106.158
-"""
-    e = Egsa87()
-    hgme = 7.0
-    fw = open("r.egs", "w")
-    fc = open("r.wgs", "w")
-    for dline in dlines.split("\n"):
-        if dline.strip() == "": continue
-        dl = dline.split()
-        aa = dl[0]
-        xx, yy, zz = map(float, dl[1:])
-        x, y, h = e.geocenGRS802en(xx, yy, zz, hgme)
-        fw.write("%-10s%15.3f%15.3f%15.3f\n" % (aa, x, y, h))
-        xt, yt, zt = e.en2geocenGRS80(x, y, h, hgme)
-        fc.write("%-10s%15.3f%15.3f%15.3f\n" % (aa, xt, yt, zt))
-    fw.close()
-
-
-def testlf():
-    "Tests almost the whole library with geodetic coordinates."
-    dlines = """\
-    60            23.63233581    37.99038846        370.510
-    ËÏÖÉÏ         23.85839586    37.96876060        235.420
-"""
-    e = Egsa87()
-    hgme = 7.0
-    fw = open("r.egs", "w")
-    fc = open("r.wgs", "w")
-    for dline in dlines.split("\n"):
-        if dline.strip() == "": continue
-        dl = dline.split()
-        aa = dl[0]
-        lam, phi, h = map(float, dl[1:])
-        lam *= pi/180.0
-        phi *= pi/180.0
-        x, y = e.geodet2en(lam, phi)
-        fw.write("%-10s%15.3f%15.3f%15.3f\n" % (aa, x, y, h))
-        xt, yt, zt = e.en2geocenGRS80(x, y, h, hgme)
-        fc.write("%-10s%15.3f%15.3f%15.3f\n" % (aa, xt, yt, zt))
-    fw.close()
-
-
-if __name__ == "__main__": 
-    testlf()
-    #testen2lf()
-    #estcen()

@@ -1,0 +1,13 @@
+path_earth = ('f:/data/gdem/                 ',
+              '/samba/data/gdem/             ',
+              '/samba2/data/gdem/            ',
+              '../binwi/libs3/p_gearth/      ',
+              '../binwm/libs3/p_gearth/      ',
+              '/home2/x/binwi/libs3/p_gearth/',
+              '/home2/x/binwm/libs3/p_gearth/',
+              'x:/binwi/libs3/p_gearth/      ',
+              'x:/binwm/libs3/p_gearth/      ',
+              'v:/kthmatologio_data/         ',
+              'u:/kthmatologio_data/         ',
+              'c:/p_gearth/                  ',
+             )

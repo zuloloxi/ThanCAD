@@ -1,6 +1,3 @@
-from __future__ import print_function
-#from future.utils import iteritems
-from p_ggen.py23 import iteritems
 from math import hypot, cos, sin
 from p_gmath import linint, dpt
 import p_ggen, p_gvarcom
@@ -47,7 +44,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
     def __fromlines(self, dtm, t, n):
         "Build a DEM using the line feature of the DTM made of lines."
         zgrid = self.zgrid
-        for iy, pyaxis in enumerate(p_ggen.xfrange(self.xymma[1], self.xymma[3], self.DY)):
+        for iy, pyaxis in enumerate(p_ggen.frange(self.xymma[1], self.xymma[3], self.DY)):
             c1, c2 = dtmvar.thanPolygonLine(self.hull, pyaxis, n)
 #            assert c1 != None, "There should be 2 intersections!"
             if c1 is None: continue
@@ -60,7 +57,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
             assert pxa >= self.xymma[0]
             assert pxb <= self.xymma[2]
             assert pxa <= pxb
-            for jx, pxaxis in enumerate(p_ggen.xfrange(self.xymma[0], self.xymma[2], self.DX)):
+            for jx, pxaxis in enumerate(p_ggen.frange(self.xymma[0], self.xymma[2], self.DX)):
                 if pxaxis < pxa: continue
                 while pxaxis > pxb:
                     i += 1
@@ -74,7 +71,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
     def __frompoints(self, dtm, t, n):
         "Build a DEM using the point feature of the DTM made of lines."
         zgrid = self.zgrid
-        for iy, pyaxis in enumerate(p_ggen.xfrange(self.xymma[1], self.xymma[3], self.DY)):
+        for iy, pyaxis in enumerate(p_ggen.frange(self.xymma[1], self.xymma[3], self.DY)):
             print(iy, pyaxis, "/", self.xymma[3])
             c1, c2 = dtmvar.thanPolygonLine(self.hull, pyaxis, n)
             if c1 is None: continue
@@ -83,7 +80,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
             assert pxa >= self.xymma[0]
             assert pxb <= self.xymma[2]
             assert pxa <= pxb
-            for jx, pxaxis in enumerate(p_ggen.xfrange(self.xymma[0], self.xymma[2], self.DX)):
+            for jx, pxaxis in enumerate(p_ggen.frange(self.xymma[0], self.xymma[2], self.DX)):
                 if pxaxis < pxa: continue
                 if pxaxis > pxb: break
                 cn = pxaxis*t[0]+pyaxis*n[0], pxaxis*t[1]+pyaxis*n[1], None
@@ -105,7 +102,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
 
     def dxfout(self, dxf):
         "Plot the DEM in dxf file."
-        for (jx, iy), h in iteritems(self.zgrid):
+        for (jx, iy), h in self.zgrid.items():
             x = jx*self.DX + self.xymma[0]
             y = iy*self.DY + self.xymma[1]
             dxf.thanDxfPlotPoint3(x, y, h)
@@ -128,7 +125,7 @@ def iterdis2(a, dd):
 #    return
     for ca, cb in p_ggen.iterby2(a):
         d = hypot(cb[1]-ca[1], cb[0]-ca[0])
-        for d1 in p_ggen.xfrange(0.0, d, dd):
+        for d1 in p_ggen.frange(0.0, d, dd):
 #            print "iterdis2: %15.3f%15.3f" % (d1, d)
             c = list(ca)
             c[0] = ca[0] + (cb[0]-ca[0])/d*d1

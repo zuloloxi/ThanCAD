@@ -1,29 +1,27 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 The package creates automatically architectural things such as stairs.
 The subpackage contains the dialogs which handle architecture related
@@ -135,7 +133,7 @@ class ThanStairsSettings(p_gtkwid.ThanComDialog):
         val = p_gtkwid.ThanValidator()
         self.thanWids.append((key, Tarch[tit], wid, val))
 
-        key = "labRun"                              #Μήκος σκάλας από πρώτο ως τελευταίο ρίχτι
+        key = "labRun"                              #ΞΞ®ΞΊΞΏΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚ Ξ±Ο€Ο Ο€ΟΟΟ„ΞΏ Ο‰Ο‚ Ο„ΞµΞ»ΞµΟ…Ο„Ξ±Ξ―ΞΏ ΟΞ―Ο‡Ο„ΞΉ
         tit = "Stairs run"
         lab = tkinter.Label(fra, text=Tarch[tit])
         lab.grid(row=2, column=1, sticky="e")
@@ -209,14 +207,14 @@ def thanCompute(r):
 def thanValsDef():
     "Build default values."
     s = p_ggen.Struct("Stair case settings")
-    s.entTread = 0.30           #Πάτημα
-    s.entRise  = 0.17           #Ρίχτι
-    s.entTotalrise  = 3.0       #Ύψος σκάλας
-    s.entWidth = 1.20           #Πλάτος σκάλας
+    s.entTread = 0.30           #Ξ Ξ¬Ο„Ξ·ΞΌΞ±
+    s.entRise  = 0.17           #Ξ΅Ξ―Ο‡Ο„ΞΉ
+    s.entTotalrise  = 3.0       #ΞΟΞΏΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚
+    s.entWidth = 1.20           #Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚
     s.entScale = 100.0
 
     s.labRise = ""
-    s.labRun  = ""              #Μήκος σκάλας από πρώτο ως τελευταίο ρίχτι
+    s.labRun  = ""              #ΞΞ®ΞΊΞΏΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚ Ξ±Ο€Ο Ο€ΟΟΟ„ΞΏ Ο‰Ο‚ Ο„ΞµΞ»ΞµΟ…Ο„Ξ±Ξ―ΞΏ ΟΞ―Ο‡Ο„ΞΉ
     s.labNtreads = ""
     s.labNrises = ""
     return s

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from __future__ import print_function
 from tkinter import Tk, Toplevel, Frame, Button, Label, Entry, SUNKEN, RAISED
 
 from .thantkutila import thanGudModalMessage, thanGudAskOkCancel

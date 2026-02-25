@@ -1,34 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module computes the intersection of any pair of elements. It also computes
 the extension of lines and arc to intersect any other element.
 """
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import fabs, atan2, hypot
 from p_gmath import PI2, thanNearx, thanNear2, converged3, thanErNear2
 from p_ggen import iterby2
@@ -133,7 +130,7 @@ def thanCurveCa(curve, circle, ccu, caLinet):
     dm = 1.0e100
     erpp = 1.0e100
     erp = erpp/10.0
-    for itry in xrange(ntries):
+    for itry in range(ntries):
         #print
         #print
         #print "thancurveCircle() itry=", itry
@@ -162,7 +159,7 @@ def thanCurveCa(curve, circle, ccu, caLinet):
 
         i1, i2 = bracketNearest(cp1, iseg1)
         if itry == 0:
-            dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in xrange(i1, i2-1))
+            dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in range(i1, i2-1))
             dm /= (i2-i1-1)
             #print "dm=",dm
         dm *= 0.5          #Make finer line representation of the curve
@@ -188,7 +185,7 @@ def thanCurveLine(curve, line, ccu):
     dm = 1.0e100
     erpp = 1.0e100
     erp = erpp/10.0
-    for itry in xrange(ntries):
+    for itry in range(ntries):
         #print
         #print
         #print "thancurveLine() itry=", itry
@@ -221,7 +218,7 @@ def thanCurveLine(curve, line, ccu):
         i1, i2 = bracketNearest(cp1, iseg1)
         i3, i4 = bracketNearest(cp2, iseg2)
         if itry == 0:
-            dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in xrange(i1, i2-1))
+            dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in range(i1, i2-1))
             dm /= (i2-i1-1)
             #print "dm=",dm
         dm *= 0.5          #Make finer line representation of the curve
@@ -249,7 +246,7 @@ def thanCurveCurve(curve, eother, ccu):
     dm = 1.0e100
     erpp = 1.0e100
     erp = erpp/10.0
-    for itry in xrange(ntries):
+    for itry in range(ntries):
         #print
         #print
         #print "thancurvecurve() itry=", itry
@@ -283,8 +280,8 @@ def thanCurveCurve(curve, eother, ccu):
         i1, i2 = bracketNearest(cp1, iseg1)
         i3, i4 = bracketNearest(cp2, iseg2)
         if itry == 0:
-            dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in xrange(i1, i2-1))
-            dm += sum(hypot(cp2[i+1][1]-cp2[i][1], cp2[i+1][0]-cp2[i][0]) for i in xrange(i3, i4-1))
+            dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in range(i1, i2-1))
+            dm += sum(hypot(cp2[i+1][1]-cp2[i][1], cp2[i+1][0]-cp2[i][0]) for i in range(i3, i4-1))
             dm /= (i2-i1+i4-i3-2)
             #print "dm=",dm
         dm *= 0.5          #Make finer line representation of the curve
@@ -307,8 +304,8 @@ def thanLineLinet(cp1, i1, i2, cp2, i3, i4, ccu):
     "Finds intersection of multi segment line1 with multi segment line2 near point ccu."
     d = 1.0e100
     iseg1t = iseg2t = ct = None
-    for iseg1 in xrange(i1, i2-1):
-        for iseg2 in xrange(i3, i4-1):
+    for iseg1 in range(i1, i2-1):
+        for iseg2 in range(i3, i4-1):
             cp = thanintersect.thanSegSeg(cp1[iseg1], cp1[iseg1+1], cp2[iseg2], cp2[iseg2+1])
             if cp is None: continue
             d1 = hypot(ccu[1]-cp[1], ccu[0]-cp[0])
@@ -324,7 +321,7 @@ def thanCircleLinet(circle, cp1, i1, i2, ccu):
     "Finds intersection of circle with line cp1 searching from i1 to i2."
     d = 1.0e100
     iseg1t = ct = None
-    for iseg1 in xrange(i1, i2-1):
+    for iseg1 in range(i1, i2-1):
         cps = thanintersect.thanSegCir(cp1[iseg1], cp1[iseg1+1], circle.cc, circle.r)
         for cp in cps:
             d1 = hypot(ccu[1]-cp[1], ccu[0]-cp[0])
@@ -339,7 +336,7 @@ def thanArcLinet(arc, cp1, i1, i2, ccu):
     "Finds intersection of arc with line cp1 searching from i1 to i2."
     d = 1.0e100
     iseg1t = ct = None
-    for iseg1 in xrange(i1, i2-1):
+    for iseg1 in range(i1, i2-1):
         cps = thanintersect.thanSegCir(cp1[iseg1], cp1[iseg1+1], arc.cc, arc.r)
         for cp in cps:
             th = atan2(cp[1]-arc.cc[1], cp[0]-arc.cc[0]) % PI2
@@ -367,6 +364,7 @@ def thanInit():
     from .thancirc  import ThanCircle
     from .thanarc   import ThanArc
     from .thanimpil import ThanImage
+    from .thanface3d import ThanFace3d
     from .thanclasses import thanElemClass
     global thanIntPair, thanExtPair
     thanIntPair = \
@@ -375,6 +373,7 @@ def thanInit():
                     ThanImage  : thanArcLine,
                     ThanLine   : thanArcLine,
                     ThanCurve  : thanArcLine,
+                    ThanFace3d : thanArcLine,
                   },
 
       ThanCircle: { ThanArc    : __Inv(thanArcCircle),
@@ -382,6 +381,7 @@ def thanInit():
                     ThanImage  : thanCircleLine,
                     ThanLine   : thanCircleLine,
                     ThanCurve  : thanCircleLine,
+                    ThanFace3d : thanCircleLine,
                   },
 
       ThanLine:   { ThanArc    : __Inv(thanArcLine),
@@ -389,6 +389,7 @@ def thanInit():
                     ThanImage  : thanLineLine,
                     ThanLine   : thanLineLine,
                     ThanCurve  : thanLineLine,
+                    ThanFace3d : thanLineLine,
                   },
 
       ThanImage:  { ThanArc    : __Inv(thanArcLine),
@@ -396,6 +397,7 @@ def thanInit():
                     ThanImage  : thanLineLine,
                     ThanLine   : thanLineLine,
                     ThanCurve  : thanLineLine,
+                    ThanFace3d : thanLineLine,
                   },
 
       ThanCurve:  { ThanArc    : thanCurveArc,
@@ -403,6 +405,15 @@ def thanInit():
                     ThanImage  : thanCurveLine,
                     ThanLine   : thanCurveLine,
                     ThanCurve  : thanCurveCurve,
+                    ThanFace3d : thanLineLine,
+                  },
+
+      ThanFace3d: { ThanArc    : __Inv(thanArcLine),
+                    ThanCircle : __Inv(thanCircleLine),
+                    ThanImage  : thanLineLine,
+                    ThanLine   : thanLineLine,
+                    ThanCurve  : thanLineLine,
+                    ThanFace3d : thanLineLine,
                   },
     }
     eq = {}                                 #Equivalent class for a ThanCurve subclass
@@ -576,8 +587,11 @@ def extLine2Line(line1, line2, ccu):
         ps.append((d, cp))
     return iend, ps
 
+def thanDummyext(e1, e2, ccu):
+    "Returns no intersections."
+    return 0, []
 
 def thanExt(e1, e2, ccu, proj):
     "Call the appropriate extension function; find distance from nearest endpoint."
-    func = thanExtPair.get((e1.__class__, e2.__class__), thanDummy)
+    func = thanExtPair.get((e1.__class__, e2.__class__), thanDummyext)
     return func(e1, e2, ccu)

@@ -1,6 +1,3 @@
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import re, tkinter
 import p_gnum, p_gtkwid
 from .gdal_bands import readWv2mBands, readWv2pBand
@@ -45,7 +42,7 @@ class Hist(object):
         self.colmin = self.cols[0]
         self.colmax = self.cols[-1]
         self.fmax = max(self.freq.values())   #OK for python 2, 3
-        print("statistics: colimn, colmax, fmax=", self.colmin, self.colmax, self.fmax)
+        #print("statistics: colimn, colmax, fmax=", self.colmin, self.colmax, self.fmax)
 
     def approx(self):
         "Find an initial approximation of position and size, inspecting histograms."
@@ -55,18 +52,18 @@ class Hist(object):
         h1 = self
         if 1:
             fmax = per*h1.fmax
-            print("fmax=",fmax)
-            for i in xrange(len(h1.cols)):
+            #print("fmax=",fmax)
+            for i in range(len(h1.cols)):
                 if h1.freq[i] < fmax: continue
                 if i < x1: x1 = i
                 break
-            print("x1, col(x1)=", x1, h1.cols[x1])
-            print("col[4095]=", h1.cols[4095])
-            for i in xrange(len(h1.cols)-1, 0, -1):
+            #print("x1, col(x1)=", x1, h1.cols[x1])
+            #print("col[4095]=", h1.cols[4095])
+            for i in range(len(h1.cols)-1, 0, -1):
                 if h1.freq[i] < fmax: continue
                 if i > x2: x2 = i
                 break
-            print("x2, col(x2)=", x2, h1.cols[x2])
+            #print("x2, col(x2)=", x2, h1.cols[x2])
         return x1, x2
 
 
@@ -174,7 +171,7 @@ class HistWin(p_gtkwid.ThanDialog, p_gtkwid.ThanFontResize):
         im = None
         for h in self.his:
             fmax = h.fmax*0.001
-            for i in xrange(len(h.freq)-1, 300, -1):   #No less than 300 in order to have room for the drag window
+            for i in range(len(h.freq)-1, 300, -1):   #No less than 300 in order to have room for the drag window
                 if h.freq[i] > fmax: break
             if im is None: im = i
             if i > im: im = i
@@ -240,13 +237,13 @@ class DragRectangle(object):
         for h1 in his:
             fmax = per*h1.fmax
             print("fmax=",fmax)
-            for i in xrange(len(h1.cols)):
+            for i in range(len(h1.cols)):
                 if h1.freq[i] < fmax: continue
                 if i < x1: x1 = i
                 break
             print("x1, col(x1)=", x1, h1.cols[x1])
             print("col[4095]=", h1.cols[4095])
-            for i in xrange(len(h1.cols)-1, 0, -1):
+            for i in range(len(h1.cols)-1, 0, -1):
                 if h1.freq[i] < fmax: continue
                 if i > x2: x2 = i
                 break

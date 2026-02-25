@@ -1,33 +1,31 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which creates a bioclimatic city plan.
 This module defines Hippodamus urban plan system.
 """
-from __future__ import print_function
 from math import cos, sin, pi
 import itertools
 import p_gimage
@@ -149,9 +147,9 @@ class HippoUrban:
             pyb = pya+state.boik[jjy]
             if pyb > pymax: break
             ca1, ca2 = p_gtri.thanPolygonLine(self.hull, pya, n)
-            assert ca1 != None, "There should be 2 intersections!"
+            assert ca1 is not None, "There should be 2 intersections!"
             cb1, cb2 = p_gtri.thanPolygonLine(self.hull, pyb, n)
-            assert cb1 != None, "There should be 2 intersections!"
+            assert cb1 is not None, "There should be 2 intersections!"
             pxa1 = t[0]*ca1[0]+t[1]*ca1[1]
             pxa2 = t[0]*ca2[0]+t[1]*ca2[1]
             if pxa1 > pxa2: ca1, pxa1, ca2, pxa2 = ca2, pxa2, ca1, pxa1
@@ -202,7 +200,7 @@ class HippoUrban:
             pyaxis = int(pyaxis/dy+0.5)*dy
             if pyaxis > pymax: break
             c1, c2 = p_gtri.thanPolygonLine(self.hull, pyaxis, n)
-            assert c1 != None, "There should be 2 intersections!"
+            assert c1 is not None, "There should be 2 intersections!"
             roads.append((c1, c2))
             py += bod[jj] + boik[jj]
             j += 1

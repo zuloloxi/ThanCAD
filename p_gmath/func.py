@@ -1,5 +1,4 @@
 "Special functions module."
-from __future__ import print_function
 from math import sqrt, cos, sin, pi, exp, fabs, log
 from .varcon import PI05, PIR
 from .var import fsign
@@ -75,8 +74,8 @@ def fresnel(x):
 
 def klotXy(A, L, pr=1):
     "Calculates xy coordinates of clothoid of parameter A at distance L from start."
-    s, c = fresnel(L / A / PIR)
     apir = A * PIR
+    s, c = fresnel(L / apir)
     return (apir*c, apir*s*pr)
 
 #============================================================================
@@ -125,7 +124,7 @@ def phiNormalUnitInv(y):
 def erfinvapprox(x):
     "A very good approximation of the inverse error function."
 #    a = 8.0*(pi-3.0) / (3.0*pi*(4.0-pi)) #This value of a gives slightly worse approximation 
-    a = 0.147                             #This value of a gives slightly better approximation (see developer/erfapprox.pdf)
+    a = 0.147                             #This value of a gives slightly better approximation (see developer/erf.pdf)
     t2 = log(1.0-x**2)
     t1 = 2.0/(pi*a) + t2/2.0
     return fsign(sqrt(sqrt(t1**2-t2/a) - t1), x)

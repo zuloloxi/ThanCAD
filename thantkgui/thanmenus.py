@@ -1,33 +1,30 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the menus and the mechanism to create and update them.
 """
-from __future__ import print_function
 import p_ggen, p_gtkwid
 import thanopt
 from thanvers import tcver
@@ -36,25 +33,6 @@ from thantrans import T, Tmatch, Tphot, Tarch, Tcivil, Turban
 
 class ThanCadTkMenu(object):
     "It creates ThanCad menu system and modifies it if necessary."
-
-    def __initold__(self, win, main=False):
-        "Create the menu system."
-        if main: seq, menus = thanMainMenus(win.thanGudCommandBegin)
-        else:    seq, menus = thanStandardMenus(win.thanGudCommandBegin)
-        ms = []
-        for m in seq: ms.extend(menus[m])
-        if main: menubar, self.__submenus = p_gtkwid.thanTkCreateThanMenus2(win, ms)
-        else:    menubar, self.__submenus = p_gtkwid.thanTkCreateThanMenus2(win, ms, win.thanStatusBar.thanInfoSet)
-        win["menu"] = menubar
-        if not main:
-            self.__submenus["File"]   = self.__submenus[T["&File"].replace("&", "")]
-            self.__submenus["Window"] = self.__submenus[T["&Window"].replace("&", "")]
-
-        self.__irecent = len(menus["File"]) - 4  #Position in file menu where new recent file will be inserted
-        self.__recent = []                       #Paths of all recent files
-        self.__iopened = 0                       #Position in file menu where new opened file will be inserted
-        self.__opened = []                       #String representation of all opened projects
-
 
     def __init__(self, win, main=False):
         "Create the menu system."
@@ -76,7 +54,8 @@ class ThanCadTkMenu(object):
             self.__submenus["File"]   = self.__submenus[T["&File"].replace("&", "")]
             self.__submenus["Window"] = self.__submenus[T["&Window"].replace("&", "")]
 
-        self.__irecent = len(menus["File"]) - 4  #Position in file menu where new recent file will be inserted
+        self.__irecent = len(self.__submenus["File"])      #This may be none if tk has not yet initialized
+        if self.__irecent is not None: self.__irecent -= 2 #Position in file menu where new recent file will be inserted
         self.__recent = []                       #Paths of all recent files
         self.__iopened = 0                       #Position in file menu where new opened file will be inserted
         self.__opened = []                       #String representation of all opened projects
@@ -86,14 +65,19 @@ class ThanCadTkMenu(object):
         "Adds a new recent file to the file menu."
         import thancom
         fmenu = self.__submenus["File"]
+        if self.__irecent is None: self.__irecent = len(fmenu) - 2  #Position in file menu where new recent file will be inserted
         n = len(self.__recent)
         try: i = self.__recent.index(fpath)      #fpath is already in menu
         except ValueError: i = -1                #fpath is not in menu
         if   i >= 0:         self.__delRecent(i) #Delete fpath from menu if already in the menu
         elif n >= MAXRECENT: self.__delRecent(MAXRECENT-1)  #Delete oldest recent file from file menu
         def op():
-            thancom.thancomfile.thanFileOpenPaths(proj, [fpath])
-            if proj[1]: proj[2].thanGudCommandEnd()    #in case proj is ThanCad and not another drawing
+            nopened = thancom.thancomfile.thanFileOpenPaths(proj, [fpath])
+            if not proj[1]: return #in case proj is ThanCad and not another drawing
+            if nopened > 0:
+                proj[2].thanGudCommandEnd()
+            else:
+                proj[2].thanGudCommandEnd("\n"+T["No file was opened."], "can")
         fmenu.insert_command(self.__irecent, label=fpath.name, foreground="blue",
             command=op, help=fpath)              #Insert fpath as the newest recent file
         self.__recent.insert(0, fpath)           #Save fpath
@@ -368,7 +352,7 @@ def thanStandardMenus(B):
           (S(B, "break"),      T["&Break"],        T["Breaks an element into 2 pieces"]),
           (S(B, "trim"),       T["&Trim"],         T["Explode 1 or more elements to smaller objects"]),
           (S(B, "extend"),     T["Extend"],        T["Extends lines and arcs until they cross other elements being the boundary edges"]),
-          (S(B, "filet"),      T["&Filet"],        T["Cuts elements with other elements being the cutting edges"]),
+          (S(B, "fillet"),     T["&Fillet"],       T["Cuts elements with other elements being the cutting edges"]),
           (S(B, "join"),       T["&Join"],         T["Joins 2 or more adjacent lines"]),
           (S(B, "join2d"),     T["Join &2D"],      T["Joins 2 or more adjacent lines"]),
           (S(B, "joingap"),    T["Join &gap"],     T["Joins 2 lines filling the gap between them."]),
@@ -412,7 +396,7 @@ def thanStandardMenus(B):
         ])
         if thanFrape.thermo:
             m1.extend(\
-            [ (S(B, "thermohumid"), u"Εισαγωγή μετρήσεων θερμοϋγρομέτρου", u"Διπλωματική εργασία Χάρη Πατούνη, Νίκου Σίμου, Σχολή Πολ. Μηχανικών, ΕΜΠ, 2012"),
+            [ (S(B, "thermohumid"), u"Ξ•ΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ® ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ…", u"Ξ”ΞΉΟ€Ξ»Ο‰ΞΌΞ±Ο„ΞΉΞΊΞ® ΞµΟΞ³Ξ±ΟƒΞ―Ξ± Ξ§Ξ¬ΟΞ· Ξ Ξ±Ο„ΞΏΟΞ½Ξ·, ΞΞ―ΞΊΞΏΟ… Ξ£Ξ―ΞΌΞΏΟ…, Ξ£Ο‡ΞΏΞ»Ξ® Ξ ΞΏΞ». ΞΞ·Ο‡Ξ±Ξ½ΞΉΞΊΟΞ½, Ξ•ΞΞ , 2012"),
             ])
         if thanFrape.civil:
             m1.extend(\
@@ -465,7 +449,7 @@ def thanMainMenus(B):
         m["File"] = \
         [ ("menu", "&File", ""),            # Menu Title
           (S(B, "new"),    "&New",  "Makes an empty drawing"),
-#          (S(B, "new"),    u"&Νέο Θανάσης",  "Makes an empty drawing"),
+#          (S(B, "new"),    u"&ΞΞ­ΞΏ ΞΞ±Ξ½Ξ¬ΟƒΞ·Ο‚",  "Makes an empty drawing"),
           (S(B, "open"),   "&Open", "Opens an existing drawing"),
           ("-",),               # Separator
           (S(B, "sykin"),  "&Import syk", "Imports a syk file"),

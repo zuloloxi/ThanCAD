@@ -1,41 +1,44 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes file related commands.
 """
 
-from __future__ import print_function
-import bz2, copy
-from p_ggen import path, doNothing, ThanImportError
-import p_gtkwid
-import thandwg, thanimp, thanexp, thantkdia, thanvers
+import bz2, copy, tkinter
+try: import xlwt          #Hopefully py2exe and cxFreeze get the hint to include xlwt
+except ImportError: pass
+
+from p_ggen import path, doNothing, ThanImportError, thanGetEncoding
+import p_gtkwid, p_ggeod
+import thandwg, thanimp, thanexp, thantkdia, thanvers, thandr
 import thanopt, thanlayer
 from thantrans import T
 from thanvar import Canc, thanfiles
-from . import thancomview, thanrwf
+from . import thancomview, thanrwf, thancomsel, thanundo
+from .thancommod import thanModCanc, thanModEnd
 
 mm = p_gtkwid.thanGudModalMessage
 
@@ -59,7 +62,6 @@ def thanFileNewDo(proj, mes=None):
     projnew[2].thanTkSetFocus()
     return projnew
 
-
 #=============================================================================
 
 _importClass = { ".dxf": ("Drawing Interchange",     thanimp.ThanImportDxf),
@@ -67,11 +69,12 @@ _importClass = { ".dxf": ("Drawing Interchange",     thanimp.ThanImportDxf),
                  ".brk": ("3D Lines",                thanimp.ThanImportBrk),
                  ".syn": ("Topographic Points",      thanimp.ThanImportSyn),
                  ".lin": ("Linicad Drawing",         thanimp.ThanImportLin),
+                 ".lcad":("Linicad Drawing",         thanimp.ThanImportLcad),
                  ".xyz": ("3D Lines, Intermap xyz format", thanimp.ThanImportXyzIntermap),
                  ".kml": ("Google KML 3D points (placemarks)", thanimp.ThanImportKml),
                  ".kmz": ("Compressed Google KML 3D points (placemarks)", thanimp.ThanImportKmz),
                }
-_ser = ".dxf .syk .brk .syn .kml .kmz .xyz .lin".split()
+_ser = ".dxf .syk .brk .syn .kml .kmz .xyz .lcad .lin".split()
 if thanopt.thancon.thanFrape.civil:
     import thanprocivil
     from thanprocivil.thanproimp import ThanImportMhk
@@ -81,6 +84,82 @@ _exts = [(_importClass[suf][0], suf) for suf in _ser]
 del _ser
 _exts.insert(0, ("ThanCad xml", ".thcx"))
 _exts.append(("All Files", "*"))
+
+
+def thanFileOpenSpreadPoints(proj):
+    "Opens one or more spreadsheet files, which contain points."
+    _spreadClass = { #".ods": ("LibreOffice points",thanimp.ThanImportOdsPoints),
+                     ".xls": ("Excel points",      thanimp.ThanImportXlsPoints),
+                     ".xlsx":("Excel points",      thanimp.ThanImportXlsPoints),
+                   }
+    _ser = ".xls .xlsx".split()
+    exts = [(_spreadClass[suf][0], suf) for suf in _ser]
+    del _ser
+
+    fildir = thanfiles.getFiledir()
+    while True:
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
+                 initialdir=fildir, multiple=True)
+        if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
+        nopened = thanFileOpenPaths(proj, fns, _spreadClass)
+        if nopened > 0: return proj[2].thanGudCommandEnd()
+
+
+def thanFileOpenSpreadLines(proj):
+    "Opens one or more spreadsheet files, which contain lines."
+    _spreadClass = { #".ods": ("LibreOffice points",thanimp.ThanImportOdsPoints),
+                     ".xls": ("Excel lines",      thanimp.ThanImportXlsLines),
+                     ".xlsx":("Excel lines",      thanimp.ThanImportXlsLines),
+                   }
+    _ser = ".xls .xlsx".split()
+    exts = [(_spreadClass[suf][0], suf) for suf in _ser]
+    del _ser
+
+    fildir = thanfiles.getFiledir()
+    while True:
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
+                 initialdir=fildir, multiple=True)
+        if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
+        nopened = thanFileOpenPaths(proj, fns, _spreadClass)
+        if nopened > 0: return proj[2].thanGudCommandEnd()
+
+
+def thanFileOpenSpreadTexts(proj):
+    "Opens one or more spreadsheet files, which contain lines."
+    _spreadClass = { #".ods": ("LibreOffice points",thanimp.ThanImportOdsPoints),
+                     ".xls": ("Excel texts",      thanimp.ThanImportXlsTexts),
+                     ".xlsx":("Excel texts",      thanimp.ThanImportXlsTexts),
+                   }
+    _ser = ".xls .xlsx".split()
+    exts = [(_spreadClass[suf][0], suf) for suf in _ser]
+    del _ser
+
+    fildir = thanfiles.getFiledir()
+    while True:
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
+                 initialdir=fildir, multiple=True)
+        if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
+        nopened = thanFileOpenPaths(proj, fns, _spreadClass)
+        if nopened > 0: return proj[2].thanGudCommandEnd()
+
+
+def thanFileOpenSpreadSurface(proj):
+    "Opens one or more spreadsheet files, which contain a surface."
+    _spreadClass = { #".ods": ("LibreOffice points",thanimp.ThanImportOdsPoints),
+                     ".xls": ("Excel surface",      thanimp.ThanImportXlsSurface),
+                     ".xlsx":("Excel surface",      thanimp.ThanImportXlsSurface),
+                   }
+    _ser = ".xls .xlsx".split()
+    exts = [(_spreadClass[suf][0], suf) for suf in _ser]
+    del _ser
+
+    fildir = thanfiles.getFiledir()
+    while True:
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
+                 initialdir=fildir, multiple=True)
+        if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
+        nopened = thanFileOpenPaths(proj, fns, _spreadClass)
+        if nopened > 0: return proj[2].thanGudCommandEnd()
 
 
 def thanFileOpen(proj, suf1=None, forceunload=False):
@@ -108,11 +187,11 @@ def thanFileOpen(proj, suf1=None, forceunload=False):
         fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
                  initialdir=fildir, multiple=True)
         if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
-        nopened = thanFileOpenPaths(proj, fns, forceunload)
+        nopened = thanFileOpenPaths(proj, fns, _importClass, forceunload)
         if nopened > 0: return proj[2].thanGudCommandEnd()
 
 
-def thanFileOpenPaths(proj, fns, forceunload=False):
+def thanFileOpenPaths(proj, fns, impClass=_importClass, forceunload=False):
     """Opens files with known paths.
 
     This is needed to implement opening of recent files (as shown in the menus).
@@ -120,9 +199,10 @@ def thanFileOpenPaths(proj, fns, forceunload=False):
     ThanCad starts."""
     nopened = 0
     for fn in fns:
+            index1 = proj[2].thanCom.index(tkinter.END+"-1c")  #TkGui dependent: get end position of command window
             fn = path(fn)
-            if fn.ext in _importClass:
-                dr, zoomext = impFile(proj, fn, _importClass[fn.ext][1])
+            if fn.ext in impClass:
+                dr, zoomext = impFile(proj, fn, impClass[fn.ext][1])
                 success = "%s: %s" % (fn.name, T["file has been successfully imported."])
             else:
                 dr = openThcx(proj, fn, forceunload)
@@ -135,9 +215,23 @@ def thanFileOpenPaths(proj, fns, forceunload=False):
                 replace = replace and (not proj[1].thanIsModified())
                 replace = replace and thanfiles.isTempname1(proj[0].basename())
                 if replace: __openHouseReplace(proj, fn, dr, success, zoomext)
-                else:       __openHouse(proj, fn, dr, success, zoomext)
+                else:       __openHouse(proj, fn, dr, success, zoomext, index1)
     return nopened
 
+
+
+def __openBZ2(proj, fn, dr, encoding):
+    "Open thcx file stored as either BZ2 compessed or text, with encoding."
+    fr = bz2.open(fn, "rt", compresslevel=1, encoding=encoding, errors="surrogateescape")
+    projtemp = (fn, dr, proj[2])      #Make a temporary project for ThanRfile
+    frf = thanrwf.ThanRBZfile(fr, projtemp, fn)
+    if not frf.isBz2():    #If not a bzip2 file, then it is normal text file
+        frf.thanDestroy()
+        #import io, p_ggen
+        #fr = io.open(fn, encoding=p_ggen.thanGetDefaultEncoding())
+        fr = open(fn, encoding=encoding, errors="surrogateescape")
+        frf = thanrwf.ThanRfile(fr, projtemp, fn)
+    return frf
 
 
 def openThcx(proj, fn, forceunload):
@@ -145,20 +239,16 @@ def openThcx(proj, fn, forceunload):
     dr = thandwg.ThanDrawing()
     try:
         try:
-            fr = bz2.BZ2File(fn, "r", 0, 1)
-            projtemp = (fn, dr, proj[2])      #Make a temporary project for ThanRfile
-            frf = thanrwf.ThanRBZfile(fr, projtemp, fn)
-            if not frf.isBz2():    #If not a bzip2 file, then it is normal text file
-                frf.thanDestroy()
-                #import io, p_ggen
-                #fr = io.open(fn, encoding=p_ggen.thanGetDefaultEncoding())
-                fr = open(fn)
-                frf = thanrwf.ThanRfile(fr, projtemp, fn)
-            dr.thanImpThc(frf, forceunload, prt=proj[2].thanPrt)
+            frf = __openBZ2(proj, fn, dr, "utf_8")      #Open temporarily to read version
+            version = dr.thanReadVersion(frf)   #May raise ValueError if invalid version
+            frf.thanDestroy()
+            if version < (0,4,0): frf = __openBZ2(proj, fn, dr, "iso8859_7") #reopen with old encoding
+            else:                 frf = __openBZ2(proj, fn, dr, "utf_8")     #reopen with UTF8
+            dr.thanImpThc(frf, forceunload, prt=proj[2].thanPrt) #may raise ValueError and other exceptions
         except StopIteration as why:
             raise IOError("Incomplete file: end of file encountered")
-    except (IOError, ValueError, IndexError, ImportError) as e:    # ImportError happens if BZ2file can not import its base class
-        raise
+    except (IOError, ValueError, IndexError, ImportError, OSError) as e:  # ImportError happens if BZ2file can not import its base class
+            #JSONDecodeError is a subclass of ValueError and thus is handled by this except command
         dr.thanDestroy()
         try:
             frf
@@ -173,19 +263,29 @@ def openThcx(proj, fn, forceunload):
     return dr
 
 
-def impFile(proj, fn, ImportClass, defaultLayer="0"):
-    "Imports a drawing saved in .dxf .syk .brk .syn .lin .mhk .xyz format."
+def impFile(proj, fn, ImportClass, defaultLayer="0", defaultLgeodp=None):
+    "Imports a drawing saved in .dxf .syk .brk .syn .lin .mhk .xyz .lcad .lin format."
     fail = "%s: %s" % (fn.name, T["import failed."])
     try:
-        mode = "r"
-        if fn.ext == ".kml" or fn.ext == ".kmz": mode = "rb"
-        finp = open(fn, mode)
+        if fn.ext in (".kml", ".kmz", ".lin", ".lcad", ".ods", ".xls", ".xlsx"):
+            #p_gimgeo library used to open kml,kmz: a) accepts filenames and not file objects
+            #b) sets the encoding defined in the kml/kmz file. Thus here we open the files
+            #just to make sure that we can.
+            #Linicad .lin and .lcad file must be opened as binary as they are
+            #based on pickle.
+            #Spreadsheet files must be opened in binary
+            finp = open(fn, "rb")   #Thanasis2016_12_24 (merry Christmas!)
+        else:  #.dxf .syk .brk .syn .xyz .mhk
+            finp = open(fn, "r", encoding=thanGetEncoding(), errors="replace") #Thanasis2016_12_24 (merry Christmas!)
     except IOError as e:
         mm(proj[2], e, "%s: %s" % (fn.name, fail), p_gtkwid.ERROR)   # (Gu)i (d)ependent
         proj[2].thanGudCommandEnd(fail, "can")
         return None, None
 #---create a new drawing
     dr = thandwg.ThanDrawing()
+    if defaultLgeodp is not None:
+        dr.Lgeodp = defaultLgeodp.copy()
+        dr.geodp = p_ggeod.params.toProj(proj[1].Lgeodp)
 #---import
     ts = thanimp.ThanCadDrSave(dr, proj[2].thanPrt)
     imp = ImportClass(finp, ts, defaultLayer)
@@ -209,7 +309,7 @@ def impFile(proj, fn, ImportClass, defaultLayer="0"):
     return dr, zoomext
 
 
-def __openHouse(proj, fn, dr, mes, zoomext):
+def __openHouse(proj, fn, dr, mes, zoomext, index1):
     "House keeping for file open."
     import thantkgui
     fn = fn.abspath()
@@ -218,6 +318,7 @@ def __openHouse(proj, fn, dr, mes, zoomext):
     win = thantkgui.ThanTkGuiWinDraw()
     projnew = win.setDrawing(fn, dr)
     #projnew = win.thanProj
+    projnew[2].thanCom.thanInsertFtext(proj[2].thanCom.thanGetFtext(index1), tkinter.END+"-1c")
     try:
         if zoomext: thancomview.thanZoomExt1(projnew)
         projnew[2].thanRegen()
@@ -232,7 +333,7 @@ def __openHouse(proj, fn, dr, mes, zoomext):
     v[:] = projnew[2].thanGudZoomWin(v) # In case that the file defined other viewport
     projnew[1].thanResetModified()      # In case the file was saved with the modified variable set to true
     proj[2].thanPrt(mes, "info")
-    projnew[2].thanGudCommandEnd()
+    projnew[2].thanGudCommandEnd(mes, "info")
     projnew[2].thanTkSetFocus()
     return projnew
 
@@ -278,7 +379,7 @@ def thanFileMerge(proj, copyelems=False, forceunload=False):
         fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to insert"],
                  initialdir=fildir, multiple=True)
         if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
-        projothers = thanFileMergePaths(proj, fns, forceunload)
+        projothers = thanFileMergePaths(proj, fns, _importClass, forceunload)
         if len(projothers) > 0: break
 
     projothers, newcl, newroot = thanMergeHier(proj, projothers, copyelems)
@@ -291,18 +392,20 @@ def thanFileMerge(proj, copyelems=False, forceunload=False):
     proj[2].thanGudCommandEnd(T["%d file(s) were inserted"] % (len(projothers),), "info")
 
 
-def thanFileMergePaths(proj, fns, forceunload=False):
+def thanFileMergePaths(proj, fns, impClass, forceunload=False):
     """Opens files with known paths for merging with current proj.
 
-    This closely resembled thanFileOpenPaths on purpose. Any change must be
+    This closely resembles thanFileOpenPaths on purpose. Any change must be
     done to both functions."""
     projothers = []
     cl = proj[1].thanLayerTree.thanCur
     clname = cl.thanAtts[thanlayer.THANNAME].thanVal
     for fn in fns:
             fn = path(fn)
-            if fn.ext in _importClass:
-                dr, _ = impFile(proj, fn, _importClass[fn.ext][1], defaultLayer=clname)
+            if fn.ext in impClass:
+                print("thanFileMergePaths(): Lgeodp=", proj[1].Lgeodp)
+                dr, _ = impFile(proj, fn, impClass[fn.ext][1], defaultLayer=clname,
+                    defaultLgeodp=proj[1].Lgeodp)
             else:
                 dr = openThcx(proj, fn, forceunload)
             if dr is not None:
@@ -462,6 +565,100 @@ def thanFileSaveas(proj, suf1=None):
         if nopened > 0: return                             # OK
 
 
+def thanFileExportSpreadx(proj, eltype):
+    "Export user selected points or lines to an .xlsx/.xls file."
+    try:
+        import xlwt
+    except ImportError:
+        return proj[2].thanGudCommandCan(T["Can not export xls/xlsx spreadsheets: The xlwt library/package was not found.\n"\
+            "Please install xlwt in your system and retry."])
+
+    if eltype == "points":
+        filterfun = lambda e: isinstance(e, thandr.ThanPoint)
+        expmethod = proj[1].thanExpXlspoints
+    elif eltype == "lines":
+        filterfun = lambda e: isinstance(e, thandr.ThanLine)
+        expmethod = proj[1].thanExpXlslines
+    else:
+        assert 0, "eltype='{}': it should be 'points' or 'lines'".format(eltype)
+    while True:
+        proj[2].thanPrt(T["Select {} to export:".format(eltype)], "info1")
+        res = thancomsel.thanSelectOr(proj, standalone=False, filter=filterfun,
+            optionname="all", optiontext="a=all")
+        if res == Canc: return thanModCanc(proj)           # Profile was cancelled
+        if res == "a":
+            #The user did not select anything, but keep current (empty) selection
+            break
+        break
+    if res == "a":
+        elements = None  #This means selection of all elements in the drawing
+    else:
+        elements = proj[2].thanSelall
+
+    book = xlwt.Workbook()
+    sh = book.add_sheet(eltype, cell_overwrite_ok=False)
+    xf = xlwt.Style.easyxf(num_format_str="0.000")
+    ok, ter = expmethod(proj, sh, xf, elements)
+    if not ok:
+        fail = T["export failed."]
+        mm(proj[2], ter, fail, p_gtkwid.ERROR)    # (Gu)i (d)ependent
+        proj[2].thanGudCommandEnd(fail)
+        return 0
+
+    exts = ("excel", ".xlsx"), ("excel old", ".xls")
+    fildir = thanfiles.getFiledir()
+    while True:
+        fn = p_gtkwid.thanGudGetSaveFile(proj[2], exts, T["Export {} to spreadsheet".format(eltype)],
+            initialfile=proj[0].namebase, initialdir=fildir)
+        if fn is None: return proj[2].thanGudCommandCan()     # Open cancelled
+        try:
+            book.save(fn)
+        except Exception as e:
+            fail = "%s: %s" % (fn.name, T["export failed."])
+            mm(proj[2], str(e), fail, p_gtkwid.ERROR)    # (Gu)i (d)ependent
+        else:
+            break
+    return proj[2].thanGudCommandEnd()
+
+
+def thanFileExportImages(proj):
+    "Export user selected images to an autocad script (.scr) file."
+    comname = "exportimages"
+    filterfun = lambda e: isinstance(e, thandr.ThanImage)
+    while True:
+        proj[2].thanPrt(T["Select images to export to an autocad script file:"], "info1")
+        res = thancomsel.thanSelectOr(proj, standalone=False, filter=filterfun,
+            optionname="all", optiontext="a=all")
+        if res == Canc: return thanModCanc(proj)           # Profile was cancelled
+        if res == "a":
+            #The user did not select anything, but keep current (empty) selection
+            break
+        break
+    if res == "a":
+        elements = None  #This means selection of all elements in the drawing
+    else:
+        elements = proj[2].thanSelall
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    exts = ("Autocad script", ".scr"),
+    fildir = thanfiles.getFiledir()
+    fn, fw = p_gtkwid.thanGudOpenSaveFile(proj[2], exts, T["Export images to autocad script"],
+        initialfile=proj[0].namebase, initialdir=fildir)
+    if fn is None: return thanModCanc(proj)     # Open cancelled
+
+    ok, ter = proj[1].thanExpImages(proj, fw, elements)
+    fw.close()
+    if not ok:
+        fail = T["export failed."]
+        mm(proj[2], ter, fail, p_gtkwid.ERROR)    # (Gu)i (d)ependent
+        return thanModCanc()
+
+    proj[1].thanDoundo.thanAdd(comname, thanundo.thanActionRedo, (elems,         doNothing),  #file .scr is not rewritten
+                                        thanundo.thanActionUndo, (elems, selold, doNothing))  #file .scr is not unwritten
+    thanModEnd(proj)                              # 'Reset color' may be necessary here
+
+
 def thanFileSavePath(proj, fn):
     """Opens a file with known path.
 
@@ -470,9 +667,12 @@ def thanFileSavePath(proj, fn):
     fn = path(fn)
     if fn.ext in _exportClass:
         try:
-            #import io, p_ggen
-            #fout = io.open(fn, "w", encoding=p_ggen.thanGetDefaultEncoding())
-            fout = fn.open("w")
+            if fn.ext in (".kml"):
+                #p_gimgeo library used to write kml: a) accepts file objects opened as text
+                #b) the encoding must be utf_8
+                fout = open(fn, "w", encoding="utf_8", errors="replace")   #Thanasis2016_12_25 (merry Christmas!)
+            else:  #.dxf .syk .brk .syn .xyz .mhk
+                fout = open(fn, "w", encoding=thanGetEncoding(), errors="replace") #Thanasis2016_12_25 (merry Christmas!)
         except IOError as why:
             mm(proj[2], why, T["Open failed"])   # (Gu)i (d)ependent
             return 0
@@ -488,7 +688,8 @@ def thanFileSavePath(proj, fn):
         success = "%s: %s" % (fn.name, T["file has been successfully exported."])
     else:
         try:
-            fw = bz2.BZ2File(fn, "w", 0, 1)
+            #fw = bz2.BZ2File(fn, "w", 0, 1)
+            fw = bz2.open(fn, "wt", compresslevel=1, encoding="utf_8", errors="surrogateescape")
             fwf = thanrwf.ThanWfile(fw, proj, fn)
             proj[1].thanExpThc(fwf)
             fwf.thanDestroy()
@@ -521,8 +722,9 @@ def thanRenameHouse(proj, fn):
     fn = fn.abspath()
     thanfiles.setFiledir(fn.parent)
     thanfiles.addOpened(proj)
-    if not thanfiles.isTempname(fnold.name): thanfiles.addRecent(fnold)
-
+    if (not thanfiles.isTempname(fnold.name) and   #Temporary files are not put in recent list
+            fnold.ext.lower() not in (".ods", ".xls", ".xlsx")): #Spreadsheet open is ambiguous: not put in recent list
+        thanfiles.addRecent(fnold)
 
 #=============================================================================
 
@@ -540,7 +742,9 @@ def thanFileCloseDo(proj):
     thanfiles.delOpened(proj)
     proj[1].thanDestroy()
     proj[2].destroy()
-    if not thanfiles.isTempname(proj[0].name): thanfiles.addRecent(proj[0])
+    if (not thanfiles.isTempname(proj[0].name) and   #Temporary files are not put in recent list
+            proj[0].ext.lower() not in (".ods", ".xls", ".xlsx")): #Spreadsheet open is ambiguous: do not put in recent list
+        thanfiles.addRecent(proj[0])
     return True
 
 
@@ -638,7 +842,7 @@ def thanPlotPil(proj):
     if v is None: return proj[2].thanGudCommandCan()  # Export cancelled
     try:
 #        proj[1].thanExpPil(fpath, mode, width, height, drwin)
-        proj[1].thanExpPil(v.filIm, v.choMode, v.entWidth, v.entHeight, v.choPlotCode, v.choBackGr)
+        proj[1].thanExpPil(v.filIm, v.choMode, v.entWidth, v.entHeight, v.choPlotCode, v.choBackGr, v.butPlotWin)
     except IOError as why:
         return proj[2].thanGudCommandCan("%s:\n%s" % (T["Image could not be exported"], why))
     proj[2].thanGudCommandEnd(T["Image has been exported."], "info")
@@ -675,4 +879,3 @@ def thanExpLin(proj):
     proj[1].thanDoundo.thanAdd("linout", doNothing, (),
                                          doNothing, ())
     proj[2].thanGudCommandEnd("%d linetypes were exported." % (len(proj[1].thanLtypes),), "info")
-

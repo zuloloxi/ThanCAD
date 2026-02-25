@@ -1,7 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import sys
 from p_ggen import path, prg
 fw = None
@@ -35,7 +31,7 @@ def openFileWrmed(nPro, pro):
 #-----Save prefix for next programs in the same batch file
 
     fw.write("%d\n" % nPro)
-    for i in xrange(nPro): fw.write(pro[i]+"\n")
+    for i in range(nPro): fw.write(pro[i]+"\n")
     openfile.openFilePar(2, fw)                  # Write user parameters to file mediate.tmp
     fw.write(ERRORTEXT+"\n")                     # Marks the end of user parameters
 
@@ -77,7 +73,7 @@ def openFileMed(pro, nPro):
 
 #-----Read prefixes from file FILNAMMED
 
-    for i in xrange(nProm):
+    for i in range(nProm):
         pro[i] = fr.readline()
         if pro[i] == "": fr.close(); return None
         pro[i] = path(pro[i].strip())
@@ -89,7 +85,7 @@ def openFileMed(pro, nPro):
 
     prg(' * '+openfile.descp)
     prg(' %s %s.' % (openfile.DLGETPRE, pathMed))
-    openfile.openFilePar(1, fr)     # Διάβασε άλλες παραμέτρους
+    openfile.openFilePar(1, fr)     # Ξ”ΞΉΞ¬Ξ²Ξ±ΟƒΞµ Ξ¬Ξ»Ξ»ΞµΟ‚ Ο€Ξ±ΟΞ±ΞΌΞ­Ο„ΟΞΏΟ…Ο‚
 
 #-----Read any extra parameters for following programs
 

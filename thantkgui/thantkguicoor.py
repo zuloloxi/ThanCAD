@@ -1,27 +1,27 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines a mixin that copes with tkinter's 2 coordinate systems -
 plus the world (user) coordinate system of ThanCad. All the zoom, pan,
@@ -35,14 +35,14 @@ coordinates or if it is measured in canvas coordinates.
 The functions defined here should not interact with the user, i.e. accept input
 or print information to the user.
 """
-from __future__ import print_function
-from math import sqrt
+
+from math import sqrt, hypot
 from tkinter import SCROLL, UNITS, ALL
 from p_gmath import thanNearx, thanNear2, ThanRectCoorTransf, thanRoundCenter
 from thanvar import Canc, thanLogTk
 from thanopt import thancadconf
 from thantrans import T
-from .thantkguilowget.thantkconst import THAN_STATE_PANDYNAMIC, THAN_STATE_ZOOMDYNAMIC
+from .thantkguilowget.thantkconst import THAN_STATE
 
 
 #############################################################################
@@ -123,11 +123,20 @@ class ThanTkGuiCoor:
         print("__resetWinCoor(): Canvas reset to logical coordinates near 0,0")
 
 
+    def thanGudGetDt(self, dpix=20):
+        """Returns length in units of length equal to dpix pixels.
+
+        This is needed in order to approximate a circle, ellipse, curve etc.
+        with small line segments."""
+        dx, dy = self.thanCt.global2LocalRel(1.0, 1.0)
+        dt = hypot(1.0, 1.0)/hypot(dx, dy)*dpix    #This means that dt is about dpix pixels
+        return dt
+
+
     def thanGudGetWincm(self):
         "Returns the width and height of the window in cm."
         width, height, widthmm, heightmm, w, h = self.__robustDim()
         return 0.1*widthmm*w/width, 0.1*heightmm*h/height
-
 
     def __robustDim(self):
         """Returns the dimensions of the window and screen in pixels and in mm.
@@ -514,7 +523,7 @@ class ThanTkGuiCoor:
 
         IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
         """
-        res, cargo = self.thanWaitFor(stat, THAN_STATE_PANDYNAMIC)
+        res, cargo = self.thanWaitFor(stat, THAN_STATE.PANDYNAMIC)
         if res == Canc: return res
 
 #-------The viewport is already panned, so we only change coordinates of viewport
@@ -534,7 +543,7 @@ class ThanTkGuiCoor:
 
         IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
         """
-        cc, fact = self.thanWaitFor(stat, THAN_STATE_ZOOMDYNAMIC)   # cc is res and fact is cargo
+        cc, fact = self.thanWaitFor(stat, THAN_STATE.ZOOMDYNAMIC)   # cc is res and fact is cargo
         if cc == Canc: return cc
         return self.thanDoZoomRT(cc, fact)
 

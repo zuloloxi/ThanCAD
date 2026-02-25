@@ -1,32 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the variables and objects of a ThanCad drawing.
 """
 
-from __future__ import print_function
 from thanobj import thanObjClass
 from thantrans import T
 
@@ -40,13 +39,14 @@ def thanVarsExpThc(fw, thanVar, ver):
     f = fw.formFloat
     k = "dimensionality"; fw.writeAtt(k, v[k])              # Number of dimensions a node has
     n = v[k]
-    k = "elevation"  ; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Elevation - limited n-dimensional support
+    k = "elevation"  ;   fw.writeAtt(k, (f*n) % tuple(v[k]))  # Elevation - limited n-dimensional support
     k = "elevationstep"; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Elevation - limited n-dimensional support
-    k = "thickness"  ; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Thickness - limited n-dimensional support
-    k = "insbase"    ; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Insertion point of the drawing (as block)
-    k = "imageframe" ; fw.writeAtt(k, "%d" % v[k])          # If false, the bounding rectangles of images are not displayed
-    k = "useroffsetdistance" ; fw.writeAtt(k, f % v[k])     # Default distance for the offset command
-    k = "useroffsetthrough"  ; fw.writeAtt(k, "%d" % v[k])  # Default offset mode is "through"
+    k = "thickness"  ;   fw.writeAtt(k, (f*n) % tuple(v[k]))  # Thickness - limited n-dimensional support
+    k = "insbase"    ;   fw.writeAtt(k, (f*n) % tuple(v[k]))  # Insertion point of the drawing (as block)
+    k = "imageframe" ;   fw.writeAtt(k, "%d" % v[k])          # If false, the bounding rectangles of images are not displayed
+    k = "useroffsetdistance" ; fw.writeAtt(k, f % v[k])       # Default distance for the offset command
+    k = "useroffsetthrough"  ; fw.writeAtt(k, "%d" % v[k])    # Default offset mode is "through"
+    k = "fillmode"  ;    fw.writeAtt(k, "%d" % v[k])          # Default fillmode is True
     fw.popInd()
     fw.writeEnd(sec)
 
@@ -73,6 +73,10 @@ def thanVarsImpThc(fr, ver):
     k = "imageframe"; thanVar[k] = bool(fr.readAtt(k)[0])          #May raise StopIteration, ValueError
     k = "useroffsetdistance"; thanVar[k] = float(fr.readAtt(k)[0]) #May raise StopIteration, ValueError
     k = "useroffsetthrough";  thanVar[k] = bool(fr.readAtt(k)[0])  #May raise StopIteration, ValueError
+
+    k = "fillmode"
+    if (ver >= (0,5,0)): thanVar[k] = bool(int(fr.readAtt(k)[0]))  #May raise StopIteration, ValueError
+    else:                thanVar[k] = True  #set default fillmode for older versions of thcx files
     fr.readEnd(sec) #May raise ValueError, StopIteration
     return thanVar
 
@@ -81,13 +85,14 @@ def thanVarsDef(thanVar=None):
     "Set default values to ThanCad variables or repair old drawing."
     if thanVar is None: thanVar = {}
     n = thanVar.setdefault("dimensionality",  3)    # Number of dimensions a node has
-    thanVar.setdefault("elevation",   [0.0]*n)      # Elevation - limited n-dimensional support
+    thanVar.setdefault("elevation",    [0.0]*n)     # Elevation - limited n-dimensional support
     thanVar.setdefault("elevationstep",[1.0]*n)     # Elevation step - limited n-dimensional support
-    thanVar.setdefault("thickness",   [0.0]*n)      # Thickness - limited n-dimensional support
-    thanVar.setdefault("insbase",     [0.0]*n)      # Insertion point of the drawing (as block)
-    thanVar.setdefault("imageframe", True)          # If false, the bounding rectangles of images are not displayed
+    thanVar.setdefault("thickness",    [0.0]*n)     # Thickness - limited n-dimensional support
+    thanVar.setdefault("insbase",      [0.0]*n)     # Insertion point of the drawing (as block)
+    thanVar.setdefault("imageframe",   True)        # If false, the bounding rectangles of images are not displayed
     thanVar.setdefault("useroffsetdistance",  1.0)  # Default distance for the offset command
     thanVar.setdefault("useroffsetthrough",   True) # Default offset mode is "through"
+    thanVar.setdefault("fillmode",     True)        # Specifies whether hatches and fills, 2D solids, and wide polylines are filled in.Default fillmode is to fill solids
     return thanVar
 
 
@@ -126,7 +131,7 @@ def thanObjsExpThc(fw, thanObjects):
     fw.writeEnd(sec)
 
 
-def thanObjsImpThc(fr, thanObjects):
+def thanObjsImpThc(fr, thanObjects, than):
     "Read the arc from thc format."
     sec = "OBJECTS"
     fr.readBeg(sec)                                    #May raise ValueError, StopIteration
@@ -146,13 +151,13 @@ def thanObjsImpThc(fr, thanObjects):
             continue
         fr.unread()
         obj = clas()
-        ok = True
+        terr = None
         try:
-            obj.thanImpThc(fr)
+            obj.thanImpThc(fr, than)
         except (ValueError, IndexError) as why:
-            ok = False
-        if not ok:
-            fr.prter(T['Error while reading object "%s":\n%s\nObject is skipped'] % (name, why))
+            terr = str(why)
+        if terr is not None:
+            fr.prter(T['Error while reading object "%s":\n%s\nObject is skipped'] % (name, terr))
             te = "</" + name + ">"
             while True:
                 dline = next(fr).strip()

@@ -1,34 +1,32 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which creates a bioclimatic city plan.
 This module builds a cache for an Hippodamian plan of city layouts.
 """
 
-from __future__ import print_function
 from math import cos, sin, pi, ceil, floor
 import p_ggen, p_gtri
 from . import roadut
@@ -70,7 +68,7 @@ class HippoCache:
         self.pymin = {}        #ymin of a road where y is the direction of angle theta-90deg and also the direction of the road
         self.pymax = {}        #ymax
         prt("Building cache..")
-        for theta in p_ggen.xfrange(-90.0, 90.0, self.dtheta):
+        for theta in p_ggen.frange(-90.0, 90.0, self.dtheta):
             prt("theta=%f" % theta)
             thrad = theta*pi/180.0
             pymin, pymax = self.build_cache_roads(dtm, hull, self.roadenx, theta, thrad, self.dy, prt)
@@ -91,9 +89,9 @@ class HippoCache:
 #        prt("pymin=%.3f  -->  %.3f" % (min(py), pymin))
 #        prt("pymax=%.3f  -->  %.3f" % (max(py), pymax))
 
-        for pyaxis in p_ggen.xfrangec(pymin, pymax, dy):
+        for pyaxis in p_ggen.frangec(pymin, pymax, dy):
             c1, c2 = p_gtri.thanPolygonLine(hull, pyaxis, n)
-            assert c1 != None, "There should be 2 intersections!"
+            assert c1 is not None, "There should be 2 intersections!"
             nc, cprof = dtm.thanLineZ((c1, c2))
             if nc == -1:
                 roads[theta, pyaxis] = None      # No profile was found

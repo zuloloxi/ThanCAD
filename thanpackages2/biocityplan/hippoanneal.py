@@ -1,34 +1,30 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which creates a bioclimatic city plan.
 """
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import random, copy
 import p_gimage
 from math import pi
@@ -77,14 +73,14 @@ class HippoAnneal(p_ganneal.SAAnnealable):
         self.state.boik = [self.boik1]*nb
         self.state.hoik = [self.hoik1]*nh
         self.state.bod = [self.bod1]*max(nb, nh)
-        for i in xrange(len(self.state.bod)):                          #Thanasis2010_05_21
+        for i in range(len(self.state.bod)):                          #Thanasis2010_05_21
             self.state.bod[i] = self.r.uniform(self.bod1, self.bod2)   #Thanasis2010_05_21
         self.ndim = 2*(nb + nh)
 
 
     def test(self):
         "Tests energy for various angles."
-        for theta in p_ggen.xfrange(-90, 90, 10):
+        for theta in p_ggen.frange(-90, 90, 10):
             self.state.theta = theta*pi/180.0
             self.pol.create_geometry(self.state)
             print("theta=%8.1f   energy=%15.6f" % (theta, self.pol.energy(self.state)))
@@ -139,21 +135,21 @@ class HippoAnneal(p_ganneal.SAAnnealable):
       self.efact = 1.0
       ndim = self.ndim
       tries = ndim*10
-      for i in xrange(tries):        # Randomise a bit
+      for i in range(tries):        # Randomise a bit
           j = self.changeState()
       e1 = self.energyState()
       de = 0.0
       ndim = self.ndim
       tries = ndim*10
-      for i in xrange(tries):
+      for i in range(tries):
           j = self.changeState()
           e2 = self.energyState()
           de += abs(e2-e1)
           e1 = e2
       de /= tries
       self.efact = 100.0 / de             # Normalise delta energy to 100: efact*de = 100
-      p_ggen.prg('Αρχική ενέργεια=%.3f -> %3.f' % (e1, e1*self.efact))
-      p_ggen.prg("Αρχική μέση Δε =%.3f -> %3.f" % (de, de*self.efact))
+      p_ggen.prg('Ξ‘ΟΟ‡ΞΉΞΊΞ® ΞµΞ½Ξ­ΟΞ³ΞµΞΉΞ±=%.3f -> %3.f' % (e1, e1*self.efact))
+      p_ggen.prg("Ξ‘ΟΟ‡ΞΉΞΊΞ® ΞΌΞ­ΟƒΞ· Ξ”Ξµ =%.3f -> %3.f" % (de, de*self.efact))
       print("efact=", self.efact)
 #      self.plot("First approximation")
       return self.ndim

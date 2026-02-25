@@ -1,32 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines a tkinter window to display a ThanCad drawing.
 """
 
-from __future__ import print_function
 import weakref
 import tkinter
 import p_ggen, p_gtkwid
@@ -47,51 +46,6 @@ class ThanTkGuiWinDraw(tkinter.Toplevel,
                        thantkguihighget.ThanTkGuiHighGet,
                        thantkguihighdraw.ThanTkGuiHighDraw):
     "A window which contains one drawing."
-
-    def __initold__ (self, fpath, dr):
-        "Initialise base classes and mixins and then this class."
-        self.thanProj = [fpath, dr, self]
-        self.thanTitle = tcver.name + " - " + self.thanProj[0].name
-        self.thanSelectLayButton = False                 # NOT in selection mode
-
-        thantkguihighget.ThanTkGuiHighGet.__init__(self)
-        thantkguihighdraw.ThanTkGuiHighDraw.__init__(self)
-        self.thanScheduler = thanvar.ThanScheduler()
-
-        tkinter.Toplevel.__init__(self, master=thanfiles.ThanCad[2], class_=T["ThanDrawing"])
-        self.__position()
-        self.__createControls()
-        self.thanScriptComs = ()
-
-        self.than = p_ggen.Struct("ThanCad Tk GUI methods and options container")
-        self.than.dc = self.thanCanvas
-        self.than.thanInfoPush = self.thanStatusBar.thanInfoPush
-        self.than.thanInfoPop = self.thanStatusBar.thanInfoPop
-        self.than.viewPort = self.thanProj[1].viewPort        # Just a reference
-        self.than.thanPoints = thanfonts.thanPoints
-        self.than.thanFonts = thanfonts.thanFonts
-        self.than.imageFrameOn = dr.thanVar["imageframe"]
-        self.than.imageBrightness = 1.0
-        self.than.strang = dr.thanUnits.strang
-        self.than.strdir = dr.thanUnits.strdir
-        self.than.strdis = dr.thanUnits.strdis
-        self.than.strcoo = dr.thanUnits.strcoo
-        self.than.markselected = set()    #These element will be drawn with the "selall" tag
-
-        S = p_ggen.ThanStub
-        B = self.thanGudCommandBegin
-        self.protocol("WM_DELETE_WINDOW", S(B, "close")) # In case user closes window with window manager
-
-        thantkguicoor.ThanTkGuiCoor.__init__(self)
-        self.than.ct = self.thanCt                            # Just a reference
-        self.than.thanTstyles = self.thanTstyles              # Just a reference
-        self.than.thanLtypes = self.thanLtypes                # Just a reference
-        self.than.thanImages = self.thanImages = set()        # For image zoom reasons
-        self.thanImageCur = None
-
-        self.thanProj[1].thanLayerTree.thanCur.thanTkSet(self.than)
-        self.thanTkSetFocus()
-
 
     def __init__(self):
         "Initialise base classes and mixins and then this class."
@@ -135,13 +89,17 @@ class ThanTkGuiWinDraw(tkinter.Toplevel,
         self.than.ct = self.thanCt                            # Just a reference
         self.than.thanTstyles = dr.thanTstyles                # Just a reference
         self.than.thanLtypes  = dr.thanLtypes                 # Just a reference
+        self.than.thanDimstyles  = dr.thanDimstyles           # Just a reference
         self.than.thanImages = self.thanImages = set()        # For image zoom reasons
+        self.than.fillModeOn = dr.thanVar["fillmode"]
+        self.than.thanGudGetDt = self.thanProj[2].thanGudGetDt
 
         width, height, widthmm, heightmm = p_gtkwid.thanRobustDim()
         self.than.pixpermm = (float(width)/widthmm + float(height)/heightmm) * 0.5   #Average of the two axes
         self.than.dash = []               #Dash pattern for lines (default is continuous)
 
         self.thanImageCur = None
+        self.thanLineRecentTag = None                         #Most recent created line (so that we may continue it in the future)
         self.thanScriptComs = ()
 
         self.thanProj[1].thanLayerTree.thanCur.thanTkSet(self.than)
@@ -206,7 +164,7 @@ class ThanTkGuiWinDraw(tkinter.Toplevel,
         self.thanCanvas.grid(row=1, column=0, sticky="swne")
 
         self.thanCom = thantkcmd.ThanTkCmd(self.thanProj, bd=1, relief=tkinter.SUNKEN, background="lightyellow",
-                              height=5, maxlines=1000)
+            height=5, maxlines=1000)  #Thanasis2024_08_30:do not specify foreground, so that correctForeground() is called
         self.thanCom.grid(row=2, column=0, columnspan=2, sticky="swne")
 
         import andreas

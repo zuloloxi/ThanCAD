@@ -1,12 +1,11 @@
-# -*- coding: iso-8859-7 -*-
 "Various math functions."
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
-from math import fabs, pi, log10
+import p_ggen
+from math import fabs, pi, log10, sqrt
 from .varcon import PI2, thanThresholdx
+import bisect
 
-def dpt (gon):                    # Python guarantees that result has 
+
+def dpt (gon):                    # Python guarantees that result has
     "Converts an angle (in rads) to normal form (between 0.0 and 2*PI)."
     return gon % PI2              # the same sign as PI2 i.e. positive
 
@@ -34,9 +33,29 @@ def avgtheta(theta1, theta2, thtol=pi/4.0):  #used to be pi/20
     return thbest
 
 
+def rmse(A, B=None):
+    """Compute the root mean squared error of the difference B-A.
+
+    if B is None, the B is considered zero."""
+    assert len(A) > 0
+    if B is not None:
+        assert len(A) == len(B)
+        return sqrt(sum((b-a)**2 for a,b in zip(A, B)) / len(A))
+    else:
+        return sqrt(sum(a**2 for a in A) / len(A))
+
+
 def linint(x1, y1, x2, y2, x):
     "Linear interpolation with no checking."
     return y1 + (y2-y1)/(x2-x1) * (x-x1)
+
+
+def polylinint(x, y, xm):
+    "Interpolate xm in a polyline; x are sorted in increasing order."
+    i = bisect.bisect(x, xm)
+    if i <= 0 or i>=len(x): return max(y) #x out of range; return arbitrary y
+    #print(x[i-1], x[i], xm)
+    return linint(x[i-1], y[i-1], x[i], y[i], xm)
 
 
 def bilinint(va, ma1, wa1,
@@ -162,6 +181,14 @@ def thanNearx(xa, xb):
     return d < v*thanThresholdx
 
 
+def thanNearzero(small, big):
+    "Checks if one coordinate (small) is zero with respect to the other (big), taking numerical error into account."
+    d = fabs(small)
+    v = fabs(big)
+    if v < thanThresholdx: return d < thanThresholdx
+    return d < v*thanThresholdx
+
+
 def isZero(x, xmax=1000.0, fact=1.0e-6):
     "Test if x is zero compared to xmax; xmax is non-negative."
     if xmax < fact:
@@ -170,10 +197,10 @@ def isZero(x, xmax=1000.0, fact=1.0e-6):
 
 
 def pollap(hh, dhx, dhm):
-    """Η Fn pollap επιστρέφει true αν το hh είναι ακέραιο πολλαπλάσιο του dhx.
+    """Ξ— Fn pollap ΞµΟ€ΞΉΟƒΟ„ΟΞ­Ο†ΞµΞΉ true Ξ±Ξ½ Ο„ΞΏ hh ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΞΊΞ­ΟΞ±ΞΉΞΏ Ο€ΞΏΞ»Ξ»Ξ±Ο€Ξ»Ξ¬ΟƒΞΉΞΏ Ο„ΞΏΟ… dhx.
 
-    Η ακρίβεια dhm, σημαίνει ότι το hh είναι ακέραιο πολλαπλάσιο του dhx
-    συν ή πλην dhm. Η dhm είναι για παράδειγμα dhx/10."""
+    Ξ— Ξ±ΞΊΟΞ―Ξ²ΞµΞΉΞ± dhm, ΟƒΞ·ΞΌΞ±Ξ―Ξ½ΞµΞΉ ΟΟ„ΞΉ Ο„ΞΏ hh ΞµΞ―Ξ½Ξ±ΞΉ Ξ±ΞΊΞ­ΟΞ±ΞΉΞΏ Ο€ΞΏΞ»Ξ»Ξ±Ο€Ξ»Ξ¬ΟƒΞΉΞΏ Ο„ΞΏΟ… dhx
+    ΟƒΟ…Ξ½ Ξ® Ο€Ξ»Ξ·Ξ½ dhm. Ξ— dhm ΞµΞ―Ξ½Ξ±ΞΉ Ξ³ΞΉΞ± Ο€Ξ±ΟΞ¬Ξ΄ΞµΞΉΞ³ΞΌΞ± dhx/10."""
     h1 = round(hh/dhx)
     pollap1 = fabs(hh-h1*dhx) < dhm
     return pollap1
@@ -206,21 +233,53 @@ def rootBisection(fun, a,b,TOL):
     "Find the root of fun() using bisection method."
     c = (a+b)/2.0
     fa = fun(a)
+    if fa == 0.0: return a
     fb = fun(b)
-    assert fa*fb <= 0.0, "f(a)*f(b) should be <= 0.0"
+    if fb == 0.0: return b
+    assert fa*fb < 0.0, "f(a)*f(b) should be <= 0.0"
     while (b-a)/2.0 > TOL:
         c = (a+b)/2.0
         #print(c)
         fc = fun(c)
         if fc==0.0:
             return c
-        elif fa*fc < 0.0:
+        elif fa*fc <= 0.0:
             b = c
             fb = fc
         else:
             a = c
             fa = fc
     return (a+b)/2.0
+
+
+def rootBracket(fun, a,b, step):
+    "Bracket a solution of function fun searching from a to b by step."
+    xa = a
+    ya = fun(a)
+    for xb in p_ggen.frangec(a+step, b, step, tol=0.1):
+        yb = fun(xb)
+        if fsign(1, ya)*fsign(1, yb) <= 0.0: return xa, xb
+        xa = xb
+        ya = yb
+    return None, None
+
+
+def rootBracketnotgoodidea(fun, a,b, step):
+    "Bracket a solution of function fun searching from a to b by step."
+    x = [a]
+    y = [fun(a)]
+    for xb in p_ggen.frangec(a+step, b, step, tol=0.1):
+        x.append(xb)
+        y.append(fun(xb))
+        if fsign(y[-2])*fsign(y[-1]) <= 0.0: return x[-1], x[-2]
+    istep = 2
+    imax = len(x)
+    while istep < imax//2:
+        for i in range(istep, imax, istep):
+            ip = i - istep
+            if fsign(y[ip])*fsign(y[i]) <= 0.0: return x[ip], x[i]
+        istep *= 2
+    return None, None
 
 
 from p_gnum import zeros, Float
@@ -233,11 +292,11 @@ def dfridr(func,x,h):
     hh=h
     a[1,1] = (func(x+hh)-func(x-hh))/(2.0*hh)
     err=BIG
-    for i in xrange(1, NTAB+1):
+    for i in range(1, NTAB+1):
         hh=hh/CON
         a[1,i]=(func(x+hh)-func(x-hh))/(2.0*hh)
         fac=CON2
-        for j in xrange(2, i+1):
+        for j in range(2, i+1):
             a[j,i]=(a[j-1,i]*fac-a[j-1,i-1])/(fac-1.0)
             fac=CON2*fac
             errt=max((fabs(a[j,i]-a[j-1,i]), fabs(a[j,i]-a[j-1,i-1])))
@@ -249,13 +308,13 @@ def dfridr(func,x,h):
     return dfridr1, err
 
 
-def partialder(f, j, *param):
+def partialder(f, j, param):
     "Compute the partial derivative of function b with respect to variable j of the function."
     par = list(param)
     def ff(a):
         par[j] = a
-        return f(*par)
-    return dfridr(ff, param[j], 0.1)[0]
+        return f(par)
+    return dfridr(ff, param[j], 0.1)
 
 
 from p_gnum import transpose, matrixmultiply, solve_linear_equations, LinAlgError, lstsq

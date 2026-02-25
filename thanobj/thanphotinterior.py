@@ -1,32 +1,30 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the photogrammetric interior orientation of a metric image.
 """
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import p_ggen, p_gmath
 from thantrans import T
 import thandr
@@ -37,7 +35,7 @@ class ThanPhotInterior(ThanObject):
     "An object which stores photogrannetric interior orientation data."
     thanObjectName = "PHOTINTERIOR"    # Name of the objects's class
     thanObjectInfo = "Optical photogrammetric interior orientation."
-    thanVersions = ("1.0",)
+    thanVersions = ((1,0),)
 
     def __init__(self, camera=None):
         "Create an initialised or empty model."
@@ -52,12 +50,12 @@ class ThanPhotInterior(ThanObject):
 
         It is assumed that the caller has already called thanTkSet."""
         cam = self.camera
-        assert cam != None
+        assert cam is not None
         delelems = lay.thanQuad.copy()
         proj[1].thanElementDelete(delelems, proj)
         elev = proj[1].thanVar["elevation"]
         newelems = {}
-        for ifid in xrange(len(cam.x)):
+        for ifid in range(len(cam.x)):
             xp, yp, rej = self.fids[ifid-1]
             if xp == "" or yp == "" or rej: continue
             cp = list(elev)
@@ -76,7 +74,7 @@ class ThanPhotInterior(ThanObject):
         "Set camera and make empty pixel values."
         self.camera = cam
         n = len(cam.x)
-        self.fids = [["", "", False] for i in xrange(n)]
+        self.fids = [["", "", False] for i in range(n)]
 
 
     def getImage(self): return self.image
@@ -86,10 +84,10 @@ class ThanPhotInterior(ThanObject):
     def toDialog(self):
         "Return the data in a form needed by ThanInterior dialog."
         cam = self.camera
-        assert cam != None
+        assert cam is not None
         v = p_ggen.Struct()
         n = len(cam.x)
-        for ifid in xrange(1, n+1):
+        for ifid in range(1, n+1):
             xp, yp, rej = self.fids[ifid-1]
             if xp == "" or yp == "":
                 setattr(v, "labXpix%d" % ifid, "")
@@ -108,7 +106,7 @@ class ThanPhotInterior(ThanObject):
     def fromDialog(self, v, other):
         "Get the data from ThanInterior dialog."
         n = len(self.camera.x)
-        for ifid in xrange(1, n+1):
+        for ifid in range(1, n+1):
             xp = getattr(v, "labXpix%d" % ifid)
             yp = getattr(v, "labYpix%d" % ifid)
             rej = getattr(v, "thanChkReject%d" % ifid)
@@ -165,7 +163,7 @@ class ThanPhotInterior(ThanObject):
         fw.writeEnd("affine")
 
 
-    def thanImpThc1(self, fr, ver):
+    def thanImpThc1(self, fr, ver, than):
         "Reads the simplification settings from a .thc file."
         im = fr.readAtt("image")[0]
         if im == "_NONE_":

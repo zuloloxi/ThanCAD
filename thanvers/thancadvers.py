@@ -1,33 +1,35 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines various information for ThanCad: version, date,
 author, license etc.
 """
-from __future__ import print_function
+
 import p_gvers
+tcver = p_gvers.ThanVersion()
+
 
 thanCadRationale =\
 """
@@ -145,7 +147,13 @@ was a main reason for the decision to make a new CAD.
 
 #---------------------------------------------------------------------------
 
-thanCadHelp =\
+
+def thancadVersInit(tlang):
+    assert tlang in ("gr", "en"), "Unknown language %s" % (tlang,)
+    if tlang == "gr": ilang = -1
+    else:             ilang = -2
+
+    thanCadHelp =\
 """
 1. General
 
@@ -265,7 +273,7 @@ measures the angle between 3 arbitrary points, may be abbreviated as "angl",
 "ang", or "an", but not as "a", since "a" is abbreviation of the command "arc".
 
 
-4. Text location ("find" command)
+5. Text location ("find" command)
 
 Some drawings contain a large number of texts. In such drawings it is difficult
 to locate a specific text string by hand. ThanCad has the command "find" which
@@ -278,7 +286,7 @@ You can try text location by typing "find" on the command line (or "fin" or
 "fi" or "f", since ThanCad abbreviates the commands to their first few letters
 enough to remove ambiguity).
 
-5. Angle measurement ("angle" command)
+6. Angle measurement ("angle" command)
 
 In ThanCad, it is possible to measure the angle between 3 arbitrary points,
 using the "angle" command. Surprisingly, this little utility is missing in other
@@ -300,52 +308,43 @@ to:
 You can try angle measurement by typing "angle" on the command line (or "angl" or
 "ang" or "an", but not "a", since "a" is the abbreviation of "arc".
 
+7. Keyhole Markup Language (KML)
 
+ThanCad can import points defined in Google Keyhole Markup Language
+format (.kml or .kmz files), typically used in GoiogleEarth. The KML
+stores the points in geodetic coordinates λ, φ of the GRS80 (or WGS84)
+ellipsoid. The units of λ,φ are decimal degrees.
+The import procedure converts the geodetic coordinates λ,φ of the
+.kml file to the easting, northing of the geodetic projections defined
+in the ThanCad drawing.
+The elevation z is not changed at all, and it may be orthometric or
+geometric as defined in the .kml file.
+
+In order to import a .kml file in a projection other than the default
+projection (which currently is EGSA87), a new drawing must be created.
+The geodetic projection of this new drawing is set to the desired
+projection. Then the .kml file is inserted to this drawing.
 """
 
+    long_description = "n-dimensional CAD with raster support for engineers"
 
+    tcver.setup(\
+    name              = "ThanCad",
+    version           = '0.9.1 "Students2024"',
+    author            = "Thanasis Stamos",
+    author_email      = "cyberthanasis@gmx.net",
+    url               = "http://thancad.sourceforge.net",
+    description       = "n-dimensional CAD with raster support for engineers",
+    download_url      = "http://sourceforge.net/projects/thancad",
+    long_description  = long_description,
 
-
-long_description = "2dimensional CAD with raster support for engineers"
-
-tcver = p_gvers.ThanVersion()
-tcver.setup(\
-name              = "ThanCad",
-version           = '0.3.0 "Oberpfaffenhofen"',
-author            = "Thanasis Stamos",
-author_email      = "cyberthanasis@excite.com",
-url               = "http://thancad.sourceforge.net",
-description       = "n-dimensional CAD with raster support for engineers",
-download_url      = "http://sourceforge.net/projects/thancad",
-long_description  = long_description,
-
-date              = "June 19, 2016",
-dates             = "2001-2016",
-city              = "Athens",
-address1          = "Athens, Greece, Europe",
-license           = p_gvers.GPL(),
-help              = thanCadHelp,
-history           = "See ThanCad's web page http://thancad.sourceforge.net for history.")
-
-
-#thanCadName     = "ThanCad"
-#thanCadVersion  = '0.2.3 "Hannover"'
-#thanCadDate     = "March 25, 2013"
-#thanCopyright   = "Copyright (c) 2001-2013" ***
-#thanCadURL      = "http://thancad.sourceforge.net"
-#thanAuthorName  = "Thanasis Stamos"
-#thanAuthorEmail = "cyberthanasis@excite.com"
-#thanCadShortDesc = thanCadName + " " + thanCadVersion +\
-#    ": 2dimensional CAD with raster support for engineers."
-
-
-#thanCadShortInfo = thanCadShortDesc + "\n\n" +\
-#    thanCopyright + " " + thanAuthorName + ",  " + thanCadDate + "\n" +\
-#    "URL:     " + thanCadURL + "\n" +\
-#    "e-mail:  " + thanAuthorEmail
-
-
-#thanCadAbout = thanCadShortInfo + "\n" + thanGplShortText
+    date              = "May 20, 2025",
+    dates             = "2001-2025",
+    city              = "Athens",
+    address1          = "Athens, Greece, Europe",
+    license           = p_gvers.GPL(ilang),
+    help              = thanCadHelp,
+    history           = "See ThanCad's web page http://thancad.sourceforge.net for history.")
 
 
 if __name__ == "__main__":

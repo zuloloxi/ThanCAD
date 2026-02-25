@@ -1,8 +1,4 @@
 # -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-from .py23 import input, xrange
-#from builtins import input
-#from past.builtins import xrange
 import sys, platform, os
 
 class RecordedError(Exception): pass
@@ -79,7 +75,8 @@ class Null:
     def __nonzero__(self): return 0
 
 
-
+#Canc is sentinel object, which is used as a return value from functions.
+#It means that the user cancelled the current operation.
 Canc = Struct("<Cancel>")
 Pyos = Struct("Platform determination")
 mach = sys.platform.lower()
@@ -92,6 +89,7 @@ Pyos.Python3 = sys.version_info.major == 3
 
 mach = platform.machine().lower()
 Pyos.Amd64 = ("x86" in mach or "amd" in mach) and "64" in mach  #If machine is x86-64 compatible (OS may still run in 32bits)
+Pyos.Pi = "armv7" in mach     #Thanasis2018_01_02
 del mach
 Pyos.Os64 = sys.maxsize > 2**32     #This means that the OS is running at 64bits (on a 64bit processor of course)
 
@@ -100,6 +98,22 @@ Pyos.Os64 = sys.maxsize > 2**32     #This means that the OS is running at 64bits
 ############################################################################
 
 #MODULE LEVEL ROUTINES
+
+#============================================================================
+
+def importpackage(MODULE_NAME, MODULE_PATH):
+    """Import module from arbitrary pathname as modulename; may be a package.
+
+    The user must type import MODULE_NAME after the call to import package.
+    https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path."""
+    import sys
+    import importlib.util
+    #MODULE_PATH = "/path/to/your/module/__init__.py"
+    #MODULE_NAME = "mymodule"
+    spec = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module 
+    spec.loader.exec_module(module)
 
 #============================================================================
 
@@ -141,44 +155,44 @@ def inpText(text,   other=()): return  _inpGen(text, ing, other)
 
 #===========================================================================
 
-def xfrangec(start, end, step=1):
-    "Implements float xrange - which includes start and end."
-    start = float(start); end = float(end); step = float(step)
+def frange(start, end, step=1.0, tol=0.0):
+    """Implements float range.
+
+    if the last step before end is within tol*step distance from end, it is skipped."""
+    assert tol>=0.0, "frange(): tolerance should be a non negative ratio."
+    start = float(start); end = float(end); step = float(step); tol = float(tol)
     a = start
-    if step > 0:
+    if step > 0.0:
         if start > end: return
-        while a < end:
+        while a < end-tol*step:
             yield a
             a += step
     else:
         if start < end: return
-        while a > end:
+        while a > end-tol*step:   #Note tol>=0 and step < 0
+            yield a
+            a += step
+
+
+def frangec(start, end, step=1.0, tol=0.0):
+    """Implements float range - which includes start and end; tol is tolerance ratio.
+
+    if the last step before end is within tol*step distance from end, it is skipped."""
+    assert tol>=0.0, "frange(): tolerance should be a non negative ratio."
+    start = float(start); end = float(end); step = float(step); tol = float(tol)
+    a = start
+    if step > 0.0:
+        if start > end: return
+        while a < end-tol*step:
+            yield a
+            a += step
+    else:
+        if start < end: return
+        while a > end-tol*step:   #Note tol>=0 and step < 0
             yield a
             a += step
     yield end
 
-def frangec(start, end, step=1):
-    "Implements float range - which includes start and end."
-    return list(xfrangec(start, end, step))
-
-def xfrange(start, end, step=1):
-    "Implements float xrange."
-    start = float(start); end = float(end); step = float(step)
-    a = start
-    if step > 0:
-        if start > end: return
-        while a < end:
-            yield a
-            a += step
-    else:
-        if start < end: return
-        while a > end:
-            yield a
-            a += step
-
-def frange(start, end, step=1):
-    "Implements float range - which includes start and end."
-    return list(xfrange(start, end, step))
 
 def iterby2(iterable):
     """Returns pairs of consecutive elements of iterable (non exclusive).
@@ -187,7 +201,8 @@ def iterby2(iterable):
     (1,3) then (3,7) then (7,-5)
     """
     it = iter(iterable)
-    val1 = next(it)
+    try: val1 = next(it)         #Thanasis2024:05_02: This raises StopIteration and PEP 479 (2023) will cause a runtime error
+    except StopIteration: return #Thanasis2024:05_02: workaround to end generator if iterable contains no elements.
     for val2 in it:
         yield val1, val2
         val1 = val2
@@ -200,7 +215,8 @@ def iterby2c(iterable):
     (1,3) then (3,7) then (7,-5) then (-5,1)
     """
     it = iter(iterable)
-    valfirst = val1 = next(it)
+    try: valfirst = val1 = next(it) #Thanasis2024:05_02: This raises StopIteration and PEP 479 (2023) will cause a runtime error
+    except StopIteration: return    #Thanasis2024:05_02: workaround to end generator if iterable contains no elements.
     for val2 in it:
         yield val1, val2
         val1 = val2
@@ -213,8 +229,11 @@ def iterby3(iterable):
     (1,3,7) then (3,7,-5) then (7,-5,'a')
     """
     it = iter(iterable)
-    val1 = next(it)
-    val2 = next(it)
+    try:          #Thanasis2024:05_02: This raises StopIteration and PEP 479 (2023) will cause a runtime error
+        val1 = next(it)
+        val2 = next(it)
+    except StopIteration:
+        return    #Thanasis2024:05_02: workaround to end generator if iterable contains no elements.
     for val3 in it:
         yield val1, val2, val3
         val1 = val2
@@ -251,10 +270,10 @@ def fnum(root):
     This function is very slow. Thus don't use fit for many
     computations."""
 
-    for i in xrange(len(root)-1, -1, -1):
+    for i in range(len(root)-1, -1, -1):
         if root[i].isdigit(): break
     else: return None
-    for j in xrange(i, -1, -1):
+    for j in range(i, -1, -1):
         if not root[j].isdigit(): return int(root[j+1:i+1])
     return int(root[:i+1])
 
@@ -311,7 +330,7 @@ def uniqfile(pref, suf="", stat="w", n=3, inum=-1):
         except IOError: pass
         else: return fw
 
-    for _iuniqfileprev in xrange(1, nmax):          #Try all
+    for _iuniqfileprev in range(1, nmax):          #Try all
         fn = path(form % (_iuniqfileprev,))
         if not fn.exists():
             try: fw = open(fn, stat)
@@ -336,7 +355,7 @@ def uniqdir(pref, suf="", stat="w", n=3, inum=-1):
         except IOError: pass
         else: return fn
 
-    for _iuniqfileprev in xrange(1, nmax):          #Try all
+    for _iuniqfileprev in range(1, nmax):          #Try all
         fn = path(form % (_iuniqfileprev,))
         if not fn.exists():
             try: fn.mkdir()
@@ -344,6 +363,97 @@ def uniqdir(pref, suf="", stat="w", n=3, inum=-1):
             else: return fn
     _iuniqfileprev = 0  #Could not create dir; all numbers are already used
     return None
+
+
+def fnequal(fna, fnb, fail=False):
+    "Tests if 2 (binary) files are identical."
+    nb = 1024*1024  # 1MB
+    try:
+        with open(fna, "rb") as fra, open(fnb, "rb") as frb:
+            while True:
+                a = fra.read(nb)       #Try to read 1MB
+                b = frb.read(nb)       #Try to read 1MB
+                if a != b: return False
+                if len(a) < nb: break
+        return True
+    except IOError as why:
+        if fail: raise
+        prg("Could not access {} or {}:\n{}".format(fna, fnb, why), "can1")
+        return False
+
+
+def fnsize(fn, fail=False):
+    "Find the size of (binary) file in bytes."
+    nb = 1024*1024  # 1MB
+    n = 0
+    try:
+        with open(fn, "rb") as fr:
+            while True:
+                b = fr.read(nb)       #Try to read 1MB
+                n += len(b)
+                if len(b) < nb: break
+    except IOError as why:
+        prg("Could not access {}:\n{}".format(fn, why), "can1")
+        return -1
+    return n
+
+#===========================================================================
+
+def getcpu():
+    """Get a little more detailed description of the CPU.
+
+    https://stackoverflow.com/questions/4842448/getting-processor-information-in-python"""
+    import subprocess, re
+    if platform.system() == "Windows":
+        family = platform.processor()
+        name = subprocess.check_output(["wmic","cpu","get", "name"]).decode()   #thanasis2024_09_12
+        name = name.split("\n")[1].strip()    #thanasis2024_09_12
+        return ' '.join([name, family])
+    elif platform.system() == "Darwin":
+        os.environ['PATH'] = os.environ['PATH'] + os.pathsep + '/usr/sbin'
+        command ="sysctl -n machdep.cpu.brand_string"
+        return subprocess.check_output(command).decode().strip()    #thanasis2024_09_12
+    elif platform.system() == "Linux":
+        command = "cat /proc/cpuinfo"
+        all_info = subprocess.check_output(command, shell=True).decode()
+        for line in all_info.split("\n"):
+            if "model name" in line:
+                return re.sub(".*model name.*:", "", line.strip(), 1)
+    return platform.processor()   #default
+
+
+def ncores():
+    "Find the number of physical and logical cores."
+    #https://askubuntu.com/questions/1292702/how-to-get-number-of-phy-logical-cores
+    import subprocess
+    try:
+        t = subprocess.check_output(["lscpu"])
+    except:
+        #raise
+        return None, None
+
+    ithreads = icores = isockets = None
+    for dline in t.decode().splitlines():
+        try:
+            if dline.startswith("Thread"):
+                dl = dline.split()
+                ithreads = int(dl[-1])
+            elif dline.startswith("Core"):
+                dl = dline.split()
+                icores = int(dl[-1])
+            elif dline.startswith("Socket"):
+                dl = dline.split()
+                isockets = int(dl[-1])
+        except ValueError:
+            #raise
+            return None, None
+
+    #print(ithreads, icores, isockets)
+    if ithreads is None or icores is None or isockets is None or ithreads<=0 or icores<=0 or isockets<=0:
+        return None, None
+    nphysical = isockets * icores
+    nlogical = nphysical * ithreads
+    return nphysical, nlogical
 
 #===========================================================================
 
@@ -389,7 +499,10 @@ ecx  = "IYABGDEZHQIKLMNJOPRSTYFXCWAEHIOYWIYS"
 esx  = "iuabgdezhqiklmnjoprstufxcwaehiouwius"
 
 
-from .grdos import *
+from .grdos import gcd, gsd
+from .grutf8 import gca8, gc8, gs8
+
+
 gw2d = dict(zip(gcw, gcd))
 gw2d.update(dict(zip(gsw, gsd)))
 gd2w = dict(zip(gcd, gcw))
@@ -403,6 +516,9 @@ grwsh = dict(zip(gcw, ecx))
 grwsh.update(dict(zip(gsw, esx)))
 grdsh = dict(zip(gcd, ecx))
 grdsh.update(dict(zip(gsd, esx)))
+
+gr8sh = dict(zip(gc8, ecx))
+gr8sh.update(dict(zip(gs8, esx)))
 
 del gcaw, gcw, gsw, gcd, gsd, ecx, esx
 
@@ -427,16 +543,21 @@ def grdos2win(fr):
 if Pyos.Python3:
     def greeklish(t, blank=None):
         "Convert greek (unicode) text to equivalent with latin characters."
-        t = "".join([grwsh.get(c, c) for c in t])
+        #Thanasis2022_02_16: The unicode character with dedimal code 769 ("́") is the
+        #Combining Acute Accent, which mean that if it follows for example letter "a"
+        #the letter "a" is acuted.
+        #Thus we completely ignore this character
+        t = t.replace(chr(769), "")
+        t = "".join([gr8sh.get(c, c) for c in t])
         if blank is None: return t
         return t.replace(" ", blank)
     def guessGreekEncoding(data):
         "Given bytes data, try to guess the greek encoding."
-        encs = "iso-8859-7", "utf8", "cp737"     #cp737 are old DOS greek
-        nmax = -1
-        encmax = ""
+        encs = "utf8", "iso-8859-7", "cp737"     #cp737 are old DOS greek
+        nmin = None
+        encmin = ""
         for i,enc in enumerate(encs):
-            text = data.decode(enc, errors="replace")
+            text = data.decode(enc, errors="surrogateescape")
             #print()
             #print(enc)
             #print("----------------------------------------------")
@@ -449,12 +570,13 @@ if Pyos.Python3:
             #greekbytes.update(gsw.encode(enc))
             n = 0
             for c in text:
-                if c in grwsh: n += 1
-            #print(enc, n)
-            if n > nmax:
-                nmax = n
-                encmax = enc
-        return encmax
+                ic = ord(c)
+                if 0xDC80 <= ic <= 0xDCFF: n += 1  #Thanasis2017_01_15 (surrogate characters)
+            print(enc, n)
+            if nmin is None or n < nmin:
+                nmin = n
+                encmin = enc
+        return encmin
 else:
     def greeklish(t, blank=None):
         "Convert greek text to equivalent with latin characters."
@@ -470,21 +592,43 @@ else:
         if blank is None: return t
         return t.replace(" ", blank)
 
-def greeklishpath(fn, blank="_", slash="_", dot=None, gtlt="", quote="", qmark=""):
+def greeklishpath(fn, blank="_", slash="_", dot=None, gtlt="", quote="", qmark="", colon="_", backslash="", comma="_"):
     "Convert name to greeklish, lower, strip, replace slash, replace blank, replace dots and return path object."
     from .jorpath import path
     t = fn.strip()
-    if slash is not None: t = t.replace("/", slash).replace("\\", slash)
+    if slash is not None: t = t.replace("/", slash)
+    if backslash is not None: t = t.replace("\\", backslash)
     if dot is not None: t = t.replace(".", dot)
     if gtlt is not None: t = t.replace("<", gtlt).replace(">", gtlt)
     if quote is not None: t = t.replace("'", quote).replace('"', quote).replace("`", quote)
     if qmark is not None: t = t.replace("?", qmark)
-    return path(greeklish(t, blank).lower())
+    if colon is not None: t = t.replace(":", colon)
+    if comma is not None: t = t.replace(",", comma)
+    t = greeklish(t, blank)
+
+    temp = []
+    for t1 in t:
+        if ord(t1) >= 128: t1 = "x"
+        temp.append(t1)
+    t = "".join(temp)
+    return path(t.lower())
 
 def prgnone(fr, tags=()): pass    #Prints nothing
 
+def cls():
+    """Clear screen.
 
-#Thanasis2016_06_22: The followiung are for compatibility with programs running python2
+    https://stackoverflow.com/questions/517970/how-to-clear-the-interpreter-console"""
+    print("\033c", end='')
+
+def beep():
+    """Make e beep sound.
+
+    https://stackoverflow.com/questions/6537481/python-making-a-beep-noise"""
+    print('\a', end="")
+
+
+#Thanasis2016_06_22: The following are for compatibility with programs running python2
 
 def prg(fr, tags=()):
     "Print converting to DOS greek only if we run windows (tags is for compatibility)."
@@ -517,8 +661,8 @@ def thanUnicode(t):
     "Convert to unicode."
     if Pyos.Python3:
         if isinstance(t, str): return t
-        if isinstance(t, bytes): return t.decode(encoding=thanGetEncoding())
-        if isinstance(t, bytearray): return t.decode(encoding=thanGetEncoding())
+        if isinstance(t, bytes): return t.decode(encoding=thanGetEncoding(), errors="surrogateescape")
+        if isinstance(t, bytearray): return t.decode(encoding=thanGetEncoding(), errors="surrogateescape")
         return str(t)
     if isinstance(t, unicode): return t
     return thanUnicode1(str(t), "replace")[0]
@@ -562,6 +706,16 @@ def thanGetEncoding():
     "Return current encoding."
     return thanEncoding
 
+
+def thanSetFileEncoding(enc):
+    "Set new encoding."
+    global thanFileEncoding
+    thanFileEncoding = enc
+
+def thanGetFileEncoding():
+    "Return current encoding."
+    return thanFileEncoding
+
 def griso2utf(fr):
     "Convert iso8859-7 Greek to utf8."
     enc = thanEncoding
@@ -590,17 +744,18 @@ def fsurrogateReplace(exc):
     a. We use cp737 codec (DOS Greek) to convert from DOS Greek to unicode.
     b. Non Greek characters (or more precisely characters not representable
        by the Greek character set are mapped to a private space in the
-       unicode space by surrogatereplace errors handler.
+       unicode space by surrogateescape errors handler.
     c. When these characters are converted from unicode to iso-8859-7
-       they take their original byte value by the surrogatereplace errors
+       they take their original byte value by the surrogateescape errors
        handler.
-    d. However, a character, which is not a Greek alphabetic character but
+    d. However, a character, which is not a Greek alphabetic character, but
        another character (for example the dos Greek equivalent of '\u256c')
-       which happens to be in the DOS Greek character set is converted to
+       which happens to be in the DOS Greek character set, is converted to
        unicode character set.
     e. When this character is converted to iso-8859-7, it has no equivalent
-       and an exception is raised by the surrogatereplace errors handler.
-    f. A solution is to call the replace errors handler after that.
+       and an exception is raised by the surrogateescape errors handler.
+    f. A solution is to call the replace errors handler after the 
+       surogateescape handler.
        Thus the surrogatereplace handler which is implemented by this
        function.
     """
@@ -622,8 +777,21 @@ def makeSurrogatereplace():
     codecs.register_error("surrogatereplace", fsurrogateReplace)
 
 
+copyrightyear = 2025
+def thanCopyright(iyear1):
+      "Return Thanasis copyright."
+      iyear2=copyrightyear
+      return 'Copyright (c) {}-{} Dr. Thanasis Stamos, EMail: cyberthanasis@gmx.net'.format(iyear1, iyear2)
+def dimCopyright(iyear1):
+      "Return Dimitra copyright."
+      iyear2=copyrightyear
+      return 'Copyright (c) {}-{} Dr. Dimitra Vassilaki, EMail: dimitra.vassilaki@gmail.com'.format(iyear1, iyear2)
+
+
 #thanSetEncoding("iso-8859-7")
 thanSetEncoding(thanGetDefaultEncoding())
+thanSetFileEncoding("utf8")
+makeSurrogatereplace()
 
 
 ############################################################################

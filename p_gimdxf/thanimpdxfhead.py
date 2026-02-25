@@ -49,4 +49,10 @@ class ThanHeader:
             att1 = vars["$EXTMIN"]
             if not self.trAttsFloat(att1, 40):
                 v["LTSCALE"] = att1[40]
+        if "$FILLMODE" in vars:
+            att1 = vars["$FILLMODE"]
+            if not self.trAtts(att1, int, 70):
+                v["LTSCALE"] = att1[70]
+
+
         self.thanDr.dxfVars(v)

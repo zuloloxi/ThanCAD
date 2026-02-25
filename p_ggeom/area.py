@@ -1,5 +1,3 @@
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from p_gmath import thanNear2, thanNearx
 
 def areapn(cc):
@@ -11,9 +9,9 @@ def areapn(cc):
     yy = [c[1] for c in cc]
     if xx[0] != xx[-1] or yy[0] != yy[-1]: xx.append(xx[0]); yy.append(yy[0])
     ymin = min(yy)
-    for i in xrange(len(yy)): yy[i] -= ymin 
+    for i in range(len(yy)): yy[i] -= ymin 
     e = 0.0
-    for i in xrange(len(yy)-1):
+    for i in range(len(yy)-1):
         j = i + 1
         e += (xx[j]-xx[i]) * (yy[j]+yy[i])
     return e*0.5

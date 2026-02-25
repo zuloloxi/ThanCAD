@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-
 from p_ggen import Translation
 
 ##############################################################################
@@ -8,17 +6,17 @@ from p_ggen import Translation
 #English to Greek translation table
 en2gr = \
 { "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
-  "Error in data"       :"Λάθος στα δεδομένα",
-  "Values have changed.\nAbandon changes?":"Οι τιμές μεταβλήθηκαν\nΝα ακυρωθούν οι μεταβολές;",
-  "WARNING"             :"ΠΡΟΕΙΔΟΠΟΙΗΣΗ",
-  "Apply"               :"Εφαρμογή",
-  "Cancel"              :"Ακύρωση",
-  "OK"                  :"Εντάξει",
-  "Yes"                 :"Ναι",
-  "No"                  :"Οχι",
-  "Insert"              :"Εισαγωγή",
-  "Delete"              :"Διαγραφή",
-  "&New"                :"&Νέο"
+  "Error in data"       :"Ξ›Ξ¬ΞΈΞΏΟ‚ ΟƒΟ„Ξ± Ξ΄ΞµΞ΄ΞΏΞΌΞ­Ξ½Ξ±",
+  "Values have changed.\nAbandon changes?":"ΞΞΉ Ο„ΞΉΞΌΞ­Ο‚ ΞΌΞµΟ„Ξ±Ξ²Ξ»Ξ®ΞΈΞ·ΞΊΞ±Ξ½\nΞΞ± Ξ±ΞΊΟ…ΟΟ‰ΞΈΞΏΟΞ½ ΞΏΞΉ ΞΌΞµΟ„Ξ±Ξ²ΞΏΞ»Ξ­Ο‚;",
+  "WARNING"             :"Ξ Ξ΅ΞΞ•Ξ™Ξ”ΞΞ ΞΞ™Ξ—Ξ£Ξ—",
+  "Apply"               :"Ξ•Ο†Ξ±ΟΞΌΞΏΞ³Ξ®",
+  "Cancel"              :"Ξ‘ΞΊΟΟΟ‰ΟƒΞ·",
+  "OK"                  :"Ξ•Ξ½Ο„Ξ¬ΞΎΞµΞΉ",
+  "Yes"                 :"ΞΞ±ΞΉ",
+  "No"                  :"ΞΟ‡ΞΉ",
+  "Insert"              :"Ξ•ΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ®",
+  "Delete"              :"Ξ”ΞΉΞ±Ξ³ΟΞ±Ο†Ξ®",
+  "&New"                :"&ΞΞ­ΞΏ"
 }
 T = Translation(en2gr)
 T.thanLangSet("en", "gr")

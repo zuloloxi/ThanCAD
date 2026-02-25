@@ -1,39 +1,42 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines a ThanCad drawing, which contains elements, has layers,
 viewports, etc."
 """
 
-from __future__ import print_function
-import p_ggen, p_gdxf, p_gimgeo, p_gimage, p_ggeod
+from math import hypot
+import p_ggen, p_gdxf, p_gimgeo, p_gimage, p_ggeod, p_gbmp
 from p_gmath   import ThanRectCoorTransf, thanRoundCenter
 import thanfonts, thandefs
 from thanlayer import ThanLayerTree, col2tuple
 from thandefs  import ThanId
-from thandr    import ThanElement, ThanImage, thanElemClass, thanImageClasses
+from thandr    import ThanElement, ThanImage, thanElemClass, thanImageClasses, ThanPoint, ThanPointNamed, ThanLine
+from thantrans import T
+from thanopt.thancon import THANLC
+
 
 from .thandwgvars import thanVarsDef, thanVarsExpThc, thanVarsImpThc, thanObjsDef, thanObjsExpThc, thanObjsImpThc
 
@@ -82,10 +85,10 @@ class ThanDoundo:
 
 
 class ThanTagel(dict):
-    "A dictionary with predefined/readonly items."
+    "A dictionary with some predefined/readonly items."
 
     rdlist = frozenset(("e0", "edrag", "enull"))
-#    __slots__ = ("prefix",)       #So that we don't need __getstate__ and __setstate__ (anyway we use few ThanTegl objects)
+#    __slots__ = ("prefix",)       #So that we don't need __getstate__ and __setstate__ (anyway we use few ThanTagel objects)
 
     def __init__(self, *args, **kw):
         "Set predefined items, if not already in args/kw."
@@ -123,7 +126,15 @@ class ThanTagel(dict):
 
 class ThanDrawing:
     "Represents a whole drawing."
-    thanThcVersions = ((0,1,0), (0,1,1), (0,2,0), (0,2,1), (0,3,0))   #All supported versions of .thcx files
+    thanThcVersions = ((0,1,0), (0,1,1), (0,2,0), (0,2,1), (0,3,0), (0,4,0), (0,5,0),
+                       (0,5,1), (0,6,0), (0,6,1))   #All supported versions of .thcx files
+    #Version 0,4,0 encodes the text using utf_8; prior versions used iso8859-7
+    #Version 0,5,0 introduces hatch element and fillmode environmental variable
+    #Version 0,5,1 introduces dimension type
+    #17/11/2022: New object ThanIsoclinal was introduced. No new version is needed, as older
+    #versions of ThanCad automatically ignore unknown objects.
+    #Version 0,6,0 introduces element attributes (as thanCargo)
+    #Version 0,6,1 introduces "persistent" attribute in element ThanLineFilled    #Thanasis2024_09_13
 
     def __init__ (self):
         """Creates a new drawing instance.
@@ -143,6 +154,7 @@ class ThanDrawing:
         viewPort: The part of the drawing that matches exactly the canvas
         thanTstyles: text styles dictionary of the drawing
         thanLtypes: line types dictionary of the drawing
+        thanDimstyles: Dimension styles dictionary of the drawing
         thanUnits: the units of the drawing
         thanVar: a dictionary of variables/values
         thanPlotDef: the previous plot parameters (window, plotter etc)
@@ -167,14 +179,33 @@ class ThanDrawing:
         t = thandefs.ThanTstyle("standard", thanfonts.thanFonts["thanprime1"])
         self.thanTstyles = {t.thanName: t}
         self.thanLtypes = thandefs.thanDashes()
+        t = thandefs.ThanDimstyle()   #Default dimstyle
+        self.thanDimstyles = {t.thanName: t}
         self.thanUnits = thandefs.ThanUnits()
         self.thanVar = thanVarsDef()
         self.thanPlotDef = thandefs.thanplotcups.ThanPlot()  # Previous plot settings
         self.thanObjects = thanObjsDef()
         self.thanElements2Repair = []    #Elements with wrong handle which must be repaired
         self.repairhandle = False        #If True, then elements with wrong handle will be repaired
+
+        #The following attributes should be copied to the temporary drawing
+        #which is created when we insert a file like .kml file to current
+        #drawing.
+
         self.Lgeodp = p_ggeod.params.fromEgsa87()  #Default geodetic projection is EGSA87
         self.geodp = p_ggeod.params.toProj(self.Lgeodp) #Geodetic projections are BUILTIN in ThanCad
+
+        self.__crel = (0.0,)*self.thanVar["dimensionality"]
+        # self.__crel: These are the coordinates of the previous points defined by the user.
+#              IT is used to aid the relative coordinates system.
+
+
+    def thanSetLastPoint(self, cc):
+        "Sets last point set by gui or command line for relative coords; cc may be None."
+        if cc is not None: self.__crel = tuple(cc)
+    def thanGetLastPoint(self):
+        "Returns last point set by gui or commandline for relative coords."
+        return self.__crel
 
 
     def thanExpThc(self, fw):
@@ -194,12 +225,20 @@ class ThanDrawing:
             pass
         fw.popInd()
         fw.writeEnd("TEXTSTYLES")
+
         fw.writeBeg("LINETYPES")
         fw.pushInd()
         for t in self.thanLtypes.values():  #works for python2,3
             t.thanExpThc(fw)
         fw.popInd()
         fw.writeEnd("LINETYPES")
+
+        fw.writeBeg("DIMSTYLES")
+        fw.pushInd()
+        for t in self.thanDimstyles.values():  #works for python2,3
+            t.thanExpThc(fw)
+        fw.popInd()
+        fw.writeEnd("DIMSTYLES")
 
         fw.writeBeg("GEODETICPROJECTION")
         fw.pushInd()
@@ -217,14 +256,20 @@ class ThanDrawing:
         fw.writeEnd("THANCAD_DRAWING")
 
 
-    def thanImpThc(self, fr, forceunload=False, prt=p_ggen.doNothing):
-        "Read all attributes of the drawing except the elements from a thc format file."
+    def thanReadVersion(self, fr):
+        "Read the version of thc file and check and raise ValueError if invalid."
         fr.readBeg("THANCAD_DRAWING")
-
         fr.readBeg("ATTRIBUTES")
         t = fr.readAtt("version")[0]
-        self.thanThcVersion = tuple(map(int, t.split(".")))  #works for python2,3
-        if self.thanThcVersion not in self.thanThcVersions: raise ValueError("Unknown thc version: %r" % (self.thanThcVersion,))
+        thanThcVersion = tuple(map(int, t.split(".")))  #works for python2,3
+        if thanThcVersion not in self.thanThcVersions: raise ValueError("Unknown thc version: %r" % (thanThcVersion,))
+        return thanThcVersion
+
+
+    def thanImpThc(self, fr, forceunload=False, prt=p_ggen.doNothing):
+        "Read all attributes of the drawing except the elements from a thc format file."
+        self.thanThcVersion = self.thanReadVersion(fr)
+
         self.viewPort = list(map(float, fr.readAtt("viewport")))    #works for python2,3
         if len(self.viewPort) != 4: raise ValueError("Invalid viewport")
         fr.readEnd("ATTRIBUTES")
@@ -241,6 +286,17 @@ class ThanDrawing:
                 self.thanLtypes[lt.thanName] = lt
         fr.readEnd("LINETYPES")
 
+        if self.thanThcVersion >= (0,5,0):   #Otherwise keep default dimension style
+            fr.readBeg("DIMSTYLES")
+            for name in fr:
+                name = name.strip()[1:-1]
+                fr.unread()
+                if name == "/DIMSTYLES": break
+                lt = thandefs.ThanDimstyle()
+                lt.thanImpThc(fr, self.thanThcVersion)
+                self.thanDimstyles[lt.thanName] = lt  #May overwrite default "standard"
+            fr.readEnd("DIMSTYLES")
+
         if (self.thanThcVersion >= (0,3,0)):   #Otherwise keep default geodetic projection
             fr.readBeg("GEODETICPROJECTION")
             self.Lgeodp = p_ggeod.params.fromFile(fr)
@@ -251,10 +307,17 @@ class ThanDrawing:
         d = thanVarsImpThc(fr, self.thanThcVersion)
         self.thanVar.update(d)
         self.thanPlotDef.thanImpThc(fr)
-        self.thanLayerTree.thanImpThc(fr, self.thanThcVersion)
+
+        than = p_ggen.Struct()
+        than.thanTstyles = self.thanTstyles    #Just a reference
+        than.prt = prt
+        self.thanLayerTree.thanImpThc(fr, self.thanThcVersion, than)
+
 #        thanEdus
         self.thanImpThcElements(fr, forceunload, prt)
-        thanObjsImpThc(fr, self.thanObjects)
+        than = p_ggen.Struct()
+        than.geodp = self.geodp
+        thanObjsImpThc(fr, self.thanObjects, than)
         fr.readEnd("THANCAD_DRAWING")
         self.thanThcVersion = self.thanThcVersions[-1]
 
@@ -313,10 +376,18 @@ class ThanDrawing:
         if cl is None: cl = self.thanLayerTree.thanCur
         if elem.handle <= 0: elem.handle, tag = self.__idTag.new2()
         else:                tag = self.__idTag.addprefix(elem.handle)
-        if elem.thanTkCompound > 1:
+        self.doElementTag(elem, tag, cl)
+
+
+    def doElementTag(self, elem, tag, cl):
+        "Assigns the tags to the element; does the job."
+        if elem.thanElementName == "TEXT":
+            elem.thanTags = tag, cl.thanTag, "textel"
+        elif elem.thanTkCompound > 1:
             elem.thanTags = tag, cl.thanTag
         else:
             elem.thanTags = tag, cl.thanTag, "nocomp"     # Not a compound element
+
 
     def thanGetLayer(self, e):
         "Gets the layer object which the element belongs to."
@@ -352,10 +423,7 @@ class ThanDrawing:
                 print("New element added has the same tag/handle with existing element: %s" % (elem.handle,))
             else:
                 tag = self.__idTag.addprefix(elem.handle)
-        if elem.thanTkCompound > 1:
-            elem.thanTags = tag, cl.thanTag
-        else:
-            elem.thanTags = tag, cl.thanTag, "nocomp"     # Not a compound element
+        self.doElementTag(elem, tag, cl)
         self.__elementAddHouse(elem, cl)
 
 
@@ -442,11 +510,11 @@ class ThanDrawing:
 
 #------Initialise min,max with first element
 
-        if lays == "all": lays = list(self.thanLayerTree.dilay.values())   #works for python2,3
+        if lays == "all": lays = self.thanLayerTree.dilay.values()   #works for python2,3 -> see sorted() function below
         #lays = [(lay.thanAtts["draworder"].thanVal, lay) for lay in lays]
         #lays.sort()
         #lays = [lay for i,lay in lays]
-        lays.sort(key=lambda lay: lay.thanAtts["draworder"].thanVal)
+        lays = sorted(lays, key=lambda lay: lay.thanAtts["draworder"].thanVal)
         for lay in lays:
             if lay.thanAtts["frozen"].thanVal: continue
             for e in lay.thanQuad:
@@ -703,11 +771,15 @@ class ThanDrawing:
         dxf.than = than = p_ggen.Struct()
         than.pointsize = 0.14       #cm
         than.scale = 500.0 / 100.0  #scale 1:500
+        #than.scale = 100.0 / 100.0  #scale 1:100
+        than.fillModeOn = self.thanVar["fillmode"]
+        than.thanTstyles = self.thanTstyles                # Just a reference
+        than.thanLtypes  = self.thanLtypes                 # Just a reference
+        than.thanDimstyles  = self.thanDimstyles           # Just a reference
+
         for lay in self.thanLayerTree.dilay.values():   #works for python2,3
-            layname = lay.thanGetPathname("__")
-            dxf.thanDxfSetLayer(layname)
-            than.layname = layname  #Active layername is needed by namedpoint
-            than.fill = lay.thanAtts["fill"].thanVal   #Needed by ThanLineFilled element
+            lay.thanDxfSet(than)
+            dxf.thanDxfSetLayer(than.layname)
             for e in lay.thanQuad:
                 e.thanExpDxf(dxf)
         dxf.thanDxfPlot(0.0, 0.0, 999)
@@ -716,19 +788,9 @@ class ThanDrawing:
 
     def __calcVars(self):
         "Determine the values of dxf variables."
-        lays = [self.thanLayerTree.thanRoot]
-        leaflayers = []
-        while len(lays) > 0:
-            lay = lays.pop(0)
-            if len(lay.thanChildren) > 0: lays.extend(lay.thanChildren)
-            else:                         leaflayers.append(lay)
         vars = []
-        nfillon = 0
-        for lay in leaflayers:
-            ia = lay.thanAtts["fill"]
-            if ia.thanVal: nfillon += 1
-        if nfillon == len(leaflayers): vars.append(("$FILLMODE", 70, 1))
-        else:                          vars.append(("$FILLMODE", 70, 0))
+        kv = int(self.thanVar["fillmode"])
+        vars.append(("$FILLMODE", 70, kv))
         return vars
 
 
@@ -736,8 +798,9 @@ class ThanDrawing:
         "Exports all the linear elements of the drawing to syk file."
         than = p_ggen.Struct("ThanCad .syk file and options container")
         than.write = fSyk.write
+        than.fillModeOn = self.thanVar["fillmode"]
         for lay in self.thanLayerTree.dilay.values():   #works for python2,3
-            than.layname = lay.thanGetPathname("__")
+            than.layname = lay.thanGetPathname(THANLC)
             for e in lay.thanQuad:
                 e.thanExpSyk(than)
         return True, ""
@@ -749,8 +812,9 @@ class ThanDrawing:
         than.write = fSyk.write
         than.ibr = 0
         than.form = "THC%07d%15.3f%15.3f%15.3f\n"
+        than.fillModeOn = self.thanVar["fillmode"]
         for lay in self.thanLayerTree.dilay.values():   #works for python2,3
-            than.layname = lay.thanGetPathname("__")
+            than.layname = lay.thanGetPathname(THANLC)
             for e in lay.thanQuad:
                 e.thanExpBrk(than)
         return True, ""
@@ -764,22 +828,147 @@ class ThanDrawing:
         than.form = "THC%07d%15.3f%15.3f%15.3f\n"     #normal point
         than.formnam = "%-10s%15.3f%15.3f%15.3f\n"    #named point
         for lay in self.thanLayerTree.dilay.values():    #works for python2,3
-            than.layname = lay.thanGetPathname("__")
+            than.layname = lay.thanGetPathname(THANLC)
             for e in lay.thanQuad:
                 e.thanExpSyn(than)
         return True, ""
 
 
+    XLSMAXROWS = 65536
+    def thanExpXlspoints(self, proj, sh, xf, elements=None):
+        "Exports all the points of the drawing to an .xlsx/.xls file."
+        #PLEASE SEE WHAT EXCEPTIONS THE sheet OBJECT MAY RAISE
+        ibr = 0
+        irow = -1
+        for e in self.iterElems(elements, filterfun=lambda e: isinstance(e, ThanPoint)):
+            if isinstance(e, ThanPointNamed):
+                name = e.name
+            else:
+                ibr += 1
+                name = "THC{:07d}".format(ibr)
+            irow += 1
+            if irow >= self.XLSMAXROWS:
+                proj[2].thanPrter1(T["Warning: Only the first spreadsheet {} rows were exported."].format(self.XLSMAXROWS))
+                return True, ""
+            try:
+                sh.write(irow, 0, label=name)
+                sh.write(irow, 1, label=e.cc[0], style=xf)
+                sh.write(irow, 2, label=e.cc[1], style=xf)
+                sh.write(irow, 3, label=e.cc[2], style=xf)
+            except (ValueError, Exception) as e:   #xlwt raises ValueError
+                return False, str(e)
+        return True, ""
+
+
+    def thanExpXlslines(self, proj, sh, xf, elements=None):
+        "Exports all the lines of the drawing to an .xlsx/.xls file."
+        #PLEASE SEE WHAT EXCEPTIONS THE sheet OBJECT MAY RAISE
+        irow = -1
+        firstline = True
+        for e in self.iterElems(elements, filterfun=lambda e: isinstance(e, ThanLine)):
+            if not firstline:
+                irow += 1     #Make blank separator line
+            else:
+                firstline = False
+            for cc in e.cp:
+                irow += 1
+                if irow >= self.XLSMAXROWS:
+                    proj[2].thanPrter1(T["Warning: Only the first spreadsheet {} rows were exported."].format(self.XLSMAXROWS))
+                    return True, ""
+                try:
+                    sh.write(irow, 0, label=cc[0], style=xf)
+                    sh.write(irow, 1, label=cc[1], style=xf)
+                    sh.write(irow, 2, label=cc[2], style=xf)
+                except (ValueError, Exception) as e:   #xlwt raises ValueError
+                    return False, str(e)
+        return True, ""
+
+
+    def thanExpImagesold(self, proj, fw, elements=None):
+        "Exports all the images of the drawing to an autocad script file (.scr) file."
+        for e in self.iterElems(elements, filterfun=lambda e: isinstance(e, ThanImage)):
+            lay = self.thanGetLayer(e)
+            layname = lay.thanGetPathname(THANLC)
+            dxp, dyp = e.image.size
+            ca, cb = e.c1ori, e.c2ori
+            dx = cb[0] - ca[0]
+            filim = e.filnam    #This is the absolute path of the raster image
+
+            try:
+                dpi, dpiy = p_gbmp.getDpi2d(e.image, filim)   #Try to get the dpi of the image, if dpiy!=dpi, dpi (x) is chosen
+            except ValueError as e:
+                dpi = 0.0
+            if dpi == 0.0: dpi = 72.0        #Let us hope that Autocad does the same
+            dxmm = dxp/dpi * 25.3997    #width of image in mm
+            scale = dx/dxmm
+
+            try:
+                #-layer Make layername <space>
+                fw.write("-layer m {} \n".format(layname))   #Create and make layer current
+                #-image Attach imagefile x,y scale theta
+                fw.write("-image A {} {:.15e},{:.15e} {:.15e} 0\n".format(filim, ca[0],ca[1], scale))
+            except IOError as e:
+                return False, str(e)
+        return True, ""
+
+
+    def thanExpImages(self, proj, fw, elements=None):
+        "Exports all the images of the drawing to an autocad script file (.scr) file."
+        #See: .../h/b/documentation/cad/autocad/script_import_images
+
+        for e in self.iterElems(elements, filterfun=lambda e: isinstance(e, ThanImage)):
+            lay = self.thanGetLayer(e)
+            layname = lay.thanGetPathname(THANLC)
+            ca, cb = e.c1ori, e.c2ori
+            dx = cb[0] - ca[0]
+            filim = e.filnam    #This is the absolute path of the raster image
+
+            scale = dx
+
+            try:
+                #-layer Make layername <space>
+                fw.write("-layer m {} \n".format(layname))   #Create and make layer current
+                #-image Attach imagefile x,y scale theta
+                fw.write("-image A {} {:.15e},{:.15e} u u {:.15e} 0\n".format(filim, ca[0],ca[1], scale))
+            except IOError as e:
+                return False, str(e)
+        return True, ""
+
+
+    def iterElems(self, elems=None, filterfun=lambda e: True):
+        "Iterate through elems or through all elements of drawing, possibly with a filter function."
+        if elems is None:   #Iterate through all elements of the drawing
+            for lay in self.thanLayerTree.dilay.values():    #works for python2,3
+                layname = lay.thanGetPathname(THANLC)
+                for e in lay.thanQuad:
+                    if filterfun(e): yield e
+        else:
+            dilay = self.thanLayerTree.dilay
+            for e in elems:
+                if filterfun(e): yield e
+
+
     def thanExpKml(self, fSyk):
         "Exports all the point of the drawing to a Google kml file."
-        than = p_ggen.Struct("ThanCad .syn file and options container")
-        than.kml = fSyk
+        than = p_ggen.Struct("ThanCad .kml file and options container")
+
+        #Please update this code when adding/modifying geodetic projections to ThanCad
+        than.dt = 1.0   #Resolution of 1m is hopefully enough for google maps (when converting circles to lines)
+                        #All geodetic projections use meters, except 1001 (λ,φ) which uses deimal degrees
+        if int(self.Lgeodp[1]) == 1001:    #geodetic coordinates in degrees
+            self.dt = self.dt / self.geod.EOID.a * 180.0/pi   #this is the angle that corresponds to 1 meter
+
+        than.kml = None
         than.ibr = 0
         than.form = "THC%07d"     #normal point
 #        p_gimgeo.writeKmlInit(than.kml)
         than.kml = p_gimgeo.ThanKmlWriter(fSyk)
+        than.kml.thanSetProjection(self.geodp)
         for lay in self.thanLayerTree.dilay.values():  #works for python2,3
-            than.layname = lay.thanGetPathname("__")
+            than.layname = lay.thanGetPathname(THANLC)
+            outline, fill = lay.thanGetColour(format="RGB")
+            print("thanExpKml(): layer=", than.layname, "colour=", outline)
+            than.kml.writeLayer(than.layname, outline)
             for e in lay.thanQuad:
                 e.thanExpKml(than)
         than.kml.close()
@@ -792,6 +981,7 @@ class ThanDrawing:
         than = p_ggen.Struct("ThanCad .pdf file and options container")
         than.dc = pyx.canvas.canvas()
         than.ct = ThanRectCoorTransf()
+        than.fillModeOn = self.thanVar["fillmode"]
         x1 = y1 = 0.0
         x2 = y2 = 1.0
         than.ct.set((x1, y1, x2, y2), (0, 0, (x2-x1)*scale, (y2-y1)*scale))
@@ -802,9 +992,19 @@ class ThanDrawing:
         return than
 
 
-    def thanExpPil(self, filpath, mode, width, height, drwin, bcol):
+    def thanExpPil(self, filpath, mode, width, height, drwin, bcol, plotwin):
         "Exports the circle to a PIL raster image."
-        than = p_ggen.Struct("ThanCad PIL image and options container")
+        class PILthan(p_ggen.Struct):
+            def thanGudGetDt(self, dpix=20):
+                """Returns length in units of length equal to dpix pixels.
+
+                This is needed in order to approximate a circle, ellipse, curve etc.
+                with small line segments."""
+                dx, dy = self.ct.global2LocalRel(1.0, 1.0)
+                dt = hypot(1.0, 1.0)/hypot(dx, dy)*dpix    #This means that dt is about dpix pixels
+                return dt
+
+        than = PILthan("ThanCad PIL image and options container")
         page = 19.5, 29.5
 #        dpi = 300.0 #120.0
 #        imsize = [int(p*dpi/2.54+0.5) for p in page]
@@ -828,14 +1028,19 @@ class ThanDrawing:
         than.im = p_gimage.new(than.mode, imsize, bcolpil)
         if isinstance(than.im, p_gimage.ThanImageMissing): raise ValueError("Python module Image/Pillow was not found")
         ib, ih = than.im.size
-        than.viewPort = x1, y1, x2, y2 = self.__roundCenter(self.viewPort, (0, ih, ib, 0))
+        if drwin == "display": plotwin = self.viewPort
+        than.viewPort = x1, y1, x2, y2 = self.__roundCenter(plotwin, (0, ih, ib, 0))
         than.dc = p_gimage.Draw(than.im)
+
         than.ct = ThanRectCoorTransf()
         than.ct.set((x1, y1, x2, y2), (0, ih, ib, 0))
+
         than.imageFrameOn = self.thanVar["imageframe"]
         than.imageBrightness = 1.0     #FIXME: it should be equal to proj[2].than.imageBrightness
         than.thanTstyles = self.thanTstyles                # Just a reference
         than.thanLtypes  = self.thanLtypes                 # Just a reference
+        than.thanDimstyles  = self.thanDimstyles           # Just a reference
+        than.fillModeOn = self.thanVar["fillmode"]
 #        than.fill = ThanAttCol("red").thanVal
 #        than.outline = ThanAttCol("yellow").thanVal
 #        than.width = int((9+1)/2)    # for the bugged version of ThanLine.thanExpPil()
@@ -857,13 +1062,13 @@ class ThanDrawing:
             i2 = int(than.width/2)
             i1 = -i2
             if i2-i1+1 > than.width: i1 += 1
-            than.widtharc = i1, i2+1                             # Simulate widths in ars, circles
+            than.widtharc = i1, i2+1                             # Simulate widths in arcs, circles
             assert than.width == than.widtharc[1]-than.widtharc[0]
             for e in lay.thanQuad:
                 e.thanExpPil(than)
 
         del than.dc
-        x1, y1, x2, y2 = self.viewPort
+        x1, y1, x2, y2 = plotwin
         ix1, iy1 = than.ct.global2Locali(x1, y2)  # PIL need left,upper and ..
         ix2, iy2 = than.ct.global2Locali(x2, y1)  # ..right,lower
         box = ix1, iy1, ix2, iy2
@@ -876,7 +1081,7 @@ class ThanDrawing:
 
     def __roundCenter(self, w, pixPort):
         "Rounds an abstract window w, so that it fits exactly to the actual (GuiDependent) window."
-        return thanRoundCenter(w, pixPort, per=0)   #After testinf delete following code
+        return thanRoundCenter(w, pixPort, per=0)   #After testing delete following code
         xa, ya, xb, yb = pixPort
         wpi = abs(xb - xa)
         hpi = abs(yb - ya)
@@ -898,7 +1103,3 @@ class ThanDrawing:
     def thanRepair(self):
         "Try to create some new objects that were not present in older versions of .thc."
         pass
-
-
-if __name__ == "__main__":
-    print(__doc__)

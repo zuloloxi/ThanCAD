@@ -1,122 +1,134 @@
-from __future__ import print_function
 from math import fabs
 import math, random
-import p_gmath, p_gnum
+#from typing import Union, Iterable, Optional, Tuple, Iterator
+import p_gmath, p_gnum  #type: ignore
 
-#===========================================================================
 
 class Vector3:
     "Implements 3d vectors."
 
-    def __init__ (self, xx=None, yy=None, zz=0.0):
+    #def __init__ (self, xx:Union[float, Iterable[float]]=0.0, yy:float=0.0, zz:float=0.0):
+    def __init__ (self, xx=0.0, yy=0.0, zz=0.0):
         "Initialise a new 3d vector to zero by default."
-        if xx is None:                    #No arguments: Default vector is zero
-            self.x = self.y = self.z = 0.0
-        elif yy is None:                  #Only one argument: it should be an iterable
-            yy = iter(xx)
-            self.x = next(yy)
-            self.y = next(yy)
-            self.z = next(yy)
-        else:                             #Two arguments or three: they should be the number like
+        #if isinstance(xx, Iterable): #Only one argument: it should be an iterable
+        try: temp=iter(xx)
+        except: temp = None
+        if temp is not None: #Only one argument: it should be an iterable
+            temp = iter(xx)
+            self.x = next(temp)
+            self.y = next(temp)
+            self.z = next(temp)
+        else:                               #Two arguments or three: they should be the number like
             self.x = float(xx)
             self.y = float(yy)
             self.z = float(zz)
 
-    def __add__ (self, other):
+
+    def __add__(self, other):  # type: (Vector3, Vector3) -> Vector3
         "Addition of vectors."
         if isinstance(other, Vector3):
             return Vector3(self.x+other.x, self.y+other.y, self.z+other.z)
         else:
             raise TypeError("Don't know how to add Vector3 by " + str(type(other)))
 
-    def __sub__ (self, other):
+    def __sub__ (self, other):  # type: (Vector3, Vector3) -> Vector3
         "Subtraction of vectors."
         if isinstance(other, Vector3):
             return Vector3(self.x-other.x, self.y-other.y, self.z-other.z)
         else:
             raise TypeError("Don't know how to subtract Vector3 by " + str(type(other)))
 
-    def __neg__ (self):
+    def __neg__ (self):  # type: (Vector3) -> Vector3
         "Returns the 3d vector with inverse direction."
         return Vector3(-self.x, -self.y, -self.z)
 
-    def __pos__ (self):
+    def __pos__ (self):  # type: (Vector3) -> Vector3
         "Returns the 3d vector with the same direction."
         return Vector3(self.x, self.y, self.z)
 
-    def __mul__ (self, other):
-        "Returns the scalar product of 3d vectors, or the vector multiplied by a number."
-        if isinstance(other, Vector3):
-            return self.x * other.x + self.y * other.y + self.z * other.z
-        #if isinstance(other, types.FloatType) or isinstance(other, types.IntType):
+
+    def __mul__ (self, other):  # type: (Vector3, float) -> Vector3
+        "Returns the the vector multiplied by a number."
         try: other+0.0      #Is it number like
         except: raise TypeError("Don't know how to multiply Vector3 by " + str(type(other)))
         return Vector3(self.x * other, self.y * other, self.z * other)
+    def __rmul__(self, other):  # type: (Vector3, float) -> Vector3
+        return self.__mul__(other)
 
-    def __truediv__ (self, other):
+
+    def __or__(self, other):  # type: (Vector3, Vector3) -> float
+        "Returns the scalar product of 3d vectors."
+        return self.x * other.x + self.y * other.y + self.z * other.z
+
+    def __truediv__ (self, other):  # type: (Vector3, float) -> Vector3
         "Returns the vector divided by a number."
-        #if isinstance(other, types.FloatType) or isinstance(other, types.IntType):
         try: other+0.0      #Is it number like
         except: raise TypeError("Don't know how to divide Vector3 by " + str(type(other)))
         return Vector3(self.x/other, self.y/other, self.z/other)
     __div__ = __truediv__   #For python 2 compatibility
 
-    def __rmul__ (self, other):
-        "Just an alias of multiplication."
-        return self.__mul__ (other)
 
+    #def __abs__ (self) -> float:
     def __abs__ (self):
         "Computes the length of the vector."
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-    def unit(self):
+    def unit(self):  # type: (Vector3) -> Optional[Vector3]
         "Computes the unit vector with the same direction."
         a = abs(self)
         if a == 0.0: return None
         return Vector3(self.x / a, self.y/a, self.z/a)
 
-    def normal (self):
+
+    def normal (self):  # type: (Vector3) -> Optional[Vector3]
         "Compute a random unit vector normal to the vector's direction."
         t = self.unit()
-        if t is None: return None
-        b = Vector3(1,0,0)
-        b = (b - (b*t)*t).unit()
-        if b is not None: return b
-        b = Vector3(0,1,0)
-        b = (b - (b*t)*t).unit()
-        assert b != None
-        return b
+        if t is None:
+            return None
+        else:
+            b = Vector3(1,0,0)
+            bb = (b - (b|t)*t).unit()
+            if bb is not None: return bb
+            b = Vector3(0,1,0)
+            bb = (b - (b|t)*t).unit()
+            assert bb != None
+            return bb
 
-    def normal2(self):
+
+    def normal2(self):  # type: (Vector3) -> Tuple[Vector3, Vector3]
         "Find 2 random unit vectors so that they and t are mutually normal."
         t = self.unit()
+        if t is None:
+            return Vector3(1, 0, 0), Vector3(0, 1, 0)     #self is zero vector: return 2 arbitrary normal vectors
+        #r:random.Random = random.Random()
         r = random.Random()
         while True:
             a = Vector3(r.uniform(0, 1), r.uniform(0, 1), r.uniform(0, 1))  # Note that it is not a unit vector..
-            na = a - (t*a)*t                                                # but I don't want to ensure that it is <>0
+            na = a - (t|a)*t                                                # but I don't want to ensure that it is <>0
             nn = abs(na)
             if nn > 0.1: break
         na /= nn
         while True:
             b = Vector3(r.uniform(0, 1), r.uniform(0, 1), r.uniform(0, 1))
-            nb = b-(t*b)*t
+            nb = b-(t|b)*t
             if abs(nb) > 0.1:
-                nb = nb - (na*nb)*na
+                nb = nb - (na|nb)*na
                 nn = abs(nb)
                 if nn > 0.1: break
         nb /= nn
-        assert fabs(na*nb) < p_gmath.thanThresholdx
-        assert fabs(t*na) < p_gmath.thanThresholdx
-        assert fabs(t*nb) < p_gmath.thanThresholdx
+        assert fabs(na|nb) < p_gmath.thanThresholdx
+        assert fabs(t|na) < p_gmath.thanThresholdx
+        assert fabs(t|nb) < p_gmath.thanThresholdx
         return na, nb
 
+    #def dircos(self) -> Tuple[float, float, float]:
     def dircos(self):
         "Compute direction cosines."
         t = self.unit()
         if t is None: return 0.0, 0.0, 0.0
         return t.x, t.y, t.z
 
-    def cross(self, b):
+    def cross(self, b):  # type: (Vector3, Vector3) -> Vector3
         "Return the cross product of vectors self x b."
         return Vector3(self.y*b.z-self.z*b.y, self.z*b.x-self.x*b.z, self.x*b.y-self.y*b.x)
 
@@ -125,7 +137,7 @@ class Vector3:
 #        cosf = math.cos(f); sinf = math.sin(f)
 #        return Vector2(self.x*cosf - self.y*sinf, self.x*sinf + self.y*cosf)
 
-    def mirXY(self):
+    def mirXY(self):  # type: (Vector3) -> Vector3
         "Returns the vector with the same x,y and opposite z: mirror with repsect to XY plane."
         return Vector3(self.x, self.y, -self.z)
 
@@ -133,7 +145,7 @@ class Vector3:
 #        "Computes the direction angle; positive=counterclockwise, zero at 3o'clock."
 #        return math.atan2(self.y, self.x)
 
-    def anal (self, da, db, dc):
+    def anal (self, da, db, dc):  # type: (Vector3, Vector3, Vector3, Vector3) -> Tuple[float, float, float]
         """Analyzes self into 3 non-coplanar vectors da, db and dc.
 
         It solves the vector system:
@@ -147,16 +159,18 @@ class Vector3:
         B = p_gnum.array((self.x, self.y, self.z))
         return p_gnum.solve_linear_equations(A, B)
 
-    def vector2(self):
+    def vector2(self):  # type: ignore
         "Return a 2d vector, discarding z."
         from . import vec
         return vec.Vector2(self.x, self.y)
 
+    #def __str__ (self) -> str:
     def __str__ (self):
         "Just a string representation of the object."
         return "<%.3f, %.3f, %.3f>" % (self.x, self.y, self.z)
 
 
+    #def __iter__(self) -> Iterator[float]:
     def __iter__(self):
         "Return an iterator to the vector."
         yield self.x
@@ -164,102 +178,26 @@ class Vector3:
         yield self.z
 
 
+#def planeaxes2(a:Vector3, b:Vector3, z:Vector3) -> Tuple[Optional[Vector3], Optional[Vector3]]: 
 def planeaxes2(a, b, z):
     """Find coordinate system of a plane so that the second axis is paralel to z.
 
     Given two vectors a and b which define a plane (a x b <> 0), find two
-    perpendicular unit vectors u and v (u * v <> 0) which define a coordinate
+    perpendicular unit vectors u and v (u x v <> 0) which define a coordinate
     system in the plane, so that v is parallel to arbitrary vector z and has the
     same direction as z.
     If z is perpendicular to the plane, or z is zero, or a and b do not define
-    a plane (they are colinear ore one of the is zero) return None.
+    a plane (they are colinear ore one of them is zero) return None.
     """
-    z = z.unit()
-    if z is None: return None, None
+    zz = z.unit()
+    if zz is None: return None, None
+    z = zz
     ab = a + b
-    tv = ab * z
+    tv = ab | z
     v = fabs(tv) * z     #v vector has the same direction as z
     u = ab - v
-    if u*v < 0.0: u = -u #Make the system convex
-    u = u.unit()
-    v = v.unit()
-    if u is None or v is None: return None, None
-    return u, v
-
-#===========================================================================
-
-def testV():
-    a = Vector3(10,20,30); print("a      = ", a)
-    b = Vector3(5, 6, 7);  print("b      = ", b)
-    z = Vector3(0, 0, 0);  print("z      = ", z)
-    c = a + b;             print("a+b    = ", c)
-    c = a - b;             print("a-b    = ", c)
-    c = a * b;             print("a*b    = ", c)
-    c = -a;                print("-a     = ", c)
-    c = +a;                print("+a     = ", c)
-    print()
-    c = a * 10.0;          print("a*10.0 = ", c)
-    c = 10.0 * a;          print("10.0*a = ", c)
-    c = a / 10.0;          print("a/10.0 = ", c)
-#    c = a / b;             print("a/b    = ", c    # Error!)
-#    c = 10.0 / a;          print("10.0/a = ", c    # Error!)
-    print()
-    c = 10.0 * a * b;      print("10.0*a*b = ", c)
-    c = a * 10.0 * b;      print("a*10.0*b = ", c)
-    c = a *  b * 10.0;     print("a*b*10.0 = ", c)
-    print()
-    c = 10.0*a + 20.0*b;   print("c=10.0*a+20.0*b = ", c)
-    print()
-    c = a.cross(b);        print("a x b=", c)
-    print("c*a=", c*a)
-    print("c*b=", c*b)
-    print()
-    c = abs(a);            print("abs(a) = ", c)
-    c = abs(b);            print("abs(b) = ", c)
-    print()
-    c = a.unit();          print("a.unit = ", c)
-    c = z.unit();          print("z.unit = ", c)           # Error
-    c = a.normal();        print("a.normal = ", c)
-
-    i = Vector3(1,0,0)
-    j = Vector3(0,1,0)
-    k = Vector3(0,0,1)
-    print()
-    a = 10*i + 25*j + 30*k;  print("a =", a)
-    t=Vector3(1,1,1).unit(); print("t =", t)
-    at = (a * t) * t;        print("at =", at)
-    an = a - at;             print("an =", an)
-
-    print()
-    print("testing iterator:")
-    v = Vector3(999.0, 1999.0, 2999.0)
-    for i,c in enumerate(v): print("v[", i, "] =", c)
-    print("list(v)=", list(v))
-    print()
-
-#    k = 1
-#    while (k < 3000):
-#        a = 10*i + 25*j
-#        t = a.normal()
-#        k = k + 1
-
-#    print("-----")
-#    for k in range(3000):
-#        a = 10*i + 25*j
-#        t = a.normal()
-
-
-def testAnal():
-    "Test anal function."
-    print()
-    i = Vector3(2, 1, 1);    print("i =", i)
-    j = Vector3(4, 18, 2);   print("j =", j)
-    k = Vector3(4, 18, -2);  print("k =", k)
-    a = Vector3(10, 25, 99); print("a =", a)
-    s = a.anal(i, j, k);     print("a.anal =", s)
-    print("a = ", s[0], "* i +", s[1], "* j +", s[2], "* k =", s[0]*i + s[1]*j + s[2]*k)
-
-
-if __name__ == "__main__":
-    testV();
-    testAnal()
+    if u|v < 0.0: u = -u #Make the system convex
+    uu = u.unit()
+    vv = v.unit()
+    if uu is None or vv is None: return None, None
+    return uu, vv

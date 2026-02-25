@@ -1,22 +1,66 @@
-from __future__ import print_function
 import sys, os
+import tkinter, tkinter.font, tkinter.ttk
 from tkinter import TclError, messagebox
 from tkinter.messagebox import ERROR, INFO, QUESTION, WARNING
 from p_ggen import floate, isString, thanUnunicode, thanUnicode, path, Pyos
+import p_gcol
 if Pyos.Python3: from tkinter import filedialog
 else:            import tkFileDialog as filedialog
+
+__fontdef = None     #Default font, with different size
 
 
 #============================================================================
 
-def thanGudGetReadFile(self, ext, tit, initialfile="", initialdir="", multiple=False):
+def thanGetDefaultFont(**kw):
+    global __fontdef
+    if __fontdef is None:
+        __fontdef = tkinter.font.Font(name="TkDefaultFont", exists=True).copy()  #Default font with different size
+        __fontdef.config(size=16)
+    if kw: __fontdef(**kw)
+    return __fontdef
+
+
+def thanSetFontsSize(s=14):
+    "Set the size of default fonts."
+    for t in "TkDefaultFont", "TkFixedFont", "TkMenuFont", "TkCaptionFont", "TkTextFont":
+        font1 = tkinter.font.Font(name=t, exists=True)
+        font1.config(size=s)   # Negative size means size in pixels
+    #font1.config(family="Arial")
+
+
+def correctDialogColor(master, font1):
+    "Return a Frame fra and Font font1 for the standard Tk file dialog; fra MUST BE DESTROYED JUST AFTER USE."
+    fra = tkinter.Frame(master)    #A widget that will take the option_add(), so that we do not alter master
+    if font1 is None: font1 = thanGetDefaultFont()
+    #bgcol = fra.cget("bg")
+    #print("bgcol=", bgcol)
+    fgcol = "darkblue"
+    bgcol = "lightyellow"
+    fra.option_add('*foreground', fgcol)        # set all tk widgets' foreground to col: changes color of file list
+    fra.option_add('*activeForeground', fgcol)  # set all tk widgets' foreground to col: changes color of file list
+    fra.option_add('*background', bgcol)  # set all tk widgets': changes all, except file list
+    fra.option_add('*font', font1)  # set all tk widgets' font to font1:  changes all, except file list, menubutton and button
+
+    style = tkinter.ttk.Style(fra)
+    style.configure('TLabel',      foreground='black')
+    style.configure('TEntry',      foreground=fgcol)
+    style.configure('TMenubutton', foreground=fgcol, font=font1)
+    style.configure('TButton',     foreground="black", font=font1)
+    return fra
+
+
+def thanGudGetReadFile(self, ext, tit, initialfile="", initialdir="", multiple=False, font=None):
     "Gets a filename that exists, from user."
-    ext = thanExtExpand(ext)
+    ext1 = thanExtExpand(ext)
+    #defext = ext[0][1][1:]    # For Windows?
+    defext = ext1[0][1]
+    if ext is None: defext = None   #Thanasis2017_04_20:Otherwise .Open does not select files with no extension
+    if not Pyos.Windows: fra = correctDialogColor(self, font)   #Thanasis2021_09_26
     while True:
-        opendialog = filedialog.Open(parent=self, initialfile=initialfile,
-          #initialdir=initialdir, defaultextension=ext[0][1][1:],    # For Windows?
-          initialdir=initialdir, defaultextension=ext[0][1], multiple=multiple,
-          title=thanUnicode(tit), filetypes=ext)  #Here defaultextension works ok: When the users types something
+        opendialog = filedialog.Open(parent=self, initialfile=initialfile,  #Thanasis2021_09_26: fra is now the parent
+          initialdir=initialdir, defaultextension=defext, multiple=multiple,
+          title=thanUnicode(tit), filetypes=ext1)  #Here defaultextension works ok: When the users types something
         #                           #It gets the extension specified as the first element of ext
         try:
             filnam = opendialog.show()
@@ -27,9 +71,10 @@ def thanGudGetReadFile(self, ext, tit, initialfile="", initialdir="", multiple=F
                 continue
             raise                                  #Something else happened; raise error
         break
+    if not Pyos.Windows: fra.destroy()    #Thanasis2021_09_26
     if multiple:
-#        print "thangudgetreadfile: multiple=", multiple, ":", filnam
-#        print "thangudgetreadfile: type(filnam)=", type(filnam)
+        #print("thangudgetreadfile: multiple=", multiple, ":", filnam)
+        #print("thangudgetreadfile: type(filnam)=", type(filnam))
         if not filnam: return None
         try: filnam+"x"     #Work around Windows bug: Yeah, Windows "just" works!!
         except: pass
@@ -59,7 +104,11 @@ def thanAbsrelPath(f, cdir=None):
     if cdir is None: cdir = os.getcwd()
     cdir = os.path.abspath(cdir)
     f = thanUnunicode(os.path.abspath(f))
-    if os.path.commonprefix((cdir, f)) == cdir: f = f[len(cdir)+1:]
+    if os.path.commonprefix((cdir, f)) == cdir:
+        n = len(cdir)
+        if f[n:n+1] in "/\\": n += 1    #skip "/" or "\"   #thanasis2018_10_25
+        f = f[n:]
+        if f == "": f = cdir    #Otherwise blank in shown   #Thanasis2022_11_19
     return path(f)
 
 #============================================================================
@@ -102,8 +151,13 @@ def thanExtExpand(ext):
 #      b. If the blank tuples are first (before the non blank tuples) then
 #         the last of the non blank tuples is shown. The user may choose another
 #         nonblank tuple or all blank tuples.
+#      c. 2022_06_13: In the file explorer go to view -> options -> view tab ->
+#         -> untick "hide extensions for for known file types"
+#         Now Windoze shows all the blank description extensions as one entry
+#         just like linux.
+#         The entry "all files", must be appended at the end of the list.
 #    Linux openfile dialog:
-#    1. Linux always shows the first entry either blanmk or nonblank tuple.
+#    1. Linux always shows the first entry either blank or nonblank tuple.
 #    2. All the blank tuples are shown as one entry.
     if ext is None:
         exts = [("All files", "*")]
@@ -113,37 +167,39 @@ def thanExtExpand(ext):
         elif " " in ext.strip():
             exts = []
             for exta in ext.split():
-                if exta[0] not in ".*": exta = "*" + exta
+                if exta[0] not in ".*": exta = "*" + exta  #in case extension is like xx.asc
                 exts.append(("", exta))
-            if Pyos.Windows: exts.insert(0, ("All files", "*"))
-            else:            exts.append(("All files", "*"))
+            #if Pyos.Windows: exts.insert(0, ("All files", "*"))  #Thanasis2022_06_13: commented out
+            #else:            exts.append(("All files", "*"))     #Thanasis2022_06_13: commented out
+            exts.append(("All files", "*"))     #Thanasis2022_06_13: see explaneation above (c.)
         else:
             desc, exta = "", ext
-            if exta[0] not in "*.": exta = "*" + exta
+            if exta[0] not in "*.": exta = "*" + exta   #in case extension is like xx.asc
             exts = [(desc, exta), ("All files", "*")]
     elif isString(ext[0]):
         desc, exta = ext
         if exta.strip() == "":
             exts = [(desc, "*")]
         else:
-            if exta[0] not in ".*": exta = "*" + exta
+            if exta[0] not in ".*": exta = "*" + exta   #in case extension is like xx.asc
             exts = [(desc, exta), ("All files", "*")]
     else:
         exts = []
         for desc, exta in ext:
-            if exta[0] not in ".*": exta = "*" + exta
+            if exta[0] not in ".*": exta = "*" + exta   #in case extension is like xx.asc
             exts.append((desc, exta))
     return exts
 #    return [(thanUnicode(desc), thanUnicode(exta)) for desc, exta in exts]
 
 
-def thanGudGetSaveFile(self, ext, tit, initialfile="", initialdir=""):
+def thanGudGetSaveFile(self, ext, tit, initialfile="", initialdir="", font=None):
     "Gets a filename that may exists, from user."
     ext = thanExtExpand(ext)
     kw = {}
     if Pyos.Windows: kw["defaultextension"]=ext[0][1]
+    if not Pyos.Windows: fra = correctDialogColor(self, font)  #Thanasis2021_09_26
     while True:
-        opendialog = filedialog.SaveAs(parent=self, initialfile=initialfile,
+        opendialog = filedialog.SaveAs(parent=self, initialfile=initialfile,  #Thanasis2021_09_26: fra is now the parent
           initialdir=initialdir, title=thanUnicode(tit), filetypes=ext,
           **kw)       #Thanasis2011_08_28:Here defaultextension does not work ok in Linux: When the user types something
         #             #It gets the extension ext[0], even if the user has selected another one with the widget
@@ -157,34 +213,37 @@ def thanGudGetSaveFile(self, ext, tit, initialfile="", initialdir=""):
                     continue
             raise
         break
+    if not Pyos.Windows: fra.destroy()    #Thanasis2021_09_26
     return thanAbsrelPath(filnam)
 
 
-def thanGudOpenReadFile(self, ext, tit, mode="r", initialfile="", initialdir=""):
+def thanGudOpenReadFile(self, ext, tit, mode="r", initialfile="", initialdir="", encoding=None, errors=None):
     "Gets a filename that exists, from user."
     while 1:
         filnam = thanGudGetReadFile(self, ext, tit, initialfile, initialdir)
         if not filnam: return filnam, filnam
-        try: fw = open(filnam, mode)
+        try: fw = open(filnam, mode, encoding=encoding, errors=errors)
         except IOError as why : thanGudModalMessage(self, why, "Error opening file")
         else: return filnam, fw
 
 
-def thanGudOpenSaveFile(self, ext, tit, mode="w", initialfile="", initialdir=""):
+def thanGudOpenSaveFile(self, ext, tit, mode="w", initialfile="", initialdir="", encoding=None, errors=None):
     "Gets a filename that exists, from user."
     while True:
         filnam = thanGudGetSaveFile(self, ext, tit, initialfile, initialdir)
         if not filnam: return filnam, filnam
-        try: fw = open(filnam, mode)
+        try: fw = open(filnam, mode, encoding=encoding, errors=errors)
         except IOError as why: thanGudModalMessage(self, why, "Error opening file")
         else: return filnam, fw
 
 
-def thanGudGetDir(self, tit, initialdir="", mustexist=False):
+def thanGudGetDir(self, tit, initialdir="", mustexist=False, font=None):
     "Gets a filename that exists, from user."
-    opendialog = filedialog.Directory(parent=self,
+    if not Pyos.Windows: fra = correctDialogColor(self, font)  #Thanasis2021_09_26
+    opendialog = filedialog.Directory(parent=self,   #Thanasis2021_09_26: fra is now the parent
                  title=thanUnicode(tit), initialdir=initialdir, mustexist=mustexist)
     filnam = opendialog.show()
+    if not Pyos.Windows: fra.destroy()    #Thanasis2021_09_26
     return thanAbsrelPath(filnam)
 
 #============================================================================
@@ -251,6 +310,65 @@ def thanGudPosition(self, master="parent", dx=20, dy=15):
         y = master.winfo_rooty()
     self.geometry("%+d%+d" % (x+dx, y+dy))
 
+
+def correctForeground(wid):
+    "Correct foreground color of a widget depending on intensity of backgroundcolor: either black or white."
+    wid.update_idletasks()
+    for act in "active", "":
+        fgcol = blackorwhite(wid, act+"background")
+        if fgcol is not None:
+            wid[act+"foreground"] = fgcol
+            #print("correctForeground: fgcol=", fgcol)
+    try: wid.config(insertbackground=fgcol)     #Thanasis2024_06_28:Try to change the color of the cursor
+    except: pass  #Widget does not have this property
+
+    if fgcol == "black":
+        selfg = "white"
+        selbg = "gray25"
+    else:
+        selfg = "black"
+        selbg = "gray75"
+    try: wid.config(selectforeground=selfg)     #Thanasis2024_06_28:Try to change the selection color
+    except: pass  #Widget does not have this property
+    try: wid.config(selectbackground=selbg)     #Thanasis2024_06_28:Try to change the selection color
+    except: pass  #Widget does not have this property
+
+    wid.update_idletasks()
+
+
+#def oldblackorwhite(wid, bg="background"):
+#    "Return black or white depending on the backgound/activebackground color of widget."
+#    wid.update_idletasks()
+#    try: bgcol = wid.cget(bg)
+#    except: return None     #Widget does not have this property
+#    #print("blackorwhite(): bgcol = {}     type={}".format(bgcol, type(bgcol)))
+#    try: bgcol = p_gcol.thanTk2Rgb(bgcol)
+#    except: return None     #Could not decipher background color
+#    #print("blackorwhite(): bgcol = {}     type={}".format(bgcol, type(bgcol)))
+#    fgcol = "black"
+#    if p_gcol.thanRgb2Gray(bgcol) < 127: fgcol = "white"
+#    #print("blackorwhite(): fgcol=", fgcol)
+#    return fgcol
+
+def blackorwhite(wid, bg="background"):
+    "Return black or white depending on the backgound/activebackground color of widget."
+    return blueorcyan(wid, blue="black", cyan="white", bg=bg)
+
+
+def blueorcyan(wid, blue="blue", cyan="cyan", bg="background"):
+    "Return blue or cyan depending on the backgound/activebackground color of widget."
+    wid.update_idletasks()
+    try: bgcol = wid.cget(bg)
+    except: return None     #Widget does not have this property
+    #print("blueorcyan(): bgcol = {}     type={}".format(bgcol, type(bgcol)))
+    try: bgcol = p_gcol.thanTk2Rgb(bgcol)
+    except: return None     #Could not decipher background color
+    #print("blueorcyan(): bgcol = {}     type={}".format(bgcol, type(bgcol)))
+    fgcol = blue
+    if p_gcol.thanRgb2Gray(bgcol) < 127: fgcol = cyan
+    #print("blueorcyan(): fgcol=", fgcol)
+    return fgcol
+
 #===========================================================================
 
 def thanValidateDouble(parentwin, controls, except_=()):
@@ -277,6 +395,7 @@ def thanValidateDouble(parentwin, controls, except_=()):
         res.append(v)
     return res 
 
+#===========================================================================
 
 from tkinter import Tk, Frame
 def testmenus2():

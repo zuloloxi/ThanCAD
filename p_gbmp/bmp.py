@@ -1,4 +1,3 @@
-from __future__ import print_function
 import struct
 from p_ggen import Struct
 

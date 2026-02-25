@@ -1,36 +1,32 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for a modification commands.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, hypot, fabs, atan2, cos, sin
 from p_gmath import thanNear2, thanNear3, sign
 import p_ggen
@@ -42,8 +38,28 @@ from .selutil import thanSel1line, thanSelMultlines, thanSelectCrosClear
 
 def thanModContline(proj):
     "Continues a line selected by the user."
-    linori = thanSel1line(proj, T["Select a line to continue.."])
-    if linori == Canc: return thanModCanc(proj)               # Line continue was cancelled
+    import thandr
+    def getprevline():
+        "Return the most recent created line, if it still exists."
+        t = proj[2].thanLineRecentTag    #Most recent created line (so that we may continue it in the future)
+        if t is None: return None
+        linori = proj[1].thanTagel.get(t)
+        if linori is None: return None
+        if isinstance(linori, thandr.ThanLine): return linori
+        print("Program Error: thanModContline(): Most recent created line is not a line!!!")
+        return None
+
+    linori = getprevline()
+    if linori is not None:
+        res = thanSel1line(proj, T["Select a line to continue (p=continue previous line): "], options=("previous",))
+        if res == Canc: return thanModCanc(proj)               # Line continue was cancelled
+        if res != "p": linori = res
+    else:
+        res = thanSel1line(proj, T["Select a line to continue:"])
+        if res == Canc: return thanModCanc(proj)               # Line continue was cancelled
+        linori = res
+
+    crelold = proj[1].thanGetLastPoint()
     selold = proj[2].thanSelold
     lin = linori.thanClone()
 #    lin.thanTags = linori.thanTags
@@ -52,14 +68,19 @@ def thanModContline(proj):
     proj[2].thanTkSet(lin)          # Set the attributes of lin's layer
     res = lin.thanTkContinue(proj)
     proj[2].thanTkSet()             # Set the attribute of current layer
-    if res == Canc: return thanModCanc(proj)
+    if res == Canc:
+        crelold = proj[1].thanSetLastPoint(crelold)
+        return thanModCanc(proj, crelold)
     if lin.cp == linori.cp: return thanModCanc(proj)  #No change; cancel
+
+    proj[2].thanLineRecentTag = lin.thanTags[0]   #Most recent created line (so that we may continue it in the future)
 
     delelems = [linori]
     newelems = set((lin,))
-    thanundo.thanReplaceRedo(proj, delelems, newelems, newelems) #Room for optimisation here.
-    proj[1].thanDoundo.thanAdd("continueline", thanundo.thanReplaceRedo, (delelems, newelems, newelems),
-                                               thanundo.thanReplaceUndo, (delelems, newelems, selold))
+    crel = proj[1].thanGetLastPoint()
+    thanundo.thanReplaceRedo2(proj, delelems, newelems, newelems, crel) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("continueline", thanundo.thanReplaceRedo2, (delelems, newelems, newelems, crel),
+                                               thanundo.thanReplaceUndo2, (delelems, newelems, selold, crelold))
     thanModEnd(proj)                # 'Reset color' is not needed, but it is called for only 1..
                                     # ..element, so it is fast
 
@@ -83,11 +104,9 @@ def thanModChelevContour(proj):
             proj[2].thanPrter(T["Point not near line. Try again."])
 
     elem1, c1 = sel1(proj, T["Select first contour line to elevate.."])
-                            #"Επιλογή πρώτης ισοϋψούς για αλλαγή υψομέτρου: "
     if elem1 == Canc: return proj[2].thanGudCommandCan()
     while True:
         elem2, c2 = sel1(proj, T["Select last contour line to elevate.."])
-                            #"Επιλογή τελευταίας ισοϋψούς για αλλαγή υψομέτρου: "
         if elem2 == Canc: return proj[2].thanGudCommandCan()
         if not thanNear2(c1, c2): break
         proj[2].thanPrter(T["Selected points are identical. Try again."])
@@ -100,20 +119,21 @@ def thanModChelevContour(proj):
     z2 = proj[2].thanGudGetFloat(stat, c2[2])
     if z2 == Canc: return thanModCanc(proj)
 
-    lin1 = ThanLine()
-    lin1.thanSet([c1, c2])
+    #lin1 = ThanLine()
+    #lin1.thanSet([c1, c2])
     lines = thanSelectCrosClear(proj, c1, c2, fil)
     lines -= set((elem1, elem2))
     seq = []
     for lin2 in lines:
-        ct = thanInt(lin1, lin2, proj)
+        #ct = thanInt(lin1, lin2, proj)
+        ct = lin2.thanIntseg(c1, c2)
         if len(ct) == 0: continue
         if len(ct) > 1:
             return proj[2].thanGudCommandCan("%s\n%s" % (
-                T["Error: An interim line is met more than once:"],
+                T["Error: An interim contour line is met more than once:"],
                 T["The elevation must increase/decrease monotonically between first and last line."]))
         ct = ct[0]
-        seq.append((hypot(ct[0]-c1[0], ct[1]-c1[1]), ct, lin2))
+        seq.append((hypot(ct[0]-c1[0], ct[1]-c1[1]), len(seq), ct, lin2))   #len(seq) is counter: in case 2 intersection are identical
     n = len(seq)
     if n == 0:
         return proj[2].thanGudCommandCan(T["No lines were met between first and last line."])
@@ -121,7 +141,8 @@ def thanModChelevContour(proj):
     idz = fabs(dz)
     idz = sign(int(idz+0.5), dz)
     if fabs(dz-idz) > 0.001:
-        statonce = T["Warning: delta z is not a integer: %s\n"] % dz
+        statonce = __chechDupContour(seq)
+        statonce += T["Warning: delta z is not a integer: %s\n"] % dz
         stat1 = T["Continue (yes/no) (enter=yes): "]
         ans = proj[2].thanGudGetYesno(stat1, default=True, statonce=statonce)
         if ans == Canc: return proj[2].thanGudCommandCan()
@@ -129,9 +150,9 @@ def thanModChelevContour(proj):
     else:
         dz = idz
     seq.sort()
-    seq.insert(0, (0.0, c1, elem1))
-    seq.append((hypot(c2[0]-c1[0], c2[1]-c1[1]), c2, elem2))
-    sizes = [seq[i+1][0]-seq[i][0] for i in xrange(len(seq)-1)]
+    seq.insert(0, (0.0, 0, c1, elem1))
+    seq.append((hypot(c2[0]-c1[0], c2[1]-c1[1]), len(seq), c2, elem2))
+    sizes = [seq[i+1][0]-seq[i][0] for i in range(len(seq)-1)]
     siz = min(sizes)*0.5
     theta = atan2(c2[1]-c1[1], c2[0]-c1[0])   #Note that c1 != c2
     cost = cos(theta)                         #This is the user line direction
@@ -143,7 +164,7 @@ def thanModChelevContour(proj):
     newelems = set()
     selelems = set()
     z = z1
-    for _, ct, lin1 in seq:
+    for _, _, ct, lin1 in seq:
         lin2 = lin1.thanClone()
         lin2.thanChelev(z)
 #        lin2.thanTags = lin1.thanTags
@@ -165,26 +186,40 @@ def thanModChelevContour(proj):
     proj[2].thanGudCommandEnd()
 
 
+def __chechDupContour(seq):
+    "Checks if the distance between contour lines is < 0.001; if yes there is probably a duplicate contour line."
+    for a, b in p_ggen.iterby2(seq):
+        if fabs(b[0]-a[0]) < 0.001: break
+    else:
+        return ""
+    statonce = ""
+    return T["Warning: there is probably an interim  duplicate contour line.\n"]
+
+
 def thanModBreak(proj):
     "Breaks an element to 2 pieces if possible."
     elem = thancomsel.thanSelect1(proj, T["Select a (breakable) element to break.."],
         filter=lambda e: e.thanBreak()) # .break() with no arguments returns True if element is breakable
-    if elem == Canc: return thanModCanc(proj)         # Break was cancelled
+    if elem == Canc: return thanModCanc(proj)        # Break was cancelled
     c1 = proj[2].thanSel1coor
     if c1 is None or elem.thanPntNearest(c1) is None:
         c1 = __getNearPnt(proj, elem, T["First point of element to break: "])
         if c1 == Canc: return thanModCanc(proj)      # Break was cancelled
-        c2 = __getNearPnt(proj, elem, T["Second point of element to break: "])
+        c2 = __getNearPnt(proj, elem, T["Second point of element to break (enter=same as first point): "], options=("",))
         if c2 == Canc: return thanModCanc(proj)      # Break was cancelled
+        if c2 == "": c2 = c1
     else:
-        c2 = __getNearPnt(proj, elem, T["Second point of element to break (F for first point): "], options=("first",))
+        c2 = __getNearPnt(proj, elem, T["Second point of element to break (enter=same as first/F=choose other first point): "], options=("", "first"))
         if c2 == Canc: return thanModCanc(proj)      # Break was cancelled
-        if c2 == "f":
+        if c2 == "":
+            c2 = c1
+        elif c2 == "f":
             c1 = __getNearPnt(proj, elem, T["First point of element to break: "])
             if c1 == Canc: return thanModCanc(proj)  # Break was cancelled
-            c2 = __getNearPnt(proj, elem, T["Second point of element to break: "])
-            if c2 == Canc: return thanModCanc(proj)      # Break was cancelled
-    newelems = set(e for e in elem.thanBreak(c1, c2) if e != None)
+            c2 = __getNearPnt(proj, elem, T["Second point of element to break (enter=same as first point): "], options=("",))
+            if c2 == Canc: return thanModCanc(proj)  # Break was cancelled
+            if c2 == "": c2 = c1
+    newelems = set(e for e in elem.thanBreak(c1, c2) if e is not None)
     if not newelems: return thanModCanc(proj, T["Element can not be deleted; use 'ERASE'."])
 
     lay = proj[1].thanGetLayer(elem)
@@ -293,7 +328,7 @@ def thanModTrim(proj):
             iel += 1
             continue
         c1 = proj[2].thanSel1coor
-        assert c1 != None, "thancomsel.thanSelect1Gen does not work well!"
+        assert c1 is not None, "thancomsel.thanSelect1Gen does not work well!"
         for elem in proj[2].thanSelall: break    # Get the element
         ps = []
         for elcut1 in elcut:
@@ -302,7 +337,7 @@ def thanModTrim(proj):
             proj[2].thanCom.thanAppend(T["Element does not intersect cutting edges\n"], "can")
             proj[2].thanUpdateLayerButton()           # Show current layer again
             continue
-        newelems = [e for e in elem.thanTrim(ps, c1) if e != None]
+        newelems = [e for e in elem.thanTrim(ps, c1) if e is not None]
         if not newelems:
             proj[2].thanCom.thanAppend(T["Element can not be deleted; use 'ERASE' instead.\n"], "can")
             proj[2].thanUpdateLayerButton()           # Show current layer again
@@ -322,12 +357,12 @@ def thanModTrim(proj):
     if iel == 0: return thanModCanc(proj)     # Trim was cancelled: unselect cutting edges
 #    delelems = []
 #    newelems = []
-#    for i in xrange(iel):
+#    for i in range(iel):
 #        delelems.extend(dodo[i][0])
 #        newelems.extend(dodo[i][1])
     delelems = []
     newelems = []
-    for i in xrange(iel):
+    for i in range(iel):
         #print(i, "/", iel)
         delelemsi, newelemsi = dodo[i]
         for e in delelemsi:
@@ -546,6 +581,7 @@ def thanModExplode(proj):
     newelems = set()
     for e in delelems:
         lay = proj[1].thanGetLayer(e)
+        lay.thanTkSet(proj[2].than)
         for e1 in e.thanExplode(proj[2].than):
             proj[1].thanElementTag(e1, lay)
             newelems.add(e1)
@@ -586,20 +622,41 @@ def thanModJoin(proj, ndim):
 
 
 def thanModJoinGap(proj, ndim=2):
-    "Joins n>=2 lines to form a bigger filling the smallest gaps between them."
+    """Joins n>=2 lines to form a larger line, filling the smallest gaps between them.
+
+    There are 3 slightly different commands:
+    joingap2: Joins lines regardless of the z or higher dimensions. It finds the
+        smallest gap between two lines using 2d distance.
+    joingap3: Joins lines taking into account the z (but not higher dimensions).
+        It finds the smallest gap between two lines using 3d distance.
+    joingap: Joins contour lines, that is lines with the same z at all
+        points. It finds the smallest gap between two lines using 2d distance
+        (in this case 2d distance and 3d distance is identical). Further more,
+        if one line was different z than the other line, the command refuses to
+        join them.
+    For two lines which both have zero (or any constant value) z at all points
+    the three commands are identical.
+    """
     if ndim == 3:
         disx = lambda a, b: hypot(hypot(b[0]-a[0], b[1]-a[1]), b[2]-a[2])
-        comname = "joingap3"
-    else:
+        comname = "joingap3d"
+    elif ndim == 2:
+        disx = lambda a, b: hypot(b[0]-a[0], b[1]-a[1])
+        comname = "joingap2d"
+        proj[2].thanPrt(T["This command will join nearest lines ignoring z or higher dimension distance"], "info1")
+    elif ndim == -1:  #This is the code for contour lines
         disx = lambda a, b: hypot(b[0]-a[0], b[1]-a[1])
         comname = "joingap"
-        proj[2].thanPrt(T["This command will join nearest lines ignoring z or higher dimension distance"], "info1")
+        proj[2].thanPrt(T["This command will join nearest lines assuming lines have constant z (contour lines)"], "info1")
+    else:
+        assert 0, "Invalid code ndim={}".format(ndim)
+
     delelems = thanSelMultlines(proj, 1, T["Select at least 2 lines to join or 1 line to close:\n"], strict=False)
     if delelems == Canc: return thanModCanc(proj)               # Join cancelled
     selold = proj[2].thanSelold
-    ok, terr = __testz2(delelems)
-    if not ok:
-        return thanModCanc(proj, terr)               # Join failed
+    if ndim == -1:
+        ok, terr = __testz2(delelems)
+        if not ok: return thanModCanc(proj, terr)               # Join contour failed
     if len(delelems) == 1:
         for e in delelems: break
         if thanNear2(e.cp[0], e.cp[-1]): thanModCanc(proj, T["Line already closed"])      # Join failed
@@ -616,7 +673,7 @@ def thanModJoinGap(proj, ndim=2):
                                         thanundo.thanReplaceUndo, (delelems, newelems, selold))
     thanModEnd(proj)    # 'Reset color' is not needed for the joined lines..
                         # since the joined elements are redrawn. So if a large number of elements..
-                        # (unlikely)  are joined, this will slow down the command.
+                        # (unlikely) are joined, this will slow down the command.
                         # there is room for optimisation!
 
 def __testz2(elems):
@@ -793,7 +850,7 @@ def thanModMove(proj):
     res = proj[2].thanGudGetMovend(dc, stat1, options=("",))
     if res == Canc: return thanModCanc(proj)               # Move was cancelled
     if res != "":
-        for i in xrange(len(dc)): dc[i] = res[i] - dc[i]
+        for i in range(len(dc)): dc[i] = res[i] - dc[i]
 
     __modMoveDo(proj, dc)
     dcm = [-c for c in dc]
@@ -916,17 +973,20 @@ def thanModOffset(proj):
 
 def thanModDDedit(proj):
     "Prompts the user to alter the text of a ThanText object."
-    from thandr import ThanText, ThanPointNamed
+    from thandr import ThanText, ThanPointNamed, ThanDimali, ThanBimColumn
+    filt2 = lambda e: isinstance(e, (ThanText, ThanPointNamed, ThanDimali, ThanBimColumn))
     first = True
     while True:
-        elem = thancomsel.thanSelect1(proj, T["Select text to edit: "], filter=lambda e: isinstance(e, (ThanText, ThanPointNamed)), options=("",))
+        elem = thancomsel.thanSelect1(proj, T["Select text to edit: "], filter=filt2, options=("",))
         if elem == Canc or elem == "":
             if first: return thanModCanc(proj)            # DDedit cancelled
             else: break                                   # DDedit ended
-        if isinstance(elem, ThanPointNamed):
-            textold = elem.name
-        else:
+        if isinstance(elem, ThanText):
             textold = elem.text
+        elif isinstance(elem, (ThanPointNamed, ThanBimColumn)):
+            textold = elem.name
+        else:    #ThanDimali
+            textold = elem.distext
         textnew = proj[2].thanGudGetText1(T["Edit text"], textDefault=textold)
         if textnew == Canc:
             proj[2].thanGudSetSelRestore()
@@ -941,17 +1001,21 @@ def thanModDDedit(proj):
         first = False
     proj[2].thanGudSetSelRestore()   #Reselect the most recent modified element
     if elem == Canc: thanModEnd(proj, "")    # If cancelled then goto the next line of the command window
-    else:            thanModEnd(proj)        # If the use pressed enter, we are already on the next line
+    else:            thanModEnd(proj)        # If the user pressed enter, we are already on the next line
 
 
 def __modDDeditDo(proj, elems, text):
     "Changes the text of the (single) selected element."
-    from thandr import ThanPointNamed
+    from thandr import ThanText, ThanPointNamed, ThanDimali, ThanBimColumn
     for elem in elems: break
-    if isinstance(elem, ThanPointNamed):
-        elem.thanSet(elem.cc, text, elem.validc)
-    else:
-        elem.thanSet(text, elem.cc, elem.size, elem.theta)
+    if isinstance(elem, ThanText):
+        #elem.thanSet(elem.cc, text, elem.validc)
+        elem.thanRename(text)
+    elif isinstance(elem, (ThanPointNamed, ThanBimColumn)):
+        #elem.thanSet(elem.cc, text, elem.validc)
+        elem.name = text
+    else:    #ThanDimali
+        elem.setText(text)
     proj[2].thanGudSetSelDel()                         # Delete the text from the canvas
     proj[2].thanTkSet(elem)                            # Set attributes of elem's layer
     elem.thanTkDraw(proj[2].than)                      # Draw the new text
@@ -1027,6 +1091,27 @@ def thanModErase(proj):
     "Erases selected elements."
     res = thancomsel.thanSelectGen(proj, standalone=False)
     if res == Canc: return thanModCanc(proj)               # Erase was cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    __modEraseDo(proj)
+    proj[1].thanDoundo.thanAdd("erase", thanundo.thanReplaceRedo, (elems, set(), set()),
+                                        thanundo.thanReplaceUndo, (elems, set(), selold))
+    thanModEnd(proj)            # 'Reset color' is completely unnecessary here, and it will slow..
+                                # ..the command down. Room for optimisation here.
+
+
+def thanModErasenew(proj):  #THIS FUNCTIONALITY MUST BE ADDED AT thanSelectGen() and thanSelectOr()
+    "Erases selected elements, 2017_10_13: adds the 'all' option."
+    while True:
+        res = thancomsel.thanSelectOr(proj, standalone=False, optionname="all", optiontext="a=All")
+        if res == Canc: return thanModCanc(proj)               # Erase was cancelled
+        if res == "a":
+            #1. Select all the elements in selall all the elemnts of the drawing
+            #2. change color of all elementes currently drawn and assign selxxx to them
+            #3.   ....
+            pass
+        else:
+            break
     elems = proj[2].thanSelall
     selold = proj[2].thanSelold
     __modEraseDo(proj)
@@ -1195,7 +1280,7 @@ def thanModChelevn(proj):
     if res == Canc: return thanModCanc(proj)   # chelevn cancelled
     elems = proj[2].thanSelall
     selold = proj[2].thanSelold
-    t = ",".join(sd(c[j]) for j in xrange(2, nd))
+    t = ",".join(sd(c[j]) for j in range(2, nd))
     stat = "%s%s): " % (T["New elevations of z and higher dimensions (enter="], t)
     cz = proj[2].thanGetElevations(nd, stat, c[2:])
     if cz == Canc: return thanModCanc(proj)

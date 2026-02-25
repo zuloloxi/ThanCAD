@@ -27,7 +27,6 @@ This module implements various types of compound list, based on the generic
 compound list.
 """
 
-from __future__ import print_function
 import types
 from tkinter import Frame, Button
 import p_ggen
@@ -79,11 +78,11 @@ class ThantkClist2(ThantkClistBare, ThanMixinUtil):
         S = p_ggen.ThanStub
         fraBut = Frame(master)
         fraBut.grid(row=ir, column=ic, columnspan=len(self.thanAtts))
-        but = Button(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
+        but = thanwids.ThanButton(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
         but.grid(row=ir, column=0)
-        but = Button(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
+        but = thanwids.ThanButton(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
         but.grid(row=ir, column=1)
-        but = Button(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
+        but = thanwids.ThanButton(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
         but.grid(row=ir, column=2)
         return 1, 0
 
@@ -111,11 +110,11 @@ class ThantkClist3(ThantkClistHierBare, ThanMixinHierUtil):
         S = self.thanStub
         fraBut = Frame(master)
         fraBut.grid(row=ir, column=ic, columnspan=len(self.thanAtts))
-        but = Button(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
+        but = thanwids.ThanButton(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
         but.grid(row=ir, column=0)
-        but = Button(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
+        but = thanwids.ThanButton(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
         but.grid(row=ir, column=1)
-        but = Button(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
+        but = thanwids.ThanButton(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
         but.grid(row=ir, column=2)
         return 1, 0
 
@@ -147,18 +146,18 @@ class ThantkClist4(ThantkClistHierBare, ThanMixinHierUtil, ThanMixinPartial):
         fraBut.grid(row=ir, column=ic, columnspan=len(self.thanAtts), sticky="we")
         for i in (0,1): fraBut.columnconfigure(i, weight=1)
 
-        but = Button(fraBut, text=T["Previous set"], command=S(self.thanSchedule1, self.thanSetPrev))
+        but = thanwids.ThanButton(fraBut, text=T["Previous set"], command=S(self.thanSchedule1, self.thanSetPrev))
         but.grid(row=0, column=0, sticky="w")
-        but = Button(fraBut, text=T["Next set"], command=S(self.thanSchedule1, self.thanSetNext))
+        but = thanwids.ThanButton(fraBut, text=T["Next set"], command=S(self.thanSchedule1, self.thanSetNext))
         but.grid(row=0, column=1, sticky="e")
 
         fraBut = Frame(master)
         fraBut.grid(row=ir+1, column=ic, columnspan=len(self.thanAtts), sticky="we")
-        but = Button(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
+        but = thanwids.ThanButton(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
         but.grid(row=ir, column=0)
-        but = Button(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
+        but = thanwids.ThanButton(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
         but.grid(row=ir, column=1)
-        but = Button(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
+        but = thanwids.ThanButton(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
         but.grid(row=ir, column=2)
 
         return 2, 0
@@ -225,36 +224,36 @@ class ThantkClist5(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         fraBut.grid(row=ir, column=ic, columnspan=len(self.thanAtts), sticky="we")
         for i in (0,1,2,3): fraBut.columnconfigure(i, weight=1)
 
-        but = Button(fraBut, text=T["Previous set"], command=S(self.thanSchedule1, self.thanSetPrev))
+        but = thanwids.ThanButton(fraBut, text=T["Previous set"], command=S(self.thanSchedule1, self.thanSetPrev))
         but.grid(row=0, column=0, sticky="we")
-        but = Button(fraBut, text=T["Next set"], command=S(self.thanSchedule1, self.thanSetNext))
+        but = thanwids.ThanButton(fraBut, text=T["Next set"], command=S(self.thanSchedule1, self.thanSetNext))
         but.grid(row=1, column=0, sticky="we")
 
-        but = Button(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
+        but = thanwids.ThanButton(fraBut, text=T["Select All"], command=S(self.thanSchedule1, self.thanSelAll))
         but.grid(row=0, column=3, sticky="we")
-        but = Button(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
+        but = thanwids.ThanButton(fraBut, text=T["Deselect All"], command=S(self.thanSchedule1, self.thanSelNone))
         but.grid(row=1, column=3, sticky="we")
-        but = Button(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
+        but = thanwids.ThanButton(fraBut, text=T["Invert selection"], command=S(self.thanSchedule1, self.thanSelInvert))
         but.grid(row=2, column=3, sticky="we")
 
-        but = Button(fraBut, text=T["New Layer"], command=S(self.thanSchedule1, self.thanLayerChildNew))
+        but = thanwids.ThanButton(fraBut, text=T["New Layer"], command=S(self.thanSchedule1, self.thanLayerChildNew))
         but.grid(row=0, column=1, sticky="we")
-        but = Button(fraBut, text=T["Rename Layer"], command=S(self.thanSchedule1, self.thanLayerRen1))
+        but = thanwids.ThanButton(fraBut, text=T["Rename Layer"], command=S(self.thanSchedule1, self.thanLayerRen1))
         but.grid(row=1, column=1, sticky="we")
-#        but = Button(fraBut, text="Delete Layer", command=S(self.thanSchedule1, self.thanSelDelete))
+#        but = thanwids.ThanButton(fraBut, text="Delete Layer", command=S(self.thanSchedule1, self.thanSelDelete))
 #        but.grid(row=3, column=1, sticky="we")
 
-        but = Button(fraBut, text=T["Copy"], command=S(self.thanSchedule1, self.thanSelCopy))
+        but = thanwids.ThanButton(fraBut, text=T["Copy"], command=S(self.thanSchedule1, self.thanSelCopy))
         but.grid(row=0, column=2, sticky="we")
-        but = Button(fraBut, text=T["Paste"], command=S(self.thanSchedule1, self.thanSelPaste))
+        but = thanwids.ThanButton(fraBut, text=T["Paste"], command=S(self.thanSchedule1, self.thanSelPaste))
         but.grid(row=1, column=2, sticky="we")
-        but = Button(fraBut, text=T["Cut"], command=S(self.thanSchedule1, self.thanSelCut))
+        but = thanwids.ThanButton(fraBut, text=T["Cut"], command=S(self.thanSchedule1, self.thanSelCut))
         but.grid(row=2, column=2, sticky="we")
 
         self.__cl = thanwids.ThanEntry(fraBut)
         self.__cl.thanSet(self.thanCur.thanGetPathname())
         self.__cl.grid(row=4, column=0, columnspan=3, sticky="we", pady=10)
-        but = Button(fraBut, text=T["Set Current"], command=S(self.thanSchedule1, self.thanSetCur))
+        but = thanwids.ThanButton(fraBut, text=T["Set Current"], command=S(self.thanSchedule1, self.thanSetCur))
         but.grid(row=4, column=3, sticky="we", pady=10)
 
         return 1, 0
@@ -293,9 +292,9 @@ class ThantkClist5(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         fraBut.grid(row=ir, column=ic, columnspan=len(self.thanAtts), sticky="we")
         for i in (0,1,2,3): fraBut.columnconfigure(i, weight=1)
 
-        but = Button(fraBut, text=T["Cancel"], command=S(self.thanSchedule1, self.thanCancel))
+        but = thanwids.ThanButton(fraBut, text=T["Cancel"], command=S(self.thanSchedule1, self.thanCancel))
         but.grid(row=0, column=0, sticky="we")
-        but = Button(fraBut, text=T["OK"], command=S(self.thanSchedule1, self.thanOK))
+        but = thanwids.ThanButton(fraBut, text=T["OK"], command=S(self.thanSchedule1, self.thanOK))
         but.grid(row=0, column=3, sticky="we")
 
 #============================================================================
@@ -399,38 +398,38 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         fraBut.grid(row=ir, column=ic, columnspan=len(self.thanAtts), sticky="we")
         for i in (0,1,2,3): fraBut.columnconfigure(i, weight=1)
 
-        but = Button(fraBut, text=T["Previous set"], bg="#ffffdc", command=S(self.thanSetPrev))
+        but = thanwids.ThanButton(fraBut, text=T["Previous set"], bg="#ffffdc", command=S(self.thanSetPrev))
         but.grid(row=0, column=0, sticky="we")
-        but = Button(fraBut, text=T["Next set"], bg="#ffffdc", command=S(self.thanSetNext))
+        but = thanwids.ThanButton(fraBut, text=T["Next set"], bg="#ffffdc", command=S(self.thanSetNext))
         but.grid(row=1, column=0, sticky="we")
 
-        but = Button(fraBut, text=T["Select All"], bg="#ffdcdc", command=S(self.thanSelAll))
+        but = thanwids.ThanButton(fraBut, text=T["Select All"], bg="#ffdcdc", command=S(self.thanSelAll))
         but.grid(row=0, column=3, sticky="we")
-        but = Button(fraBut, text=T["Deselect All"], bg="#ffdcdc", command=S(self.thanSelNone))
+        but = thanwids.ThanButton(fraBut, text=T["Deselect All"], bg="#ffdcdc", command=S(self.thanSelNone))
         but.grid(row=1, column=3, sticky="we")
-        but = Button(fraBut, text=T["Invert selection"], bg="#ffdcdc", command=S(self.thanSelInvert))
+        but = thanwids.ThanButton(fraBut, text=T["Invert selection"], bg="#ffdcdc", command=S(self.thanSelInvert))
         but.grid(row=2, column=3, sticky="we")
 
-        but = Button(fraBut, text=T["New Top Layer"], bg="#dcffdc", command=S(self.thanLayerTopNew1))
+        but = thanwids.ThanButton(fraBut, text=T["New Top Layer"], bg="#dcffdc", command=S(self.thanLayerTopNew1))
         but.grid(row=0, column=1, sticky="we")
-        but = Button(fraBut, text=T["New Child Layer"], bg="#dcffdc", command=S(self.thanLayerChildNew1))
+        but = thanwids.ThanButton(fraBut, text=T["New Child Layer"], bg="#dcffdc", command=S(self.thanLayerChildNew1))
         but.grid(row=1, column=1, sticky="we")
-        but = Button(fraBut, text=T["Rename Layer"], bg="#dcffdc", command=S(self.thanLayerRen1))
+        but = thanwids.ThanButton(fraBut, text=T["Rename Layer"], bg="#dcffdc", command=S(self.thanLayerRen1))
         but.grid(row=2, column=1, sticky="we")
-#        but = Button(fraBut, text="Delete Layer", command=S(self.thanSelDelete))
+#        but = thanwids.ThanButton(fraBut, text="Delete Layer", command=S(self.thanSelDelete))
 #        but.grid(row=3, column=1, sticky="we")
 
-        but = Button(fraBut, text=T["Copy"], bg="#dcdcff", command=S(self.thanSelCopy))
+        but = thanwids.ThanButton(fraBut, text=T["Copy"], bg="#dcdcff", command=S(self.thanSelCopy))
         but.grid(row=0, column=2, sticky="we")
-        but = Button(fraBut, text=T["Paste"], bg="#dcdcff", command=S(self.thanSelPaste))
+        but = thanwids.ThanButton(fraBut, text=T["Paste"], bg="#dcdcff", command=S(self.thanSelPaste))
         but.grid(row=1, column=2, sticky="we")
-        but = Button(fraBut, text=T["Cut"], bg="#dcdcff", command=S(self.thanSelCut))
+        but = thanwids.ThanButton(fraBut, text=T["Cut"], bg="#dcdcff", command=S(self.thanSelCut))
         but.grid(row=2, column=2, sticky="we")
 
         self.__cl = thanwids.ThanEntry(fraBut, bg="#ffdcff")
         self.__cl.thanSet(self.thanCur.thanGetPathname())
         self.__cl.grid(row=4, column=0, columnspan=3, sticky="we", pady=10)
-        but = Button(fraBut, text=T["Set Current"], bg="#ffdcff", command=S(self.thanSetCur))
+        but = thanwids.ThanButton(fraBut, text=T["Set Current"], bg="#ffdcff", command=S(self.thanSetCur))
         but.grid(row=4, column=3, sticky="we", pady=10)
 
         return 1, 0
@@ -456,8 +455,8 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
             self.thanPollForce()      # Force selection now
             try:
                 lay1 = self.thanLayerChildNewHouse(name1)
-            except ThanLayerError:    # Check if name is valid
-                thanGudModalMessage(self, lay1, T["Top Level Layer can not be created"])
+            except ThanLayerError as e:    # Check if name is valid
+                thanGudModalMessage(self, str(e), T["Top Level Layer can not be created"])
             else:
                 break
 
@@ -475,9 +474,12 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         while True:
             name1 = xinp.xinpStrB(self, T["Create New '%s' Child Layer"]%laypar.thanGetPathname(), name1)
             if name1 is None: return Canc
-            lay1 = self.thanLayerChildNewHouse(name1)
-            if not p_ggen.isString(lay1): break        # Check if name is valid
-            thanGudModalMessage(self, lay1, T["Child Layer can not be created"])
+            try:
+                lay1 = self.thanLayerChildNewHouse(name1)
+            except ThanLayerError as e:
+                thanGudModalMessage(self, str(e), T["Child Layer can not be created"])
+            else:
+                break
 
 
     def thanSetCur(self, *args):

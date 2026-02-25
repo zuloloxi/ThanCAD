@@ -1,5 +1,3 @@
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import cos, pi
 
 class Chebyshev(object):
@@ -11,17 +9,17 @@ class Chebyshev(object):
           bpa=0.5*(b+a)
           f = [None]
     #      do 11 k=1,n
-          for k in xrange(1, n+1):
+          for k in range(1, n+1):
             y=cos(pi*(k-0.5)/n)
             f.append(func(y*bma+bpa))
     #11    continue
           fac=2.0/n
           c = [None]
     #      do 13 j=1,n
-          for j in xrange(1, n+1):
+          for j in range(1, n+1):
             sum=0.0
     #        do 12 k=1,n
-            for k in xrange(1, n+1):
+            for k in range(1, n+1):
               sum=sum+f[k]*cos((pi*(j-1))*((k-0.5)/n))
     #12      continue
             c.append(fac*sum)
@@ -42,7 +40,7 @@ class Chebyshev(object):
           y=(2.0*x-self.a-self.b)/(self.b-self.a)
           y2=2.0*y
     #      do 11 j=m,2,-1
-          for j in xrange(m, 2-1, -1):
+          for j in range(m, 2-1, -1):
             sv=d
             d=y2*d-dd+c[j]
             dd=sv

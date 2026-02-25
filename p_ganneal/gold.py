@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
 from math import fabs
 import p_ggen
 
@@ -7,7 +5,7 @@ import p_ggen
 def goldSect(func, cka=0.0, ckb=1.0, eps=None, prt2=p_ggen.doNothing):
     "Golden section minimisation."
     assert ckb > cka
-    t = 0.6180339887  # t= (sqrt(5.)-1.)/2. : áñéÈÌÏÓ ×ÑÕÓÇÓ ÔÏÌÇÓ
+    t = 0.6180339887  # t= (sqrt(5.)-1.)/2. : Î±ÏÎ¹Î˜ÎœÎŸÎ£ Î§Î¡Î¥Î£Î—Î£ Î¤ÎŸÎœÎ—Î£
     if eps is None: eps = (ckb-cka)/100.0
     sfa = func(cka)
     sf = func(ckb)
@@ -19,7 +17,7 @@ def goldSect(func, cka=0.0, ckb=1.0, eps=None, prt2=p_ggen.doNothing):
     prt2(ckx2, sx2)
     prt2(ckb,  sf)
 
-#-----ÌÅÈÏÄÏÓ ×ÑÕÓÇÓ ÔÏÌÇÓ
+#-----ÎœÎ•Î˜ÎŸÎ”ÎŸÎ£ Î§Î¡Î¥Î£Î—Î£ Î¤ÎŸÎœÎ—Î£
 
     while fabs(ckx2-ckx1) > eps:
         if sx2 < sx1:
@@ -39,7 +37,7 @@ def goldSect(func, cka=0.0, ckb=1.0, eps=None, prt2=p_ggen.doNothing):
             prt2(ckx1, sx1)
             telx1 = True
 
-#-----âñÝÈÇÊÅ ÔÏ ÅËÁ×ÉÓÔÏ
+#-----Î²ÏÎ­Î˜Î—ÎšÎ• Î¤ÎŸ Î•Î›Î‘Î§Î™Î£Î¤ÎŸ
 
     if sx1 < sx2:
         if not telx1: sx1 = func(ckx1)

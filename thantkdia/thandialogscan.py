@@ -1,34 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to scan and insert an image
 to ThanCad.
 """
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from tkinter import Tk, Frame, Canvas
 import p_gimage
 from p_gtkwid import (ThanDialog, thanGudModalMessage, thanGudAskOkCancel,
@@ -171,7 +168,7 @@ class ThanScan(ThanDialog):
 
         but = ThanButton(fra, text=T["Save Image\nto file"], command=self.saveim)
         but.grid(row=5, column=1, sticky="we")
-        for i in xrange(6): fra.rowconfigure(i, weight=1)
+        for i in range(6): fra.rowconfigure(i, weight=1)
         fra.columnconfigure(0, weight=1)
         win.rowconfigure(1, weight=1)
         win.columnconfigure(0, weight=1)

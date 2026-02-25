@@ -1,34 +1,31 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This dialog accepts the parameters of a photogrammetric metric camera.
 """
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
+
 import sys, copy
 import tkinter
 from tkinter.messagebox import ERROR
@@ -132,7 +129,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
             return
         x = [""] * 9
         y = [""] * 9
-        for ifid in xrange(1, 9):
+        for ifid in range(1, 9):
             try:
                 x[ifid], y[ifid] = map(float, next(fr).split())  #works for python2,3
             except ValueError as why:
@@ -140,7 +137,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
                 return
             except StopIteration:
                 break
-        for ifid in xrange(1, 9):
+        for ifid in range(1, 9):
             fx = "entFid%dx" % (ifid,)
             fy = "entFid%dy" % (ifid,)
             setattr(v, fx, x[ifid])
@@ -184,7 +181,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
         try:
             fw.write("%s\n" % vs.entName)
             fw.write("%f\n" % vs.entFocus)
-            for ifid in xrange(1, 9):
+            for ifid in range(1, 9):
                 fx = "entFid%dx" % (ifid,)
                 fy = "entFid%dy" % (ifid,)
                 x = getattr(vs, fx)
@@ -267,10 +264,10 @@ class ThanCamera(p_gtkwid.ThanComDialog):
         lab = tkinter.Label(fra, text="Y (mm)")
         lab.grid(row=1, column=3, sticky="w")
         i = 1
-        for ifid in xrange(1, 9):
+        for ifid in range(1, 9):
             lab = tkinter.Label(fra, text="%d " % ifid)
             lab.grid(row=i+ifid, column=1)
-            for j in xrange(2):
+            for j in range(2):
                 key = "entFid%d%s" % (ifid, "xy"[j])
 #                tit = "Fiducial %d %s (mm)" % (ifid, "xy"[j])  #Don't put ifid:Save translation space
                 tit = "Fiducial %s (mm)" % ("xy"[j],)      #Tphot["Fiducial x (mm)"] #Tphot["Fiducial y (mm)"]
@@ -289,7 +286,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
         if not ret and strict: return ret
         blankfound = False
         nfid = 0
-        for ifid in xrange(1, 9):
+        for ifid in range(1, 9):
             fx = "entFid%dx" % (ifid,)
             fy = "entFid%dy" % (ifid,)
             vx = getattr(vs, fx)

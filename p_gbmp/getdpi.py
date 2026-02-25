@@ -29,7 +29,7 @@ def getDpi2d(im=None, fn=None):
 
     If dpi is found in im.info -> OK.
     If dpi is not found in im and fn=None -> return 0,0  (resolution has not been set).
-    if pdi is not found in im and fn ends with .bmp then
+    if dpi is not found in im and fn ends with .bmp then
         dpi is computed alternatively -> OK.
     """
     if "dpi" in im.info: return im.info["dpi"]

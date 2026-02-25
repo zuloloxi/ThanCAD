@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-7 -*-
 """
 This programs computes the elevation difference (hgme) between the geoid and the
 EGSA87 ellipsoid (which is the the GRS80 translated by some constant values).
@@ -12,8 +11,8 @@ or
     hgme = hgeometric - horthometric
 
 hgme is computed using the contour map from the book (page 25)
-Ανώτερη Γεωδαισία, Βέης, Μπιλίρης, Παπαζήση,
-ΕΜΠ 1992.
+Ξ‘Ξ½ΟΟ„ΞµΟΞ· Ξ“ΞµΟ‰Ξ΄Ξ±ΞΉΟƒΞ―Ξ±, Ξ’Ξ­Ξ·Ο‚, ΞΟ€ΞΉΞ»Ξ―ΟΞ·Ο‚, Ξ Ξ±Ο€Ξ±Ξ¶Ξ®ΟƒΞ·,
+Ξ•ΞΞ  1992.
 
 The same with the elevation difference between geoid and the GRS80
 ellipsoid itself (from the same book page 26).
@@ -23,18 +22,17 @@ Greece.
 
 2011_05_08
 It seems that the diagram on page 25 (Greek local GRS80) was computed using
-the diagram on page 26 (international GRS80), transforming λ, φ, h from
+the diagram on page 26 (international GRS80), transforming Ξ», Ο†, h from
 GRS80 to Greek local. It seems that these computations were done with
-ΔΧ, ΔΥ, ΔΖ which ARE NOT the final ΔΧ, ΔΥ, ΔΖ defined in EGSA87.
+Ξ”Ξ§, Ξ”Ξ¥, Ξ”Ξ– which ARE NOT the final Ξ”Ξ§, Ξ”Ξ¥, Ξ”Ξ– defined in EGSA87.
 The difference between the hgme of local ellipsoid and international GRS80
 are about 0.60-0.70m.
 On the other hand the difference between the hgme of diagram on page 26 (GRS80)
-and the hgme computed by NASA EGM2008 (Pavlis Nikolaos: 
+and the hgme computed by NASA EGM2008 (Pavlis Nikolaos:
 http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html)
 are about zero.
 """
 
-from __future__ import print_function
 from math import pi
 import p_gtri
 from p_ggeod import egsa87, GRS80
@@ -72,18 +70,18 @@ def getNegs(cpegs):
 
 
 def getNlf80(l, f):
-    "Calculate DH geoid-ellipsoid for point with λ, φ in GRS80 international."
+    "Calculate DH geoid-ellipsoid for point with Ξ», Ο† in GRS80 international."
     assert useGRS80, "useGRS80 should be True"
     l *= 180.0/pi
     f *= 180.0/pi
     h1 = getN(l, f)              #hgme between geoid and EGSA87 ellipsoid
     if h1 is None:
-        raise ValueError("Point is outside Greece: GRS80 (deg) λ=%.5f φ=%.5f" % (l, f))
+        raise ValueError("Point is outside Greece: GRS80 (deg) Ξ»=%.5f Ο†=%.5f" % (l, f))
     return h1
 
 
 def getDhEgsa87(xgyse, ygyse):
-    "Get the elevation difference Greek local GRS80 surface minus the international GRS80 surface, given x,y EGSA87 coordinates."
+    "Get the elevation difference: Greek local GRS80 surface minus the international GRS80 surface, given x,y EGSA87 coordinates."
     assert useGRS80, "useGRS80 should be True"
     xt, yt, zt = egsa87.en2geocenGRS80(xgyse, ygyse, h=0.0, hgme=0.0)
     l8, f8, h8 = GRS80.geocen2det(xt, yt, zt, hgme=0.0)
@@ -97,9 +95,9 @@ def getHgmeEgsa87(xgyse, ygyse):
     l8, f8, h8 = GRS80.geocen2det(xt, yt, zt, hgme=0.0)
     l8 *= 180.0/pi
     f8 *= 180.0/pi
-#    print "λ, φ GRS80:", l8, f8
+#    print "Ξ», Ο† GRS80:", l8, f8
     h1 = getN(l8, f8)                                #hgme between geoid and EGSA87 ellipsoid
     if h1 is None:
-        raise ValueError("Point is outside Greece: x=%.3f y=%.3f: GRS80 (deg) λ=%.5f φ=%.5f" % (xgyse, ygyse, l8, f8))
+        raise ValueError("Point is outside Greece: x=%.3f y=%.3f: GRS80 (deg) Ξ»=%.5f Ο†=%.5f" % (xgyse, ygyse, l8, f8))
 #    print "h1=", h1
     return h1-h8

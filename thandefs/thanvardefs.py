@@ -1,31 +1,30 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the ThanCad TextStyle, and others.
 """
-from __future__ import print_function
 import random, copy
 import p_gimage
 
@@ -60,9 +59,9 @@ def imageOpen(fi, size=None, load=True):
         if im.mode == "I;16S": im.mode = "I"
         if load:
             im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
-        if isinstance(im, p_gimage.ThanImageMissing): return im, "Python module Image was not found"
+        if isinstance(im, p_gimage.ThanImageMissing): return im, "Python module PILLOW was not found"
         return im, ""
-    except (IOError, ValueError) as e:
+    except (IOError, ValueError, RuntimeError, p_gimage.DecompressionBombError) as e:
         if size is not None: im = p_gimage.ThanImageMissing(size)
         else:                im = p_gimage.ThanImageMissing()        #Default size
         return im, str(e)
@@ -72,7 +71,7 @@ class ThanId:
     """Class to return unique ids (e.g. for Tkinter windows).
 
     The tag of an element is its id prefixed by a prefix. The id of an element
-    is its handle (id and handle are refer to the same thing).
+    is its handle (id and handle refer to the same thing).
     If an element has not a valid handle (for example when it has just been created)
     the new2() method creates a handle and a tag for the element. The tag is the
     handle prefixed by self.prefix.
@@ -127,4 +126,3 @@ class ThanId:
 
 if __name__ == "__main__":
     print(__doc__)
-    testThanCoorMemory()

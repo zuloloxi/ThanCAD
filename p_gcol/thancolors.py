@@ -1048,7 +1048,7 @@ thanNamedCols = """\
 def __tra():
     "Transforms the data to a dictionary."
     import sys
-    from . import colrnames
+    from . import colrnames, xkcd_rgb
     cols = {}
     names = {}
     invnames = {}
@@ -1060,6 +1060,21 @@ def __tra():
     for dl, col in colrnames.THECOLORS.items(): #Python Game Library   #OK for python 2, 3
         names[dl.lower()] = col[:3]
         invnames[col[:3]] = dl.lower()
+    for dl in xkcd_rgb.colors.split("\n"):
+        dl, col = dl.strip().split("\t")
+        dl = dl.lower()
+        c1 = int(col[1:3], base=16)  # #9d0759
+        c2 = int(col[3:5], base=16)
+        c3 = int(col[5:7], base=16)
+        col = c1, c2, c3
+        if dl in names:
+            #print("xkcd color name '{}' ('{}') already defined: {}".format(dl, col, names[dl]))
+            continue
+        elif col in invnames:
+            #print("xkcd color tuple '{}' ('{}') already defined: {}".format(col, dl, invnames[col]))
+            continue
+        names[dl] = col
+        invnames[col] = dl
     for dline in thanPartialCols.split("\n"):       #thAtCad dxf partial colours
         dl = dline.split()
         col = tuple(map(int, dl[1:4]))
@@ -1069,7 +1084,7 @@ def __tra():
             invnames[col] = dl[4]
         except IndexError:
             pass
-    try: del sys.modules["colrnames"]   # This is to assist cpy.py
+    try: del sys.modules["colrnames"], sys.modules["xkcd_rgb"]   # This is to assist cpy.py
     except: pass
     return cols, names, invnames
 
@@ -1099,6 +1114,8 @@ def thanRgb2DxfColCodeApprox(rgb):
               abs(g-g1)*max(g,128) + \
               abs(b-b1)*max(b,128)
         if dif < difmin: difmin = dif; partmin = partial
+    if partmin == 0: partmin = 7    #Thanasis2024_09_25: there is no integer code for black: set white! :
+                                    #black and white are used interchangeably according to background color.
     return partmin
 
 
@@ -1119,6 +1136,24 @@ def thanDxfColCode2DxfGrayCodeApprox(cod):
                 for cod,(r,g,b) in thanDxfColCode2Rgb.items()  #OK for python 2, 3
                 if r == g == b
               )[1]
+
+
+def thanDxfColCode2Tk(cod):
+    "Returns Tk representation of a dxf colour code."
+    rgb = thanDxfColCode2Rgb[cod]
+    return thanFormTkcol % rgb
+
+
+def thanDxfColCommonCodes():
+    "All dxf color codes which are not too dark."
+    c = []
+    for i in range(10):
+        c.append(i)
+    for i in range(10, 16):
+        while i < 256:
+            c.append(i)
+            i += 10
+    return c
 
 
 def thanRgb2Gray(rgb):

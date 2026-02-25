@@ -1,15 +1,11 @@
-# -*- coding: iso-8859-7 -*-
 #Envi IDL emulation library
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi
 from PIL import Image
 import p_gnum
 from p_ggen import Struct
 from .ellipsoid import Ellipsoid, _ellipsoid
 from .mercator import TMercator, UTMercator, Egsa87
-from .lambert import Lambert
+from .lambert import LambertAzimEqualArea
 
 
 _projection = {  4: "Lambert Azimuthal",
@@ -96,7 +92,7 @@ def map_proj_forward(longitude, latitude=None, map_structure=None, keywords=""):
     cs = p_gnum.zeros((2, n), p_gnum.Float)
     if key.RADIANS: coef = 1.0
     else:           coef = pi/180.0
-    for i in xrange(n):
+    for i in range(n):
         cs[0, i], cs[1, i] = en(longitude[i]*coef, latitude[i]*coef)
     return cs
 
@@ -114,7 +110,7 @@ def map_proj_inverse(x, y=None, map_structure=None, keywords=""):
     cs = p_gnum.zeros((2, n), p_gnum.Float)
     if key.RADIANS: coef = 1.0
     else:           coef = 180.0/pi
-    for i in xrange(n):
+    for i in range(n):
         print("inv:", i)
         cs[0, i], cs[1, i] = en(x[i], y[i])
         cs[0, i] *= coef
@@ -234,7 +230,7 @@ def round(x, keyword=None):
 
 
 def reform(ar, *dims):
-    """Changes the shape of an array without chnagin its elements.
+    """Changes the shape of an array without changing its elements.
 
     The '/OVERWRITE' does not work (nor it is necessary in python) in IDLemu."""
     return p_gnum.reshape(ar, dims)

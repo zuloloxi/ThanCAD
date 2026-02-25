@@ -35,14 +35,15 @@ nriw2    = nrows+2*iw
 nciw2    = ncols+2*iw
 dlat     = 1.0/60.0
 dlon     = 1.0/60.0
-path_gd = ('                                       ',
-           '../binwi/libs2/p_gearth/nge_egm08/      ',
-           '../binwm/libs2/p_gearth/nge_egm08/      ',
-           '/home2/x/binwi/libs2/p_gearth/nge_egm08/',
-           '/home2/x/binwm/libs2/p_gearth/nge_egm08/',
-           'x:/binwi/libs2/p_gearth/nge_egm08/      ',
-           'x:/binwm/libs2/p_gearth/nge_egm08/      ',
+path_gd = ('                                        ',
+           '/samba/data/gdem/nge_egm08/             ',
+           'f:/data/gdem/nge_egm08/                 ',
+           '../libs/p_gearth/nge_egm08/             ',
+           '/home2/x/libs/p_g/p_gearth/nge_egm08/   ',
+           'x:/libs/p_g/p_gearth/nge_egm08/         ',
           )
+
+
 name_gd  = 'Und_min1x1_egm2008_isw=82_WGS84_TideFree_SE'    #Grid without edges
 name_gde = 'thanegm08.bin'                                  #Grid with edges
 dostat = False
@@ -79,11 +80,18 @@ def egm08ReadGridEdgesDyn(prt1=p_ggen.prg):
     notinitialised = False
 
 
+def geodDege(alam, phi):
+    "Convert angles (degrees) so that they are 0<=alam<360, -90<=phi<90 if possible."
+    alam %= 360.0   #Ensure 0 <= alam <= 360
+    phi  %= 360.0   #Ensure 0 <= phi  <= 360
+    if phi > 180.0: phi -= 360.0
+    return alam, phi
+
+
 def egm08Ndyn (flon, flat):
     "Check (GRS80) geodetic coordinates and compute N."
     if notinitialised: egm08ReadGridEdgesDyn()
-    if flon > 360.0: flon = flon-360.0
-    if flon <  0.0: flon = flon+360.0
+    flon, flat = geodDege(flon, flat)
 #-----------------------------------------------------------------------
 #
 #   COORDS OK?
@@ -100,8 +108,7 @@ def egm08Ndyn (flon, flat):
 def egm08PixelCoor(flon, flat):
     "Return the column and row of the nearest undulation to flon, flat."
     if notinitialised: egm08ReadGridEdgesDyn()
-    if flon > 360.0: flon = flon-360.0
-    if flon <  0.0: flon = flon+360.0
+    flon, flat = geodDege(flon, flat)
     if flat > 90.0 or flat < -90.0 or flon > 360.0 or flon < 0.0: return -1, -1
     slat = -90.0 - dlat*iw  #  (lat < -90) OK
     wlon =       - dlon*iw  #  (lon <   0) OK

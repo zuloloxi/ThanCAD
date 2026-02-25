@@ -1,28 +1,27 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which creates a highway interchange.
 """
@@ -42,7 +41,7 @@ def main1():
       A, B, v1, v2, v3, v4, v5, L1, L2a, L2b, L3, LC1, LC2, th0, th1, th2, th3, th4, pr, terr = \
       calcARARA(prg, x1, y1, x2, y2, x3, y3, A1, R1, A2, R2, A3, convex=False)
       if terr is not None:
-          prg("ËÜèïò êáôÜ ôç ÷Üñáîç ôïõ êüìâïõ:")
+          prg("Î›Î¬Î¸Î¿Ï‚ ÎºÎ±Ï„Î¬ Ï„Î· Ï‡Î¬ÏÎ±Î¾Î· Ï„Î¿Ï… ÎºÏŒÎ¼Î²Î¿Ï…:")
           prg(terr)
           sys.exit(1)
       dxf = ThanDxfPlot()
@@ -73,7 +72,7 @@ def thanMainTcad(proj, lin1):
       A, B, v1, v2, v3, v4, v5, L1, L2a, L2b, L3, LC1, LC2, th0, th1, th2, th3, th4, pr, terr = \
       calcARARA(prt, x1, y1, x2, y2, x3, y3, A1, R1, A2, R2, A3, convex=False)
       if terr is not None:
-          prt("ËÜèïò êáôÜ ôç ÷Üñáîç ôïõ êüìâïõ:", "can")
+          prt("Î›Î¬Î¸Î¿Ï‚ ÎºÎ±Ï„Î¬ Ï„Î· Ï‡Î¬ÏÎ±Î¾Î· Ï„Î¿Ï… ÎºÏŒÎ¼Î²Î¿Ï…:", "can")
           prt(terr, "can")
           return
 
@@ -117,11 +116,11 @@ def calcARARA(prt, x1, y1, x2, y2, x3, y3, A1, R1, A2, R2, A3, convex):
     dth = dpt(thf-th0)
     if convex:
         if dth > pi: dth = 2*pi-dth
-        if n1*t2 > 0.0: pr= 1   # left turn
+        if n1|t2 > 0.0: pr= 1   # left turn
         else          : pr=-1   # right turn
     else:
         if dth < pi: dth = 2*pi-dth
-        if n1*t2 > 0.0: pr=-1   # right turn
+        if n1|t2 > 0.0: pr=-1   # right turn
         else          : pr= 1   # left turn
         prt("pr=%f" % pr)
 

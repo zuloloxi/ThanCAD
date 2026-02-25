@@ -1,35 +1,32 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module implements an engineering grid used in surveys.
 """
 
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import sqrt, fabs, pi
 from p_ggen import frange, prg
 import p_ggeom
@@ -52,11 +49,13 @@ class ThanGrid(object):
         "Make grid within the given rectangle."
         self.cc1 = list(proj[1].thanVar["elevation"])
         self.proj = proj
+        self.newelems = []
         xp = [c[0] for c in cp]
         yp = [c[1] for c in cp]
         m = p_ggeom.MesaQuad((xp[0],yp[0]),(xp[1],yp[1]),(xp[2],yp[2]),(xp[3],yp[3]))
         self.pin(akl, xp, yp, dx, dy, ikan, m)
         del self.proj
+        return self.newelems
 
 #========================================================================
 
@@ -105,6 +104,7 @@ class ThanGrid(object):
             e.thanSet([self.cc1, cc])
             self.proj[1].thanElementAdd(e)
             item = e.thanTkDraw(self.proj[2].than)
+            self.newelems.append(e)
         self.cc1 = cc
 
     def number(self, xx, yy, hs, a, thet, n):
@@ -120,6 +120,7 @@ class ThanGrid(object):
         e.thanSet(t, cc, hs, thet*pi/180)
         self.proj[1].thanElementAdd(e)
         item = e.thanTkDraw(self.proj[2].than)
+        self.newelems.append(e)
 
     def __del__(self):
         "Inform that grid died for debugging reasons."
@@ -128,7 +129,7 @@ class ThanGrid(object):
 def akont(xp, yp, xx, yy):
     "Test if grid point is near the polygon boundary."
     am = 1.0e30
-    for i in xrange(4):
+    for i in range(4):
         j = (i + 1) % 4
         ap = apos(xp[i], yp[i], xp[j], yp[j], xx, yy)
         if ap < am: am = ap

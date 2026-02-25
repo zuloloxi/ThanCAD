@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-7 -*-
 """\
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -11,23 +10,23 @@ from .thantrans import Translation
 #English to greek translation table
 en2gr = \
 { "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
-"&File"                                           : "Αρχείο",
-"&Save program output"                            : "Αποθήκευση εξόδου προγράμματος",
-"E&xit"                                           : "Έξοδος",
-"Save the text of the program output"             : "Αποθήκευση του κειμένου που τύπωσε το πρόγραμμα στο παράθυρο",
-"Close GUI"                                       : "Κλείσιμο της γραφικής διεπαφής (GUI)",
+"&File"                                           : "Ξ‘ΟΟ‡ΞµΞ―ΞΏ",
+"&Save program output"                            : "Ξ‘Ο€ΞΏΞΈΞ®ΞΊΞµΟ…ΟƒΞ· ΞµΞΎΟΞ΄ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚",
+"E&xit"                                           : "ΞΞΎΞΏΞ΄ΞΏΟ‚",
+"Save the text of the program output"             : "Ξ‘Ο€ΞΏΞΈΞ®ΞΊΞµΟ…ΟƒΞ· Ο„ΞΏΟ… ΞΊΞµΞΉΞΌΞ­Ξ½ΞΏΟ… Ο€ΞΏΟ… Ο„ΟΟ€Ο‰ΟƒΞµ Ο„ΞΏ Ο€ΟΟΞ³ΟΞ±ΞΌΞΌΞ± ΟƒΟ„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ",
+"Close GUI"                                       : "ΞΞ»ΞµΞ―ΟƒΞΉΞΌΞΏ Ο„Ξ·Ο‚ Ξ³ΟΞ±Ο†ΞΉΞΊΞ®Ο‚ Ξ΄ΞΉΞµΟ€Ξ±Ο†Ξ®Ο‚ (GUI)",
 
 
 
-"Warning at line %d of file %s:\n%s"              : "Προειδοποίηση στη γραμμή %d του αρχείου %s:\n%s",
-"Error at line %d of file %s:\n%s"                : "Λάθος στη γραμμή %d του αρχείου %s:\n%s",
-"Syntax error at line %d of file %s:\n%s"         : "Συντακτικό λάθος στη γραμμή %d του αρχείου %s:\n%s",
-"Unexpected end of file"                          : "απροσδόκητο τέλος αρχείου",
-"Error while executing program"                   : "Λάθος κατά την εκτέλεση του προγράμματος",
-"Error while executing external program"          : "Λάθος κατά την εκτέλεση εξωτερικού προγράμματος",
-"Details were recorded on output window"          : "Περισσότερες λεπτομέρειες στο παράθυρο εξόδου",
-"ERROR executing"                                 : "ΛΑΘΟΣ κατα την εκτέλεση",
-"Close this window to finish.."                   : "Κλείστε αυτό το παράθυρο για τερματισμό..",
+"Warning at line %d of file %s:\n%s"              : "Ξ ΟΞΏΞµΞΉΞ΄ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΟƒΟ„Ξ· Ξ³ΟΞ±ΞΌΞΌΞ® %d Ο„ΞΏΟ… Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s:\n%s",
+"Error at line %d of file %s:\n%s"                : "Ξ›Ξ¬ΞΈΞΏΟ‚ ΟƒΟ„Ξ· Ξ³ΟΞ±ΞΌΞΌΞ® %d Ο„ΞΏΟ… Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s:\n%s",
+"Syntax error at line %d of file %s:\n%s"         : "Ξ£Ο…Ξ½Ο„Ξ±ΞΊΟ„ΞΉΞΊΟ Ξ»Ξ¬ΞΈΞΏΟ‚ ΟƒΟ„Ξ· Ξ³ΟΞ±ΞΌΞΌΞ® %d Ο„ΞΏΟ… Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… %s:\n%s",
+"Unexpected end of file"                          : "Ξ±Ο€ΟΞΏΟƒΞ΄ΟΞΊΞ·Ο„ΞΏ Ο„Ξ­Ξ»ΞΏΟ‚ Ξ±ΟΟ‡ΞµΞ―ΞΏΟ…",
+"Error while executing program"                   : "Ξ›Ξ¬ΞΈΞΏΟ‚ ΞΊΞ±Ο„Ξ¬ Ο„Ξ·Ξ½ ΞµΞΊΟ„Ξ­Ξ»ΞµΟƒΞ· Ο„ΞΏΟ… Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚",
+"Error while executing external program"          : "Ξ›Ξ¬ΞΈΞΏΟ‚ ΞΊΞ±Ο„Ξ¬ Ο„Ξ·Ξ½ ΞµΞΊΟ„Ξ­Ξ»ΞµΟƒΞ· ΞµΞΎΟ‰Ο„ΞµΟΞΉΞΊΞΏΟ Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚",
+"Details were recorded on output window"          : "Ξ ΞµΟΞΉΟƒΟƒΟΟ„ΞµΟΞµΟ‚ Ξ»ΞµΟ€Ο„ΞΏΞΌΞ­ΟΞµΞΉΞµΟ‚ ΟƒΟ„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ ΞµΞΎΟΞ΄ΞΏΟ…",
+"ERROR executing"                                 : "Ξ›Ξ‘ΞΞΞ£ ΞΊΞ±Ο„Ξ± Ο„Ξ·Ξ½ ΞµΞΊΟ„Ξ­Ξ»ΞµΟƒΞ·",
+"Close this window to finish.."                   : "ΞΞ»ΞµΞ―ΟƒΟ„Ξµ Ξ±Ο…Ο„Ο Ο„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ Ξ³ΞΉΞ± Ο„ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟ..",
 }
 
 Tgui = Translation(en2gr)

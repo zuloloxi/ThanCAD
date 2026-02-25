@@ -1,36 +1,33 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 The package creates automatically architectural things such as stairs.
 The subpackage contains the commands which handle architecture related
 procedures.
 This module implements architecture related procedures.
 """
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi
 from thantrans import Tarch
 import thansupport, thanimp
@@ -62,11 +59,12 @@ def thanArchStairs(proj):
           than = proj[2].than
           g2l = than.ct.global2Local
           r = max((v.entTread*(v.labNrises-1), 0.1))
-          than.dc.create_line(g2l(ca[0], ca[1]), g2l(ca[0], ca[1]+r), fill="blue", tags=("e0",))
-          f = proj[2].thanGudGetArc(ca, r*0.5, pi/2.0, Tarch["Staircase rotation angle (enter=0): "], direction=False, options=("",))
+          than.dc.create_line(g2l(ca[0], ca[1]), g2l(ca[0]+r, ca[1]), fill="blue", tags=("e0",))
+          f = proj[2].thanGudGetArc(ca, r*0.5, 0.0, Tarch["Staircase rotation angle (enter=0): "], direction=False, options=("",))
           than.dc.delete("e0")
           if f == Canc: continue
           if f == "": f = 0.0
+          f -= pi*0.5    #__stairsdraw() thinks that zero angle is vertical
           fdeg = f*180.0/pi
           break
 
@@ -97,7 +95,7 @@ def __stairsdraw(proj, v, ca, f, fdeg):
       dxf.thanDxfSetColor(7)
 
       y = -bpat
-      for i in xrange(nyps):
+      for i in range(nyps):
           y = y + bpat
           xt, yt = tra((0.0, y))
           dxf.thanDxfPlot (xt, yt, 3)
@@ -117,7 +115,7 @@ def __stairsdraw(proj, v, ca, f, fdeg):
       dxf.thanDxfSetColor(2)
       hs = 0.15 * v.entScale / 100.0
       y = -bpat
-      for i in xrange(nyps):
+      for i in range(nyps):
           y = y + bpat
           xa = bskal*0.5 + hs
           ya = y + hs*0.5
@@ -134,7 +132,7 @@ def __stairsdraw(proj, v, ca, f, fdeg):
 
 
 def __sxFora (dxf, bskal, bpat, scale, nyps, tra):
-      "Σχεδίαση φοράς σκάλας."
+      "Ξ£Ο‡ΞµΞ΄Ξ―Ξ±ΟƒΞ· Ο†ΞΏΟΞ¬Ο‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚."
       dxf.thanDxfSetLayer ('SKALA__FORA')
       dxf.thanDxfSetColor(1)
       hs = 0.15 * scale / 100.0

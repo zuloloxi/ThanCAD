@@ -1,38 +1,35 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the generic ThanCad element. It can be also used as a null
 element - this is NOT an asbtract class.
 The class defines functionality to speed up the rotate operation.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import cos, sin
-import copy
+import copy, json
 import p_ggen
 from thantrans import T
 
@@ -42,13 +39,14 @@ class ThanElement:
 
     This class of elements may be used whenever a dummy, or Null element
     (see python recipes), is needed. The element accepts usual commands through
-    the routine but does nothing.
+    the methods but does nothing.
     """
     thanTkCompound = 1         # The number of Tkinter objects that make the element. 1=No compound object
     thanElementName = "GENERIC"    # Name of the element's class
 
     def __init__ (self):
         "Make the elements with invalid thanTags invalid handle."
+        self.thanCargo = None   #holds dict with optional,user defined, attributes, or None if no attributes.
         self.thanUntag()
 
 #---Dummy operations
@@ -59,8 +57,35 @@ class ThanElement:
 
 
     def thanIsNormal(self):
-        "Checks if element shape is OK (i.e. it is not degenerate."
+        "Checks if element shape is OK (i.e. it is not degenerate)."
         return False
+
+
+    def than2Line(self, dt=0.0, ta=None, tb=None):
+        """Represent the element with straight line segments.
+
+        If we have a curved element (for example a circle), dt is the size of
+        the line segments to approximate the curve. Usually it is the size of
+        20 pixels in user data units.
+        The implementation of than2line() may use less size if needed.
+        If dt is zero or negative, then the implementation of than2line may
+        choose a default size.
+        Specifically if dt<1, elements which smooth out a polyline
+        (for example spline, bezier, Bspline, NURB) return the nodes of the
+        original line (which is smoothed out).
+        For optimization reasons, than2line() may represent part of the element
+        with line segments. The implementations are free to ignore ta and tb.
+        ta is the parameter which corresponds to the beginning of the part,
+        and tb is the parameter which corresponds to the end of the part.
+        For each element the parameter t may be different. For example t is
+        angle for circles, ellipses and arcs, and t is the distance along the
+        curve from the beginning of the curve for splines.
+        than2line() returns a list of points which is the line segment
+        representation of the lements and a list of parametes which correspond
+        to the points.
+        """
+        if dt is None: return False       #than2Line IS NOT implemented
+        assert False, "Since if dt is None we answer with False, the code should not reach here."
 
 
     def thanRotate(self):
@@ -100,20 +125,30 @@ class ThanElement:
         "Finds the nearest point of this line to a point."
         return None
 
+    def thanTrim(self, ct, cnear):
+        """Breaks the element into multiple segments and deletes the segment nearest to cnear.
+
+        "If self.thanBreak() returns True, then this function must me implemented."""
+        if self.thanBreak():
+            assert False, "Since self.thanBreak() returns True, this function must me implemented."
+        assert False, "Since self.thanBreak() returns True, the code should not reach here."
 
     def thanBreak(self, c1=None, c2=None):
         "Breaks an element to 2 pieces."
-        return False       # Break is NOT implemented
+        if c1 is None: return False       # Break is NOT implemented/possible
+        assert False, "Since if dt is None we answer with False, the code should not reach here."
 
 
     def thanExplode(self, than=None):
         "Transform an element to a set of smaller elements."
-        return False       # Explode is NOT implemented/possible
+        if than is None: return False     # Explode IS NOT implemented/possible
+        assert False, "Since if than is None we answer with False, the code should not reach here."
 
 
     def thanOffset(self, through=None, distance=None, sidepoint=None):
         "Offset element by distance dis; to the right if dis>0 and to the left otherwise."
-        return False       # Offset is NOT implemented
+        if through==None and distance==None: return False  # Offset IS NOT implemented/possible
+        assert False, "Since if through&distance is None we answer with False, the code should not reach here."
 
 
     def thanLength(self):
@@ -164,6 +199,9 @@ class ThanElement:
         "Exports the element to syn file."
         pass
 
+    def thanExpKml(self, than):
+        "Exports the element to Google .kml file."
+        pass
 
     def thanExpPil(self, than):
         "Exports the element to a PIL raster image."
@@ -198,7 +236,9 @@ class ThanElement:
 
         The 2D transformation should also receive Z and return it unchanged.
         If the transformation is 3D, then the resulting Z is treated as an
-        attribute, not as geometric property."""
+        attribute, not as geometric property.
+        If the transformation is rigid (move, rotate, scale) the element should not change
+        it shape. Otherwise the best fit."""
         pass
 
 #---Reasonable default behavior of elements
@@ -235,15 +275,6 @@ class ThanElement:
         if self.thanXymm[2] < xymm[0]: return False
         if self.thanXymm[3] < xymm[1]: return False
         return True
-
-
-    #def thanInarea(self, xymm):  #Thanasis2015_04_15:Commented out
-    #    "Checks if element may (partially) be in area xymm (which may have None)."
-    #    if xymm[2] is None or self.thanXymm[0] > xymm[2]: return False
-    #    if xymm[1] is None or self.thanXymm[1] > xymm[3]: return False
-    #    if xymm[2] is None or self.thanXymm[2] < xymm[0]: return False
-    #    if xymm[3] is None or self.thanXymm[3] < xymm[1]: return False
-    #    return True
 
 
     def thanInarea(self, xymm):
@@ -302,6 +333,12 @@ class ThanElement:
                           max(ya, yb, yc, yd)
                         ]
 
+
+    def thanIsClosed(self):
+        "Returns True if the element is closed (circle, ellipse, closed line)."
+        return False
+
+
     def getInspnt(self):
         "Returns the insertion point of the element."
         return list(self.cc)
@@ -324,8 +361,33 @@ class ThanElement:
         fw.writeTextln(layname)
         fw.writeln("%d" % self.handle)
         self.thanExpThc1(fw)
+        self.thanWriteCargo(fw)
         fw.popInd()
         fw.writeEnd(self.thanElementName)
+
+
+    def thanWriteCargo(self, fw):
+        "Write extra attrributes of the element - do not fail on errors."
+        fw.writeBeg("CARGO")
+        fw.pushInd()
+        for dline in self.__cargo2string(fw):
+            fw.writeln(dline)
+        fw.popInd()
+        fw.writeEnd("CARGO")
+
+
+    def __cargo2string(self, fw):
+        "Write extra attributes of the element to string - do not fail on errors."
+        print("__cargo2string(): self.thanCargo=", self.thanCargo)
+        if self.thanCargo is None or len(self.thanCargo) == 0: return []
+        try:
+            t = json.dumps(self.thanCargo, indent=4)  #may raise TypeError
+        except TypeError as e:
+            fw.prter("Error: illegal user defined element attributes:\n{}\nAttribytes are ignored".format(e))
+            return []
+        dlines = t.split("\n")
+        if dlines[-1].strip() == "": del dlines[-1]    #erase last blank line
+        return dlines
 
 
     def thanImpThc(self, fr, ver):
@@ -334,14 +396,34 @@ class ThanElement:
         layname = fr.readTextln()        #May raise StopIteration, ValueError
         self.handle = int(next(fr))      #May raise ValueError, StopIteration
         self.thanImpThc1(fr, ver)
+        self.thanCargo = self.thanReadCargo(fr, ver)
         fr.readEnd(self.thanElementName) #May raise ValueError, StopIteration
         return layname
 
+
+    def thanReadCargo(self, fr, ver):
+        "Read extra attrributes of the element."
+        if ver < (0,6,0): return None   #previous versions did not have attributes
+        fr.readBeg("CARGO") #May raise ValueError, StopIteration
+        jsondata = []
+        while True:
+            dline = next(fr)
+            name = dline.strip()[1:-1]
+            if name == "/CARGO": break
+            jsondata.append(dline)
+        fr.unread()
+        fr.readEnd("CARGO") #May raise ValueError, StopIteration
+
+        if len(jsondata) == 0: return None  #element does not have any user defined attributes
+        jsondata = "".join(jsondata)   #jsondata already has a \n at the end of the line
+        atts = json.loads(jsondata)  #May raise JSONDecodeError which is a subclass of ValueError
+        return atts
 
 #---Rotate operations (for all elements)
 
     @classmethod
     def thanRotateSet (clas, cc, phi):
+        "Set center and rotation angle in radians."
         clas.rotPhi = phi
         clas.cosf = cos(clas.rotPhi)
         clas.sinf = sin(clas.rotPhi)
@@ -350,6 +432,7 @@ class ThanElement:
 
     @classmethod
     def thanRotateXy(clas, ca):
+        "Rotate a point."
         xa = ca[0] - clas.cc[0]
         ya = ca[1] - clas.cc[1]
         ct = list(ca)
@@ -360,6 +443,7 @@ class ThanElement:
 
     @classmethod
     def thanRotateXyn(clas, cc):
+        "Rotate many points in place."
         xc = clas.cc[0]
         yc = clas.cc[1]
         cosf = clas.cosf
@@ -388,7 +472,7 @@ class ThanElement:
         yc = clas.ycp
         cosf = clas.cosfp
         sinf = clas.sinfp
-        for i in xrange(0, len(cc), 2):
+        for i in range(0, len(cc), 2):
             xa = cc[i] - xc
             ya = cc[i+1] - yc
             xt = xa*cosf - ya*sinf
@@ -456,7 +540,7 @@ class ThanElement:
         yc = clas.ycp
         cosf = clas.cosfp
         sinf = clas.sinfp
-        for i in xrange(0, len(cn), 2):
+        for i in range(0, len(cn), 2):
             ca = cn[i], cn[i+1]
             dis = (ca[0] - xc)*cosf + (ca[1] - yc)*sinf
             xa = xc + dis*cosf
@@ -496,7 +580,3 @@ class ThanElement:
             dy = ct[1] - yc
             ct[0] = xc - dx
             ct[1] = yc - dy
-
-
-if __name__ == "__main__":
-    print(__doc__)

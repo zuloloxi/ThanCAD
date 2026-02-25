@@ -1,34 +1,31 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module implements read/write mechanism for ThanCad files..
 """
 
-#from future.builtins import object
-from p_ggen.py23 import xrange
 from p_ggen import Pyos
 
 class ThanRfile(object):
@@ -63,11 +60,11 @@ class ThanRfile(object):
         "Get next line."
         if self.returnPrev:
             self.returnPrev = False
-            if Pyos.Python3: return self.prev.decode(encoding="iso-8859-7", errors="replace")
+            #if Pyos.Python3: return self.prev.decode(encoding="iso-8859-7", errors="replace")
             return self.prev
         self.prev = next(self.fr)
         self.nline += 1
-        if Pyos.Python3: return self.prev.decode(encoding="iso-8859-7", errors="replace")
+        #if Pyos.Python3: return self.prev.decode(encoding="iso-8859-7", errors="replace")
         return self.prev
 
     def __iter__(self):
@@ -178,7 +175,14 @@ class ThanRfile(object):
         return dl[1:-1]
 
     def readAttb(self, name, s2=None):
-        "Read an attribute which may contain blanks inside it and an attribute which does not."
+        """Read an attribute which may contain blanks inside it, and optionally another attribute which does not.
+
+        For example:
+        <hatch>
+            "solid"
+            0
+        </hatch>
+        """
         self.readBeg(name)
         s = self.readTextln()
         if s2 is not None: s2 = next(self).strip()
@@ -191,7 +195,7 @@ class ThanRfile(object):
         """Reads a line of text.
 
         It skips characters until first double quote.
-        The it reads the rest of the line. It deletes the newline and then
+        Then it reads the rest of the line. It deletes the newline and then
         it deletes the last char, which should be double quote."""
         dline = next(self).rstrip("\n")
         i = dline.find('"')
@@ -246,11 +250,12 @@ class ThanWfile(object):
 
     def writeb(self, s):
         "Convert string to bytes and write."
-        if Pyos.Python3:
-            b = s.encode(encoding="iso-8859-7", errors="replace")
-            self.fw.write(b)
-        else:
-            self.fw.write(s)
+        #if Pyos.Python3:
+            #b = s.encode(encoding="iso-8859-7", errors="replace")
+            #self.fw.write(b)
+        #else:
+        #    self.fw.write(s)
+        self.fw.write(s)
 
     def writeEnd(self, s):
         "Write end of element."
@@ -332,10 +337,13 @@ class ThanRBZfile(ThanRfile):
         "Checks if the file opened is real a bzip2 file."
         try:
             next(self)
-        except IOError as why:
-            why = str(why)            #If not transformed to string the in operator does not work
+        except OSError as why:     #In python 3.3 IOError was merged to OSError
+            why = str(why).lower()            #If not transformed to string the in operator does not work
             if "invalid" in why and "data" in why: return False
             raise       #If other IOError propagate
+        except EOFError as why:     #EOFError is not a subclass of OSError (or IOError)
+            #EOFError: Compressed file ended before the end-of-stream marker was reached
+            return False  #This realy means invalid data (or completely empty file)
         else:
             self.unread()
             return True

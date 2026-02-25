@@ -1,28 +1,27 @@
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
-# 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
-# 
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This is the professional part of ThanCad which is initially commercial.
 The package supports 3dviewing with red/blue glasses.
@@ -87,8 +86,8 @@ class ThanTkBlueRed(ThanTkGuiLowGet):
 
     def pointpair(self, x1, y1, size, paral, tags=()):
         "Draw 1 red and 1 cyan square centered at jx, iy with size and parallax paral."
-        dx = dy = max(size/2, 1)
-        ip2 = int(paral/2)
+        dx = dy = max(size//2, 1)
+        ip2 = int(paral//2)
         jxb = x1-dx-ip2
         jxr = x1-dx+paral-ip2
         iy = y1-dy
@@ -137,14 +136,14 @@ class ThanTkBlueRed(ThanTkGuiLowGet):
         thanMiny = int(dc.canvasy(miny))
         thanMaxx = int(dc.canvasx(maxx))
         thanMaxy = int(dc.canvasy(maxy))
-        print "br3dZeroSurface():", thanMinx, thanMiny, thanMaxx, thanMaxy, jdx, idy
+        print("br3dZeroSurface():", thanMinx, thanMiny, thanMaxx, thanMaxy, jdx, idy)
 
         br = self.blred
         tags = "enull", "enull0"
         dc.delete("enull0")
-        for jx in xrange(thanMinx, thanMaxx, jdx):
+        for jx in range(thanMinx, thanMaxx, jdx):
             dc.create_line(jx, thanMiny, jx, thanMaxy, fill=br, tags=tags)
-        for iy in xrange(thanMiny, thanMaxy, idy):
+        for iy in range(thanMiny, thanMaxy, idy):
             dc.create_line(thanMinx, iy, thanMaxx, iy, fill=br, tags=tags)
 
 
@@ -153,7 +152,7 @@ class CrosHairRect3d(CrosHair):
 
     def __init__(self, dc, size):
         "Take size as an argument."
-        self.dx = self.dy = max(size/2, 1)
+        self.dx = self.dy = max(size//2, 1)
         self.incp = -1                       #Previous increase moved left subcursor
         self.paral = 0
         CrosHair.__init__(self, dc)

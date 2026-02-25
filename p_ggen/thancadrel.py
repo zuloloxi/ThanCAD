@@ -6,10 +6,10 @@ excludedmatch = set("cop copy fortran f95 ex developer".split())
 excludedmatchnumber = "ok".split()   #This means ok[number]
 
 
-def iterfpy(root):
+def iterfpy(root, suf="*.py"):
     "Iterate through all the python sources of a program."
     for di in thancadirs(root):
-        for fp in di.files("*.py"):
+        for fp in di.files(suf):
             yield fp
 
 
@@ -31,8 +31,9 @@ def dirs(parent, excluded=()):
             n1 = len(nam1)
             if nam[:n1] != nam1: continue
             try:
-                int(nam[n1:])
-            except ValueError:
+                #int(nam[n1:])     #thanasis2022_06_13: commented out: it does not exclude ok09oldtoexe
+                int(nam[n1:n1+1])  #thanasis2022_06_13: If it is fllowed by a digit..
+            except ValueError:     #..it is excluded, for example ok09oldtoexe
                 pass
             else:
                 matched = True

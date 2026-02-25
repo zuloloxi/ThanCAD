@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
 import tkinter
 from PIL import Image, ImageTk
 from math import hypot, fabs
@@ -24,6 +22,10 @@ class ThanChart:
 
     def curveAdd(self, x, y, color="red", fill=None, style="continuous", width=1, size=6):
         "Adds a new curve to the chart."
+        if len(x) != len(y): raise ValueError("Curve with len(x) != len(y)")
+        if len(x) == 0:
+            print("Empty curve is ignored.")
+            return
         self.curves.append((x[:], y[:], color, fill, style, width, size))
 #        self.minmax()
 
@@ -129,6 +131,8 @@ class ThanChart:
             yp = [ dy+y*ysc for y in yc ]
             if style == "continuous":
                 dc.create_line(list(zip(xp, yp)), fill=color, width=width)   #OK for python 2,3
+            elif style == "polygon":
+                dc.create_polygon(list(zip(xp, yp)), outline=color, fill=fill, width=width)   #OK for python 2,3
             elif style == "directed":
                 if size == 6: size = (6, -6)
                 self.linedirected(xp, yp, size, color, width, dc)
@@ -183,6 +187,8 @@ class ThanChart:
             yp = [ self.wy-(y-ymi)*ysc for y in yc ]
             if style == "continuous":
                 dc.create_line(list(zip(xp, yp)), fill=color, width=width)  #OK for python 2,3
+            elif style == "continuous":
+                dc.create_polygon(list(zip(xp, yp)), outline=color, fill=fill, width=width)   #OK for python 2,3
             elif style == "directed":
                 if size == 6: size = (6, -6)
                 self.linedirected(xp, yp, size, color, width, dc)

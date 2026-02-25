@@ -1,34 +1,31 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module computes the offset of a line.
 """
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
+
 import copy
 from itertools import islice
 from p_gvec import Vector2
@@ -48,7 +45,7 @@ def thanOffsetLine(ca, dis):
         vb = Vector2(cc[0], cc[1])
         n2 = (vb-va).normal()
         diag = (n1+n2)*0.5
-        kapa = dis / (diag*n1)
+        kapa = dis / (diag|n1)
         vf.append(va+kapa*diag)
         vf[-1].cargo = cc[2:]
         n1 = n2
@@ -60,7 +57,7 @@ def thanOffsetLine(ca, dis):
         while i < len(vf)-2:
             cca = vf[i].x, vf[i].y
             ccb = vf[i+1].x, vf[i+1].y
-            for j in xrange(i+2, len(vf)-1):
+            for j in range(i+2, len(vf)-1):
                 cc1 = vf[j].x, vf[j].y
                 cc2 = vf[j+1].x, vf[j+1].y
                 ct = thanSegSeg(cca, ccb, cc1, cc2)

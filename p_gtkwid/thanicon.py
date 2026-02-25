@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys, base64, tkinter
 
 __icons = None
@@ -30,7 +29,7 @@ def get(name, **kw):
     except: pass
     fun = getattr(self, name)
     try: ph = tkinter.PhotoImage(data=fun())
-    except: ph = tkinter.BitmapImage(data=base64.decodestring(fun()), **kw)
+    except: ph = tkinter.BitmapImage(data=base64.decodebytes(fun()), **kw)
     __icons[name] = ph
     return ph
 

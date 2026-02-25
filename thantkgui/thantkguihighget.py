@@ -1,37 +1,34 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for user interaction in a drawing
 window.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import time
-from math import atan2, hypot
+from math import atan2, hypot, cos, sin
 import tkinter
 from tkinter import simpledialog
 import p_gtkwid, p_ggen
@@ -39,12 +36,7 @@ import p_gtkwid, p_ggen
 from thanvar import Canc, ThanScheduler, thanfiles
 from thanopt import thancadconf
 from thantrans import T
-from .thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_SNAPELEM,
-    THAN_STATE_TEXT, THAN_STATE_ZOOMDYNAMIC, THAN_STATE_PANDYNAMIC,
-    THAN_STATE_POINT, THAN_STATE_POINT1, THAN_STATE_LINE, THAN_STATE_LINE2,
-    THAN_STATE_RECTANGLE, THAN_STATE_RECTRATIO, THAN_STATE_MOVE, THAN_STATE_ROADP,
-    THAN_STATE_ROADR, THAN_STATE_SPLINEP, THAN_STATE_POLAR, THAN_STATE_CIRCLE,
-    THAN_STATE_ARC, THAN_STATE_ELLIPSEB)
+from .thantkguilowget.thantkconst import THAN_STATE
 
 
 class ThanTkGuiHighGet:
@@ -95,12 +87,12 @@ class ThanTkGuiHighGet:
 
 
     __READYSTATES = frozenset(\
-        (THAN_STATE_POINT, THAN_STATE_POINT1,
-         THAN_STATE_LINE, THAN_STATE_LINE2,
-         THAN_STATE_RECTANGLE, THAN_STATE_RECTRATIO,
-         THAN_STATE_MOVE, THAN_STATE_ROADP, THAN_STATE_ROADR,
-         THAN_STATE_SPLINEP, THAN_STATE_POLAR, THAN_STATE_CIRCLE, THAN_STATE_ARC,
-         THAN_STATE_ELLIPSEB,
+        (THAN_STATE.POINT, THAN_STATE.POINT1,
+         THAN_STATE.LINE, THAN_STATE.LINE2,
+         THAN_STATE.RECTANGLE, THAN_STATE.RECTRATIO,
+         THAN_STATE.MOVE, THAN_STATE.ROADP, THAN_STATE.ROADR,
+         THAN_STATE.SPLINEP, THAN_STATE.POLAR, THAN_STATE.AZIMUTH, THAN_STATE.CIRCLE,
+         THAN_STATE.CIRCLE2, THAN_STATE.CIRCLE3, THAN_STATE.ARC, THAN_STATE.ELLIPSEB,
         ))
 
 
@@ -116,9 +108,9 @@ class ThanTkGuiHighGet:
             for com1 in self.thanScriptComs:
                 cmd.thanEnter(com1)
                 break
-            while dc.thanState != THAN_STATE_NONE and cmd.thanState != THAN_STATE_NONE: dc.update()
+            while dc.thanState != THAN_STATE.NONE and cmd.thanState != THAN_STATE.NONE: dc.update()
 
-            if dc.thanState == THAN_STATE_NONE:            # Gui answered
+            if dc.thanState == THAN_STATE.NONE:            # Gui answered
                 res, cargo = dc.thanLastResult              # Get gui result
                 dc.thanCleanup()                            # Cleanup saved answer in gui
                 cmd.thanCleanup()                           # Cleanup commandline
@@ -127,14 +119,14 @@ class ThanTkGuiHighGet:
                 if res == "c": return "c", cargo
                 if state in self.__READYSTATES:
                     cmd.thanCleanup("%s" % strcoo(res))
-                    cmd.thanLastPoint(res)                  # Save last point for relative coords
+                    self.thanProj[1].thanSetLastPoint(res)  # Save last point for relative coords
                     return res, cargo
-                elif state == THAN_STATE_SNAPELEM:
+                elif state == THAN_STATE.SNAPELEM:
                     cmd.thanCleanup(" ")
                     return res, cargo
-                elif state == THAN_STATE_TEXT:
+                elif state == THAN_STATE.TEXT or state == THAN_STATE.TEXTRAW:
                     assert False, "Boy, I would like to see this bug :)"
-                elif state == THAN_STATE_ZOOMDYNAMIC or state == THAN_STATE_PANDYNAMIC:
+                elif state == THAN_STATE.ZOOMDYNAMIC or state == THAN_STATE.PANDYNAMIC:
                     return res, cargo
                 else:
                     assert False, "Unknown state "+str(state)
@@ -165,7 +157,7 @@ class ThanTkGuiHighGet:
     def thanGudCommandCan(self, mes=None, mestype="can"):
         """print((at least default) cancel message and reprompt.)
 
-        The meaning of this is that the precious command ended
+        The meaning of this is that the previous command ended
         unsuccessfully and no do/undo was added. That's why
         the word 'cancel' is always shown. So that when the user
         sees cancel, it means that the drawing has not been altered."""
@@ -216,6 +208,18 @@ class ThanTkGuiHighGet:
            function asks for input. If the function asks again for input (in
            case of error - step 8) statonce is not printed.
         """
+        def uniqoption():
+            "Find option and return the first letter if letter is unique, else the whole option."
+            for i, opt in enumerate(opts):
+                if res1 == opt[:n]: break
+            else:
+                return None
+            opt1 = opt
+            for j in range(i):
+                if opts[j] == "": continue    #Blank option is permitted; hopefully it is unique
+                if opts[j][0] == opt1[0]: return opt1, "o", None # not unique
+            return opt1[0], "o", None      # unique
+
         stat = statonce+stat1
         opts = [opt.strip().lower() for opt in options]
         osnapOrig = None
@@ -232,7 +236,7 @@ class ThanTkGuiHighGet:
             except: istext = False
             if not istext:  #If it is text then res[0], res[1], res[2] might be digits and they would be taken as coordinates
                 try:
-                    c2 = [float(res[i]) for i in xrange(nd)]
+                    c2 = [float(res[i]) for i in range(nd)]
                 except (IndexError, ValueError, TypeError):
                     pass
                 else:
@@ -261,11 +265,8 @@ class ThanTkGuiHighGet:
                     ret = "", "o", None                      # Option is returned
                     break
             elif len(opts) > 0:
-                for opt in opts:
-                    if res1 == opt[:n]:
-                        ret = opt[0], "o", None              # Option is returned
-                        break
-                if res1 == opt[:n]: break
+                ret = uniqoption()
+                if ret is not None: break
 #-----------Check if not strict and return the user response as text
             if not strict:
                 ret = res, "t", cargo                        # Text (other than coordinates,osnap or options) plus cargo are returned
@@ -285,19 +286,19 @@ class ThanTkGuiHighGet:
     def thanGudGetPoint(self, stat1, statonce="", options=()):
         "Gets a point from user with possible options."
         return self.__getPoint(stat1, statonce, strict=True, options=options,
-               state=THAN_STATE_POINT)[0]
+               state=THAN_STATE.POINT)[0]
 
     def thanGudGetPointOr(self, stat1, statonce="", options=()):
         "Gets a point from user with possible options or any other text."
         return self.__getPoint(stat1, statonce, strict=False, options=options,
-               state=THAN_STATE_POINT)
+               state=THAN_STATE.POINT)
 
 
     def thanGudGetSize(self, c1, stat, default=None, statonce="", options=()):
         "Gets a point from user with possible options or a positive real number."
         while True:
             res, typ, cargo = self.__getPoint(stat, statonce, strict=False, options=options,
-               state=THAN_STATE_LINE, args=(c1,))
+               state=THAN_STATE.LINE, args=(c1,))
             if typ == "o":            #This includes Canc
                 return res
             elif typ == "v":
@@ -327,7 +328,7 @@ class ThanTkGuiHighGet:
         """
         while True:
             res, typ, cargo = self.__getPoint(stat, statonce, strict=False, options=options,
-               state=THAN_STATE_LINE, args=(c1,))
+               state=THAN_STATE.LINE, args=(c1,))
             if typ == "o":            #This includes Canc
                 return res
             elif typ == "v":
@@ -353,23 +354,23 @@ class ThanTkGuiHighGet:
     def thanGudGetPoint1(self, stat1, statonce="", options=()):
         "Gets a point from user with possible options; use a different cursor."
         return self.__getPoint(stat1, statonce, strict=True, options=options,
-               state=THAN_STATE_POINT1)[0]
+               state=THAN_STATE.POINT1)[0]
 
     def thanGudGetLine(self, c1, stat, statonce="", options=()):
         "Gets a line from user  beginning at c1, with possible options."
         return self.__getPoint(stat, statonce, strict=True, options=options,
-               state=THAN_STATE_LINE, args=(c1,))[0]
+               state=THAN_STATE.LINE, args=(c1,))[0]
 
     def thanGudGetLine2(self, c1, c2, stat, statonce="", options=()):
         "Gets a line dragging 2 lines from user beginning at c1,c2 with possible options."
         return self.__getPoint(stat, statonce, strict=True, options=options,
-               state=THAN_STATE_LINE2, args=(c1,c2))[0]
+               state=THAN_STATE.LINE2, args=(c1,c2))[0]
 
 
     def thanGudGetRoadP(self, c1, c2, c3, r2, stat, statonce="", options=()):
         "Gets a line/arc combination from user, with possible options."
         res, typres, cargo = self.__getPoint(stat, statonce, strict=True, options=options,
-                             state=THAN_STATE_ROADP, args=(c1, c2, c3, r2))
+                             state=THAN_STATE.ROADP, args=(c1, c2, c3, r2))
         return res, cargo
 
 
@@ -377,7 +378,7 @@ class ThanTkGuiHighGet:
         "Gets a line/arc combination from user, with possible options."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce, strict=False, options=options,
-                state=THAN_STATE_ROADR, args=(c1, c2, c3, r2))
+                state=THAN_STATE.ROADR, args=(c1, c2, c3, r2))
             if typres == "v":                  # coordinates
                 from thanvar import calcRoadNodeR
                 delta = hypot(res[1]-c2[1], res[0]-c2[0])
@@ -398,7 +399,7 @@ class ThanTkGuiHighGet:
     def thanGudGetSplineP(self, c1, c2, stat, statonce="", options=()):
         "Gets next point of a spline curve from user, with possible options."
         res, typres, cargo = self.__getPoint(stat, statonce, strict=True, options=options,
-            state=THAN_STATE_SPLINEP, args=(c1, c2))
+            state=THAN_STATE.SPLINEP, args=(c1, c2))
         return res, cargo
 
 
@@ -408,7 +409,7 @@ class ThanTkGuiHighGet:
         else:             self.thanGudSetDrag(elems)
         if dc is not None: self.thanGudMoveDrag(dc[0], dc[1])
         return self.__getPoint(stat, statonce, strict=True, options=options,
-            state=THAN_STATE_MOVE, args=(c1,direction))[0]
+            state=THAN_STATE.MOVE, args=(c1,None,None,None,direction))[0]
 
 
     def thanGudGetImPoint(self, stat1, image=None, ptol=0, threshold=None, statonce="", options=()):
@@ -422,7 +423,7 @@ class ThanTkGuiHighGet:
         strict = True
         while True:
             cw = self.__getPoint(stat1, statonce, strict=True, options=options,
-                state=THAN_STATE_POINT)[0]
+                state=THAN_STATE.POINT)[0]
             first = None, cw                               # cw may be None
             try: 0.0+cw[0]+cw[1]
             except (IndexError, TypeError): return first   # An option, or anything but point if strict==True
@@ -430,7 +431,7 @@ class ThanTkGuiHighGet:
             else:             images = [image]
             rasterFound = False
             for image in images:
-                for k in xrange(ptol+1):
+                for k in range(ptol+1):
                     wk, _ = self.thanCt.local2GlobalRel(k, k)
                     for dx in -wk,wk:
                         for dy in -wk,wk:
@@ -456,7 +457,7 @@ class ThanTkGuiHighGet:
         "Gets the angle between x-axis and a dragged line of length r beginning at cc."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-                options=options, args=(cc,None,None,r), state=THAN_STATE_POLAR)
+                options=options, args=(cc,None,None,r), state=THAN_STATE.POLAR)
             if typres == "v":              # coordinates
                 th = atan2(res[1]-cc[1], res[0]-cc[0])
                 return th
@@ -469,11 +470,36 @@ class ThanTkGuiHighGet:
             self.thanCom.thanAppend(statonce, "can")
             statonce = ""
 
-    def thanGudGetCircle(self, cc, stat, statonce="", options=()):
+    def thanGudGetInclined(self, cc, theta, stat, statonce="", options=()):
+        "Gets a line with constant inclination."
+        while True:
+            res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
+                options=options, args=(cc,None,None,None,theta), state=THAN_STATE.AZIMUTH)
+            if typres == "v":              # coordinates
+                t = cos(theta), sin(theta)
+                d = (res[0]-cc[0])*t[0] + (res[1]-cc[1])*t[1]
+                res[:2] = cc[0]+d*t[0], cc[1]+d*t[1]
+                return res
+            if typres == "o": return res   # Option or Cancel
+            try:
+                d = float(res)
+            except ValueError:
+                pass
+            else:
+                res = list(cc)
+                t = cos(theta), sin(theta)
+                res[:2] = cc[0]+d*t[0], cc[1]+d*t[1]
+                return res
+            if options: statonce = T["Invalid point, distance or option. Try again.\n"]
+            else:       statonce = T["Invalid point or distance. Try again.\n"]
+            self.thanCom.thanAppend(statonce, "can")
+            statonce = ""
+
+    def thanGudGetCircle(self, cc, coef, stat, statonce="", options=()):
         "Gets a circle from user, centered at cc."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-                options=options, args=(cc,), state=THAN_STATE_CIRCLE)
+                options=options, args=(cc,None,None,None,coef), state=THAN_STATE.CIRCLE)
             if typres == "v":              # coordinates
 #                print("GUI answered")
                 r = hypot(res[1]-cc[1], res[0]-cc[0])
@@ -491,6 +517,19 @@ class ThanTkGuiHighGet:
             self.thanCom.thanAppend(statonce, "can")
             statonce = ""
 
+
+    def thanGudGetCircle3(self, cc1, cc2, stat, statonce="", options=()):
+        "Gets a circle from user, which passes through points cc1 and cc2 and the point that the user inputs."
+        return self.__getPoint(stat, statonce=statonce, strict=False,
+                options=options, args=(cc1, cc2), state=THAN_STATE.CIRCLE3)[0]
+
+
+    def thanGudGetCircle2(self, cc1, stat, statonce="", options=()):
+        "Gets a circle from user, which passes through points cc1 and the point that the user inputs."
+        return self.__getPoint(stat, statonce=statonce, strict=False,
+                options=options, args=(cc1,), state=THAN_STATE.CIRCLE2)[0]
+
+
     def thanGudGetArc(self, cc, r, theta1, stat, statonce="", direction=True, options=()):
         """Gets a circular arc from user, centered at cc, radius r and beginning at theta1.
 
@@ -500,7 +539,7 @@ class ThanTkGuiHighGet:
         clockwise = self.thanProj[1].thanUnits.angldire == -1
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-                options=options, args=(cc,None,None,r,theta1,clockwise), state=THAN_STATE_ARC)
+                options=options, args=(cc,None,None,r,theta1,clockwise), state=THAN_STATE.ARC)
             if typres == "v":              # coordinates
                 theta2 = atan2(res[1]-cc[1], res[0]-cc[0])
                 if direction: return theta2
@@ -518,7 +557,7 @@ class ThanTkGuiHighGet:
         "Gets the semi-minor axis of a (possibly tilted) ellipse from user, centered at cc."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-                options=options, args=(cc,None,None,a,theta,None), state=THAN_STATE_ELLIPSEB)
+                options=options, args=(cc,None,None,a,theta,None), state=THAN_STATE.ELLIPSEB)
             if typres == "v":              # coordinates
 #                print("GUI answered")
                 r = hypot(res[1]-cc[1], res[0]-cc[0])
@@ -536,16 +575,18 @@ class ThanTkGuiHighGet:
             self.thanPrter(statonce)
             statonce = ""
 
-    def thanGudGetRect(self, c1, stat, statonce="", options=(), com=None):
+    def thanGudGetRect(self, c1, stat, statonce="", options=(), *, com=None, ratioxy=(0.0,0.0)):
         "Gets a rectangle from user, beginning at c1."
+        #ratioxy[0] is the ratio by which the dx to the left is increasing with respect to the dx on the right
+        #ratioxy[1] is the ratio by which the dy to the bottom is increasing with respect to the dy to the top
         return self.__getPoint(stat, statonce, strict=True, options=options,
-            state=THAN_STATE_RECTANGLE, args=(c1, None, None, None, com))[0]
+            state=THAN_STATE.RECTANGLE, args=(c1, None, None, None, com, ratioxy))[0]
 
     def thanGudGetRectratio(self, c1, stat, ratio, statonce="", options=()):
         "Gets a rectangle from user, beginning at c1 with given ratio height/width."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-                options=options, args=(c1,None,None,None,ratio), state=THAN_STATE_RECTRATIO)
+                options=options, args=(c1,None,None,None,ratio), state=THAN_STATE.RECTRATIO)
             if typres == "v": return res   # coordinates
             if typres == "o": return res   # Option or Cancel
             try:
@@ -563,7 +604,7 @@ class ThanTkGuiHighGet:
             statonce = ""
 
     def __getText(self, stat1, default=None, validate=None, statonce="",
-        strict=True, options=(), fullopt=False, state=THAN_STATE_TEXT, args=()):
+        strict=True, options=(), fullopt=False, state=THAN_STATE.TEXT, args=()):
         """Gets a point but allows for options which are returned with the first letter (in lower case).
 
         1. Read user response.
@@ -614,6 +655,10 @@ class ThanTkGuiHighGet:
     def thanGudGetText(self, stat1, default=None, statonce="", strict=True):
         return self.__getText(stat1, default, statonce=statonce, strict=strict)[0]
 
+    def thanGudGetTextraw(self, stat1, default=None, statonce="", strict=True):
+        return self.__getText(stat1, default, statonce=statonce, strict=strict,
+            state=THAN_STATE.TEXTRAW)[0]
+
 
     def thanGudGetText0(self, stat1, default=None, statonce="", strict=True):
         "Gets nonblank text from user."
@@ -658,7 +703,7 @@ class ThanTkGuiHighGet:
 
 
     def thanGudGetFloat(self, stat1, default=None, statonce="", strict=True,
-        options=(), state=THAN_STATE_TEXT, args=()):
+        options=(), state=THAN_STATE.TEXT, args=()):
         "Gets a float number from user."
         def validate(res, stat1):
             try:
@@ -671,7 +716,7 @@ class ThanTkGuiHighGet:
             strict=strict, options=options, state=state, args=args)[0]
 
     def thanGudGetPosFloat(self, stat1, default=None, statonce="", strict=True,
-        options=(), state=THAN_STATE_TEXT, args=()):
+        options=(), state=THAN_STATE.TEXT, args=()):
         "Gets a positive float number from user."
         def validate(res, stat1):
             try:
@@ -684,7 +729,8 @@ class ThanTkGuiHighGet:
             strict=strict, options=options, state=state, args=args)[0]
 
 
-    def thanGudGetFloat2(self, stat1, default=None, limits=(None, None), statonce="", strict=True):
+    def thanGudGetFloat2(self, stat1, default=None, limits=(None, None), statonce="", strict=True,
+        options=(), state=THAN_STATE.TEXT, args=()):
         "Gets a float number from user within limits."
         def validate(res, stat1):
             try:               val = float(res)
@@ -697,7 +743,8 @@ class ThanTkGuiHighGet:
             else:
                 if limits[0] <= val <= limits[1]: return val, None
             return None, T["Real number out of range. Try again.\n"]
-        return self.__getText(stat1, default, validate, statonce=statonce, strict=strict)[0]
+        return self.__getText(stat1, default, validate, statonce=statonce,
+            strict=strict, options=options, state=state, args=args)[0]
 
 
     def thanGetElevations(self, nd, stat, default=None):
@@ -748,7 +795,7 @@ class ThanTkGuiHighGet:
         otypes["ena"] = otypes["ele"] = True
         self.thanCanvas.thanChs.thanPush(-2)                  # Save previous croshair; set rectangle croshair
         res = self.__getText(stat1, default, validate, statonce, strict, options,
-            state=THAN_STATE_SNAPELEM)[0]
+            state=THAN_STATE.SNAPELEM)[0]
         otypes.clear()
         otypes.update(otypes1)
         self.thanCanvas.thanChs.thanPop()                     # Restore previous croshair
@@ -962,13 +1009,15 @@ class ThanTkGuiHighGet:
         elements with dashed lines in the future), are represented by more
         than one Tkinter items. In select window, we must make sure that all
         the items of a single compound element are present within the window.
-        If they are not, the element and its correspondig items are deleted
+        If they are not, the element and its corresponding items are deleted
         from the selection.
         """
         dc = self.thanCanvas
         items1 = {}
         for item in dc.find_all():
-            titem = dc.gettags(item)[0]
+            tags = dc.gettags(item)
+            if len(tags) == 0: continue   #Avoid osnap symbols  #Thanasis2021_11_28
+            titem = tags[0]
             try: items1[titem].add(item)     # These are the items of a single ThanCad (compound) element
             except KeyError: items1[titem] = set((item,))
 
@@ -1063,7 +1112,9 @@ class ThanTkGuiHighGet:
         dc = self.thanCanvas
         items1 = {}
         for item in dc.find_all():
-            titem = dc.gettags(item)[0]
+            tags = dc.gettags(item)
+            if len(tags) == 0: continue   #Avoid osnap symbols  #Thanasis2021_11_28
+            titem = tags[0]
             try: items1[titem].add(item)  # These are the items of a single ThanCad (compound) element
             except KeyError: items1[titem] = set((item,))
         items2add = []

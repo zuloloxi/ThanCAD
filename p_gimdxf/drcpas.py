@@ -1,22 +1,22 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from fnmatch import fnmatch
+from operator import itemgetter
+from math import hypot, fabs
 import p_ggen
+from p_gmath import thanNear3
 from . import thanimpdxfget, thanimpdxf
 
 
 class ThanDrConpas(thanimpdxfget.ThanDrWarn):
     "A class which gets control/pass points from a .dxf file."
 
-    def __init__(self, filnam="<undefined>", ctype="noname", layer=("fotost*", ), prt=p_ggen.prg):
+    def __init__(self, filnam="<undefined>", ctype="noname", layer=("fotost*", ),
+        dxyname=(0.0,0.0), dxyheight=(0.0,0.0), obj="POINT", prt=p_ggen.prg):
         """Sets the type of points and the layers to search.
 
         If type == "noname" then x, y, z coordinates of all points plus an
             arbitrary name are returned.
         If type == "pixel" then x, y, z coordinates of all points are returned.
-            Furthermore, the program looks for texts and finds the closest text to 
+            Furthermore, the program looks for texts and finds the closest text to
             a point, and considers it as the point's name. As a precaution, this
             point must also be the closest point to the text found, or else there
             is ambiguity and the program returns an error. The texts must not
@@ -28,60 +28,106 @@ class ThanDrConpas(thanimpdxfget.ThanDrWarn):
             is ambiguity and the program returns an error. The texts must
             contain the character '/' and after this the z coordinate of the point
             for example "Point1/123.457". This z is returned.
+        if type == control3: Ξ£Ξ·ΞΌΞµΞ―Ξ± Ο‰Ο‚ points, ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ± ΞΊΞ±ΞΉ Ο…ΟΟΞΌΞµΟ„ΟΞΏ Ο‰Ο‚ ΞΎΞµΟ‡Ο‰ΟΞΉΟƒΟ„Ξ¬ texts
+                ΞΊΞΏΞ½Ο„Ξ¬ ΟƒΟ„ΞΏ ΟƒΞ·ΞΌΞµΞ―ΞΏ (Ξ· ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ξ· Z Ξ‘Ξ“ΞΞΞ•Ξ™Ξ¤Ξ‘Ξ™). Ξ— ΞΌΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ®
+                layer Ο€ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± ΞµΞ―Ξ½Ξ±ΞΉ tuple/list ΞΌΞµ Ξ±ΞΊΟΞΉΞ²ΟΟ‚ 3 ΟƒΟ„ΞΏΞΉΟ‡ΞµΞ―Ξ±. Ξ ΟΟΟ„ΞΏ layer
+                Ξ³ΞΉΞ± ΟƒΞ·ΞΌΞµΞ―Ξ±, Ξ΄ΞµΟΟ„ΞµΟΞΏ Ξ³ΞΉΞ± ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―ΞµΟ‚ ΞΊΞ±ΞΉ Ο„ΟΞ―Ο„ΞΏ Ξ³ΞΉΞ± Ο…ΟΟΞΌΞµΟ„ΟΞ±.
         if layer == "*" all the layers are searched. Else only the layer with name
             the content of the variable layer is searched.
             Another possibility is if layer ends with * (for example fotost*). In
             this case all the layers beginning with fotost are searched.
+        dxyname is dx and dy which are added algebrically to the coordinates of points
+            (cname) in representations 2, 3 and 5, in case the coordinates of texts
+            are (systematically) in wrong position.
+        dxyheight is x and y which are added algebrically to the coordinates of points
+            in representations 4 and 5, in case the coordinates of heights
+            are (systematically) in wrong position.
+        obj is the object which reopresents a point. Usually "POINT", but Autocad 
+            Civil uses also "CIRCLE" !!!!
         """
         thanimpdxfget.ThanDrWarn.__init__(self, layer, prt=prt)
-        self.cxypix = []       # pixel coordinates of control points
-        self.cname =  []       # texts (names of points or name/height of points
+        self.cxypix =  []      # pixel coordinates of control points
+        self.cname =   []      # texts (names of points or name/height of points
+        self.cheight = []      # texts (names of points or name/height of points
         self.filnam = filnam   # Name of the dxf file
-        self.ctype = ctype     # Type of points: pixel, control, or noname
+        self.ctype = ctype     # Type of points: noname, pixel, control, nonamez, control3
+
         if ctype == "control3" and len(layer) != 3:
             self.prt("For point type 'control3' there must be exactly 3 layers defined.")
             self.prt("%d were defined" % (len(layer),))
             raise p_ggen.RecordedError("Errors recorded above.")
+        self.dxyname = tuple(dxyname)
+        self.dxyheight = tuple(dxyheight)
+        self.obj = obj
 
 
     def dxfPoint(self, xx, yy, zz, lay, handle, col):
-        "Selects the polylines only in certain layers."
+        "Selects the points only in certain layers."
         lay = lay.lower()
-        if self.isLayerKnown(lay):
+        if self.obj == "POINT" and self.isLayerKnown(lay):
+            if col is None: col = 7
             if self.ctype != "control3":
-                self.cxypix.append([None, xx, yy, zz])
+                self.cxypix.append([None, xx, yy, zz, lay, col])
                 return
             if fnmatch(lay, self._layknopat[0]):
-                self.cxypix.append([None, xx, yy, zz])
+                self.cxypix.append([None, xx, yy, zz, lay, col])
                 return
         self.warnObj(lay, self.POINT)
 
 
-    def dxfText(self, xx, yy, zz, lay, handle, col, t, h, theta):
-        "Selects the circle of layer plaisio; its center is the origin point."
+    def dxfCircle(self, xx, yy, zz, lay, handle, col, r):
+        "Selects the circles only in certain layers if the representation of points is CIRCLE."
         lay = lay.lower()
-        if self.isLayerKnown(lay):
+        if self.obj == "CIRCLE" and self.isLayerKnown(lay):
+            if col is None: col = 7
             if self.ctype != "control3":
-                self.cname.append([t, xx, yy, 0.0, lay])
+                self.cxypix.append([None, xx, yy, zz, lay, col])
                 return
-            for i in xrange(1, 3):
-                if fnmatch(lay, self._layknopat[i]):
-                    self.cname.append([t, xx, yy, 0.0, lay])
-                    return
-        self.warnObj(lay, self.TEXT)
+            if fnmatch(lay, self._layknopat[0]):
+                self.cxypix.append([None, xx, yy, zz, lay, col])
+                return
+        self.warnObj(lay, self.CIRCLE)
 
 
-    def splitTexts(self):
-        "In the case of control3 there are exactly 3 layers; split cname to last 2 layers which should have the texts."
-        cname = [[], [], []]
-        for cname1 in self.cname:
-            lay = cname1[-1]
-            for i in xrange(1, 3):
-                if fnmatch(lay, self._layknopat[i]): break
+    def dxfLine(self, xx, yy, zz, lay, handle, col):
+        "Selects the circles only in certain layers if the representation of points is LINE."
+        lay = lay.lower()
+        if self.obj == "LINE" and self.isLayerKnown(lay):
+            if len(xx) != 2: return    # line must have exactly two points
+            aa = list(zip(xx, yy, zz))
+            if not thanNear3(aa[0], aa[1]): return #Both line points must have the same coordinates
+            if col is None: col = 7
+            if self.ctype != "control3":
+                self.cxypix.append([None, xx[0], yy[0], zz[0], lay, col])
+                return
+            if fnmatch(lay, self._layknopat[0]):
+                self.cxypix.append([None, xx[0], yy[0], zz[0], lay, col])
+                return
+        self.warnObj(lay, self.LINE)
+
+
+    def dxfText(self, xx, yy, zz, lay, handle, col, t, h, theta):
+        "Selects the texts in certain layers."
+        lay = lay.lower()
+        if not self.isLayerKnown(lay):      #If layer in not known (i.e. not the ones the user defined) do nothing
+            self.warnObj(lay, self.TEXT)
+            return
+
+        if self.ctype != "control3":    #All cases except 5
+            if self.ctype == "pixel" or self.ctype == "control":  #Get name text for cases 2, 3
+                self.cname.append([t, xx, yy, 0.0, lay])
+            elif self.ctype == "nonamez":                         #Get name height for case 4
+                self.cheight.append([t, xx, yy, 0.0, lay])
+            else:                                                 #Case 1: no name, no height
+                self.warnObj(lay, self.TEXT)
+
+        else:                           #Case 5
+            if fnmatch(lay, self._layknopat[1]):    #second layer contains name
+                self.cname.append([t, xx, yy, 0.0, lay])
+            elif fnmatch(lay, self._layknopat[2]):  #third layer contains heights
+                self.cheight.append([t, xx, yy, 0.0, lay])
             else:
-                assert 0, "Control3: Texts belongs to other layer!!!"
-            cname[i].append(cname1)
-        self.cname = cname
+                self.warnObj(lay, self.TEXT)
 
 
     def validateHeight(self, cname):
@@ -133,32 +179,77 @@ class ThanDrConpas(thanimpdxfget.ThanDrWarn):
             cname1[3] = ht
 
 
-    def corTexts(self, cname):
+    def dupPoints(self, dmax=0.005, dhmax=1.0e100):
+        "Erase duplicate points, which differ less horizontal distance dmax and less than elevation difference dhmax."
+        self.prt("Checking for duplicate points..", "info1")
+        i = 0
+        self.cxypix.sort(key=itemgetter(1))
+        while i < len(self.cxypix):
+            aa1, x1, y1, z1, _, _ = self.cxypix[i]
+            if (i+1) % 10000 == 0: self.prt("{}/{}".format(i+1, len(self.cxypix)))
+            j = i + 1
+            while j < len(self.cxypix):
+                aa2, x2, y2, z2, _, _ = self.cxypix[j]
+                if x2-x1 > dmax: break
+                ds = hypot(x2-x1, y2-y1)
+                if ds > dmax or fabs(z2-z1) > dhmax:
+                    j += 1
+                else:
+                    self.prt("Duplicate point deleted: %.3f  %.3d" % (x2, y2), "can1")
+                    del self.cxypix[j]
+            i += 1
+
+
+    def dupTexts(self, cn, dmax=0.005):
+        "Erase duplicate texts, which differ less horizontal distance dmax and have the same text (right stripped)."
+        self.prt("Checking for duplicate texts..", "info1")
+        cn.sort(key=itemgetter(1))
+        i = 0
+        while i < len(cn):
+            t1,x1,y1,h1,_ = cn[i]
+            t1 = t1.rstrip()
+            if (i+1) % 10000 == 0: self.prt("{}/{}".format(i+1, len(cn)))
+            j = i + 1
+            while j < len(cn):
+                t2,x2,y2,h2,_ = cn[j]
+                if x2-x1 > dmax: break
+                ds = hypot(x2-x1, y2-y1)
+                if ds > dmax or t1 != t2.rstrip():
+                    j += 1
+                else:
+                    self.prt("Duplicate name deleted: '%s'  %.3f  %.3d" % (t2, x2, y2), "can1")
+                    del cn[j]
+            i += 1
+
+
+    def corTexts(self, cn, dxy, tit):
         "Correlates texts with points; the text (name, name/height, or height) of a point is the closest text to it."
+        self.prt("Correlating points with {}..".format(tit), "info1")
         corcname = []
-        for i,(aa,x,y,h) in enumerate(self.cxypix):
-            if len(cname) < 1:
+        dx, dy = dxy[:2]
+        for i,(aa,x,y,h, _, _) in enumerate(self.cxypix):
+            if len(cn) < 1:
                 self.prt("Error in file %s: Point with %s coordinates %.1f %.1f:" % (self.filnam, self.ctype, x,y), "can")
-                self.prt("The name and/or the height of this point was not defined.", "can")
-                self.prt("(The number of point names and/or heights is less than the number of points!)", "can")
+                self.prt("The {} of this point was not defined.".format(tit[:-1]), "can")
+                self.prt("(The number of point {} is less than the number of points!)".format(tit), "can")
                 raise p_ggen.RecordedError("Errors recorded above.")
-            ds = [((x-xt)**2+(y-yt)**2, j) for j,(t,xt,yt,ht,_) in enumerate(cname)]
+            ds = [(hypot(x+dx-xt, y+dy-yt), j) for j,(t,xt,yt,ht,_) in enumerate(cn)]
             d, j = min(ds)
-            t,xt,yt,ht,_ = cname[j]
-            ds = [((x1-xt)**2+(y1-yt)**2, i1) for i1,(aa1,x1,y1,h1) in enumerate(self.cxypix) if aa1 == None]
+            t,xt,yt,ht,_ = cn[j]
+            ds = [(hypot(x1+dx-xt, y1+dy-yt), i1) for i1,(aa1,x1,y1,h1,_,_) in enumerate(self.cxypix) if aa1 == None]
             d, i1 = min(ds)
             if i1 != i:
                 x1, y1 = self.cxypix[i1][1:3]
-                self.prt("Error in file %s: Point with %s coordinates %.1f %.1f:" % (self.filnam, self.ctype, x,y), "can")
-                self.prt("The name and/or height of this point was probably not defined.", "can")
-                self.prt("The nearest name and/or height to this point is: '%s' but it was found to refer to" % t, "can")
+                self.prt("Error in file %s: Point with %s coordinates %.1f %.1f:" % (self.filnam, self.ctype, x, y), "can")
+                self.prt("The {} of this point was probably not defined.".format(tit[:-1]), "can")
+                self.prt("The nearest {} to this point is: '{}' but it was found to refer to".format(tit[:-1], t), "can")
                 self.prt("point with pixel coordinates %.1f %.1f" % (x1,y1))
                 raise p_ggen.RecordedError("Errors recorded above.")
-            corcname.append(cname.pop(j))
-        if len(cname) > 0:
-            self.prt("Warning in file %s: The number of points is less than the number of point names" % self.filnam, "can1")
-            self.prt("and/or heights. The following point names and/or heights do not refer to any point:", "can1")
-            for cname1 in cname: self.prt("%s" % (cname1,))
+            corcname.append(cn.pop(j))
+        if len(cn) > 0:
+            self.prt("Warning in file {}: The number of points is less than the number of point {}".format(self.filnam, tit), "can1")
+            self.prt("The following point {} do not refer to any point:".format(tit), "can1")
+            for cname1 in cn: self.prt("%s" % (cname1,))
         return corcname
 
 
@@ -170,51 +261,70 @@ class ThanDrConpas(thanimpdxfget.ThanDrWarn):
             i += 1
 
 
-def thanDxfGetConpas(fdxf, ctype, layer=("fotost*",), prt=p_ggen.prg):
+def thanDxfGetConpas(fdxf, ctype, layer=("fotost*",), dxyname=(0.0,0.0), dxyheight=(0.0,0.0), obj="POINT", prt=p_ggen.prg):
     """Reads the coordinates of the control points from dxf file.
 
-    noname:  1. Σημεία ως points (με ενδεχόμενο υψόμετρο στη συντεταγμένη Z)
-    pixel:   2. Σημεία ως points και ονομασία ως text κοντά στο σημείο
-                (και με ενδεχόμενο υψόμετρο στη συντεταγμένη Z)
-    control: 3. Σημεία ως points και ονομασία/υψόμετρο (πχ 'S1/42.4') ως text
-                κοντά στο σημείο (η συντεταγμένη Z ΑΓΝΟΕΙΤΑΙ)
-    nonamez: 4. Σημεία ως points και υψόμετρο ως text κοντά στο σημείο
-                (τα σημεία είναι ανώνυμα και η συντεταγμένη Z ΑΓΝΟΕΙΤΑΙ)
-    control3:5. Σημεία ως points, υψόμετρο και ονομασία ως ξεχωριστά texts
-                κοντά στο σημείο (η συντεταγμένη Z ΑΓΝΟΕΙΤΑΙ). Η μεταβλητή
-                layer πρέπει να είναι tuple/list με ακριβώς 3 στοιχεία.
+    noname:  1. Ξ£Ξ·ΞΌΞµΞ―Ξ± Ο‰Ο‚ points (ΞΌΞµ ΞµΞ½Ξ΄ΞµΟ‡ΟΞΌΞµΞ½ΞΏ Ο…ΟΟΞΌΞµΟ„ΟΞΏ ΟƒΟ„Ξ· ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ξ· Z), Ο‡Ο‰ΟΞ―Ο‚ ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ±
+    pixel:   2. Ξ£Ξ·ΞΌΞµΞ―Ξ± Ο‰Ο‚ points ΞΊΞ±ΞΉ ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ± Ο‰Ο‚ text ΞΊΞΏΞ½Ο„Ξ¬ ΟƒΟ„ΞΏ ΟƒΞ·ΞΌΞµΞ―ΞΏ
+                (ΞΊΞ±ΞΉ ΞΌΞµ ΞµΞ½Ξ΄ΞµΟ‡ΟΞΌΞµΞ½ΞΏ Ο…ΟΟΞΌΞµΟ„ΟΞΏ ΟƒΟ„Ξ· ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ξ· Z)
+    control: 3. Ξ£Ξ·ΞΌΞµΞ―Ξ± Ο‰Ο‚ points ΞΊΞ±ΞΉ ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ±/Ο…ΟΟΞΌΞµΟ„ΟΞΏ (Ο€Ο‡ 'S1/42.4') Ο‰Ο‚ text
+                ΞΊΞΏΞ½Ο„Ξ¬ ΟƒΟ„ΞΏ ΟƒΞ·ΞΌΞµΞ―ΞΏ (Ξ· ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ξ· Z Ξ‘Ξ“ΞΞΞ•Ξ™Ξ¤Ξ‘Ξ™)
+    nonamez: 4. Ξ£Ξ·ΞΌΞµΞ―Ξ± Ο‰Ο‚ points ΞΊΞ±ΞΉ Ο…ΟΟΞΌΞµΟ„ΟΞΏ Ο‰Ο‚ text ΞΊΞΏΞ½Ο„Ξ¬ ΟƒΟ„ΞΏ ΟƒΞ·ΞΌΞµΞ―ΞΏ
+                (Ο„Ξ± ΟƒΞ·ΞΌΞµΞ―Ξ± ΞµΞ―Ξ½Ξ±ΞΉ Ξ±Ξ½ΟΞ½Ο…ΞΌΞ± ΞΊΞ±ΞΉ Ξ· ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ξ· Z Ξ‘Ξ“ΞΞΞ•Ξ™Ξ¤Ξ‘Ξ™)
+    control3:5. Ξ£Ξ·ΞΌΞµΞ―Ξ± Ο‰Ο‚ points, ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―Ξ± ΞΊΞ±ΞΉ Ο…ΟΟΞΌΞµΟ„ΟΞΏ Ο‰Ο‚ ΞΎΞµΟ‡Ο‰ΟΞΉΟƒΟ„Ξ¬ texts
+                ΞΊΞΏΞ½Ο„Ξ¬ ΟƒΟ„ΞΏ ΟƒΞ·ΞΌΞµΞ―ΞΏ (Ξ· ΟƒΟ…Ξ½Ο„ΞµΟ„Ξ±Ξ³ΞΌΞ­Ξ½Ξ· Z Ξ‘Ξ“ΞΞΞ•Ξ™Ξ¤Ξ‘Ξ™). Ξ— ΞΌΞµΟ„Ξ±Ξ²Ξ»Ξ·Ο„Ξ®
+                layer Ο€ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± ΞµΞ―Ξ½Ξ±ΞΉ tuple/list ΞΌΞµ Ξ±ΞΊΟΞΉΞ²ΟΟ‚ 3 ΟƒΟ„ΞΏΞΉΟ‡ΞµΞ―Ξ±. Ξ ΟΟΟ„ΞΏ layer
+                Ξ³ΞΉΞ± ΟƒΞ·ΞΌΞµΞ―Ξ±, Ξ΄ΞµΟΟ„ΞµΟΞΏ Ξ³ΞΉΞ± ΞΏΞ½ΞΏΞΌΞ±ΟƒΞ―ΞµΟ‚ ΞΊΞ±ΞΉ Ο„ΟΞ―Ο„ΞΏ Ξ³ΞΉΞ± Ο…ΟΟΞΌΞµΟ„ΟΞ±.
+    dxyname is dx and dy which are added algebrically to the coordinates of points
+        (cname) in representations 2, 3 and 5, in case the coordinates of texts
+        are (systematically) in wrong position.
+    dxyheight is x and y which are added algebrically to the coordinates of points
+        in representations 4 and 5, in case the coordinates of heights
+        are (systematically) in wrong position.
+    obj is the object which reopresents a point. Usually "POINT", but Autocad 
+        Civil uses also "CIRCLE" !!!!
     """
-    dr = ThanDrConpas(fdxf.name, ctype, layer, prt)
+    dr = ThanDrConpas(fdxf.name, ctype, layer, dxyname, dxyheight, obj, prt)
     t = thanimpdxf.ThanImportDxf(fdxf, dr)
     t.thanImport()
     if ctype == "noname":
         dr.addName()
     elif ctype == "pixel":
         dr.validateName(dr.cname)
-        cname = dr.corTexts(dr.cname)
-        for i in xrange(len(dr.cxypix)):
-            dr.cxypix[i][0] = cname[i][0]
+        dr.dupPoints()
+        dr.dupTexts(dr.cname)
+        cname = dr.corTexts(dr.cname, dr.dxyname, "names")
+        for cxy, cn in zip(dr.cxypix, cname):
+            cxy[0] = cn[0]
+            cxy[4] = "{:20s}{}".format(cxy[4][:20], cn[4]) #Add the layer of the text to the layer of the point
     elif ctype == "control":
         dr.validateNameHeight(dr.cname)
-        cname = dr.corTexts(dr.cname)
-        for i in xrange(len(dr.cxypix)):
-            dr.cxypix[i][0] = cname[i][0]
-            dr.cxypix[i][3] = cname[i][3]
+        cname = dr.corTexts(dr.cname, dr.dxyname, "names/heights")
+        for cxy, cn in zip(dr.cxypix, cname):
+            cxy[0] = cn[0]
+            cxy[3] = cn[3]
+            cxy[4] = "{:20s}{}".format(cxy[4][:20], cn[4]) #Add the layer of the text to the layer of the point
     elif ctype == "nonamez":
-        dr.validateHeight(dr.cname)
-        cname = dr.corTexts(dr.cname)
-        for i in xrange(len(dr.cxypix)):
-            dr.cxypix[i][3] = cname[i][3]
+        dr.validateHeight(dr.cheight)
+        cheight = dr.corTexts(dr.cheight, dr.dxyheight, "heights")
+        for cxy, cn in zip(dr.cxypix, cheight):
+            cxy[3] = cn[3]
+            cxy[4] = "{:20s}{}".format(cxy[4][:20], cn[4]) #Add the layer of the text to the layer of the point
         dr.addName()
     elif ctype == "control3":
-        dr.splitTexts()
-        dr.validateName(dr.cname[1])
-        dr.validateHeight(dr.cname[2])
-        cname   = dr.corTexts(dr.cname[1])
-        cheight = dr.corTexts(dr.cname[2])
-        for i in xrange(len(dr.cxypix)):
-            dr.cxypix[i][0] = cname[i][0]
-            dr.cxypix[i][3] = cheight[i][3]
+        dr.validateName(dr.cname)
+        dr.validateHeight(dr.cheight)
+
+        dr.dupPoints()             #Thanasis2020_02_09
+        dr.dupTexts(dr.cname)      #Thanasis2020_02_09
+        dr.dupTexts(dr.cheight)    #Thanasis2020_02_09
+
+        cname   = dr.corTexts(dr.cname,   dr.dxyname,   "names")
+        cheight = dr.corTexts(dr.cheight, dr.dxyheight, "heights")
+        for cxy, cn, ch in zip(dr.cxypix, cname, cheight):
+            cxy[0] = cn[0]
+            cxy[3] = ch[3]
+            cxy[4] = "{:20s}{}".format(cxy[4][:20], cn[4]) #Add the layer of the text to the layer of the point
     else:
         prt("Unknown type of points: '%s'" % (ctype,))
         raise p_ggen.RecordedError("Errors recorded above.")
@@ -225,11 +335,11 @@ def testThanDxfGetConpas():
     "Test dxf import of named points."
     f = open("trap.dxf", "r")
     cxypix = thanDxfGetConpas(f, "pixel")
-    for a,x,y,h in cxypix:
+    for a,x,y,h,lay,icol in cxypix:
         print("%10s%15.3f%15.3f%15.3f" % (a,x,y,h))
     f = open("trap.dxe", "r")
     cxypix = thanDxfGetConpas(f, "EGSA87")
-    for a,x,y,h in cxypix:
+    for a,x,y,h,lay,icol in cxypix:
         print("%10s%15.3f%15.3f%15.3f" % (a,x,y,h))
 
 

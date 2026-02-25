@@ -1,27 +1,27 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the ellipse element.
 """
@@ -58,9 +58,9 @@ class ThanEllipse(ThanCurve):
             self.theta1 = theta1 % PI2        # radians assumed
             self.theta2 = theta2 % PI2        # radians assumed
             if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
-        self.theta1 = pi/6        ####################
-        self.theta2 = pi/2+pi/4   ####################
-        self.full = False         ####################
+        #self.theta1 = pi/6        ####################
+        #self.theta2 = pi/2+pi/4   ####################
+        #self.full = False         ####################
         self.phi = dpt(phi)
         self.spin = spin             #By default we assume counterclockwise (1)
 #        self.setBoundBoxRect(cc[0], cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
@@ -79,7 +79,7 @@ class ThanEllipse(ThanCurve):
             tb = self.theta2
         cp, tp = ellipse2Line(self.cc[0], self.cc[1], self.a, self.b, ta, tb, self.phi, dt)
         cp = thanExtendNodeDims(cp, self.cc)
-        return cp, tp
+        return cp, tp    #The caller may mutate these lists without problem
 
 
     def thanIsNormal(self):
@@ -111,7 +111,7 @@ class ThanEllipse(ThanCurve):
         ca, cb = self.thanMirrorXy(cs[0]), self.thanMirrorXy(cs[1])
         self.phi = atan2(cb[1]-ca[1], cb[0]-ca[0])
         self.cc = self.thanMirrorXy(self.cc)
-        if not self.full: 
+        if not self.full:
             #self.__mirrorThetas(cs)
             self.theta2, self.theta1 = (-self.theta1) % PI2, (-self.theta2)%PI2  #See documetation of __mirrorThetas()
             if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
@@ -121,7 +121,7 @@ class ThanEllipse(ThanCurve):
             """Compute the mirror of thetas.
 
             Ater running this function some times, we realised that the thetas
-            become negative. Also to keep the notation that the arc is draw, 
+            become negative. Also to keep the notation that the arc is drawn,
             counterclokwise from theta1 to theta2, we swap theta1 and theta2.
             """
             print("thanMirror: original: theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
@@ -188,6 +188,74 @@ class ThanEllipse(ThanCurve):
             print("thanPointMir: after   : theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
 
 
+    def thanScale(self, cs, scale):
+        "Enlarges or shrinks the element with predefined basepoint and factor."
+        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.cc, cs)]  #works for python2,3
+        self.a *= scale
+        self.b *= scale
+        self.setBoundBoxRect(self.cc[0], self.cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
+
+
+    def thanMove(self, dc):
+        "Moves the element with predefined displacecent in all axes."
+        self.cc = [cc1+dd1 for (cc1,dd1) in zip(self.cc, dc)]   #works for python2,3
+        self.setBoundBoxRect(self.cc[0], self.cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
+
+
+    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+        "Return a point of type in otypes nearest to point ccu."
+        if "ena" not in otypes: return None            # Object snap is disabled
+        ps = []
+        #if "nea" in otypes:
+        #    cn, rn, thet = self.thanPntNearest2(ccu)
+        #    if thet is not None:
+        #        if "cen" not in otypes or rn > self.r:  # If we are getting near from the outside then "nea"
+        #            self.thanOsnapAdd(ccu, ps, thet, "nea")
+        #            ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "nea", cn))
+        #if "cen" in otypes:
+        #    cn, rn, thet = self.thanPntNearest2(ccu)
+        #    if thet is not None:
+        #        if "nea" not in otypes or rn < self.r:  # If we are getting near from the inside then "cen"
+        #            ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "cen", self.cc))
+        if "qua" in otypes:
+            for thet in 0, 0.5*pi, pi, 1.5*pi:    # If both "nea" and "cen" are active, "qua" does not have a chance
+                self.thanOsnapAdd(ccu, ps, thet, "qua")
+        #if cori is not None and "tan" in otypes:
+        #    dx = (self.cc[0] - cori[0])*0.5
+        #    dy = (self.cc[1] - cori[1])*0.5
+        #    r = hypot(dx, dy)
+        #    c = cori[0]+dx, cori[1]+dy
+        #    for cp in thanintersect.thanCirCir(self.cc, self.r, c, r):
+        #        thet = atan2(cp[1]-self.cc[1], cp[0]-self.cc[0]) % PI2
+        #        self.thanOsnapAdd(ccu, ps, thet, "tan")
+        #if cori is not None and "per" in otypes:
+        #    for cn in self.thanPerpPoints(cori):
+        #        ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "per", cn))
+        #if eother is not None and "int" in otypes:
+        #    ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+        if len(ps) > 0: return min(ps)
+        return None
+
+
+    def thanOsnapAdd(self, ccu, ps, thet, snaptyp):
+        "Add a new point to osnap points."
+        cp = self.thanPerimPoint(thet)
+        cc = list(self.cc)
+        cc[:2] = cp
+        ps.append((fabs(cc[0]-ccu[0])+fabs(cc[1]-ccu[1]), snaptyp, cc))
+
+
+    def thanPerimPoint(self, thet):
+        "Return the coordinates of a point on the perimeter."
+        x = self.a*cos(thet)
+        y = self.b*sin(thet)
+        sinf = sin(self.phi)
+        cosf = cos(self.phi)
+        xt = x*cosf - y*sinf
+        yt = x*sinf + y*cosf
+        return self.cc[0]+xt, self.cc[1]+yt
+
+
     def thanChelev(self, z):
         "Set constant elevation of z."
         ThanElement.thanChelev(self, z)
@@ -215,7 +283,7 @@ class ThanEllipse(ThanCurve):
         if cc == Canc: return Canc                                  #Ellipse was cancelled
         if cc == "5": return self.__getTiltHor(proj, 5)
         if cc == "4": return self.__getTiltHor(proj, 4)
-        a = proj[2].thanGudGetCircle(cc, T["Semi-major axis: "])
+        a = proj[2].thanGudGetCircle(cc, 1.0, T["Semi-major axis: "])
         if a == Canc: return Canc                                   #Ellipse was cancelled
         b = proj[2].thanGudGetEllipseB(cc, a, 0.0, T["Semi-minor axis: "])
         if b == Canc: return Canc                                   #Ellipse was cancelled
@@ -268,7 +336,7 @@ class ThanEllipse(ThanCurve):
                 if c1 == "s": return self.__getPointsSel (proj, nmin)
                 cs.append(c1)
             elif n < nmin:
-                c1 = proj[2].thanGudGetPoint(T["Point %s of ellipse (Undo/enter=finish): "]%(n+1,), options=("u",))
+                c1 = proj[2].thanGudGetPoint(T["Point %s of ellipse (Undo): "]%(n+1,), options=("u",))
                 if c1 == Canc:  return Canc                                  #Ellipse was cancelled
                 elif c1 == "u": del cs[-1]
                 else:           cs.append(c1)
@@ -316,8 +384,9 @@ class ThanEllipse(ThanCurve):
 
     def thanTkDraw1(self, than):
         "Draws the spline to a Tk Canvas."
-        dx, dy = than.ct.global2LocalRel(1.0, 1.0)
-        dt = hypot(1.0, 1.0)/hypot(dx, dy)*10.0    #This means that dt is about 10 pixels
+        #dx, dy = than.ct.global2LocalRel(1.0, 1.0)
+        #dt = hypot(1.0, 1.0)/hypot(dx, dy)*10.0    #This means that dt is about 10 pixels
+        dt = than.thanGudGetDt()
         self.cp, self.tp = self.than2Line(dt)
         ThanCurve.thanTkDraw1(self, than)
 
@@ -350,6 +419,14 @@ class ThanEllipse(ThanCurve):
         rd = 180.0 / pi
         fDxf.thanDxfPlotEllipse(self.cc[0], self.cc[1], self.a, self.b,
             self.theta1*rd, self.theta2*rd, self.phi*rd)
+
+
+    def thanExpKml(self, than):
+        "Exports the ellipse to Google .kml file."
+        than.ibr += 1
+        aa = than.form % (than.ibr,)
+        cp, tp = self.than2Line(than.dt)    #1m resolution is hopefully enough for google maps
+        than.kml.writeLinestring(aa, cp, than.layname, desc="")
 
 
     def thanTransform(self, fun):

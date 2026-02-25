@@ -28,13 +28,10 @@ Tkinter lists.
 """
 
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import types
 from tkinter import Scrollbar, Frame, Label, EXTENDED, END, VERTICAL, HORIZONTAL
 import p_ggen
-from p_ggen import Canc
+from p_ggen import ThanLayerError, Canc
 from .thantkutila import thanGudModalMessage
 from .xinp import xinpStrB
 from .thansched import ThanScheduler
@@ -120,7 +117,7 @@ class ThantkClistBare(Frame, ThanScheduler):
             w = self.thanHsbars[att]
             if w: w.grid(row=ir+2, column=ic+i, sticky="we")
             i += 1
-        for i in xrange(len(self.thanAtts)):
+        for i in range(len(self.thanAtts)):
             self.columnconfigure(i, weight=self.thanWidths[i])
         self.rowconfigure(ir+1, weight=1)
 
@@ -339,9 +336,9 @@ class ThanMixinUtil:
             lay = lay1
             if self.thanClipCom != "move": lay = lay1.thanClone()
             name = lay.thanAtts[self.thanAttmain]
-            if p_ggen.isString(lay.thanRename(name)):
-                for j in xrange(1000000):
-                    if p_ggen.isString(lay.thanRename(name+str(j))): break
+            if p_ggen.isString(lay.thanRenametest(name)):
+                for j in range(1000000):
+                    if p_ggen.isString(lay.thanRenametest(name+str(j))): break
 
             lay.thanParent = None
             self.thanListLayers.insert(i, lay)     # layer pointer
@@ -370,16 +367,16 @@ class ThanMixinUtil:
 #============================================================================
 
     def thanLayerRen(self):
-        "Renames a highligthed layer."
+        "Renames a highlighted layer."
         (indexes, lays) = self.thanSelGet()
         i = 0
         if len(indexes) > 0: i = int(indexes[0])
         self.thanSel1(i)
         lay = self.thanListLayers[i]
         name = str(lay.thanAtts[self.thanAttmain])
-        name1 = self.thanLimain.thanGet(i)
+        name1 = self.thanLimain.thanGetitem(i)
 
-        for j in xrange(len(name1)):
+        for j in range(len(name1)):
             if name1[j] != ".": break
         else: assert None, "Layer name all dots!!"
         dots = ""
@@ -389,7 +386,7 @@ class ThanMixinUtil:
         while 1:
             name1 = xinpStrB(self, T["Rename Layer"]+" "+name, name1)
             if name1 is None: return Canc
-            lay1 = lay.thanRename(name1)
+            lay1 = lay.thanRenametest(name1)
             if not p_ggen.isString(lay1): break        # Check if name is valid
             thanGudModalMessage(self, lay1, T["Rename Failed"])
             return Canc
@@ -417,9 +414,10 @@ class ThanMixinHierUtil(ThanMixinUtil):
 
     def thanLayerChildNew(self):
         "Makes a new child layer."
-        lay = self.thanLayerChildNewHouse()
-        if p_ggen.isString(lay):
-            thanGudModalMessage(self, lay, "New Child Layer Failed")
+        try:
+            lay = self.thanLayerChildNewHouse()   #May raise ThanLayerError
+        except ThanLayerError as e:
+            thanGudModalMessage(self, str(e), "New Child Layer Failed")
             return
 
 
@@ -434,8 +432,13 @@ class ThanMixinHierUtil(ThanMixinUtil):
             laypar = lays[0]
 
         self.thanBranchCollapse(i)
-        lay = laypar.thanChildNew(name)
-        if p_ggen.isString(lay): return lay     # New Child Layer Failed
+        try:
+            lay = laypar.thanChildNew(name)    #May raise ThanLayerError
+        except ThanLayerError:
+            self.thanBranchExpand(i)
+            self.thanSel1(i)
+            raise
+        assert not p_ggen.isString(lay), "The previous statement here should have raised ThanLayerError, and never reach here!!"
         lay.thanAtts[_EXPAND].thanVal = " "
 
         laypar.thanAtts[_EXPAND].thanVal = "+"
@@ -444,7 +447,7 @@ class ThanMixinHierUtil(ThanMixinUtil):
 
         self.thanBranchExpand(i)
 
-        for j in xrange(i, len(self.thanListLayers)):
+        for j in range(i, len(self.thanListLayers)):
             if self.thanListLayers[j] == lay: break
         else:
             assert None, "Newly created child layer not found!"
@@ -509,9 +512,10 @@ class ThanMixinHierUtil(ThanMixinUtil):
             i = int(indexes[0])
         self.thanBranchCollapse(i)
 
-        er = laypar.thanChildAdd(self.thanClipLays)
-        if p_ggen.isString(er):
-            thanGudModalMessage (self, er, T["Paste Failed"])
+        try:
+            laypar.thanChildAdd(self.thanClipLays)    #May raise ThanLayerError
+        except ThanLayerError as e:
+            thanGudModalMessage (self, str(er), T["Paste Failed"])
             return
 
         laypar.thanAtts[_EXPAND].thanVal = "+"
@@ -621,7 +625,7 @@ class ThantkClistHierBare(ThantkClistBare):
         li = self.thanLiexpand
         i = int(li.nearest(evt.y))
         sign = self.thanListLayers[i].thanAtts[_EXPAND].thanVal
-#        sign = li.thanGet(i)
+#        sign = li.thanGetitem(i)
 
         if sign == "+":
             self.thanBranchExpand(i)
@@ -637,7 +641,7 @@ class ThantkClistHierBare(ThantkClistBare):
         li = self.thanLiexpand
         lay = self.thanListLayers[i]
         sign = lay.thanAtts[_EXPAND].thanVal
-#        sign = li.thanGet(i)
+#        sign = li.thanGetitem(i)
         if sign == "+":
             self.thanSelNone()
             sign = "-"
@@ -645,8 +649,8 @@ class ThantkClistHierBare(ThantkClistBare):
             li.delete(i)
             li.thanInsert(i, sign)
 
-            m = self.thanLimain.thanGet(i)
-            for j in xrange(len(m)):
+            m = self.thanLimain.thanGetitem(i)
+            for j in range(len(m)):
                 if m[j] != ".": break
             prefix = m[0:j]
             i = self.thanInsert2Lists(i, lay.thanChildren, prefix+"....")
@@ -658,7 +662,7 @@ class ThantkClistHierBare(ThantkClistBare):
         li = self.thanLiexpand
         lay = self.thanListLayers[i]
         sign = lay.thanAtts[_EXPAND].thanVal
-#        sign = li.thanGet(i)
+#        sign = li.thanGetitem(i)
         if sign == "-":
             self.thanSelNone()
             sign = "+"
@@ -746,7 +750,7 @@ class ThanMixinPartial:
         else:
             self.thanSetsList = sets                          # Sets of lists are given
         atts = list(self.thanAtts)
-        for i in xrange(vlistl): del atts[0]
+        for i in range(vlistl): del atts[0]
         self.thanHideLists(atts)                              # Hide all lists
         self.thanSetI = 0
         self.thanShowLists(self.thanSetsList[self.thanSetI])  # Show first set of lists
@@ -793,7 +797,7 @@ class ThanMixinPartial:
         hl = hl1 = sum(self.thanWidths[:vlistl])
         self.thanSetsList = [ ]
         setList = [ ]
-        for i in xrange(self.thanVlistl, len(self.thanLists)):
+        for i in range(self.thanVlistl, len(self.thanLists)):
             if hl > hlen:
                 self.thanSetsList.append(setList)
                 setList = [ ]

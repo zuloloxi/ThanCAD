@@ -1,6 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from p_ggen import iterby2, doNothing
 from p_ggeom import TriLocal, MesaTri
 
@@ -25,7 +22,7 @@ class TriLocate(object):
                 if pixelindex: raise
                 x1p = y1p = -99999.9     #Fake pixel coordinates, when there are no pixel coordinates and pixelindex==False
             xyz.append((x1, y1, z1, x1p, y1p))
-            if a1 == '####ΚΔ####': infin = 4   # Υπάρχουν άπειρα σημεία
+            if a1 == '####ΞΞ”####': infin = 4   # Ξ¥Ο€Ξ¬ΟΟ‡ΞΏΟ…Ξ½ Ξ¬Ο€ΞµΞΉΟΞ± ΟƒΞ·ΞΌΞµΞ―Ξ±
             en1 = []
             for dline in fr:
                 dl = dline.strip()
@@ -35,7 +32,7 @@ class TriLocate(object):
         dmax **= 2
         seen = set()
         tri = []
-        for i in xrange(len(xyz)-infin):
+        for i in range(len(xyz)-infin):
             for j, k in iterby2(en[i]):
                 s = frozenset((i,j,k))
                 if s in seen: continue
@@ -81,8 +78,8 @@ class GridIndex(object):
         for tri1 in tri:
             jss = [int((c[ix]-xmin)/dx) for c in tri1[:3]]
             iss = [int((c[iy]-ymin)/dy) for c in tri1[:3]]
-            for i in xrange(min(iss), max(iss)+1):
-                for j in xrange(min(jss), max(jss)+1): grind.setdefault((i,j), []).append(tri1)
+            for i in range(min(iss), max(iss)+1):
+                for j in range(min(jss), max(jss)+1): grind.setdefault((i,j), []).append(tri1)
         self.ispixel = ispixel
         self.tri = tri
         self.dx = dx

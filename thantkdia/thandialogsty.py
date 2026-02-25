@@ -1,35 +1,32 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to create/modify/delete a text style.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
-from tkinter import Tk, Frame, Label, Button, Entry, Checkbutton, Canvas, IntVar, GROOVE, SUNKEN, RIDGE, ALL, END
+from tkinter import Tk, Frame, Label, Button, Entry, Canvas, IntVar, GROOVE, SUNKEN, RIDGE, ALL, END
 import p_ggen, p_gtkwid
 from thanfonts import thanFonts
 from thandefs import ThanTstyle
@@ -63,7 +60,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
     def __stylenameForm(self, fra, ir, ic):
         "Shows common colors."
         f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, columnspan=2, sticky="we", ipady=4, pady=4)
-        for i in xrange(4): f.columnconfigure(i, weight=1)
+        for i in range(4): f.columnconfigure(i, weight=1)
         w = Label(f, text=" "+T["Style Name"])
         w.grid(row=0, column=0, columnspan=4, sticky="w")
 
@@ -80,7 +77,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
     def __fontnameForm(self, fra, ir, ic):
         "Shows common colors."
         f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, columnspan=2, sticky="we", ipady=4, pady=4)
-        for i in xrange(3): f.columnconfigure(i, weight=1)
+        for i in range(3): f.columnconfigure(i, weight=1)
 
         w = Label(f, text=" "+T["Font Name"]); w.grid(row=0, column=0, sticky="w", padx=5)
         self.__flabs = sorted(thanFonts.keys())  #works for python2,3
@@ -104,18 +101,18 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
     def __effectsForm(self, fra, ir, ic):
         "Shows common colors."
         f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="wesn", ipady=4, pady=4)
-        for i in xrange(1, 2): f.columnconfigure(i, weight=1)
-        for i in xrange(1, 4): f.rowconfigure(i, weight=1)
+        for i in range(1, 2): f.columnconfigure(i, weight=1)
+        for i in range(1, 4): f.rowconfigure(i, weight=1)
 
         w = Label(f, text=" "+T["Effects"]); w.grid(row=0, column=0, sticky="w", padx=5)
         self.__efUp = IntVar(); self.__efUp.set(False)
         self.__efBack = IntVar(); self.__efBack.set(False)
         self.__efVert = IntVar(); self.__efVert.set(False)
-        w = Checkbutton(f, text=T["Upside Down"], variable=self.__efUp)
+        w = p_gtkwid.ThanCheck(f, text=T["Upside Down"], variable=self.__efUp)
         w.grid(row=1, column=0, sticky="w")
-        w = Checkbutton(f, text=T["Backwards"], variable=self.__efBack)
+        w = p_gtkwid.ThanCheck(f, text=T["Backwards"], variable=self.__efBack)
         w.grid(row=2, column=0, sticky="w")
-        w = Checkbutton(f, text=T["Vertical"], variable=self.__efVert)
+        w = p_gtkwid.ThanCheck(f, text=T["Vertical"], variable=self.__efVert)
         w.grid(row=3, column=0, sticky="w")
 
         w = Frame(f); w.grid(row=1, column=1, sticky="we")
@@ -128,14 +125,16 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
     def __previewForm(self, fra, ir, ic):
         "Shows common colors."
         f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="wesn", ipady=4, pady=4)
-        for i in xrange(1): f.columnconfigure(i, weight=1)
-        for i in xrange(1,2): f.rowconfigure(i, weight=1)
+        for i in range(1): f.columnconfigure(i, weight=1)
+        for i in range(1,2): f.rowconfigure(i, weight=1)
 
         w = Label(f, text=""+T["Preview"], anchor="w", width=15); w.grid(row=0, column=0, sticky="w", padx=5)
         w = self.__prevBig = Canvas(f, width=20, height=60, bd=2, relief=RIDGE)
         w.grid(row=1, column=0, columnspan=2, sticky="wesn", padx=5)
+        #p_gtkwid.correctForeground(w)
         w = self.__prevSmall = Canvas(f, width=20, height=15, bd=2, relief=RIDGE)
         w.grid(row=2, column=0, sticky="wesn", padx=5)
+        #p_gtkwid.correctForeground(w)
         w = Button(f, text=T["Preview"], command=self.__doPreview)
         w.grid(row=2, column=1, sticky="w", padx=5)
 
@@ -156,8 +155,11 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
         if self.thanVals[6]: f.thanBackwardsMake()
         if self.thanVals[7]: f.thanVerticalMake()
 
-        tk = p_ggen.Struct(); tk.fill = tk.outline = None
+        tk = p_ggen.Struct()
+        tk.tkThick = 2
         for dc in self.__prevBig, self.__prevSmall:
+            tk.fill = tk.outline = p_gtkwid.blackorwhite(dc, bg="background")
+            if dc is self.__prevSmall: tk.tkThick = 1
             b = dc.winfo_width(); h = dc.winfo_height()
             if f.thanVert: hchar = h*0.18; h2 = h*0.95
             else:          hchar = h*0.5; h2 = (h-hchar)*0.6

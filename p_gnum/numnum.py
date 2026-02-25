@@ -30,10 +30,12 @@ def histogram1(a, bins=10, ra=None):
 
 #Thanasis2012_12_10: Note that I added the function eig,mean in the numpy; 
 #I added them to Numeric too, but it has not been tested
+#Thanasis2018_06_11: Note that I added the function diag in the numpy; 
+#I added them to Numeric too, but it has not been tested
 try:
     from Numeric import (array, transpose, zeros, reshape, fromstring,
         sin, cos, tan, sqrt, absolute, equal, not_equal, greater_equal, less_equal,
-        greater, less, logical_and, compress, where, mean,
+        greater, less, logical_and, compress, where, mean, diag,
         matrixmultiply, histogram, argmin, argmax, arange, sort, searchsorted,
         eye, polyfit, polyval, interp)
     from Numeric import (Float, Float16, Float32, Float64, Int, Int8, Int16, Int32,
@@ -66,7 +68,7 @@ try:
 except ImportError:
     from numpy import (array, transpose, zeros, reshape, fromstring,
         sin, cos, tan, sqrt, absolute, equal, not_equal, greater_equal, less_equal,
-        greater, less, logical_and, compress, where, mean,
+        greater, less, logical_and, compress, where, mean, diag,
         dot as matrixmultiply, histogram, argmin, argmax, arange, sort, searchsorted,
         eye, polyfit, polyval, interp)
     from numpy.linalg import (LinAlgError, eig,
@@ -79,11 +81,11 @@ except ImportError:
 #    from numpy.oldnumeric import (Float, Float16, Float32, Float64, Int, Int8, Int16, Int32,
 #        UnsignedInt8, UnsignedInt16, Complex64)
     import numpy
-    Float   = numpy.float
+    Float   = numpy.float64  #thanasis2023_05_08: numpy.float was an alias for python float: python float coincides with numpy.float64
     Float16 = numpy.float16
     Float32 = numpy.float32
     Float64 = numpy.float64
-    Int     = numpy.int
+    Int     = numpy.int32    #thanasis2023_05_08: numpy.int was an alias for python int: python int coincides with numpy.int32
     Int8    = numpy.int8
     Int16   = numpy.int16
     Int32   = numpy.int32

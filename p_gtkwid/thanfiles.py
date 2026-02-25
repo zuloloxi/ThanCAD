@@ -1,9 +1,6 @@
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import sys, os.path, weakref
-try: from configparser import SafeConfigParser     #python3
-except: from ConfigParser import SafeConfigParser  #python2
+try: from configparser import SafeConfigParser     #python3.9
+except: from configparser import ConfigParser as SafeConfigParser  #python3.12
 from .thantkutila import thanExtExpand, thanAbsrelPath
 
 #############################################################################
@@ -62,13 +59,13 @@ class ThanFiles:
     def thanOpenedDel(self, win):
         "Removes a file from the opened files list."
 
-        for i in xrange(len(self.__openedFiles)):
+        for i in range(len(self.__openedFiles)):
             if str(win) == str(self.__openedFiles[i][0]): break
         else:
             assert None, "Drawing class instance did not exist in common database!"
         del self.__openedFiles[i]
 
-        for i in xrange(len(self.__openedFiles)):
+        for i in range(len(self.__openedFiles)):
             assert str(win) != str(self.__openedFiles[i][0]), "thanfiles: win duplicately declared!"
 
         self.thanOpenedNotify()
@@ -113,17 +110,8 @@ class ThanFiles:
         for win,f in self.__openedFiles:
             if win != exclude: win.thanRecentRefresh(recent)
 
-#############################################################################
-#############################################################################
 
-#MODULE LEVEL FUNCTIONS
-
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
-
-if __name__ == "__main__":
+def testThanFiles():
     class St(str):
         def thanOpenedRefresh(self, a): pass
         def thanRecentRefresh(self, a): pass

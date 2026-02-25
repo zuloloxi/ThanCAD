@@ -1,33 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the ThanCad Line type, and some builtin line types.
 """
 
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import fabs
 
 
@@ -39,7 +37,7 @@ class ThanLtype:
         """Initialise line type object.
 
         In contrast to the Tk specification which does not allow zero length
-        dashed, ThanCad accepts a zero dash; it is a special case where the
+        dashes, ThanCad accepts a zero dash; it is a special case where the
         dash is plotted as a single pixel dot.
         The dashes list is in the form: dash1, space1, dash2, space2, dash3, space3, ...
         Thus the first element is always a dash. The number of elements must be
@@ -145,7 +143,7 @@ class ThanLtype:
         self.thanDashes = tuple(dashes)
 
 
-    MMSENT = "__THANCADMM "
+    MMSENT = "THANCADMM "
     def thanExpDxf(self, fDxf, unit="mm", scale=1.0):
         "Exports the linetype to dxf file."
         desc = self.desc
@@ -153,13 +151,13 @@ class ThanLtype:
             desc = self.MMSENT + desc
             scale *= 0.1                 #thAtCad equivalent is in cm (ThanCad dash is in mm)
         relems = [d1*scale for d1 in self.thanDashes]
-        for i in xrange(0, len(relems), 2):
+        for i in range(0, len(relems), 2):
             relems[i] = -relems[i]
         fDxf.thanDxfCrLtype (self.thanName, desc, relems)
 
 
     def thanFromDxf(self, name, desc, elems):
-        "Create the linetype from a dxf formatted linetype."
+        "Create the linetype from data found in a dxf formatted linetype."
         dash = list(elems)
         i = 1
         while i < len(dash):
@@ -174,13 +172,18 @@ class ThanLtype:
         if len(dash) > 0:
             if dash[0] < 0:            #If ltype begins with space, add a small dash (dot) in front of it
                 dash.insert(0, 0.0)
-            if len(dash) % 2 != 0:     #If odd number of dashes..
-                dash.append(dash[1])   #..append a space at the end (the first space defined is appended)
+            if len(dash) % 2 != 0:         #If odd number of dashes..
+                if len(dash) >= 3: #thanasis2016_12_11
+                    dash.append(dash[1])   #..append a space at the end (the first space defined is appended)
+                else:              #thanasis2016_12_11
+                    dash.append(-dash[0])  #..append a space equal to the first and only dash: ltype contains only one dash!
         for i,d1 in enumerate(dash):   #Now make spaces positive
             dash[i] = fabs(d1)
 
-        if self.MMSENT in desc:
-            desc = desc.replace(self.MMSENT, "")
+        temp = self.MMSENT
+        if temp not in desc: temp = temp.lower()
+        if temp in desc:
+            desc = desc.replace(temp, "")
             unit = "mm"
             dash = [d1*10.0 for d1 in dash]  #In this case thAtCad equivalent is cm and we convert it to mm
         else:
@@ -199,7 +202,7 @@ def thanDashesTest(dashes):
         except ValueError as e:
             return False, "Invalid dash: %s" % (e,)
         if d1 < 0.0: return False, "Negative dash or space found"
-    for i in xrange(1, len(dashes), 2):
+    for i in range(1, len(dashes), 2):
         if dashes[i] == 0.0: return False, "Zero space found"
 #    if len(dashes) > 12: return False, "Too many dashes"     #Tk does not set a limit (as some other CAD does)
     if len(dashes) % 2 != 0: return False, "The number of dashed must an even number"

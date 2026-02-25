@@ -1,29 +1,27 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -36,100 +34,100 @@ from p_ggen import Translation
 
 #English to greek translation table
 en2gr = \
-{ "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
+{ "__TRANSLATION__"     : ("en", "utf_8", "gr", "utf_8"),
 
-"INTERSCIENTIFIC PROGRAM"                         : u"ΔΙΕΠΙΣΤΗΜΟΝΙΚΟ ΠΡΟΓΡΑΜΜΑ",
-"OF GRADUATE STUDIES (DPMS) OF NTUA"              : u"ΜΕΤΑΠΤΥΧΙΑΚΩΝ ΣΠΟΥΔΩΝ (ΔΠΜΣ) ΤΟΥ ΕΜΠ",
-"ENVIRONMENT AND DEVELOPMENT"                     : u"ΠΕΡΙΒΑΛΛΟΝ ΚΑΙ ΑΝΑΠΤΥΞΗ",
+"INTERSCIENTIFIC PROGRAM"                         : u"Ξ”Ξ™Ξ•Ξ Ξ™Ξ£Ξ¤Ξ—ΞΞΞΞ™ΞΞ Ξ Ξ΅ΞΞ“Ξ΅Ξ‘ΞΞΞ‘",
+"OF GRADUATE STUDIES (DPMS) OF NTUA"              : u"ΞΞ•Ξ¤Ξ‘Ξ Ξ¤Ξ¥Ξ§Ξ™Ξ‘ΞΞ©Ξ Ξ£Ξ ΞΞ¥Ξ”Ξ©Ξ (Ξ”Ξ ΞΞ£) Ξ¤ΞΞ¥ Ξ•ΞΞ ",
+"ENVIRONMENT AND DEVELOPMENT"                     : u"Ξ Ξ•Ξ΅Ξ™Ξ’Ξ‘Ξ›Ξ›ΞΞ ΞΞ‘Ξ™ Ξ‘ΞΞ‘Ξ Ξ¤Ξ¥ΞΞ—",
 "Applications of environmental design on the built space":
-                                                    u"Εφαρμογές περιβαλλοντικού σχεδιασμού στον δομημένο χώρο",
-"A.A. Stamos"                                     : u"Θ. Στάμος",
+                                                    u"Ξ•Ο†Ξ±ΟΞΌΞΏΞ³Ξ­Ο‚ Ο€ΞµΟΞΉΞ²Ξ±Ξ»Ξ»ΞΏΞ½Ο„ΞΉΞΊΞΏΟ ΟƒΟ‡ΞµΞ΄ΞΉΞ±ΟƒΞΌΞΏΟ ΟƒΟ„ΞΏΞ½ Ξ΄ΞΏΞΌΞ·ΞΌΞ­Ξ½ΞΏ Ο‡ΟΟΞΏ",
+"A.A. Stamos"                                     : u"Ξ. Ξ£Ο„Ξ¬ΞΌΞΏΟ‚",
 
-"Mark &Region"                                    : u"Σημείωση περιοχής",
-"&Edit Region"                                    : u"Επεξεργασία περιοχής",
-"Automated Floor Plan Design Algorithms"          : u"Αλγόριθμοι Αυτόματης Διαρρύθμισης Κάτοψης",
-"Automated Floor Plan Design"                     : u"Αυτόματη Διαρρύθμιση Κάτοψης",
-"Thanasis Stamos, Research/Teaching Personnel"    : u"Θανάσης Στάμος, Ερευνητικό/Διδακτικό Προσωπικό",
-"School of Civil Engineering, NTUA, "             : u"Σχολή Πολιτικών Μηχανικών, Ε.Μ.Π., ",
-"Floor plan width (m)"                            : u"Πλάτος κάτοψης",
-"Floor plan height (m)"                           : u"Ύψος κάτοψης",
-"FLOOR PLAN CONSTRAINTS:"                         : u"ΠΕΡΙΟΡΙΣΜΟΙ ΔΙΑΡΥΘΜΙΣΗΣ:",
-"Min number of rooms"                             : u"Ελάχιστος αριθμός δωματίων",
-"Max number of rooms"                             : u"Μέγιστος αριθμός δωματίων",
-"ROOM CONSTRAINTS:"                               : u"ΠΕΡΙΟΡΙΣΜΟΙ ΔΩΜΑΤΙΩΝ:",
-"Min room length - hard (m)"                      : u"Min μήκος δωματίων - αναγκαίο (m)",
-"Min room length - soft (m)"                      : u"Min μήκος δωματίων - ελαστικό (m)",
-"Max room length - soft (m)"                      : u"Max μήκος δωματίων - ελαστικό (m)",
-"Max room length - hard (m)"                      : u"Max μήκος δωματίων - αναγκαίο (m)",
-"Min room width - hard (m)"                       : u"Min πλάτος δωματίων - αναγκαίο (m)",
-"Min room width - soft (m)"                       : u"Min πλάτος δωματίων - ελαστικό (m)",
-"Max room width - soft (m)"                       : u"Max πλάτος δωματίων - ελαστικό (m)",
-"Max room width - hard (m)"                       : u"Max πλάτος δωματίων - αναγκαίο (m)",
-"PENALTY (ADVANCED):"                             : u"ΠΟΙΝΕΣ (ΓΙΑ ΠΡΟΧΩΡΗΜΕΝΟΥΣ):",
-"Number of rooms less(more) than min(max) (penalty/room)": u"Για περισσότερα(λιγότερα) δωμάτια από min(max) (ποινή/δωμάτιο)",
-"(absolute)"                                      : u"(απόλυτη)",
-"Room dimension less(more) than hard min(max) (penalty/m)": u"Για διάσταση δωματίου μεγαλύτερη(μικρότερη) από αναγκαίο min(max) (ποινή/m)",
-"(normalised)"                                    : u"(κανονικοποιημένη)",
-"Room dimension between soft and hard min(max) (penalty/m)": u"Για διάσταση δωματίου μεταξύ αναγκαίου και ελαστικού min(max) (ποινή/m)",
+"Mark &Region"                                    : u"Ξ£Ξ·ΞΌΞµΞ―Ο‰ΟƒΞ· Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚",
+"&Edit Region"                                    : u"Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ± Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚",
+"Automated Floor Plan Design Algorithms"          : u"Ξ‘Ξ»Ξ³ΟΟΞΉΞΈΞΌΞΏΞΉ Ξ‘Ο…Ο„ΟΞΌΞ±Ο„Ξ·Ο‚ Ξ”ΞΉΞ±ΟΟΟΞΈΞΌΞΉΟƒΞ·Ο‚ ΞΞ¬Ο„ΞΏΟΞ·Ο‚",
+"Automated Floor Plan Design"                     : u"Ξ‘Ο…Ο„ΟΞΌΞ±Ο„Ξ· Ξ”ΞΉΞ±ΟΟΟΞΈΞΌΞΉΟƒΞ· ΞΞ¬Ο„ΞΏΟΞ·Ο‚",
+"Thanasis Stamos, Research/Teaching Personnel"    : u"ΞΞ±Ξ½Ξ¬ΟƒΞ·Ο‚ Ξ£Ο„Ξ¬ΞΌΞΏΟ‚, Ξ•ΟΞµΟ…Ξ½Ξ·Ο„ΞΉΞΊΟ/Ξ”ΞΉΞ΄Ξ±ΞΊΟ„ΞΉΞΊΟ Ξ ΟΞΏΟƒΟ‰Ο€ΞΉΞΊΟ",
+"School of Civil Engineering, NTUA, "             : u"Ξ£Ο‡ΞΏΞ»Ξ® Ξ ΞΏΞ»ΞΉΟ„ΞΉΞΊΟΞ½ ΞΞ·Ο‡Ξ±Ξ½ΞΉΞΊΟΞ½, Ξ•.Ξ.Ξ ., ",
+"Floor plan width (m)"                            : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ ΞΊΞ¬Ο„ΞΏΟΞ·Ο‚",
+"Floor plan height (m)"                           : u"ΞΟΞΏΟ‚ ΞΊΞ¬Ο„ΞΏΟΞ·Ο‚",
+"FLOOR PLAN CONSTRAINTS:"                         : u"Ξ Ξ•Ξ΅Ξ™ΞΞ΅Ξ™Ξ£ΞΞΞ™ Ξ”Ξ™Ξ‘Ξ΅Ξ¥ΞΞΞ™Ξ£Ξ—Ξ£:",
+"Min number of rooms"                             : u"Ξ•Ξ»Ξ¬Ο‡ΞΉΟƒΟ„ΞΏΟ‚ Ξ±ΟΞΉΞΈΞΌΟΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½",
+"Max number of rooms"                             : u"ΞΞ­Ξ³ΞΉΟƒΟ„ΞΏΟ‚ Ξ±ΟΞΉΞΈΞΌΟΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½",
+"ROOM CONSTRAINTS:"                               : u"Ξ Ξ•Ξ΅Ξ™ΞΞ΅Ξ™Ξ£ΞΞΞ™ Ξ”Ξ©ΞΞ‘Ξ¤Ξ™Ξ©Ξ:",
+"Min room length - hard (m)"                      : u"Min ΞΌΞ®ΞΊΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - Ξ±Ξ½Ξ±Ξ³ΞΊΞ±Ξ―ΞΏ (m)",
+"Min room length - soft (m)"                      : u"Min ΞΌΞ®ΞΊΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - ΞµΞ»Ξ±ΟƒΟ„ΞΉΞΊΟ (m)",
+"Max room length - soft (m)"                      : u"Max ΞΌΞ®ΞΊΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - ΞµΞ»Ξ±ΟƒΟ„ΞΉΞΊΟ (m)",
+"Max room length - hard (m)"                      : u"Max ΞΌΞ®ΞΊΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - Ξ±Ξ½Ξ±Ξ³ΞΊΞ±Ξ―ΞΏ (m)",
+"Min room width - hard (m)"                       : u"Min Ο€Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - Ξ±Ξ½Ξ±Ξ³ΞΊΞ±Ξ―ΞΏ (m)",
+"Min room width - soft (m)"                       : u"Min Ο€Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - ΞµΞ»Ξ±ΟƒΟ„ΞΉΞΊΟ (m)",
+"Max room width - soft (m)"                       : u"Max Ο€Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - ΞµΞ»Ξ±ΟƒΟ„ΞΉΞΊΟ (m)",
+"Max room width - hard (m)"                       : u"Max Ο€Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ΄Ο‰ΞΌΞ±Ο„Ξ―Ο‰Ξ½ - Ξ±Ξ½Ξ±Ξ³ΞΊΞ±Ξ―ΞΏ (m)",
+"PENALTY (ADVANCED):"                             : u"Ξ ΞΞ™ΞΞ•Ξ£ (Ξ“Ξ™Ξ‘ Ξ Ξ΅ΞΞ§Ξ©Ξ΅Ξ—ΞΞ•ΞΞΞ¥Ξ£):",
+"Number of rooms less(more) than min(max) (penalty/room)": u"Ξ“ΞΉΞ± Ο€ΞµΟΞΉΟƒΟƒΟΟ„ΞµΟΞ±(Ξ»ΞΉΞ³ΟΟ„ΞµΟΞ±) Ξ΄Ο‰ΞΌΞ¬Ο„ΞΉΞ± Ξ±Ο€Ο min(max) (Ο€ΞΏΞΉΞ½Ξ®/Ξ΄Ο‰ΞΌΞ¬Ο„ΞΉΞΏ)",
+"(absolute)"                                      : u"(Ξ±Ο€ΟΞ»Ο…Ο„Ξ·)",
+"Room dimension less(more) than hard min(max) (penalty/m)": u"Ξ“ΞΉΞ± Ξ΄ΞΉΞ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ΄Ο‰ΞΌΞ±Ο„Ξ―ΞΏΟ… ΞΌΞµΞ³Ξ±Ξ»ΟΟ„ΞµΟΞ·(ΞΌΞΉΞΊΟΟΟ„ΞµΟΞ·) Ξ±Ο€Ο Ξ±Ξ½Ξ±Ξ³ΞΊΞ±Ξ―ΞΏ min(max) (Ο€ΞΏΞΉΞ½Ξ®/m)",
+"(normalised)"                                    : u"(ΞΊΞ±Ξ½ΞΏΞ½ΞΉΞΊΞΏΟ€ΞΏΞΉΞ·ΞΌΞ­Ξ½Ξ·)",
+"Room dimension between soft and hard min(max) (penalty/m)": u"Ξ“ΞΉΞ± Ξ΄ΞΉΞ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ΄Ο‰ΞΌΞ±Ο„Ξ―ΞΏΟ… ΞΌΞµΟ„Ξ±ΞΎΟ Ξ±Ξ½Ξ±Ξ³ΞΊΞ±Ξ―ΞΏΟ… ΞΊΞ±ΞΉ ΞµΞ»Ξ±ΟƒΟ„ΞΉΞΊΞΏΟ min(max) (Ο€ΞΏΞΉΞ½Ξ®/m)",
 
-"Select polygon enclosing city plan\n"            : u"Επιλογή πολυγώνου που περικλείει το ρυμοτομικό\n",
-"&Bio city plan"                                  : u"Βιοκλιματικό Ρυμοτομικό",
-"Bioclimatic City Plan Design"                    : u"Βιοκλιματικός Σχεδιασμός Ρυμοτομικού Σχεδίου Πόλης",
-"Preprocess"                                      : u"Προεπεξεργασία",
-"Bioclimatic City Plan Design Algorithms"         : u"Αλγόριθμοι Βιοκλιματικού Σχεδιασμού\nΡυμοτομικού Σχεδίου Πόλης",
-"CITY PLAN DEFINITION:"                           : u"ΚΑΘΟΡΙΣΜΟΣ ΡΥΜΟΤΟΜΙΚΟΥ ΣΧΕΔΙΟΥ",
-"Polygon enclosing\ncity plan defined?"           : u"Έχει καθοριστεί το πολύγωνο\nπου περικλείει το ρυμοτομικό;",
-"Define..."                                       : u"Καθορισμός...",
-"Preprocessing done?"                             : u"Έχει γίνει προεπεξεργασία;",
-"DTM defined?"                                    : u"Έχει γίνει ΨΜΕ;",
-"CITY BLOCK PARAMETERS:"                          : u"ΠΑΡΑΜΕΤΡΟΙ ΟΙΚΟΔΟΜΙΚΩΝ ΤΕΤΡΑΓΩΝΩΝ",
-"City block width (east-west):"                   : u"Πλάτος Ο.Τ. (ανατολή-δύση):",
-"Min width (m)"                                   : u"Ελάχιστο πλάτος (m)",
-"Max width (m)"                                   : u"Μέγιστο πλάτος (m)",
-"City block height (north-south) < width:"        : u"Ύψος Ο.Τ. (βοράς-νότος) < πλάτος:",
-"Min height (m)"                                  : u"Ελάχιστο ύψος (m)",
-"Max height (m)"                                  : u"Μέγιστο ύψος (m)",
-"Road width:"                                     : u"Πλάτος οδών:",
-"Apply bioclimatic constraints?"                  : u"Εφαρμογή βιοκλιματικών κριτηρίων;",
-"1 polygon enclosing the city plan must be selected": u"Πρέπει να επιλεγεί 1 πολύγωνο που περικλείει το ρυμοτομικό σχέδιο",
-"Multiple executions of the algorithm"            : u"Πολλαπλές εκτελέσεις του αλγόριθμου",
-"Import from file..."                             : u"Εισαγωγή απο αρχείο...",
+"Select polygon enclosing city plan\n"            : u"Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ο€ΞΏΞ»Ο…Ξ³ΟΞ½ΞΏΟ… Ο€ΞΏΟ… Ο€ΞµΟΞΉΞΊΞ»ΞµΞ―ΞµΞΉ Ο„ΞΏ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΟ\n",
+"&Bio city plan"                                  : u"Ξ’ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΟ Ξ΅Ο…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΟ",
+"Bioclimatic City Plan Design"                    : u"Ξ’ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΟΟ‚ Ξ£Ο‡ΞµΞ΄ΞΉΞ±ΟƒΞΌΟΟ‚ Ξ΅Ο…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ Ξ£Ο‡ΞµΞ΄Ξ―ΞΏΟ… Ξ ΟΞ»Ξ·Ο‚",
+"Preprocess"                                      : u"Ξ ΟΞΏΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±",
+"Bioclimatic City Plan Design Algorithms"         : u"Ξ‘Ξ»Ξ³ΟΟΞΉΞΈΞΌΞΏΞΉ Ξ’ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΞΏΟ Ξ£Ο‡ΞµΞ΄ΞΉΞ±ΟƒΞΌΞΏΟ\nΞ΅Ο…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ Ξ£Ο‡ΞµΞ΄Ξ―ΞΏΟ… Ξ ΟΞ»Ξ·Ο‚",
+"CITY PLAN DEFINITION:"                           : u"ΞΞ‘ΞΞΞ΅Ξ™Ξ£ΞΞΞ£ Ξ΅Ξ¥ΞΞΞ¤ΞΞΞ™ΞΞΞ¥ Ξ£Ξ§Ξ•Ξ”Ξ™ΞΞ¥",
+"Polygon enclosing\ncity plan defined?"           : u"ΞΟ‡ΞµΞΉ ΞΊΞ±ΞΈΞΏΟΞΉΟƒΟ„ΞµΞ― Ο„ΞΏ Ο€ΞΏΞ»ΟΞ³Ο‰Ξ½ΞΏ\nΟ€ΞΏΟ… Ο€ΞµΟΞΉΞΊΞ»ΞµΞ―ΞµΞΉ Ο„ΞΏ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΟ;",
+"Define..."                                       : u"ΞΞ±ΞΈΞΏΟΞΉΟƒΞΌΟΟ‚...",
+"Preprocessing done?"                             : u"ΞΟ‡ΞµΞΉ Ξ³Ξ―Ξ½ΞµΞΉ Ο€ΟΞΏΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±;",
+"DTM defined?"                                    : u"ΞΟ‡ΞµΞΉ Ξ³Ξ―Ξ½ΞµΞΉ Ξ¨ΞΞ•;",
+"CITY BLOCK PARAMETERS:"                          : u"Ξ Ξ‘Ξ΅Ξ‘ΞΞ•Ξ¤Ξ΅ΞΞ™ ΞΞ™ΞΞΞ”ΞΞΞ™ΞΞ©Ξ Ξ¤Ξ•Ξ¤Ξ΅Ξ‘Ξ“Ξ©ΞΞ©Ξ",
+"City block width (east-west):"                   : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ Ξ.Ξ¤. (Ξ±Ξ½Ξ±Ο„ΞΏΞ»Ξ®-Ξ΄ΟΟƒΞ·):",
+"Min width (m)"                                   : u"Ξ•Ξ»Ξ¬Ο‡ΞΉΟƒΟ„ΞΏ Ο€Ξ»Ξ¬Ο„ΞΏΟ‚ (m)",
+"Max width (m)"                                   : u"ΞΞ­Ξ³ΞΉΟƒΟ„ΞΏ Ο€Ξ»Ξ¬Ο„ΞΏΟ‚ (m)",
+"City block height (north-south) < width:"        : u"ΞΟΞΏΟ‚ Ξ.Ξ¤. (Ξ²ΞΏΟΞ¬Ο‚-Ξ½ΟΟ„ΞΏΟ‚) < Ο€Ξ»Ξ¬Ο„ΞΏΟ‚:",
+"Min height (m)"                                  : u"Ξ•Ξ»Ξ¬Ο‡ΞΉΟƒΟ„ΞΏ ΟΟΞΏΟ‚ (m)",
+"Max height (m)"                                  : u"ΞΞ­Ξ³ΞΉΟƒΟ„ΞΏ ΟΟΞΏΟ‚ (m)",
+"Road width:"                                     : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ ΞΏΞ΄ΟΞ½:",
+"Apply bioclimatic constraints?"                  : u"Ξ•Ο†Ξ±ΟΞΌΞΏΞ³Ξ® Ξ²ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΟΞ½ ΞΊΟΞΉΟ„Ξ·ΟΞ―Ο‰Ξ½;",
+"1 polygon enclosing the city plan must be selected": u"Ξ ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± ΞµΟ€ΞΉΞ»ΞµΞ³ΞµΞ― 1 Ο€ΞΏΞ»ΟΞ³Ο‰Ξ½ΞΏ Ο€ΞΏΟ… Ο€ΞµΟΞΉΞΊΞ»ΞµΞ―ΞµΞΉ Ο„ΞΏ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΟ ΟƒΟ‡Ξ­Ξ΄ΞΉΞΏ",
+"Multiple executions of the algorithm"            : u"Ξ ΞΏΞ»Ξ»Ξ±Ο€Ξ»Ξ­Ο‚ ΞµΞΊΟ„ΞµΞ»Ξ­ΟƒΞµΞΉΟ‚ Ο„ΞΏΟ… Ξ±Ξ»Ξ³ΟΟΞΉΞΈΞΌΞΏΟ…",
+"Import from file..."                             : u"Ξ•ΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ® Ξ±Ο€ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ...",
 
-"Bio a&zimuth"                                    : u"Βιοκλιματικός προσανατολισμός",
+"Bio a&zimuth"                                    : u"Ξ’ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΟΟ‚ Ο€ΟΞΏΟƒΞ±Ξ½Ξ±Ο„ΞΏΞ»ΞΉΟƒΞΌΟΟ‚",
 "This command computes statistics of the azimuth of roads (lines) for bioclimatic evaluation of city plans.":
-                                                    u"Η εντολή αυτή υπολογίζει στατιστικά στοιχεία για τη γωνία "\
-                                                    u"διεύθυνσης οδών (lines) για βιοκλιματική αποτίμηση ρυμοτομικού.",
-"Number of azimuth categories (enter=4): "        : u"Πλήθος κλάσεων που θα χωριστούν οι γωνίες διεύθυνσης (enter=4): ",
-"Select roads to process:"                        : u"Επιλογή οδών προς επεξεργασία:",
-"Draws an active rectangle which contains comments":u"Σχεδιάζει ενεργό ορθογώνιο που περιέχει σχόλια",
-"Edits the comments of an active rectangle"       : u"Επεξεργασία σχολίων ενός ενεργού ορθογωνίου",
-"&Floor plan"                                     : u"Διαρρύθμιση κάτοψης",
-"Creates automatically a floor plan"              : u"Αυτόματη δημιουργία διαρρύθμισης κάτοψης",
-"Creates bioclimatic oriented city plan"          : u"Δημιουργία βιοκλιματικοστρεφούς ρυμοτομικού",
+                                                    u"Ξ— ΞµΞ½Ο„ΞΏΞ»Ξ® Ξ±Ο…Ο„Ξ® Ο…Ο€ΞΏΞ»ΞΏΞ³Ξ―Ξ¶ΞµΞΉ ΟƒΟ„Ξ±Ο„ΞΉΟƒΟ„ΞΉΞΊΞ¬ ΟƒΟ„ΞΏΞΉΟ‡ΞµΞ―Ξ± Ξ³ΞΉΞ± Ο„Ξ· Ξ³Ο‰Ξ½Ξ―Ξ± "\
+                                                    u"Ξ΄ΞΉΞµΟΞΈΟ…Ξ½ΟƒΞ·Ο‚ ΞΏΞ΄ΟΞ½ (lines) Ξ³ΞΉΞ± Ξ²ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΞ® Ξ±Ο€ΞΏΟ„Ξ―ΞΌΞ·ΟƒΞ· ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ.",
+"Number of azimuth categories (enter=4): "        : u"Ξ Ξ»Ξ®ΞΈΞΏΟ‚ ΞΊΞ»Ξ¬ΟƒΞµΟ‰Ξ½ Ο€ΞΏΟ… ΞΈΞ± Ο‡Ο‰ΟΞΉΟƒΟ„ΞΏΟΞ½ ΞΏΞΉ Ξ³Ο‰Ξ½Ξ―ΞµΟ‚ Ξ΄ΞΉΞµΟΞΈΟ…Ξ½ΟƒΞ·Ο‚ (enter=4): ",
+"Select roads to process:"                        : u"Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® ΞΏΞ΄ΟΞ½ Ο€ΟΞΏΟ‚ ΞµΟ€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±:",
+"Draws an active rectangle which contains comments":u"Ξ£Ο‡ΞµΞ΄ΞΉΞ¬Ξ¶ΞµΞΉ ΞµΞ½ΞµΟΞ³Ο ΞΏΟΞΈΞΏΞ³ΟΞ½ΞΉΞΏ Ο€ΞΏΟ… Ο€ΞµΟΞΉΞ­Ο‡ΞµΞΉ ΟƒΟ‡ΟΞ»ΞΉΞ±",
+"Edits the comments of an active rectangle"       : u"Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ± ΟƒΟ‡ΞΏΞ»Ξ―Ο‰Ξ½ ΞµΞ½ΟΟ‚ ΞµΞ½ΞµΟΞ³ΞΏΟ ΞΏΟΞΈΞΏΞ³Ο‰Ξ½Ξ―ΞΏΟ…",
+"&Floor plan"                                     : u"Ξ”ΞΉΞ±ΟΟΟΞΈΞΌΞΉΟƒΞ· ΞΊΞ¬Ο„ΞΏΟΞ·Ο‚",
+"Creates automatically a floor plan"              : u"Ξ‘Ο…Ο„ΟΞΌΞ±Ο„Ξ· Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± Ξ΄ΞΉΞ±ΟΟΟΞΈΞΌΞΉΟƒΞ·Ο‚ ΞΊΞ¬Ο„ΞΏΟΞ·Ο‚",
+"Creates bioclimatic oriented city plan"          : u"Ξ”Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± Ξ²ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΞΏΟƒΟ„ΟΞµΟ†ΞΏΟΟ‚ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ",
 "Computes the azimuth of a road network to test bioclimatic design of city plan":
-                                                    u"Υπολογισμός της γωνίας διεύθυνσης ενός δικτύου οδών για "\
-                                                    u"να ελεγχθεί ο βιοκλιματικός σχεδιασμός ρυμοτομικού",
-"&Stairs"                                         : u"Σκάλα",
-"Computes and draws the plan view of a simple staircase": u"Υπολογισμός και σχεδίαση κάτοψης απλής σκάλας",
-"Step tread"                                      : u"Πάτημα",
-"Step rise"                                       : u"Ύψος (ριχτι)",
-"Stairs width"                                    : u"Πλάτος σκάλας",
-"Stairs total rise"                               : u"Συνολικό ύψος σκάλας",
-"Print scale"                                     : u"Κλίμακα εκτύπωσης",
-"Staircase position - lowest axis point (s=change Settings): ": u"Θέση σκάλας - κατώτατο σημείο άξονα (s=αλλαγή ρυθμίσεων): ",
-"Stair case settings"                             : u"Ρυθμίσεις σκάλας",
-"Compute"                                         : u"Υπολογισμός",
-"STAIRS SPECIFICATIONS:"                          : u"ΡΥΘΜΙΣΕΙΣ ΣΚΑΛΑΣ:",
-"STAIRS COMPUTED GEOMETRY:"                       : u"ΥΠΟΛΟΓΙΣΜΟΣ ΓΕΩΜΕΤΡΙΑΣ ΣΚΑΛΑΣ:",
-"Actual step rise"                                : u"Πραγματικό ύψος (ρίχτι)",
-"Stairs run"                                      : u"Οριζόντιο μήκος σκάλας",
-"Number of treads"                                : u"Πλήθος πατημάτων",
-"Number of rises"                                 : u"Πλήθος υψών",
-"PRINT SCALE:"                                    : u"ΚΛΙΜΑΚΑ ΕΚΤΥΠΩΣΗΣ:",
-"Print scale 1/"                                  : u"Κλίμακα εκτύπωσης 1/",
-"Staircase rotation angle (enter=0): "            : u"Γωνία περιστροφής σκάλας (enter=0): ",
-"T=%.2f"                                          : "π=%.2f",      #No unincode here
-"R=%.3f"                                          : "υ=%.3f",      #No unincode here
+                                                    u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΟΟ‚ Ο„Ξ·Ο‚ Ξ³Ο‰Ξ½Ξ―Ξ±Ο‚ Ξ΄ΞΉΞµΟΞΈΟ…Ξ½ΟƒΞ·Ο‚ ΞµΞ½ΟΟ‚ Ξ΄ΞΉΞΊΟ„ΟΞΏΟ… ΞΏΞ΄ΟΞ½ Ξ³ΞΉΞ± "\
+                                                    u"Ξ½Ξ± ΞµΞ»ΞµΞ³Ο‡ΞΈΞµΞ― ΞΏ Ξ²ΞΉΞΏΞΊΞ»ΞΉΞΌΞ±Ο„ΞΉΞΊΟΟ‚ ΟƒΟ‡ΞµΞ΄ΞΉΞ±ΟƒΞΌΟΟ‚ ΟΟ…ΞΌΞΏΟ„ΞΏΞΌΞΉΞΊΞΏΟ",
+"&Stairs"                                         : u"Ξ£ΞΊΞ¬Ξ»Ξ±",
+"Computes and draws the plan view of a simple staircase": u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΟΟ‚ ΞΊΞ±ΞΉ ΟƒΟ‡ΞµΞ΄Ξ―Ξ±ΟƒΞ· ΞΊΞ¬Ο„ΞΏΟΞ·Ο‚ Ξ±Ο€Ξ»Ξ®Ο‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚",
+"Step tread"                                      : u"Ξ Ξ¬Ο„Ξ·ΞΌΞ±",
+"Step rise"                                       : u"ΞΟΞΏΟ‚ (ΟΞΉΟ‡Ο„ΞΉ)",
+"Stairs width"                                    : u"Ξ Ξ»Ξ¬Ο„ΞΏΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚",
+"Stairs total rise"                               : u"Ξ£Ο…Ξ½ΞΏΞ»ΞΉΞΊΟ ΟΟΞΏΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚",
+"Print scale"                                     : u"ΞΞ»Ξ―ΞΌΞ±ΞΊΞ± ΞµΞΊΟ„ΟΟ€Ο‰ΟƒΞ·Ο‚",
+"Staircase position - lowest axis point (s=change Settings): ": u"ΞΞ­ΟƒΞ· ΟƒΞΊΞ¬Ξ»Ξ±Ο‚ - ΞΊΞ±Ο„ΟΟ„Ξ±Ο„ΞΏ ΟƒΞ·ΞΌΞµΞ―ΞΏ Ξ¬ΞΎΞΏΞ½Ξ± (s=Ξ±Ξ»Ξ»Ξ±Ξ³Ξ® ΟΟ…ΞΈΞΌΞ―ΟƒΞµΟ‰Ξ½): ",
+"Stair case settings"                             : u"Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚",
+"Compute"                                         : u"Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΞΌΟΟ‚",
+"STAIRS SPECIFICATIONS:"                          : u"Ξ΅Ξ¥ΞΞΞ™Ξ£Ξ•Ξ™Ξ£ Ξ£ΞΞ‘Ξ›Ξ‘Ξ£:",
+"STAIRS COMPUTED GEOMETRY:"                       : u"Ξ¥Ξ ΞΞ›ΞΞ“Ξ™Ξ£ΞΞΞ£ Ξ“Ξ•Ξ©ΞΞ•Ξ¤Ξ΅Ξ™Ξ‘Ξ£ Ξ£ΞΞ‘Ξ›Ξ‘Ξ£:",
+"Actual step rise"                                : u"Ξ ΟΞ±Ξ³ΞΌΞ±Ο„ΞΉΞΊΟ ΟΟΞΏΟ‚ (ΟΞ―Ο‡Ο„ΞΉ)",
+"Stairs run"                                      : u"ΞΟΞΉΞ¶ΟΞ½Ο„ΞΉΞΏ ΞΌΞ®ΞΊΞΏΟ‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚",
+"Number of treads"                                : u"Ξ Ξ»Ξ®ΞΈΞΏΟ‚ Ο€Ξ±Ο„Ξ·ΞΌΞ¬Ο„Ο‰Ξ½",
+"Number of rises"                                 : u"Ξ Ξ»Ξ®ΞΈΞΏΟ‚ Ο…ΟΟΞ½",
+"PRINT SCALE:"                                    : u"ΞΞ›Ξ™ΞΞ‘ΞΞ‘ Ξ•ΞΞ¤Ξ¥Ξ Ξ©Ξ£Ξ—Ξ£:",
+"Print scale 1/"                                  : u"ΞΞ»Ξ―ΞΌΞ±ΞΊΞ± ΞµΞΊΟ„ΟΟ€Ο‰ΟƒΞ·Ο‚ 1/",
+"Staircase rotation angle (enter=0): "            : u"Ξ“Ο‰Ξ½Ξ―Ξ± Ο€ΞµΟΞΉΟƒΟ„ΟΞΏΟ†Ξ®Ο‚ ΟƒΞΊΞ¬Ξ»Ξ±Ο‚ (enter=0): ",
+"T=%.2f"                                          : "Ο€=%.2f",      #No unincode here
+"R=%.3f"                                          : "Ο…=%.3f",      #No unincode here
 }
 Tarch = Translation(en2gr)
 #Tarch.thanLangSet("en", thancadconf.thanTranslateTo)

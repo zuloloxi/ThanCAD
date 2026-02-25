@@ -1,35 +1,32 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog fro the user to enter a color.
 It also has the routine to get the user defined colors from the config files.
 """
 
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from tkinter import Frame, Label, Button, Entry, BitmapImage, END, GROOVE
 from tkinter.colorchooser import askcolor
 from p_ggen import ThanStub as S, Pyos
@@ -88,7 +85,7 @@ class ThanColor(p_gtkwid.ThanDialog):
         w.grid(row=0, column=11)
 
         ic1 = 1
-        for jcol in xrange(0, 10):
+        for jcol in range(0, 10):
             thc = thanatt.thanAttCol(p_gcol.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
             but = Button(f, width=buwi, bd=1, bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
             but.grid(row=1, column=ic1, padx=buwi)
@@ -131,9 +128,11 @@ class ThanColor(p_gtkwid.ThanDialog):
         but = Button(f, text=str(thanvar.THANBYPARENT), bg="gold", activebackground="yellow",
             command=S(self.__updateChosen, str(thanvar.THANBYPARENT)))
         but.grid(row=1, column=1, sticky="we", padx=5)
+        p_gtkwid.correctForeground(but)    #Thanasis2024_06_29
         but = Button(f, text=str(thanvar.THANPERSONAL), bg="darkcyan", activebackground="cyan",
             command=S(self.__updateChosen, str(thanvar.THANPERSONAL)))
         but.grid(row=1, column=2, sticky="we", padx=5)
+        p_gtkwid.correctForeground(but)    #Thanasis2024_06_29
 
 
     def __userColors(self, fra, ir, ic, buwi):
@@ -161,8 +160,10 @@ class ThanColor(p_gtkwid.ThanDialog):
         f1.grid(row=2, column=1, columnspan=max((len(thancadconf.thanColUser), 1)), sticky="e")
         but = Button(f1, text="Nearest palette color", command=S(self.__nearest))
         but.grid(row=0, column=0, sticky="e")
+        p_gtkwid.correctForeground(but)    #Thanasis2024_06_29
         but = Button(f1, text="Define new...", command=S(self.__choosecol))
         but.grid(row=0, column=1, sticky="e")
+        p_gtkwid.correctForeground(but)    #Thanasis2024_06_29
 
 
     def __nearest(self):
@@ -182,9 +183,9 @@ class ThanColor(p_gtkwid.ThanDialog):
         w.grid(row=ir1, column=0, columnspan=25, sticky="w")
 
         ir1 += 1; blankim1 = self.thanAttsTk[2]
-        for i in list(xrange(18, 9, -2))+list(xrange(11, 20, 2)):
+        for i in list(range(18, 9, -2))+list(range(11, 20, 2)):
             ic1 = 0
-            for jcol in xrange(i, 230+i+1, 10):
+            for jcol in range(i, 230+i+1, 10):
                 thc = thanatt.thanAttCol(p_gcol.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
 #                but = Button(f, image=blankim1, width=10, height=8, # Blank image instead of blank text, so that button is arbitrarily small
                 but = Button(f, image=blankim1, width=14, height=8, # Blank image instead of blank text, so that button is arbitrarily small
@@ -207,6 +208,7 @@ class ThanColor(p_gtkwid.ThanDialog):
         w.grid(row=0, column=1, sticky="w")
         self.thanCol = Entry(f, width=12)
         self.thanCol.grid(row=0, column=2, sticky="w")
+        p_gtkwid.correctForeground(self.thanCol)    #Thanasis2024_06_29
         self.cbut = Button(f, width=buwi, bd=1, command=self.__updateChosen)
         self.cbut.grid(row=0, column=3, sticky="w", padx=buwi)
         self.thanColRGB = Label(f, text="")
@@ -252,8 +254,25 @@ class ThanColor(p_gtkwid.ThanDialog):
             butcol1 = but["bg"]
             but.destroy()
             butfont1.config(size=6)
+
+            #self.__class__.thanAttsTk = butfont1, butcol1, \
+            #                           BitmapImage(data=b'\0'*2) # A blank b/w image of size 2x2 pixels
+            #im2x2 = b'''#define 2x2_width 2
+            #            #define 2x2_height 2
+            #            static unsigned char 2x2_bits[] = {
+            #                0x03, 0x03 };'''
+            #Thanasis2024_06_29:the above creates a black dot in the image but it was a workaround for
+            #previous version of tkinter/tk: if the bitmap was completely empty (black), and you used it
+            #as the image of a button with background color, no color was shown.
+            #Today the bug (?) was fixed in tkinter/tk, and thus workaround is no longer necessary,
+            #and thus the code below
+            im2x2 = b'''#define 2x2_width 2
+                        #define 2x2_height 2
+                        static unsigned char 2x2_bits[] = {
+                            0x00, 0x00 };'''
             self.__class__.thanAttsTk = butfont1, butcol1, \
-                                       BitmapImage(data=b'\0'*2) # A blank b/w image of size 2x2 pixels
+                                       BitmapImage(data=im2x2) # A blank b/w image of size 2x2 pixels
+
 
     def __choosecol(self, *args):
         "Lets the user define a new TGB color."

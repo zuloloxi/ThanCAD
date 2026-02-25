@@ -2,10 +2,9 @@
 This module defines the common parts of dialogs in ThanCad.
 """
 
-from __future__ import print_function
 import tkinter
-try: from configparser import SafeConfigParser     #python3
-except: from ConfigParser import SafeConfigParser  #python2
+try: from configparser import SafeConfigParser     #python3.9
+except: from configparser import ConfigParser as SafeConfigParser  #python3.12
 import p_ggen
 from . import thantksimpledialog, thantkutila
 from . import thanwidstrans
@@ -125,10 +124,24 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
         return None
 
 
+    @staticmethod
+    def choosefg(win):
+        "Return blue or cyan, dependinf on the background color of Labels."
+        #make a dummy label to find background color, and correct foreground color
+        temp = tkinter.Label(win, text="xxx")
+        temp.grid()
+        win.update_idletasks()
+        col = thantkutila.blueorcyan(temp)
+        if col is None: col = "blue"  #If could not decide, then use blue as most GUIs have white background
+        temp.grid_forget()
+        temp.destroy()
+        return col
+
+
     def body(self, win):
-        "create the body of the dialog; delegate to other functions."
+        "Create the body of the dialog; delegate to other functions."
         self.thanWids = []
-        self.colfra = "blue"
+        self.colfra = self.choosefg(win)   #Choose Frame title color, depending on the background color of Labels
 #        self.option_add("*font", _fo)
         self.body2(win)
 
@@ -218,16 +231,18 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
         for (key,tit,wid,vld) in self.thanWids:
             v = getattr(vs, key)
             if type(v) == float or type(v) == int: v = str(v)
+            temp = wid["state"]
             wid.config(state=stat) # All widgets must be enabled..
             wid.thanSet(v)         # ..to change their values
+            wid.config(state=temp) # Restore state
 
 
     def ok2change(self, mes="Data modified, OK to abandon modifications?"):
         "Checks if data has been changed since last save and ask user to abanodon if so."
         ret = self.validate(strict=False)     # If anything is wrong, then let it be
         if self.result == self.thanValsSaved: return True
-#        print "result=", self.result.__dict__
-#        print "saved=", self.thanValsSaved.__dict__
+        #print("result=", self.result.__dict__)
+        #print("saved=", self.thanValsSaved.__dict__)
         a = thantkutila.thanGudAskOkCancel(self, self.T[mes], self.T["WARNING"])
         return bool(a)
 

@@ -1,11 +1,9 @@
-# -*- coding: iso-8859-7 -*-
-
 import os, sys
 from tkinter import *
 from tkinter.font import Font
 from p_gtkwid import *
 import help
-encoding="iso-8859-7"
+encoding="utf-8"
 
 
 ###############################################################################
@@ -80,14 +78,14 @@ class ThanMhkWin(ThanWinCom):
             return
         f = os.path.abspath(self.thanFilnam)
         dlines = runmhk(f)
-        tit = u"епитувгс ейтекесг пяоцяаллатос"
+        tit = u"н∙н═н≥н╓н╔н╖н≈нё н∙н н╓н∙н⌡н∙нён≈ н═н║н÷н⌠н║н▒н°н°н▒н╓н÷нё"
         if dlines[-1].strip() == tit:
             f = os.path.splitext(f)[0] + ".dxf"
             thanGudModalMessage(self, T["Drawing is saved in file "]+f, tit)
             return
-        tit = u"амепитувгс ейтекесг пяоцяаллатос"
+        tit = u"н▒н²н∙н═н≥н╓н╔н╖н≈нё н∙н н╓н∙н⌡н∙нён≈ н═н║н÷н⌠н║н▒н°н°н▒н╓н÷нё"
         if dlines[-1].strip() == tit:
-            if u"цяаллг" in dlines[0]:
+            if u"н⌠н║н▒н°н°н≈" in dlines[0]:
                 lin = int(dlines[0].split()[-1][:-1])
                 self.thanHighlit(lin)
                 thanGudModalMessage(self, "\n".join(dlines[:-2]), tit)
@@ -142,5 +140,5 @@ def runmhk(pref):
 if __name__ == "__main__":
     root = ThanMhkWinMain(title="FMHK 12.1.1", suffix=("MHK files", ".mhk"))
     if sys.platform == "win32":_tfont = Font(family="Courier New", size=10, weight=NORMAL)
-    else: _tfont = Font(family="Greekcourier", size=12, weight=NORMAL)
+    else: _tfont = Font(family="LiberationMono", size=10, weight=NORMAL)
     root.mainloop()

@@ -1,11 +1,8 @@
 "Ellipse related module."
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, cos, sin, atan2, sqrt, fabs
 from p_gnum import (array, matrixmultiply, transpose, inv, Float, eig, zeros,
                     LinAlgError, solve_linear_equations)
-from p_ggen import xfrangec
+from p_ggen import frangec
 from .var import thanNearx, lsmsolve
 from .varcon import thanThresholdx, PI2, PI05
 
@@ -17,7 +14,7 @@ def ellipse5Fit(x, y):
     that they define an ellipse.
     Radim Hal, Jan Flusser method.
     """
-    xy = zip(x,y)
+    xy = list(zip(x,y))
     D1 = array([(x1**2, x1*y1, y1**2) for (x1,y1) in xy]) # quadratic part of the design matrix
     D2 = array([(x1, y1, 1) for (x1,y1) in xy])           # linear part of the design matrix
     S1 = matrixmultiply(transpose(D1), D1)                # quadratic part of the scatter matrix
@@ -62,7 +59,7 @@ def ellipse4Fit(x, y):
     that they define an ellipse.
     Stamos method based on Radim Hal, Jan Flusser.
     """
-    xy = zip(x,y)
+    xy = list(zip(x,y))
     D1 = array([(x1**2, y1**2) for (x1,y1) in xy])        # quadratic part of the design matrix
     D2 = array([(x1, y1, 1) for (x1,y1) in xy])           # linear part of the design matrix
     S1 = matrixmultiply(transpose(D1), D1)                # quadratic part of the scatter matrix
@@ -112,7 +109,7 @@ def ellipse5Lsm(x, y):
     nunk = 5
     A = zeros((n, nunk), Float)
     B = zeros((n, ), Float)
-    for i in xrange(n):
+    for i in range(n):
         A[i, :] = x[i]*y[i], y[i]**2, x[i], y[i], 1.0
         B[i] = -x[i]**2
     #a = lsmLinDo(A, B)
@@ -138,7 +135,7 @@ def ellipse4Lsm(x, y):
     nunk = 4
     A = zeros((n, nunk), Float)
     B = zeros((n, ), Float)
-    for i in xrange(n):
+    for i in range(n):
         A[i, :] = y[i]**2, x[i], y[i], 1.0
         B[i] = -x[i]**2
 #    a = lsmLinDo(A, B)
@@ -155,7 +152,7 @@ def ellipse2Standard5(a):
     """Convert the ellipse representation from conic to standard form.
 
     conic form: F(x, y) = ax2 + bxy + cy2 + dx + ey + f  = 0
-    standard form: ((x-cx)/r1)^2 + ((y-cy)/r2)^2 = 1
+    standard form: ((x-cx)/r1)^2 + ((y-cy)/r2)^2 = 1   -> see ellips2line below
     """
     # get ellipse orientation
     try:
@@ -233,7 +230,7 @@ def ellipseLength(a, b):
     arp = v1
     oros = arp
     c = oros
-    for n in xrange(1, 10):
+    for n in range(1, 10):
         ar = arp + v2
         oros *= 5.0/144.0*ar/arp*r/n**2
         c += oros
@@ -280,7 +277,7 @@ def ellipse2Lineold(cx, cy, a, b, theta, dt=0.0):
     cosf = cos(theta)
     sinf = sin(theta)
     cs = []
-    for phi in xfrangec(0.0, PI2, dphi):
+    for phi in frangec(0.0, PI2, dphi):
         x = a*cos(phi)
         y = b*sin(phi)
         xt = x*cosf - y*sinf
@@ -293,8 +290,8 @@ def ellipse2Line(cx, cy, a, b, phia=0.0, phib=PI2, theta=0.0, dt=0.0):
     """Represent an elliptic arc between angles phia and phib, with straight line segments; dt refers to length units.
 
     standard form: ((x-cx)/a)^2 + ((y-cy)/b)^2 = 1
-    Note: phib should be bigger than phia or nothing will be returnd.
-    The anti-clockwise anges are positive. To plot an elliptic arc form 1.5pi to 0.5pi
+    Note: phib should be bigger than phia or nothing will be returned.
+    The anti-clockwise anges are positive. To plot an elliptic arc from 1.5pi to 0.5pi
     set phia=1.5pi and phib=0.5pi+2pi=2.5pi.
     """
     a = fabs(a)
@@ -318,7 +315,7 @@ def ellipse2Line(cx, cy, a, b, phia=0.0, phib=PI2, theta=0.0, dt=0.0):
     sinf = sin(theta)
     cs = []
     phis = []
-    for phi in xfrangec(phia, phib, dphi):
+    for phi in frangec(phia, phib, dphi):
         x = a*cos(phi)
         y = b*sin(phi)
         xt = x*cosf - y*sinf
@@ -326,6 +323,27 @@ def ellipse2Line(cx, cy, a, b, phia=0.0, phib=PI2, theta=0.0, dt=0.0):
         cs.append((cx+xt, cy+yt))
         phis.append(phi)
     return cs, phis
+
+
+
+def _ellipsen(ab, phia, phib, dt):
+    """Determine dphi and number of linear segments for line approximation of an allipse."
+
+    ab is the bigger of the semi axes."""
+    if thanNearx(ab, 0.0): return None, None        #Invalid ellipse
+    phiab = phib - phia                             #angle span of elliptic arc
+    if phiab < 0.0: return None, None               #Zero lengthed elliptic arc
+    if thanNearx(phiab*ab, 0.0): return None, None  #Zero lengthed elliptic arc
+    n16 = phiab/PI2 * 16.0               #a logical value of points: 16 points for full ellipse
+    dphi = dt/ab    #Approximate dphi based on a circle with radius the biggest of the semi-axes
+    if dt <= 0.0 or thanNearx(dphi, 0.0):
+        n = n16     #Something wrong with dt; use a logical value of points: 16 points for full ellipse
+    else:
+        n = max(phiab/dphi, n16/2.0)  #At least 8 points for a full ellipse
+    if n < 3.0: n = 3.0               #At least 3 points for any elliptic arc
+    dphi = phiab / n
+    print("****ellipse2Line: dphi=", dphi)
+    return n, dphi
 
 
 def circle3Lsm(x, y):
@@ -340,7 +358,7 @@ def circle3Lsm(x, y):
     nunk = 3
     A = zeros((n, nunk), Float)
     B = zeros((n, ), Float)
-    for i in xrange(n):
+    for i in range(n):
         A[i, :] = 2*x[i], 2*y[i], 1.0
         B[i] = x[i]**2+y[i]**2
     sol, ter = lsmsolve(A, B)

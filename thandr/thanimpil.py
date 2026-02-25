@@ -1,32 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the raster image element, based on Python Image Library.
 """
 
-from __future__ import print_function
 import os
 from math import fabs, cos, sin, atan2
 import p_gimage, p_gtkwid, p_gbmp, p_gtri
@@ -451,8 +450,9 @@ class ThanImage(ThanElement):
             if dpi < 2:
                 dpi = 0
                 why = "Resolution too low"
-        except ValueError as why:
+        except ValueError as e:
             dpi = 0
+            why = str(e)
         if dpi <= 0:
             proj[2].thanPrter("%s : %s" % (T["Could not determine image resolution (dpi)"], why))
             while True:
@@ -613,12 +613,19 @@ compute the corber points.
             cy = float(next(fr))
             fr.close()
         except StopIteration: raise IOError("Incomplete .tfw/.j2w file")
+
         fi = path(fi)
-        if fi.ext.lower() == ".j2w": ext = ".jp2"
-        else:                        ext = ".tif"
-        fi = fi.parent / fi.namebase + ext
-        if not fi.exists():
-            fi = fi.parent / fi.namebase + ext.upper()   #Support windows; yeah, windows "just" works
+        def checkifexists(exts):
+            for ext in exts:
+                fi2 = fi.parent / fi.namebase + ext
+                if fi2.exists(): break
+                fi2 = fi.parent / fi.namebase + ext.upper()   #Support windows; yeah, windows "just" works
+                if fi2.exists(): break
+            else:
+                raise ValueError("File {} (or .jp2 ) does not exist")
+            return fi2
+        if fi.ext.lower() == ".j2w": fi = checkifexists((".jp2", ".jpg"))
+        else:                        fi = checkifexists((".tif", ))
 
         im, terr = imageOpen(fi)
         if terr != "": raise ValueError(terr)
@@ -696,7 +703,8 @@ compute the corber points.
         xa, yb = than.ct.global2Locali(self.c1[0], self.c1[1])    # xa, ya is the upper left point of the image
         xb, ya = than.ct.global2Locali(self.c2[0], self.c2[1])    # xb, yb is the lower right point of the image
         if isinstance(self.image, p_gimage.ThanImageMissing):
-            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, dash=than.dash, tags=self.thanTags)     # Frame around image
+            w = than.tkThick
+            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, dash=than.dash, tags=self.thanTags, width=w)     # Frame around image
             than.thanImages.add(self)
             t = ThanText()
             h = (self.c2[0]-self.c1[0])/40.0
@@ -740,7 +748,8 @@ compute the corber points.
 #        item2 = than.dc.create_image(xa, yb+1, image=self.imagez, anchor="sw", tags=self.thanTags)  #Thanasis2010_02_27:"sw" has a bug so that we put yb+1
         item2 = than.dc.create_image(xa, ya, image=self.imagez, anchor="nw", tags=self.thanTags)
         if than.imageFrameOn:
-            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, dash=than.dash, tags=self.thanTags)     # Frame around image
+            w = than.tkThick
+            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, dash=than.dash, tags=self.thanTags, width=w)     # Frame around image
         than.thanImages.add(self)
         than.thanInfoPop()
 
@@ -849,7 +858,7 @@ compute the corber points.
             xb, ya = than.ct.global2Locali(xn2, yn2)    # xb, yb is the lower  right point of the image
             wx = xb - xa; wy = yb - ya
             assert wx>=0 and wy>=0, "Something wrong with coordinates systems!!!"
-            assert wx*wy <= 4000000, "Reduced (!!!) image too big: %.0f x %.0f" % (wx,wy)
+            assert wx*wy <= 10000000, "Reduced (!!!) image too big: %.0f x %.0f" % (wx,wy)
 
             dxp, dyp = self.size
             xp1, yp2 = self.thanGetPixCoor([xn1, yn1])
@@ -1069,5 +1078,3 @@ def thanGetRendering():
 
 
 thanSetRendering(0)     # Quick rendering of images
-if __name__ == "__main__":
-    print(__doc__)

@@ -1,8 +1,5 @@
-# -*- coding: iso-8859-7 -*-
-#from future.utils import iteritems
-from p_ggen.py23 import iteritems
 from math import hypot, atan2, pi
-from p_ggen import xfrange, doNothing
+from p_ggen import frange, doNothing
 from p_gmath import linint, dpt
 
 class ThanYpyka(object):
@@ -23,9 +20,9 @@ class ThanYpyka(object):
         "Compute all isocurves."
         if dhl is not None: self.dhl = dhl
         if apmax is not None: self.apOrioMax = apmax
-        assert len(self.ls) > 2, "Τουλάχιστον 3 σημεία χρειάζονται στην τριγωνοποίηση"
+        assert len(self.ls) > 2, "Ξ¤ΞΏΟ…Ξ»Ξ¬Ο‡ΞΉΟƒΟ„ΞΏΞ½ 3 ΟƒΞ·ΞΌΞµΞ―Ξ± Ο‡ΟΞµΞΉΞ¬Ξ¶ΞΏΞ½Ο„Ξ±ΞΉ ΟƒΟ„Ξ·Ξ½ Ο„ΟΞΉΞ³Ο‰Ξ½ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·"
 
-#-------ΒΡΕΣ ΜΕΓΙΣΤΟ ΚaΙ ΕΛaΧΙΣΤΟ ΥΨΟΜΕΤΡΟ
+#-------Ξ’Ξ΅Ξ•Ξ£ ΞΞ•Ξ“Ξ™Ξ£Ξ¤Ξ ΞaΞ™ Ξ•Ξ›aΞ§Ξ™Ξ£Ξ¤Ξ Ξ¥Ξ¨ΞΞΞ•Ξ¤Ξ΅Ξ
 
         for k in self.ls: break
         hmin = hmax = k[2]
@@ -34,10 +31,10 @@ class ThanYpyka(object):
             if h1 > hmax: hmax = h1
             if h1 < hmin: hmin = h1
 
-#-------Υπολόγισε καμπύλες
+#-------Ξ¥Ο€ΞΏΞ»ΟΞ³ΞΉΟƒΞµ ΞΊΞ±ΞΌΟ€ΟΞ»ΞµΟ‚
 
         h1 = int(hmin / dhl) * dhl
-        for his in xfrange(h1, hmax, dhl):
+        for his in frange(h1, hmax, dhl):
             pr = 1.0
             if his > (hmin+hmax)*0.5: pr = -1.0
             self.ypyka1(his, pr)
@@ -49,14 +46,14 @@ class ThanYpyka(object):
 
     def ypyka1(self, his, pr):
         "Compute all contour lines of elevation his."
-        self.prt('ΥΠΟΛΟΓΙΣΜΟΣ ΚΑΜΠΥΛΗΣ %.2f' % his)
+        self.prt('Ξ¥Ξ ΞΞ›ΞΞ“Ξ™Ξ£ΞΞΞ£ ΞΞ‘ΞΞ Ξ¥Ξ›Ξ—Ξ£ %.2f' % his)
 
-#-------ΒΡΕΣ ΣΗΜΕΙΟ aΠ' ΟΠΟΥ aΡΧΙΖΕΙ Η ΙΣΟΥΨΗΣ his
+#-------Ξ’Ξ΅Ξ•Ξ£ Ξ£Ξ—ΞΞ•Ξ™Ξ aΞ ' ΞΞ ΞΞ¥ aΞ΅Ξ§Ξ™Ξ–Ξ•Ξ™ Ξ— Ξ™Ξ£ΞΞ¥Ξ¨Ξ—Ξ£ his
 
         dhis = 0.01*self.dhl
         seen = self.seen
         seen.clear()
-        for karx, linksarx in iteritems(self.ls):
+        for karx, linksarx in self.ls.items():
             harx = karx[2]
             if harx == his: harx -= dhis
             if harx*pr > his*pr: continue
@@ -67,7 +64,7 @@ class ThanYpyka(object):
                 if hl*pr < his*pr: continue
                 if self.orioper(karx, larx): continue
                 icod = self.ypyka2(his, karx, iarx)
-                self.saveis(icod, self.cis)           # Σώσε καμπύλη
+                self.saveis(icod, self.cis)           # Ξ£ΟΟƒΞµ ΞΊΞ±ΞΌΟ€ΟΞ»Ξ·
 
 #==========================================================================
 
@@ -90,29 +87,29 @@ class ThanYpyka(object):
     def ypyka2(self, his, karx, iarx):
         "Compute 1 isocurve."
 
-#-------ΔΕΞΙΟ ΜΙΣΟ ΙΣΟΥΨΟΥΣ
+#-------Ξ”Ξ•ΞΞ™Ξ ΞΞ™Ξ£Ξ Ξ™Ξ£ΞΞ¥Ξ¨ΞΞ¥Ξ£
 
         del self.cis[:]
         icod = self.mishyp(his, karx, iarx, 1)
 
-#-------ΚΥΚΛΙΚΗ ΙΣΟΥΨΗΣ
+#-------ΞΞ¥ΞΞ›Ξ™ΞΞ— Ξ™Ξ£ΞΞ¥Ξ¨Ξ—Ξ£
 
         if icod < 0:
             if self.cis[0] != self.cis[-1]:
-#                assert 0, "Κυκλική ΙΣΟΥΨΗΣ ΔΕΝ ΕΧΕΙ ΙΔΙΕΣ ΑΡΧΙΚΕΣ ΚΑΙ ΤΕΛΙΚΕΣ ΣΥΝΤΕΤΑΓΜΕΝΕΣ: Πιθανό πρόβλημα στην κατασκευή των τριγώνων."
-                self.prt("Κυκλική ΙΣΟΥΨΗΣ ΔΕΝ ΕΧΕΙ ΙΔΙΕΣ ΑΡΧΙΚΕΣ ΚΑΙ ΤΕΛΙΚΕΣ ΣΥΝΤΕΤΑΓΜΕΝΕΣ: Πιθανό πρόβλημα στην κατασκευή των τριγώνων.")
+#                assert 0, "ΞΟ…ΞΊΞ»ΞΉΞΊΞ® Ξ™Ξ£ΞΞ¥Ξ¨Ξ—Ξ£ Ξ”Ξ•Ξ Ξ•Ξ§Ξ•Ξ™ Ξ™Ξ”Ξ™Ξ•Ξ£ Ξ‘Ξ΅Ξ§Ξ™ΞΞ•Ξ£ ΞΞ‘Ξ™ Ξ¤Ξ•Ξ›Ξ™ΞΞ•Ξ£ Ξ£Ξ¥ΞΞ¤Ξ•Ξ¤Ξ‘Ξ“ΞΞ•ΞΞ•Ξ£: Ξ ΞΉΞΈΞ±Ξ½Ο Ο€ΟΟΞ²Ξ»Ξ·ΞΌΞ± ΟƒΟ„Ξ·Ξ½ ΞΊΞ±Ο„Ξ±ΟƒΞΊΞµΟ…Ξ® Ο„Ο‰Ξ½ Ο„ΟΞΉΞ³ΟΞ½Ο‰Ξ½."
+                self.prt("ΞΟ…ΞΊΞ»ΞΉΞΊΞ® Ξ™Ξ£ΞΞ¥Ξ¨Ξ—Ξ£ Ξ”Ξ•Ξ Ξ•Ξ§Ξ•Ξ™ Ξ™Ξ”Ξ™Ξ•Ξ£ Ξ‘Ξ΅Ξ§Ξ™ΞΞ•Ξ£ ΞΞ‘Ξ™ Ξ¤Ξ•Ξ›Ξ™ΞΞ•Ξ£ Ξ£Ξ¥ΞΞ¤Ξ•Ξ¤Ξ‘Ξ“ΞΞ•ΞΞ•Ξ£: Ξ ΞΉΞΈΞ±Ξ½Ο Ο€ΟΟΞ²Ξ»Ξ·ΞΌΞ± ΟƒΟ„Ξ·Ξ½ ΞΊΞ±Ο„Ξ±ΟƒΞΊΞµΟ…Ξ® Ο„Ο‰Ξ½ Ο„ΟΞΉΞ³ΟΞ½Ο‰Ξ½.")
                 icod = 0
 
-#------ΑΡΙΣΤΕΡΟ ΜΙΣΟ ΙΣΟΥΨΟΥΣ
+#------Ξ‘Ξ΅Ξ™Ξ£Ξ¤Ξ•Ξ΅Ξ ΞΞ™Ξ£Ξ Ξ™Ξ£ΞΞ¥Ξ¨ΞΞ¥Ξ£
 
         else:
             self.cis.reverse()
-            del self.cis[-1]                                         # ΞΑΝΑΒΡΕΣ ΑΡΧΙΚΟ..
-            self.seen.remove(frozenset((karx, self.ls[karx][iarx]))) # ..ΣΗΜΕΙΟ
+            del self.cis[-1]                                         # ΞΞ‘ΞΞ‘Ξ’Ξ΅Ξ•Ξ£ Ξ‘Ξ΅Ξ§Ξ™ΞΞ..
+            self.seen.remove(frozenset((karx, self.ls[karx][iarx]))) # ..Ξ£Ξ—ΞΞ•Ξ™Ξ
             icod = self.mishyp(his, karx, iarx, -1)
             if icod == -1:
-#                assert 0, "ΙΣΟΥΨΗΣ Κατέληξε σε σημείο του εαυτού της: Πιθανό πρόβλημα στην κατασκευή των τριγώνων."
-                self.prt("ΙΣΟΥΨΗΣ Κατέληξε σε σημείο του εαυτού της: Πιθανό πρόβλημα στην κατασκευή των τριγώνων.")
+#                assert 0, "Ξ™Ξ£ΞΞ¥Ξ¨Ξ—Ξ£ ΞΞ±Ο„Ξ­Ξ»Ξ·ΞΎΞµ ΟƒΞµ ΟƒΞ·ΞΌΞµΞ―ΞΏ Ο„ΞΏΟ… ΞµΞ±Ο…Ο„ΞΏΟ Ο„Ξ·Ο‚: Ξ ΞΉΞΈΞ±Ξ½Ο Ο€ΟΟΞ²Ξ»Ξ·ΞΌΞ± ΟƒΟ„Ξ·Ξ½ ΞΊΞ±Ο„Ξ±ΟƒΞΊΞµΟ…Ξ® Ο„Ο‰Ξ½ Ο„ΟΞΉΞ³ΟΞ½Ο‰Ξ½."
+                self.prt("Ξ™Ξ£ΞΞ¥Ξ¨Ξ—Ξ£ ΞΞ±Ο„Ξ­Ξ»Ξ·ΞΎΞµ ΟƒΞµ ΟƒΞ·ΞΌΞµΞ―ΞΏ Ο„ΞΏΟ… ΞµΞ±Ο…Ο„ΞΏΟ Ο„Ξ·Ο‚: Ξ ΞΉΞΈΞ±Ξ½Ο Ο€ΟΟΞ²Ξ»Ξ·ΞΌΞ± ΟƒΟ„Ξ·Ξ½ ΞΊΞ±Ο„Ξ±ΟƒΞΊΞµΟ…Ξ® Ο„Ο‰Ξ½ Ο„ΟΞΉΞ³ΟΞ½Ο‰Ξ½.")
                 icod = 0
         return icod
 
@@ -132,30 +129,30 @@ class ThanYpyka(object):
         if hl == his: hl -= dhis
         edge = frozenset((k, l))
 
-#-------ΒΡΕΣ ΤΟΜΗ - ΠaΡΕ ΕΠΟΜΕΝΟ ΣΗΜΕΙΟ ΤΟΥ ΚΕΝΤΡΙΚΟΥ ΣΗΜΕΙΟΥ k
+#-------Ξ’Ξ΅Ξ•Ξ£ Ξ¤ΞΞΞ— - Ξ aΞ΅Ξ• Ξ•Ξ ΞΞΞ•ΞΞ Ξ£Ξ—ΞΞ•Ξ™Ξ Ξ¤ΞΞ¥ ΞΞ•ΞΞ¤Ξ΅Ξ™ΞΞΞ¥ Ξ£Ξ—ΞΞ•Ξ™ΞΞ¥ k
 
         while True:
             self.tomis(k, hk, l, hl, his)
             seen.add(edge)
             lp = l
-#-----------ΕΠΟΜΕΝΗ ΕΝΩΣΗ ΤΟΥ ΣΗΜΕΙΟΥ ksp(k)
+#-----------Ξ•Ξ ΞΞΞ•ΞΞ— Ξ•ΞΞ©Ξ£Ξ— Ξ¤ΞΞ¥ Ξ£Ξ—ΞΞ•Ξ™ΞΞ¥ ksp(k)
             i = (i + ibhm) % len(linksk)
             l = linksk[i]
-#-----------ΕΞΕΤΑΣΕ ΤΕΛΟΣ,ΚΥΚΛΟ
-            if self.xasma(k, l, lp, ibhm): return 0 # Υπάρχει χάσμα >=pi μεταξύ lp και l: τέλος περιοχής  #Thanasis2012_05_16
+#-----------Ξ•ΞΞ•Ξ¤Ξ‘Ξ£Ξ• Ξ¤Ξ•Ξ›ΞΞ£,ΞΞ¥ΞΞ›Ξ
+            if self.xasma(k, l, lp, ibhm): return 0 # Ξ¥Ο€Ξ¬ΟΟ‡ΞµΞΉ Ο‡Ξ¬ΟƒΞΌΞ± >=pi ΞΌΞµΟ„Ξ±ΞΎΟ lp ΞΊΞ±ΞΉ l: Ο„Ξ­Ξ»ΞΏΟ‚ Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚  #Thanasis2012_05_16
             hl = l[2]
             if hl == his: hl -= dhis
-            if lp not in self.ls[l]: return 0    # ΤΕΛΟΣ ΠΕΡΙΟΧΗΣ
+            if lp not in self.ls[l]: return 0    # Ξ¤Ξ•Ξ›ΞΞ£ Ξ Ξ•Ξ΅Ξ™ΞΞ§Ξ—Ξ£
             edge = frozenset((k, l))
-            if edge in seen:                     # ΕΧΕΙ ΗΔΗ ΒΡΕΘΕΙ (ΚΥΚΛΟΣ);
-                assert (hk-his) * (his-hl) >= 0.0, "Προηγουμένως είχε βρεθεί τομή. Τώρα όχι!"
+            if edge in seen:                     # Ξ•Ξ§Ξ•Ξ™ Ξ—Ξ”Ξ— Ξ’Ξ΅Ξ•ΞΞ•Ξ™ (ΞΞ¥ΞΞ›ΞΞ£);
+                assert (hk-his) * (his-hl) >= 0.0, "Ξ ΟΞΏΞ·Ξ³ΞΏΟ…ΞΌΞ­Ξ½Ο‰Ο‚ ΞµΞ―Ο‡Ξµ Ξ²ΟΞµΞΈΞµΞ― Ο„ΞΏΞΌΞ®. Ξ¤ΟΟΞ± ΟΟ‡ΞΉ!"
                 self.tomis(k, hk, l, hl, his)
                 return -1
             if (hk-his) * (his-hl) >= 0.0:
-                if self.orioper(k, l): return 0       # Οριο περιοχής
+                if self.orioper(k, l): return 0       # ΞΟΞΉΞΏ Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚
                 continue
 
-#-----------aΛΛaΓΗ ΚΕΝΤΡΙΚΟΥ ΣΗΜΕΙΟΥ Κ
+#-----------aΞ›Ξ›aΞ“Ξ— ΞΞ•ΞΞ¤Ξ΅Ξ™ΞΞΞ¥ Ξ£Ξ—ΞΞ•Ξ™ΞΞ¥ Ξ
 
             k = l
             hk = k[2]
@@ -164,25 +161,25 @@ class ThanYpyka(object):
             for i, l in enumerate(linksk):
                 if l == lp: break
             else:
-                assert 0, "Τέλος περιοχής: έπρεπε να είχε βρεθεί προηγουμένως!"
+                assert 0, "Ξ¤Ξ­Ξ»ΞΏΟ‚ Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚: Ξ­Ο€ΟΞµΟ€Ξµ Ξ½Ξ± ΞµΞ―Ο‡Ξµ Ξ²ΟΞµΞΈΞµΞ― Ο€ΟΞΏΞ·Ξ³ΞΏΟ…ΞΌΞ­Ξ½Ο‰Ο‚!"
             hl = l[2]
             if hl == his: hl -= dhis
             edge = frozenset((k, l))
-            if edge in seen:                     # ΕΧΕΙ ΗΔΗ ΒΡΕΘΕΙ (ΚΥΚΛΟΣ);
+            if edge in seen:                     # Ξ•Ξ§Ξ•Ξ™ Ξ—Ξ”Ξ— Ξ’Ξ΅Ξ•ΞΞ•Ξ™ (ΞΞ¥ΞΞ›ΞΞ£);
                 self.tomis(k, hk, l, hl, his)
                 return -1
-            assert (hk-his) * (his-hl) >= 0.0, "Έπρεπε να υπάρχει τομή!"
-            if self.orioper(k, l): return 0           # Οριο περιοχής
+            assert (hk-his) * (his-hl) >= 0.0, "ΞΟ€ΟΞµΟ€Ξµ Ξ½Ξ± Ο…Ο€Ξ¬ΟΟ‡ΞµΞΉ Ο„ΞΏΞΌΞ®!"
+            if self.orioper(k, l): return 0           # ΞΟΞΉΞΏ Ο€ΞµΟΞΉΞΏΟ‡Ξ®Ο‚
 
 #==========================================================================
 
     def tomis(self, k, hk, l, hl, his):
         "Find intersection and save it."
 
-#-------ΒΡΕΣ ΤΟΜΗ
+#-------Ξ’Ξ΅Ξ•Ξ£ Ξ¤ΞΞΞ—
 
         dh = hl - hk
-        assert dh != 0.0, "Αφού αφαιρείται 0.01*dhl, πώς βγήκαν ίδια;"
+        assert dh != 0.0, "Ξ‘Ο†ΞΏΟ Ξ±Ο†Ξ±ΞΉΟΞµΞ―Ο„Ξ±ΞΉ 0.01*dhl, Ο€ΟΟ‚ Ξ²Ξ³Ξ®ΞΊΞ±Ξ½ Ξ―Ξ΄ΞΉΞ±;"
         ca = list(k)
         ca[2] = hk
         cb = list(l)
@@ -191,6 +188,6 @@ class ThanYpyka(object):
             ct = [(a+b)*0.5 for a,b in zip(ca, cb)]
         else:
             ct = [linint(hk, a, hl, b, his) for a,b in zip(ca, cb)]
-#-------ΣΩΣΕ ΤΟΜΗ
+#-------Ξ£Ξ©Ξ£Ξ• Ξ¤ΞΞΞ—
 
         self.cis.append(ct)

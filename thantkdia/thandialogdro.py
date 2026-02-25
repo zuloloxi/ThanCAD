@@ -1,32 +1,31 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter the draw order of a layer.
 """
 
-from __future__ import print_function
 from tkinter import Tk, Frame, Label, Button, Entry, GROOVE, END
 from p_ggen import ThanStub as S
 import p_gtkwid
@@ -54,12 +53,13 @@ class ThanDro(p_gtkwid.ThanDialog):
         w = Frame(f, width=5); w.grid(row=0, column=0)
         w = Label(f, text=" Special Draw Orders")
         w.grid(row=0, column=1, columnspan=2, sticky="w")
+        p_gtkwid.correctForeground(w)
         w = Frame(f, width=5); w.grid(row=0, column=3)
 
-        but = Button(f, text=str(thanvar.THANBYPARENT), bg="gold", activebackground="yellow",
+        but = p_gtkwid.ThanButton(f, text=str(thanvar.THANBYPARENT), bg="gold", activebackground="yellow",
             command=S(self.__updateChosen, str(thanvar.THANBYPARENT)))
         but.grid(row=1, column=1, sticky="we", padx=5)
-        but = Button(f, text=str(thanvar.THANPERSONAL), bg="darkcyan", activebackground="cyan",
+        but = p_gtkwid.ThanButton(f, text=str(thanvar.THANPERSONAL), bg="darkcyan", activebackground="cyan",
             command=S(self.__updateChosen, str(thanvar.THANPERSONAL)))
         but.grid(row=1, column=2, sticky="we", padx=5)
 
@@ -70,7 +70,8 @@ class ThanDro(p_gtkwid.ThanDialog):
 
         w = Label(f, text="Draw Order:")
         w.grid(row=0, column=1, sticky="w")
-        self.thanCol = Entry(f, width=12)
+        p_gtkwid.correctForeground(w)
+        self.thanCol = p_gtkwid.ThanEntry(f, width=12)
         self.thanCol.grid(row=0, column=2, sticky="w")
 
         self.__updateChosen(self.__val)

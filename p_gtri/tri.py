@@ -1,12 +1,9 @@
-# -*- coding: iso-8859-7 -*-
-#from future.utils import iteritems
-#from past.builtins import xrange
-from p_ggen.py23 import xrange, iteritems
 import bisect, itertools
 from math import pi, atan2, hypot
 from p_gmath import dpt, thanSegSeguw
-from p_ggen import prg
+import p_gimdxf, p_ggen
 from . import ypyka
+
 
 class ThanLinks(set):
     "A set with ordered iteration."
@@ -63,8 +60,9 @@ class ThanLinksdelegate(object):
 class ThanTri(object):
     "Thanasis triangulation."
 
-    def __init__(self):
+    def __init__(self, prt=p_ggen.prg):
         "Make sure that the points are unique."
+        self.prt = prt
         self.clear()
 
 
@@ -209,7 +207,7 @@ class ThanTri(object):
         yc /= 3
         self.hull = [(dpt(atan2(c[1]-yc, c[0]-xc)), c) for d,c in self.hull]
         self.hull.sort()
-        for i in xrange(3):
+        for i in range(3):
             self.link(self.hull[i-1][1], self.hull[i][1])
         dxy = [((c[0]-xc)**2+(c[1]-yc)**2, c) for d,c in itertools.islice(dxy, 3, None)]
         dxy.sort()
@@ -265,11 +263,11 @@ class ThanTri(object):
             ci = linksor[i]
             cj = linksor[j]
             if cj not in self.ls[ci]:
-                print("Hit boundary of triangulation.")
+                self.prt("Hit boundary of triangulation.")
                 return
             caa = self.diamopposed(cor, ci, cj)
             if caa is None:
-                print("Dead End!")
+                self.prt("Dead End!")
 #                vis(*chs)
                 return
             ct = thanSegSeguw(cor, caa, ci, cj)
@@ -277,7 +275,7 @@ class ThanTri(object):
 #                print("Non convex quadrilateral found")
                 ct = thanSegSeguw(cor, cb, ci, cj)
                 if ct is None:
-                    print("There should be an intersection!")
+                    self.prt("There should be an intersection!")
 #                    vis(*chs)
                     return
                 u, _ = ct
@@ -316,7 +314,7 @@ class ThanTri(object):
 
     def iteredges(self):
         "Iterate through the edges of the triangulation."
-        a = (frozenset((j,k)) for j,ks in iteritems(self.ls) for k in ks)
+        a = (frozenset((j,k)) for j,ks in self.ls.items() for k in ks)
         a = frozenset(a)
         for jk in a:
             yield tuple(jk)
@@ -326,12 +324,13 @@ class ThanTri(object):
         "Iterate through the triangles of the triangulation."
         apMaxEn2 = apmax**2
         seen = set()
-        for ca, linksa in iteritems(self.ls):
+        for ca, linksa in self.ls.items():
             if ca in self.xyapeira: continue                # throw Infinite points out
+            if len(linksa) <= 0: continue   #Thanasis2022_08_14: Some .tri files have points with no links (read by readtri)
             cb = linksa[0]
             bigKb = (cb[0]-ca[0])**2 + (cb[1]-ca[1])**2 > apMaxEn2
-            for ib in xrange(len(linksa)):
-                ic = (ib + 1) % len(linksa)                 ### ÐÑÏÓÏ×Ç: ÍÁ ÌÇÍ ÕÐÁÑ×ÅÉ ÁÓÕÍÅ×ÅÉÁ
+            for ib in range(len(linksa)):
+                ic = (ib + 1) % len(linksa)                 ### Î Î¡ÎŸÎ£ÎŸÎ§Î—: ÎÎ‘ ÎœÎ—Î Î¥Î Î‘Î¡Î§Î•Î™ Î‘Î£Î¥ÎÎ•Î§Î•Î™Î‘
                 cc = linksa[ic]
                 bigKc = (cc[0]-ca[0])**2 + (cc[1]-ca[1])**2 > apMaxEn2
                 discont = cc not in self.ls[cb]
@@ -384,15 +383,36 @@ class ThanTri(object):
             ca = list(c[:3])
             while len(ca) < 3: ca.append(0.0)
             px, py, pz = p.project(ca)
-            px = px + 1                  # ÌåôáôñïðÞ óå óõíôåôáãìÝíåò DVP
-            py = hphoto - py             # ôéò ïðïßåò áíáìÝíåé ôï ortho
+            px = px + 1                  # ÎœÎµÏ„Î±Ï„ÏÎ¿Ï€Î® ÏƒÎµ ÏƒÏ…Î½Ï„ÎµÏ„Î±Î³Î¼Î­Î½ÎµÏ‚ DVP
+            py = hphoto - py             # Ï„Î¹Ï‚ Î¿Ï€Î¿Î¯ÎµÏ‚ Î±Î½Î±Î¼Î­Î½ÎµÎ¹ Ï„Î¿ ortho
             fw.write(form1 % (self.aa[c], ca[0], ca[1], ca[2], px, py))
             for ca in self.ls[c]:
                 fw.write(form2 % iaa[ca])
             fw.write("$\n")
 
 
-    apnames = frozenset(('####ÊÁ####', '####ÊÄ####', '####ÐÄ####', '####ÐÁ####'))
+    apnames = frozenset(('####ÎšÎ‘####', '####ÎšÎ”####', '####Î Î”####', '####Î Î‘####'))
+
+
+    @staticmethod
+    def from3dfaces(fr, prt=p_ggen.prg):
+        "Create a tri object from a triangulation saved as triangular 3d faces in a dxf file."
+        tri = ThanTri(prt)
+        tri.clear()
+        dr = ThanDr3dface(tri, ("*",), prt=prt)
+        p_gimdxf.thanImportDxf(fr, dr)
+        del dr
+        tri.sortlinks()
+        return tri
+
+
+    @staticmethod
+    def fromtri(fr, prt=p_ggen.prg):
+        "Reads the triangulation from a tri file; it sorts the links."
+        tri = ThanTri(prt)
+        tri.readtri(fr)
+        return tri
+
 
     def readtri(self, fr):
         "Reads the triangulation from a tri file; it sorts the links."
@@ -410,25 +430,28 @@ class ThanTri(object):
                 x1 = float(dline[10:25])
                 y1 = float(dline[25:40])
                 z1 = float(dline[40:55])
-            except ValueError:
-                prg("Syntax error at line %d of tri file." % line)
-                raise
+            except ValueError as e:
+                raise ValueError("Syntax error at line %d of tri file:\n%s" % (line, e))
             c1 = (x1, y1, z1)
             xy[i] = c1
             self.aa[c1] = a1
             if a1 in self.apnames: self.xyapeira.add(c1)
             links1 = ls[c1] = []
+            jmax = (0, None, None)
             for dline in it:
                 line += 1
                 if dline.rstrip() == "$": break
                 try:
                     j = int(dline[:10])
                     if j < 1: raise ValueError("Invalid link")
-                except ValueError:
-                    prg("Syntax error/bad value at line %d of tri file." % line)
-                    raise
+                    if j > jmax[0]: jmax = (j, i+1, line)
+                except ValueError as e:
+                    raise ValueError("Syntax error/bad value at line %d of tri file:\n%s" % (line, e))
                 links1.append(j-1)
-        for i in xrange(len(xy)):
+        if jmax[0] > i+1:
+            terr= "Error at line {} of tri file:".format(jmax[2]) #Thanasis2018_06_26
+            raise ValueError("{}\nPoint {} links to point {}, but there are only {} points!".format(terr, jmax[1], jmax[0], i+1))
+        for i in range(len(xy)):
             c1 = xy[i]
             links1 = self.ls[c1] = ThanLinks()
             for j in ls[c1]: links1.add(xy[j])
@@ -450,7 +473,7 @@ class ThanTri(object):
             fw.writeln("$")
 
 
-    def thanImpThc1(self, fr, ver):
+    def thanImpThc1(self, fr, ver, than):
         "Reads the triangulation from a .thc file; it sorts the links."
         tend = "</" + self.thanObjectName + ">"
         self.clear()
@@ -474,7 +497,7 @@ class ThanTri(object):
                 if j < 1: raise ValueError("Invalid link")
                 links1.append(j-1)
         fr.unread()
-        for i in xrange(len(xy)):
+        for i in range(len(xy)):
             c1 = xy[i]
             links1 = self.ls[c1] = ThanLinks()
             for j in ls[c1]: links1.add(xy[j])
@@ -485,14 +508,14 @@ class ThanTri(object):
     def apeira(self):
         "Add infinite points to make a convex quadrilateral."
 
-#-------Âñåò xmin,xmax,ymin,ymax
+#-------Î’ÏÎµÏ‚ xmin,xmax,ymin,ymax
 
         xmin = min(c[0] for c in self.xy)
         xmax = max(c[0] for c in self.xy)
         ymin = min(c[1] for c in self.xy)
         ymax = max(c[1] for c in self.xy)
 
-#-------Äéüñèùóå xmin,xmax,ymin,ymax Ýôóé þóôå íá åßíáé ðéï ìáêñéÜ
+#-------Î”Î¹ÏŒÏÎ¸Ï‰ÏƒÎµ xmin,xmax,ymin,ymax Î­Ï„ÏƒÎ¹ ÏŽÏƒÏ„Îµ Î½Î± ÎµÎ¯Î½Î±Î¹ Ï€Î¹Î¿ Î¼Î±ÎºÏÎ¹Î¬
 
         dymax = (xmax - xmin) * 1.0e-1 + 1.0
         if dymax < 500.0: dymax = 500.0
@@ -504,34 +527,34 @@ class ThanTri(object):
         ymax = ymax + dymax
         dymax = dymax * 0.5
 
-#-------Ðñüóèåóå "Üðåéñá óçìåßá" ðïõ ó÷çìáôßæïõí ðåñéãåãñáììÝíï êõñôü
-#       ôåôñÜðëåõñï. Åôóé áðïöåýãïõìå bug óôï ðñüãñáììá triangle
-#       êáé âãÜæïõìå áðïôåëÝóìáôá óõìâáôÜ ìå ôï ðñüãñáììá deltri
+#-------Î ÏÏŒÏƒÎ¸ÎµÏƒÎµ "Î¬Ï€ÎµÎ¹ÏÎ± ÏƒÎ·Î¼ÎµÎ¯Î±" Ï€Î¿Ï… ÏƒÏ‡Î·Î¼Î±Ï„Î¯Î¶Î¿Ï…Î½ Ï€ÎµÏÎ¹Î³ÎµÎ³ÏÎ±Î¼Î¼Î­Î½Î¿ ÎºÏ…ÏÏ„ÏŒ
+#       Ï„ÎµÏ„ÏÎ¬Ï€Î»ÎµÏ…ÏÎ¿. Î•Ï„ÏƒÎ¹ Î±Ï€Î¿Ï†ÎµÏÎ³Î¿Ï…Î¼Îµ bug ÏƒÏ„Î¿ Ï€ÏÏŒÎ³ÏÎ±Î¼Î¼Î± triangle
+#       ÎºÎ±Î¹ Î²Î³Î¬Î¶Î¿Ï…Î¼Îµ Î±Ï€Î¿Ï„ÎµÎ»Î­ÏƒÎ¼Î±Ï„Î± ÏƒÏ…Î¼Î²Î±Ï„Î¬ Î¼Îµ Ï„Î¿ Ï€ÏÏŒÎ³ÏÎ±Î¼Î¼Î± deltri
 
         for add in self.xy: break
         add = add[2:]
         s = []
         c = (xmin, ymin) + add
         s.append(c)
-        self.aa[c] = '####ÊÁ####'
+        self.aa[c] = '####ÎšÎ‘####'
 
         c = (xmax, ymin) + add
         s.append(c)
-        self.aa[c] = '####ÊÄ####'
+        self.aa[c] = '####ÎšÎ”####'
 
         c = (xmax, ymax-dymax) + add
         s.append(c)
-        self.aa[c] = '####ÐÄ####'           #Ôï -dymax åîáóöáëßæåé ãùíßá äéåõèýíóåùò  < 0
+        self.aa[c] = '####Î Î”####'           #Î¤Î¿ -dymax ÎµÎ¾Î±ÏƒÏ†Î±Î»Î¯Î¶ÎµÎ¹ Î³Ï‰Î½Î¯Î± Î´Î¹ÎµÏ…Î¸ÏÎ½ÏƒÎµÏ‰Ï‚  < 0
 
         c = (xmin, ymax) + add
         s.append(c)
-        self.aa[c] = '####ÐÁ####'
+        self.aa[c] = '####Î Î‘####'
 
         for c in s:
             self.xyapeira.add(c)
         self.xy.extend(s)
 
-#-------Ðñüóèåóå ôéò ðëåõñÝò ôïõ ôåôñáðëåýñïõ óôéò break lines
+#-------Î ÏÏŒÏƒÎ¸ÎµÏƒÎµ Ï„Î¹Ï‚ Ï€Î»ÎµÏ…ÏÎ­Ï‚ Ï„Î¿Ï… Ï„ÎµÏ„ÏÎ±Ï€Î»ÎµÏÏÎ¿Ï… ÏƒÏ„Î¹Ï‚ break lines
 
 #        call erInc1 (nBrk, MSYNT, 0, 'break lines')
 #        ke1(nBrk) = nSYnt - 3
@@ -587,9 +610,49 @@ class ThanTri(object):
         vis(ch)
 
 
+class ThanDr3dface(p_gimdxf.ThanDrWarn):
+    """A class which imports 3d faces."""
+
+    def __init__(self, tri, laykno=(), **kw):
+        "Pass the tri object to the class."
+        super().__init__(laykno, **kw)
+        self.tri = tri
+
+
+    def dxf3dface   (self, xx, yy, zz, lay, handle, col):
+        "Get 3d face if it is in known layers."
+        lay = lay.lower()
+        if self.isLayerKnown(lay):
+            self.process3dface(xx, yy, zz, lay, handle, col)
+        else:
+            self.warnObj(lay, self.FACE3D)
+
+
+    def process3dface(self, xx, yy, zz, lay, handle, col):
+        """Add the sides of the triangle as links to the tri object.
+
+        Note that if there is a gap (Ï‡Î¬ÏƒÎ¼Î±) between 2 links of a point, this is
+        taken into account, in ypyka.ThanYpyka() which calculates the contours."""
+        cc = list(zip(xx, yy, zz))
+        if len(cc) > 3:
+            if cc[3] != cc[2]:
+                for cca in cc: self.prt(str(cca))
+                terr = "Found 3d face which is not triangle: x1=%.3f  y1=%.3f z1=%.3f ... in layer=%s" % (cc[0][0], cc[0][1], cc[0][2], lay)
+                raise p_ggen.ThanImportError(terr)
+        if cc[0] == cc[1] or cc[0] == cc[2] or cc[1] == cc[2]:
+            self.prt("Degenerate triangle ignored in layer={}:".format(lay), "can1")
+            self.prt("    x1=%.3f  y1=%.3f z1=%.3f" % (cc[0][0], cc[0][1], cc[0][2]))
+            self.prt("    x2=%.3f  y2=%.3f z2=%.3f" % (cc[1][0], cc[1][1], cc[1][2]))
+            self.prt("    x3=%.3f  y3=%.3f z3=%.3f" % (cc[2][0], cc[2][1], cc[2][2]))
+            return
+        self.tri.link(cc[0], cc[1])
+        self.tri.link(cc[0], cc[2])
+        self.tri.link(cc[1], cc[2])
+
+
 def vis1(t, ch, brk=()):
     "Adds all the edges to a ThanChart."
-    a = (frozenset((j,k)) for j,ks in iteritems(t.ls) for k in ks)
+    a = (frozenset((j,k)) for j,ks in t.ls.items() for k in ks)
     a = frozenset(a)
     try:    t.xc
     except: pass
@@ -610,12 +673,12 @@ def vis1(t, ch, brk=()):
 def testTriRan():
     "Tests the triangulation and the break lines with random points."
     n = 200
-    for i in xrange(2, 3):
+    for i in range(2, 3):
         print("try", i)
         r = random.Random(i)
         u = r.uniform
         print("generating points..")
-        ps = [(None, u(0,10000), u(0,10000), -123.456) for i in xrange(n)]
+        ps = [(None, u(0,10000), u(0,10000), -123.456) for i in range(n)]
 
         print("Creating triangulation..")
         t = ThanTri()
@@ -646,7 +709,7 @@ def testlinks():
     print("object sorted:", a)
     print("------------------------------------------------------")
     print("indexing:")
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         print("a[", i, "]=", a[i])
 
 

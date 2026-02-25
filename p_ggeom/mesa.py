@@ -1,4 +1,3 @@
-from __future__ import print_function
 from math import fabs
 from p_ggen import iterby2
 import p_gmath, p_gvarcom

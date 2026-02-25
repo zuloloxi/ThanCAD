@@ -1,4 +1,3 @@
-#from builtins import object
 import p_ggen
 from . import openfile, opgui
 Tgui = p_ggen.Tgui
@@ -73,6 +72,21 @@ class File1(object):
     def unre1(self):
         "Unread the previous line."
         self.isSavedf = True
+
+
+    def wr1(self, dline):
+        "Write data line to file append a newline, exceptions are not handled."
+        self.fr.write("{}\n".format(dline))
+        self.linesf += 1
+
+
+    def wr1ee(self, dline):
+        "Write data line to file append a newline, stop with message if error."
+        try:
+            self.fr.write("{}\n".format(dline))
+        except Exception as e:
+            self.er1s("%s" % (e,))
+        self.linesf += 1
 
 
     def wa1(self, mes, tags="can1"):

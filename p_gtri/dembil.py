@@ -1,5 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-from __future__ import print_function
 """
 10/2/2013
 This module reads an ESPRI .hdr DEM (also known as bil) and makes a ThanDEMusgs
@@ -21,7 +19,7 @@ try:
     import osgeo.gdal as gdal
 except ImportError:
     gdal = None
-import p_ggen
+import p_ggen, p_gnum
 from .demusgs import ThanDEMusgs
 from .demsrtm import ThanDEMsrtm
 
@@ -57,9 +55,7 @@ class ThanDEMbil(ThanDEMusgs):
 
         band = dataset.GetRasterBand(1)
         # We need to nodata value for our MaskedArray later.
-
-        self.GDAL_NODATA = band.GetNoDataValue()
-        print("nodata=", self.GDAL_NODATA)
+        self.GDAL_NODATA = decipherNodata(band, self.nodatadef)
         # Load the entire dataset into one numpy array.
         image = band.ReadAsArray(0, 0, band.XSize, band.YSize)
         # Close the dataset.
@@ -67,16 +63,17 @@ class ThanDEMbil(ThanDEMusgs):
         self.nxcols, self.nyrows = band.XSize, band.YSize
 
         self.filnam = p_ggen.path(filnam).abspath()
-        self.im = image
+        #self.im = image
+        self.im = p_gnum.num2im(image)  #Thanasis2018_10_06
         self.xymma[:] = self.X0, self.Y0-self.DY*self.nyrows, self.X0+self.DX*self.nxcols, self.Y0 #WARNING: xymma must be valid node coordinates
         self.thanCentroidCompute()
         return True, ""
 
-    def getpixel(self, jx, iy):
+    def getpixelxx(self, jx, iy):     #Thanasis2018_10_06
         "Return the pixel value"
         return self.im[iy, jx]
 
-    def than2Num(self):
+    def than2Numxx(self):     #Thanasis2018_10_06
         "Return the DEM as a numpy array."
 #        return self.im.transpose()
         return self.im
@@ -120,9 +117,7 @@ class ThanDEMbilc(ThanDEMsrtm):
 
         band = dataset.GetRasterBand(1)
         # We need to nodata value for our MaskedArray later.
-
-        self.GDAL_NODATA = band.GetNoDataValue()
-        print("nodata=", self.GDAL_NODATA)
+        self.GDAL_NODATA = decipherNodata(band, self.nodatadef)
         # Load the entire dataset into one numpy array.
         image = band.ReadAsArray(0, 0, band.XSize, band.YSize)
         # Close the dataset.
@@ -130,16 +125,29 @@ class ThanDEMbilc(ThanDEMsrtm):
         self.nxcols, self.nyrows = band.XSize, band.YSize
 
         self.filnam = p_ggen.path(filnam).abspath()
-        self.im = image
+        #self.im = image
+        self.im = p_gnum.num2im(image)  #Thanasis2018_10_06
         self.xymma[:] = self.X0, self.Y0-self.DY*self.nyrows, self.X0+self.DX*self.nxcols, self.Y0 #WARNING: xymma must be valid node coordinates
         self.thanCentroidCompute()
         return True, ""
 
-    def getpixel(self, jx, iy):
+
+
+    def getpixelxx(self, jx, iy):     #Thanasis2018_10_06
         "Return the pixel value"
         return self.im[iy, jx]
 
-    def than2Num(self):
+    def than2Numxx(self):             #Thanasis2018_10_06
         "Return the DEM as a numpy array."
 #        return self.im.transpose()
         return self.im
+
+
+def decipherNodata(band, nodatadef):
+    "Try to find the no data value."
+    GDAL_NODATA = band.GetNoDataValue()
+    print("ThanDEMbilx.thanSet2(): GDAL_NODATA in image=", GDAL_NODATA)
+    if GDAL_NODATA is None:
+        GDAL_NODATA = nodatadef  #Use default value supplied by user, if tag is not found
+        print("ThanDEMbilc.thanSet2(): tag not found, using user supplied value GDAL_NODATA=", GDAL_NODATA)
+    return GDAL_NODATA

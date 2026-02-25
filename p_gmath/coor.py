@@ -58,7 +58,7 @@ class ThanRectCoorTransf:
 
     def global2Locali(self, xg, yg):
         "Transform global coordinates to local converting to integers."
-        return int(self.axg2l + self.bxg2l * xg + 0.5), int(self.ayg2l + self.byg2l * yg + 0.5)
+        return round(self.axg2l + self.bxg2l * xg), round(self.ayg2l + self.byg2l * yg)
 
 
     def local2Global(self, xl, yl):
@@ -73,7 +73,7 @@ class ThanRectCoorTransf:
 
     def global2LocalReli(self, xg, yg):
         "Transform global size to local converting to integer."
-        return int(self.bxg2l * xg + 0.5), int(self.byg2l * yg + 0.5)
+        return round(self.bxg2l * xg), round(self.byg2l * yg)
 
 
     def local2GlobalRel(self, xl, yl):

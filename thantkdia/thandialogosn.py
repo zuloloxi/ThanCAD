@@ -1,33 +1,32 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter object snap values.
 It also has the routine to get the osnap values from the config files.
 """
 
-from __future__ import print_function
 from tkinter import Tk, Frame, Button, Label, Canvas, Checkbutton, IntVar, NORMAL, ACTIVE, GROOVE
 import p_ggen, p_gtkwid
 from thanopt import thancadconf
@@ -90,14 +89,18 @@ class ThanTkOsnap(p_gtkwid.ThanDialog):
         w = Label(f, text=" Object Snap Modes")
         w.grid(row=0, column=1, columnspan=4, sticky="w")
 
-#        but = p_gtkwid.ThanButtonIm(f, image=thanimag.ntuabig3(), title=T["National Technical University of Athens"],
-#            url="www.ntua.gr/index_en.html", iconsize=(480,360))
+        but = p_gtkwid.ThanButtonIm(f, image=thanimag.ntuabig3(), title=T["National Technical University of Athens"],
+            url="www.ntua.gr/en", iconsize=(480,360))
 #        but = p_gtkwid.ThanButtonIm(f, image=thanimag.hannover_leibniz(), title=T["Leibniz Universitaet Hannover"],
 #            url="www.uni-hannover.de/en", iconsize=(480,360))
 #        but = p_gtkwid.ThanButtonIm(f, image=thanimag.valencia_uni(), title=T["La Universitat de Valencia"],
 #            url="www.uv.es/uvweb/college/en/university-valencia-1285845048380.html", iconsize=(480,360))
-        but = p_gtkwid.ThanButtonIm(f, image=thanimag.oberpfaffenhofen_esa(), title=T["Columbus-Kontrollzentrum, Oberpfaffenhofen"],
-            url="http://www.esa.int/ger/ESA_in_your_country/Germany/Columbus-Kontrollzentrum_Oberpfaffenhofen_Deutschland", iconsize=(480,360))
+#        but = p_gtkwid.ThanButtonIm(f, image=thanimag.oberpfaffenhofen_esa(), title=T["Columbus-Kontrollzentrum, Oberpfaffenhofen"],
+#            url="http://www.esa.int/ger/ESA_in_your_country/Germany/Columbus-Kontrollzentrum_Oberpfaffenhofen_Deutschland", iconsize=(480,360))
+#        im = thanimag.prague_congress_center()
+#        print("__osnapTab():im=",im)
+#        but = p_gtkwid.ThanButtonIm(f, image=thanimag.prague_congress_center(), title=T["Congress center, Prague"],
+#            url="http://www.kcp.cz/en/homepage", iconsize=(480,360))
         but.grid(row=1, column=3, rowspan=modescol, padx=5, pady=5)
 
         w = Frame(f, width=5); w.grid(row=0, column=7)
@@ -116,7 +119,11 @@ class ThanTkOsnap(p_gtkwid.ThanDialog):
                 w.grid(row=ii+1, column=j+1, pady=4, sticky="w")
                 self.__drawMode(w, mode)
             self.__osnapVal.append(IntVar())
-            w = Checkbutton(f, text=t, variable=self.__osnapVal[i])
+            w = p_gtkwid.ThanCheck(f, text=t, variable=self.__osnapVal[i])
+            #bgcol = w.cget("background")
+            #print("bgcol=", bgcol)
+            #w.config(selectcolor=bgcol)
+            #print("checkbutton:",); p_gtkwid.correctForeground(w)
             w.grid(row=ii+1, column=j+2, sticky="w")
 
         w = Button(f, text="Select All", command=self.__selectAll)

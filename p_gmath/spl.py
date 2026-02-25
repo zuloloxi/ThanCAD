@@ -1,8 +1,4 @@
-# -*- coding: iso-8859-7 -*-
 "Splines and equidistant splines."
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import pi, atan2, sqrt, floor
 import p_ggen
 from .var import dpt
@@ -19,14 +15,14 @@ class ThanSpline:
         real*8 a(nmax), b(nmax), c(nmax), d(nmax), pr, e
         character cret
 
-  c-----ic = 0 : κανονική ανοικτή καμπύλη με καμπυλότητα 0 στα δύο άκρα
-  c        = 1 : κανονική κλειστή καμπύλη με ίδια καμπυλότητα στα δύο "άκρα"
-  c        = 2 : κλειστή καμπύλη με αντίθετη καμπυλότητα στα δύο "άκρα":
-  c              μορφή σταγόνας
+  c-----ic = 0 : ΞΊΞ±Ξ½ΞΏΞ½ΞΉΞΊΞ® Ξ±Ξ½ΞΏΞΉΞΊΟ„Ξ® ΞΊΞ±ΞΌΟ€ΟΞ»Ξ· ΞΌΞµ ΞΊΞ±ΞΌΟ€Ο…Ξ»ΟΟ„Ξ·Ο„Ξ± 0 ΟƒΟ„Ξ± Ξ΄ΟΞΏ Ξ¬ΞΊΟΞ±
+  c        = 1 : ΞΊΞ±Ξ½ΞΏΞ½ΞΉΞΊΞ® ΞΊΞ»ΞµΞΉΟƒΟ„Ξ® ΞΊΞ±ΞΌΟ€ΟΞ»Ξ· ΞΌΞµ Ξ―Ξ΄ΞΉΞ± ΞΊΞ±ΞΌΟ€Ο…Ξ»ΟΟ„Ξ·Ο„Ξ± ΟƒΟ„Ξ± Ξ΄ΟΞΏ "Ξ¬ΞΊΟΞ±"
+  c        = 2 : ΞΊΞ»ΞµΞΉΟƒΟ„Ξ® ΞΊΞ±ΞΌΟ€ΟΞ»Ξ· ΞΌΞµ Ξ±Ξ½Ο„Ξ―ΞΈΞµΟ„Ξ· ΞΊΞ±ΞΌΟ€Ο…Ξ»ΟΟ„Ξ·Ο„Ξ± ΟƒΟ„Ξ± Ξ΄ΟΞΏ "Ξ¬ΞΊΟΞ±":
+  c              ΞΌΞΏΟΟ†Ξ® ΟƒΟ„Ξ±Ξ³ΟΞ½Ξ±Ο‚
         """
         def calc(x):
             a = [0]; b = [0]; c = [0]; d = [0]
-            for i in xrange(1, len(x)-1):
+            for i in range(1, len(x)-1):
                 a.append(t[i+1])
                 b.append(2.0 * (t[i]+t[i+1]))
                 c.append(t[i])
@@ -53,7 +49,7 @@ class ThanSpline:
         if zs is None: z = None
         else:          z = tuple(zs)
         t = [0.0]
-        for i in xrange(1, len(x)):
+        for i in range(1, len(x)):
             d = (x[i]-x[i-1])**2 + (y[i]-y[i-1])**2
             if z is not None: d += (z[i]-z[i-1])**2
             t.append(sqrt(d))
@@ -78,7 +74,7 @@ class ThanSpline:
         if tt <= 0.0: tt = 0.0
         elif (tt > self.tmax): tt = self.tmax
         tor = 0.0
-        for i in xrange(1, len(t)):
+        for i in range(1, len(t)):
             tor = tor + t[i]
             if (tt <= tor):
                 tt = tt + t[i] - tor
@@ -108,7 +104,7 @@ class ThanSpline:
         if tt <= 0.0: tt = 0.0
         elif (tt > self.tmax): tt = self.tmax
         tor = 0.0
-        for i in xrange(1, len(t)):
+        for i in range(1, len(t)):
             tor = tor + t[i]
             if (tt <= tor):
                 tt = tt + t[i] - tor
@@ -130,12 +126,12 @@ class ThanSpline:
         if ta is None:
             ta = 0.0
             tb = self.tmax
-        if dt == 0.0:
+        if dt <= 0.0:
             dt = self.tmax/len(self.x)   #Average distance between original line segments
             dt /= 4.0                    #4 points should be enough to show the curvature
         cs = []
         ts = []
-        for t in p_ggen.xfrangec(ta, tb, dt):
+        for t in p_ggen.frangec(ta, tb, dt):
             c = self.splfun(t)
             cs.append(c)
             ts.append(t)
@@ -221,12 +217,12 @@ class EquidistantSpline:
         self.R = R = [None] * (N+1)
         Q[1] = 0.0
         R[1] = 0.0
-        for K in xrange(2, N):
+        for K in range(2, N):
             P = Q[K-1]/2+2
             Q[K] = -0.5/P
             R[K] = (3*(Y[K+1]-2*Y[K]+Y[K-1]) - R[K-1]/2)/P
         R[N] = 0.0
-        for K in xrange(N-1, 1, -1):
+        for K in range(N-1, 1, -1):
             R[K] = Q[K]*R[K+1]+R[K]
 
 #-----------------------------------------------------------------------

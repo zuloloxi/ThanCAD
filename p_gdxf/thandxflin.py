@@ -1,10 +1,3 @@
-# -*- coding: iso-8859-7 -*-
-
-#############################################################################
-#############################################################################
-
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 from math import hypot
 PLINECLOSED   = 1
 PLINE3        = 8
@@ -26,7 +19,7 @@ class ThanDxfLin:
         "Plots many line segments."
         p = self.thanDxfPlot
         p(xp[0], yp[0], 3)
-        for i in xrange(1, len(xp)): p(xp[i], yp[i], 2)
+        for i in range(1, len(xp)): p(xp[i], yp[i], 2)
 
 #===========================================================================
 
@@ -34,11 +27,11 @@ class ThanDxfLin:
         "Plots many 3d line segments."
         p = self.thanDxfPlot3
         p(xp[0], yp[0], zp[0], 3)
-        for i in xrange(1, len(xp)): p(xp[i], yp[i], zp[i], 2)
+        for i in range(1, len(xp)): p(xp[i], yp[i], zp[i], 2)
 
 #===========================================================================
 
-    def thanDxfPlotPolyline (self, xgram, ygram):
+    def thanDxfPlotPolyline (self, xgram, ygram, zgram1=0.0):      #Thanasis2024_01_23: added zgram1
         "Plots a 2d polyline."
         ig = len(xgram)
         if ig < 2: return
@@ -46,13 +39,14 @@ class ThanDxfLin:
         self.thanDxfWrEntry(0, 'POLYLINE')
         self.thanDxfWrLinatts()
 
-        (px, py) = self.thanDxfTop(xgram[0], ygram[0])
+        (px, py, pz) = self.thanDxfTop3(xgram[0], ygram[0], zgram1)             #Thanasis2024_01_23
+        px = py = 0.0   #According to dxf12 manual page 23, these must be zero  #Thanasis2024_01_23
         self.thanDxfWrEntry(66, 1)
-        self.thanDxfWrXy(px, py)
+        self.thanDxfWrXyz(px, py, pz)
         self.thanDxfWrEntry(70, PLINEWHOKNOWS)
         self.thanDxfWrPlineWidth()
 
-        for i in xrange(ig):
+        for i in range(ig):
             (px, py) = self.thanDxfTop(xgram[i], ygram[i])
             self.thanDxfWrEntry(0, 'VERTEX')
             self.thanDxfWrLinatts()
@@ -72,12 +66,13 @@ class ThanDxfLin:
         self.thanDxfWrLinatts()
 
         (px, py, pz) = self.thanDxfTop3(xgram[0], ygram[0], zgram[0])
+        px = py = 0.0   #According to dxf12 manual page 23, these must be zero  #Thanasis2024_01_23
         self.thanDxfWrEntry(66, 1)
         self.thanDxfWrXyz(px, py, pz)
         self.thanDxfWrEntry(70, PLINE3)
         self.thanDxfWrPlineWidth()
 
-        for i in xrange(ig):
+        for i in range(ig):
             (px, py, pz) = self.thanDxfTop3(xgram[i], ygram[i], zgram[i])
             self.thanDxfWrEntry(0, 'VERTEX')
             self.thanDxfWrLinatts()
@@ -233,7 +228,7 @@ class ThanDxfLin:
 
     def thanDxfPlot10a(self, x, y, ipen):
         """Plots or moves the pen with 10cm steps.
-      
+
         This code is for fast old pen plotters (e.g. CIL). If the distance to
         move or plot is big (e.g. 1m and more) the plotter is moving the drum
         very fast. This either ruptures the paper or causes the pen not write.
@@ -249,7 +244,7 @@ class ThanDxfLin:
         or down).
         This code was written in Fortran IV around 1982, in the 550 Prime
         computer.
-        """ 
+        """
         ipen1=ipen
         x2, y2 = self.thanDxfPlotWhere()
         dis=hypot(x-x2, y-y2)
@@ -257,7 +252,7 @@ class ThanDxfLin:
             k=int(dis/10.0)
             dx=(x-x2)*10.0/dis
             dy=(y-y2)*10.0/dis
-            for i in xrange(k):
+            for i in range(k):
                 x2 += dx
                 y2 += dy
                 self.thanDxfPlot(x2, y2, ipen1)
@@ -280,14 +275,14 @@ class ThanDxfLin:
         if ic == 2:
             self.thanDxfWrEntry(0, "LINE")
             self.thanDxfWrLinatts()
-            px1, py1, py1 = self.thanDxfGetNow3()
+            px1, py1, pz1 = self.thanDxfGetNow3()
             self.thanDxfWrXyz(px1, py1, pz1)
             self.thanDxfWrXyz1(px, py, pz)
         self.thanDxfSetNow3(px, py, pz)
 
 #-------Check if negative
 
-        if icom < 0: self.thanDxfLocref3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        if icod < 0: self.thanDxfLocref3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 
 if __name__ == "__main__":

@@ -1,29 +1,27 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the menus.
 """
@@ -44,14 +42,30 @@ def thanStandardMenus2():
           (("new"),    T["&New"],     T["Makes an empty drawing"]),
           (("open"),   T["&Open"],    T["Opens an existing drawing"]),
           (("openunload"), T["Open &without images"], T["Opens an existing drawing with the images unloaded"]),
+
+          ("menu", T["Open spreadsheet"], ""),             # Sub Menu Title
+          ("openspreadpoints", T["with &points"], T["Opens spreadsheets (ods,xls,xlsx) which contain points coordinates."]),
+          ("openspreadlines",  T["with &lines"],  T["Opens spreadsheets (ods,xls,xlsx) which contain coordinates of lines."]),
+          ("openspreadtexts",  T["with &texts"],  T["Opens spreadsheets (ods,xls,xlsx) which contain coordinates of texts."]),
+          ("openspreadsurface",T["with &surface"],T["Opens spreadsheets (ods,xls,xlsx) which contain coordinates of surface."]),
+          ("endmenu",),
+
           (("save"),   T["&Save"],    T["Saves drawing into a file"]),
           (("saveas"), T["S&ave as"], T["Saves drawing into a file"]),
           (("close"),  T["&Close"],   T["Closes current drawing"]),
+
+          ("menu", T["Export to spreadsheet"], ""),             # Sub Menu Title
+          ("exportspreadpoints", T["Export &points"], T["Exports ThanCad points to spreadsheets (ods,xls,xlsx)."]),
+          ("exportspreadlines" , T["Export &lines"],  T["Exports ThanCad lines to spreadsheets (ods,xls,xlsx)."]),
+          ("exportimages" ,      T["Export &images"], T["Exports ThanCad images to an autocad script (scr) file."]),
+          ("endmenu",),
+          ("exportimages" ,      T["Export &images"], T["Exports ThanCad images to an autocad script (scr) file."]),
+
           ("-",),               # Separator
           (("insert"), T["Ins&ert"],    T["Inserts other drawings into current drawing"]),
 #          (("insertunload"), T["Insert &without images"], T["Inserts a drawing with the images unloaded"]),
           ("-",),               # Separator
-          (("pilout"), T["Export &Image"], T["Exports a raster image"]),
+          (("pilout"), T["Export to &Image"], T["Plots the drawing into a raster image"]),
           (("pdfout"), T["Plot to PDF"],   T["Plots the drawing to a PDF file"]),
           (("plot"),   T["&Plot"],         T["Plots the drawing to a printer"]),
           ("-",),
@@ -79,6 +93,7 @@ def thanStandardMenus2():
           (("select"),    T["&Select"], "Selects elements"),
           ("-",),               # Separator
           (("background"),T["&Background colour"],    T["Changes the canvas background colour"]),
+          (("encoding"),  T["&Encoding"],             T["Changes the encoding for reading/writing text files"]),
           ("endmenu",),
         ]
 
@@ -100,12 +115,13 @@ def thanStandardMenus2():
         m["Image"] = \
         [ ("menu", T["&Image"], ""), # Menu Title
           (("imageattach"),  T["Insert Raster &Image"], T["Inserts a new image to the current drawing"]),
+          (("goi"),          T["Insert GOI &Frame"],    T["Insert one or more frames of global orthoimage"]),
           (("imagegeo"),     T["Import &GeoTIFF"],   T["Inserts TIFF images whose georeference is inside the TIFF"]),
           (("imagetfw"),     T["Import &tfw/j2w Image"], T["Inserts TIFF images whose georeference is defined in .tfw/.j2w files"]),
           (("imagelog"),     T["Import &log Image"], T["Inserts BMP images whose georeference is defined in .log files"]),
           (("imagecadastre"),T["Import &Cadastre"],T["Inserts Greek cadastre map image to its correct position using standardised file naming conventions"]),
           (("imagetiles"),   T["Import tiled Image"],T["Inserts a Digital Globe image split into multiple tiles"]),
-          (("imageterrasar"),T["Import/convert TerraSAR Image"], T["Convert a complex pixel valued TerraSAR image to GeoTiff and inserts it to the current drawing"]),
+          (("imageterrasar"),T["Import/convert TerraSAR Image"], T["Converts a complex pixel valued TerraSAR image to GeoTiff and inserts it to the current drawing."]),
           (("imagescan"),    T["&Scan Image"],       T["Acquires image from scanner"]),
           (("imageframe"),   T["Image &frame"],      T["Displays or not frames around images"]),
           ("-",),               # Separator
@@ -124,6 +140,7 @@ def thanStandardMenus2():
         [ ("menu", T["F&ormat"], ""),          # Layer Title
           (("ddlmodes"), T["&Layer"],      "Manipulates layers"),
           (("style"),    T["&Text Style"], "Manipulates text styles"),
+          (("dimstyle"), T["&Dimension Style"], "Manipulates dimension styles"),
           (("units"),    T["&Units"],      "Manipulates length and angle units"),
           ("endmenu",),
         ]
@@ -132,11 +149,12 @@ def thanStandardMenus2():
         [ ("menu", T["&Tools"], ""),           # Menu Title
           (("dist"), T["&Distance"],  "Computes and displays the distance and angle between 2 points"),
           (("area"), T["&Area"],      "Computes and displays the area of a closed polygon defined by points"),
-          (("angle"),T["&Angle"],     "Computes and displays the angle between 2 lines defined by 3 points"),
+          (("angle"),T["A&ngle"],     "Computes and displays the angle between 2 lines defined by 3 points"),
           (("id"),   T["&Id Point"],  "Displays the coordinates of a point"),
           (("list"), T["&List"],      "Displays information about an element"),
           (("elev"), T["&Elevation"], "Displays and sets default elevation"),
           (("elevn"),T["Elevation (higher dimensions)"], "Displays and sets default elevations of z and higher dimensions"),
+          (("highlightzero"),T["&Highlight zero elevation"], "Temporarily highlights lines and points the elevation of which is zero"),
           ("-",),
           (("dsettings"), T["Drafting &Settings"],  "Chooses the drafting modes end, mid etc."),
           (("find"),      T["&Find text"], "Zooms to a text containing user defined text string"),
@@ -145,6 +163,7 @@ def thanStandardMenus2():
           (("hull"),      T["&Find convex hull"],   "Finds the convex hulls of a set of lines"),
           (("simplify"),  T["&Simplify line"], "Approximates the lines with fewer points"),
           (("interpolate"),T["&Interpolate line"], "Adds points to a line with sparse nodes"),
+          (("optline"),   T["&Optimum line"], T["Finds optimum line that pass through points, lines, spline"]),
           ("-",),
           (("script"),  T["&Run script"], "Executes ThanCad commands from file"),
           ("endmenu",),
@@ -154,7 +173,8 @@ def thanStandardMenus2():
         [ ("menu", T["&Draw"], ""),            # Menu Title
           (("line"),      T["&Line"],      "Draws a line"),
           (("rectangle"), T["&Rectangle"], "Draws a closed line in the shape of a rectangle"),
-          (("polygon"),   T["&Polygon"],   "Draws a closed line in the shape of a polygon filled with colour"),
+          (("polygonirregular"), T["&Polygon"],   "Draws a closed line in the shape of a polygon filled with colour"),
+          (("polygon"),   T["Re&gular polygon"],   "Draws a closed line in the shape of a reular polygon"),
           (("circle"),    T["&Circle"],    "Draws a circle"),
           (("arc"),       T["&Arc"],       "Draws a circular arc"),
           (("ellipse"),   T["&Ellipse"],   "Draws an ellipse"),
@@ -163,14 +183,21 @@ def thanStandardMenus2():
           (("spline"),    T["Spl&ine"],    "Draws a cubic spline curve"),
           ("-",),
           (("pnamed"),    T["&Named Point"],"Draws a point with name"),
+          (("pointdistance"), T["Point from dist"], T["Draws a point whose distance from 2 reference points is known"]),
           (("road"),      T["R&oad"],       "Draws a road"),
-          (("hatchopen"), T["Hatch Open"],  T["Create hatch between disjoint lines"]),
+          (("bhatch"),    T["&Boundary hatch"],  T["Creates hatch in closed areas"]),
+          (("hatchopen"), T["Hatch Open"],  T["Creates hatch between disjoint lines"]),
           ("-",),
           (("dimali"), T["&Dimension aligned"], "Draws a dimension aligned to coordinates"),
           ("-",),
           (("tospline"),  T["To spline"],   "Transfroms a line to cubic spline curve"),
           (("tocurve"),   T["To curve"],    "Transforms a line to a curve"),
           (("decurve"),   T["&Decurve"],    "Transforms curves to lines"),
+          (("topolygon"), T["To polygon"],  "Closes and transforms lines to polygons"),
+          ("menu", T["BIM"], ""),             # Sub Menu Title
+              ("bimcolumn", T["&Column"], T["Draws the cross section of a named structural column."]),
+          ("endmenu",),
+
           ("endmenu",),
         ]
 
@@ -187,6 +214,8 @@ def thanStandardMenus2():
         m1.extend(
         [ (("EngTrace"),  T["&Trace"],           T["Traces a curve in a bitmap raster image"]),
           (("greeceperimeter"), T["Draw &Greece"], T["Draws the perimeter of Greece in EGSA87 coordinates"]),
+          (("glp"),             T["Global points"], T["Draws global points (trigonometric points)"]),
+          (("glpexport"),       T["Export global points"], T["Writes gloabal point to a file"]),
           ("-",),
           ("geodeticprojection", T["Geo&detic Projection"], T["Displays and changes the geodetic projection of the drawing"]),
           (("demload"),   T["Load DE&Ms"],       T["Loads DEMs (USGS format) stored in .tif files"]),
@@ -203,6 +232,7 @@ def thanStandardMenus2():
             m1.append((("engprofile"),      T["Engineering Pro&file"], T["Creates an engineering drawing with the profile of a (3D) line"]))
         m1.extend(\
         [ (("engquickprofile"), T["&Quick Profile"], T["Creates quickly the profile of a (3D) line"]),
+          (("isoclinal"),  T["&Isoclinal"],   T["Creates the isoclinal line of a road"]),
           (("EngInterchange"),  T["&Interchange"],   T["Creates an interchange between 2 highways"]),
         ])
         if thanFrape.urban:
@@ -279,9 +309,10 @@ def thanStandardMenus2():
 
           (("offset"),     T["&Offset"],       T["Copies object parallel to itself"]),
           (("break"),      T["&Break"],        T["Breaks an element into 2 pieces"]),
-          (("trim"),       T["&Trim"],         T["Explode 1 or more elements to smaller objects"]),
+          (("trim"),       T["&Trim"],         T["Cuts elements with other elements being the cutting edges"]),
           (("extend"),     T["Extend"],        T["Extends lines and arcs until they cross other elements being the boundary edges"]),
-          (("filet"),      T["&Filet"],        T["Cuts elements with other elements being the cutting edges"]),
+          (("lengthen"),   T["Lengthen"],      T["Changes the length of open elements"]),
+          (("fillet"),     T["&Fillet"],       T["Rounds off a corner with arc"]),
           (("explode"),    T["E&xplode"],      T["Explode 1 or more elements to smaller objects"]),
           (("reverse"),    T["Re&verse"],      T["Reverses the orientation of lines, circles, arcs"]),
           (("ddedit"),     T["E&dit Text"],    T["Lets the user edit any text interactively"]),
@@ -319,10 +350,11 @@ def thanStandardMenus2():
         [ ("-",),
           (("edufloorplan"),  Tarch["&Floor plan"],    Tarch["Creates automatically a floor plan"]),
           (("edubiocityplan"),Tarch["&Bio city plan"], Tarch["Creates bioclimatic oriented city plan"]),
+          (("edudfr"), Tmatch["Show dfr coordinates"], Tmatch["&Shows, selects draws and saves coordinates for a .dxf file."]),
         ])
         if thanFrape.thermo:
             m1.extend(\
-            [ (("thermohumid"), u"Εισαγωγή μετρήσεων θερμοϋγρομέτρου", u"Διπλωματική εργασία Χάρη Πατούνη, Νίκου Σίμου, Σχολή Πολ. Μηχανικών, ΕΜΠ, 2012"),
+            [ (("thermohumid"), u"Ξ•ΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ® ΞΌΞµΟ„ΟΞ®ΟƒΞµΟ‰Ξ½ ΞΈΞµΟΞΌΞΏΟ‹Ξ³ΟΞΏΞΌΞ­Ο„ΟΞΏΟ…", u"Ξ”ΞΉΟ€Ξ»Ο‰ΞΌΞ±Ο„ΞΉΞΊΞ® ΞµΟΞ³Ξ±ΟƒΞ―Ξ± Ξ§Ξ¬ΟΞ· Ξ Ξ±Ο„ΞΏΟΞ½Ξ·, ΞΞ―ΞΊΞΏΟ… Ξ£Ξ―ΞΌΞΏΟ…, Ξ£Ο‡ΞΏΞ»Ξ® Ξ ΞΏΞ». ΞΞ·Ο‡Ξ±Ξ½ΞΉΞΊΟΞ½, Ξ•ΞΞ , 2012"),
             ])
         if thanFrape.civil:
             m1.extend(\
@@ -375,7 +407,7 @@ def thanMainMenus():
     m["File"] = \
     [ ("menu", "&File", ""),            # Menu Title
       (("new"),    "&New",  "Makes an empty drawing"),
-#          (("new"),    u"&Νέο Θανάσης",  "Makes an empty drawing"),
+#          (("new"),    u"&ΞΞ­ΞΏ ΞΞ±Ξ½Ξ¬ΟƒΞ·Ο‚",  "Makes an empty drawing"),
       (("open"),   "&Open", "Opens an existing drawing"),
       ("-",),               # Separator
       (("sykin"),  "&Import syk", "Imports a syk file"),

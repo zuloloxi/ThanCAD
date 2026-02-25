@@ -1,35 +1,30 @@
-#!/usr/bin/python
-# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 Package which creates a floor plan design automatically.
 """
-from __future__ import print_function
-#from past.builtins import xrange
-from p_ggen.py23 import xrange
 import random, copy
 from functools import partial
 from p_ggen import prg
@@ -67,7 +62,7 @@ class Room:
 
     def isleaf(self):
         "Checks if the room is a leaf node (it has not been split)."
-        return self.isplit == None
+        return self.isplit is None
 
     def list(self, all, mall, sall, chall):
         "Returns a list of self and children."
@@ -284,22 +279,22 @@ class RoomConfiguration(SAAnnealable):
       self.efact = 1.0
       ndim = self.ccon.minrooms             # Assume (minrooms) rooms in house
       tries = ndim*10
-      for i in xrange(tries):        # Randomise a bit
+      for i in range(tries):        # Randomise a bit
           j = self.changeState(fill=True)    # (almost) ensure that number of rooms is about minrooms
       e1 = self.energyState()
       n1 = len(self.sable)
       de = 0.0
       ndim = len(self.all)
       tries = ndim*10
-      for i in xrange(tries):
+      for i in range(tries):
           j = self.changeState()
           e2 = self.energyState()
           de += abs(e2-e1)
           e1 = e2
       de /= tries
       self.efact = 100.0 / de             # Normalise delta energy to 100: efact*de = 100
-      self.prt('Αρχική ενέργεια=%.3f' % e1)
-      self.prt("Αρχική μέση Δε =%.3f" % de)
+      self.prt('Ξ‘ΟΟ‡ΞΉΞΊΞ® ΞµΞ½Ξ­ΟΞ³ΞµΞΉΞ±=%.3f' % e1)
+      self.prt("Ξ‘ΟΟ‡ΞΉΞΊΞ® ΞΌΞ­ΟƒΞ· Ξ”Ξµ =%.3f" % de)
       print("Initial    number of rooms:", n1)
       print("Randomized number of rooms:", len(self.sable))
       print("efact=", self.efact, "Initial temperature=", 100.0/self.efact)
@@ -358,7 +353,7 @@ def test():
     global col
     col = "red yellow green blue cyan magenta white".split()
     per = 0.2
-    for itry in xrange(5):
+    for itry in range(5):
         all = []; mall = []; sall = []; chall = []
         root.list(all, mall, sall, chall)
         room = r.choice(sall)

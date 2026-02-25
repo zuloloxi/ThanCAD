@@ -1,29 +1,27 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This package includes dialogs (forms to get user input) implemented with tkinter.
 This module contains the dialog which asks for line type settings.
@@ -41,14 +39,25 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
 
     def __init__(self, *args, **kw):
         "Just set the title."
+        self.idialog = kw.pop("idialog", 0)    #line type settings=0, dimension style settings=1
+        if self.idialog == 0: tit = T["Line type settings"]
+        else:                tit = T["Dimension style settings"]
         proj = kw["cargo"]
-        kw.setdefault("title", "%s - %s" % (proj[0].name, T["Line type settings"]))
-        p_gtkwid.ThanComDialog.__init__(self, *args, **kw)
+        kw.setdefault("title", "%s - %s" % (proj[0].name, tit))
+        super().__init__(*args, **kw)
 
 
     def thanValsDef(self):
         "Build default values."
-        return thanValsDef()
+        if self.uidialog == 0:
+            s = p_ggen.Struct("Line type settings")
+            s.butPattern = "continuous"
+        else:
+            s = p_ggen.Struct("Dimension style settings")
+            s.butPattern = "standard"
+        s.choUnit  = 0
+        s.entScale = 1.0
+        return s
 
 
     def body(self, win):
@@ -60,7 +69,9 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
     def body2(self, win):
         "Create the body of the dialog in steps."
         self.fraSpec(win, 1)
-        labs = sorted((val.thanName, val.thanDesc) for val in self.thanProj[1].thanLtypes.values())   #works for python2,3
+        if self.idialog == 0: temp = self.thanProj[1].thanLtypes
+        else:                 temp = self.thanProj[1].thanDimstyles
+        labs = sorted((val.thanName, val.thanDesc) for val in temp.values())   #works for python2,3
         labs.insert(0, (str(THANBYPARENT), str(THANBYPARENT)))
         labs.insert(1, (str(THANPERSONAL), str(THANPERSONAL)))
         n = max(len(b[0]) for b in labs)
@@ -91,7 +102,8 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
 #        lab.grid(row=0, column=1, columnspan=2, sticky="w")
 
         key = "butPattern"
-        tit = "Line type (dashes)"
+        if self.idialog == 0: tit = "Line type (dashes)"
+        else:                 tit = "Dimension style"
         lab = tkinter.Label(fra, text=T[tit])
         lab.grid(row=1, column=1, sticky="e")
         wid = p_gtkwid.ThanButton(fra, width=30, command=self.__poppattern, anchor="w", justify=tkinter.LEFT)
@@ -100,7 +112,8 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
         self.thanWids.append((key, T[tit], wid, val))
 
         key = "choUnit"
-        tit = "Line type unit"
+        if self.idialog == 0: tit = "Line type unit"
+        else:                 tit = "Dimension style unit"
         lab = tkinter.Label(fra, text=T[tit])
         lab.grid(row=2, column=1, sticky="e")
         wid = p_gtkwid.ThanChoice(fra, labels=("mm", "user data units"), width=20)
@@ -109,7 +122,8 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
         self.thanWids.append((key, T[tit], wid, val))
 
         key = "entScale"
-        tit = "Line type scale"
+        if self.idialog == 0: tit = "Line type scale"
+        else:                 tit = "Dimension style scale"
         lab = tkinter.Label(fra, text=T[tit])
         lab.grid(row=3, column=1, sticky="e")
         wid = p_gtkwid.ThanEntry(fra, width=8)
@@ -122,8 +136,11 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
     def __poppattern(self):
         "Show a popup list with the line type patterns."
         namlt = self.butPattern.thanGet()
-        try: i = self.__labs1.index(namlt)
-        except IndexError: i = self.__labs1.index("continuous")
+        try:
+            i = self.__labs1.index(namlt)
+        except IndexError:
+            if self.idialog == 0: i = self.__labs1.index("continuous")
+            else:                 i = self.__labs1.index("standard")
 
 #        self.option_add("*%s*font" % (self.winfo_name(),), thantk.thanFonts[0])
         win = p_gtkwid.ThanPoplist(self, self.__labs2, width=100, height=20, selectmode=tkinter.SINGLE,
@@ -144,15 +161,6 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
         else:
             self.choUnit.config(state=tkinter.NORMAL)
             self.entScale.config(state=tkinter.NORMAL)
-
-
-def thanValsDef():
-    "Build default values."
-    s = p_ggen.Struct("Line type settings")
-    s.butPattern = "continuous"
-    s.choUnit  = 0
-    s.entScale = 1.0
-    return s
 
 
 def test1():

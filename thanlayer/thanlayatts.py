@@ -1,27 +1,27 @@
 ##############################################################################
-# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
-# 
-# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
+# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+#
+# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
-# e-mail: cyberthanasis@excite.com
-# 
+# e-mail: cyberthanasis@gmx.net
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
 
 This module defines the valid attributes of a layer, their type, and their
 default value.
@@ -29,7 +29,6 @@ It also defines the actions to do to elements, when an attribute is forced
 on them.
 """
 
-from __future__ import print_function
 import collections
 import p_gtkwid, p_ggen
 from thanvar import Canc, THANBYPARENT, THANPERSONAL
@@ -131,8 +130,16 @@ def thanTstyleGet(win, att, selLayers):
     return r, True
 
 
+def thanDimstyleGet(win, att, selLayers):
+    "Lets the user select new dimstyle for the selected layers."
+    return __dstyleltypeGet(win, att, selLayers, idialog=1)
+
 def thanLinetypeGet(win, att, selLayers):
-    "Lets the user select new textstyle for the selected layers."
+    "Lets the user select new linetype for the selected layers."
+    return __dstyleltypeGet(win, att, selLayers, idialog=0)
+
+def __dstyleltypeGet(win, att, selLayers, idialog):
+    "Lets the user select new linetype or dimstyle for the selected layers."
     name = collections.Counter()
     unit = collections.Counter()
     scale = collections.Counter()
@@ -158,7 +165,7 @@ def thanLinetypeGet(win, att, selLayers):
     print("s.entScale   = ", s.entScale)
     i = inher.most_common(1)[0][0]
     if i: s.butPattern = str(THANBYPARENT)
-    win = thantkdia.ThanDialogLtype(master=win, vals=s, cargo=win.thanCargo, translation=None)
+    win = thantkdia.ThanDialogLtype(master=win, vals=s, cargo=win.thanCargo, translation=None, idialog=idialog)
     s = win.result
     if s is None: return Canc, True
     if s.butPattern == str(THANBYPARENT): return THANBYPARENT, True
@@ -183,7 +190,7 @@ def thanDraworderGet (win, att, selLayers):
 def thanPenthickGet (win, att, selLayers):
     "Lets the user select new pen  thickness (mm of linear objects) for the selected layers."
     c =__commonVal(att, selLayers)
-    w = thantkdia.ThanPen(win, c, "Pen", title="Select Pen Thickness")
+    w = thantkdia.ThanPen(win, c, "Pen", "mm", title="Select Pen Thickness")
     r = w.result
     if r is None: return Canc, True
     if r in (THANBYPARENT, THANPERSONAL): return r, True
@@ -195,7 +202,7 @@ def thanPenthickGet (win, att, selLayers):
 def thanLinethickGet (win, att, selLayers):
     "Lets the user select new thickness (user unints of linear objects) for the selected layers."
     c =__commonVal(att, selLayers)
-    w = thantkdia.ThanPen(win, c, "Line", title="Select Line Thickness")
+    w = thantkdia.ThanPen(win, c, "Line", "user units", title="Select Line Thickness")
     r = w.result
     if r is None: return Canc, True
     if r in (THANBYPARENT, THANPERSONAL): return r, True
@@ -381,6 +388,7 @@ thanLayAttsOrder = \
     ("moncolor",   (0, thanMoncolorGet,  ThanAttCol(thancadconf.thanColRoot), ThanAttCol,        # red
                   "Element color on screen.")),
     ("linetype",   (0, thanLinetypeGet, ("continuous", "mm", 1.0), ThanAttLtype, "Linetype of linear elements.")),
+    ("dimstyle",   (0, thanDimstyleGet, ("standard", "mm", 1.0),   ThanAttLtype, "Dimension style.")),
     ("ltscale",    (0, thanLinetypeGet,  1.0,    ThanAttScale, "Linetype scale. It may be negative "+\
                   "as a percentage to the screen.")),
     ("fill",       (0, thanFillGet,      False,  ThanAttOnoffInherit,
@@ -451,10 +459,10 @@ thanLayAttsNames = []
 for (key, val) in thanLayAttsOrder:
     thanLayAtts[key] = val
     thanLayAttsNames.append(key)
-thanLayAttsNames = ["expand", THANNAME, "moncolor", "frozen", "textstyle", "linetype", "draworder",
-                    "fill", "penthick", "linethick", "hidename", "hideheight"]
-thanLayAttsWidths = [1,        30,       20,         3,        20,          40,         6,
-                     5,      6,          6,           3,          3]
+thanLayAttsNames = ["expand", THANNAME, "moncolor", "frozen", "textstyle", "linetype",
+    "dimstyle", "draworder", "fill", "penthick", "linethick", "hidename", "hideheight"]
+thanLayAttsWidths = [1,        30,       20,         3,        20,          40,
+    30,         6,           5,      6,          6,           3,          3]
 
 
 if __name__ == "__main__":

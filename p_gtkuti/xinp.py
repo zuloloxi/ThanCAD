@@ -160,6 +160,19 @@ def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
         thantkutila.thanGudModalMessage(win, ter, "No files found", icon=thantkutila.ERROR)
 
 
+def xinpImage(win, mes, initialfile="", initialdir=None):
+    "Open an image with PIL."
+    import p_gbmp, p_gfil
+    if initialdir == None: _, _, initialdir = p_gfil.openfileWinget()
+    while True:
+        fn = thantkutila.thanGudGetReadFile(win, "", mes, initialfile=initialfile, initialdir=initialdir)
+        if fn == None: sys.exit()
+        im, ter = p_gbmp.imageOpen(fn)
+        if im != None: return fn, im
+        ter = "Error while accessing %s:\n%s\nTry again." % (fn, ter)
+        thantkutila.thanGudModalMessage(win, ter, "Open failed", icon=thantkutila.ERROR)
+
+
 def xinpDir(win, mes, mustexist=False, mustnotexist=False, default=None):
     "Inputs a non-blank directory name with default value."
     from p_gfil import Tgui

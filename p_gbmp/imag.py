@@ -1,0 +1,79 @@
+import base64, cStringIO, Image
+
+
+def image2Bytes(im, format="jpeg"):
+    "Translate image to .jpeg or other format saved in memory file."
+#    if im.mode != "RGB":
+#        im = im.convert("RGB")
+    fw = cStringIO.StringIO()
+    im.save(fw, format)
+    return fw.getvalue()
+
+
+def bytes2Image(bytes):
+    "Read image from binary bytes."
+    fr = cStringIO.StringIO(bytes)
+    im = Image.open(fr)
+    return im
+
+
+def writeBytesB64(bytes, fw):
+    "Write binary bytes encoded to base64 text."
+    t = base64.b64encode(bytes)
+    fw.write("<BASE64>\n")
+    nl = 80
+    for i in xrange(0, len(t), nl):
+        fw.write("%s\n" % (t[i:i+nl],))
+    fw.write("</BASE64>\n")
+
+
+def readBytesB64(fr):
+    "Read binary bytes encoded as base64 text."
+    for dline in fr:
+        break
+    else:
+        raise ValueError, "Expected '<BASE64>' but found end of file."
+    dline = dline.strip().upper()
+    if dline != "<BASE64>": raise ValueError, "Expected '<BASE64>' but found '%s'" % (dline,)
+    dlines = []
+    for dline in fr:
+        dline = dline.strip()
+        if dline.upper() == "</BASE64>": break
+        dlines.append(dline)
+    else:
+        raise ValueError, "Expected '</BASE64>' but found end of file."
+    return base64.b64decode("".join(dlines))
+
+
+def imageOpenold(fi):
+    "Get an image from a file and report errors."
+    try:
+        im = Image.open(fi)
+        if im.size[0] < 2 or im.size[1] < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
+        im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised..
+        return im, ""        #..it also slows down the open as it is force to read the image
+    except (IOError, ValueError), e:
+        im = None                 #This deletes image if it was half loaded
+        return im, str(e)
+
+#When the PIL image mode is I;16S it means that the (TIFF) file has the pixels
+#as 16 bits Signed integers. Although PIL reads the TIFF tags, it does not
+#load the image; it complains that the mode is not recognised.
+#A workaround is to explicitly set mode to "I" before loading the image.
+#The result is that the image loads, and strangely the getpixel() and the
+#tostring() methods now return 32bit signed integer!.
+#THIS CODE WHICH IS A DIRTY HACK, MUST BE REVISITED EVERY TIME A NEW PIL
+#IS RELEASED.
+#Please also see im2num in p_gnum
+
+def imageOpen(fi):
+    "Get an image from a file and report errors."
+    try:
+        im = Image.open(fi)
+        if im.size[0] < 2 or im.size[1] < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
+        if im.mode == "I;16S": im.mode = "I"
+        im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised..
+        return im, ""        #..it also slows down the open as it is force to read the image
+    except (IOError, ValueError), e:
+        im = None                 #This deletes image if it was half loaded
+        return im, str(e)

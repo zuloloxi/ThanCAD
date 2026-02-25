@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,22 +21,21 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module processes draw commands.
 """
 from math import cos, sin
-import Image
-from p_gmath import thanNear2, thanNear3
-import p_gtkuti, p_ggen
+from p_gmath import thanNear2
+import p_ggen
 import thandr
-from thanvar import Canc, thanfiles
+from thanvar import Canc
 from thantrans import T
-from thandefs import ThanImageMissing
 from thansupport import thanToplayerCurrent
 
-from thancommod import thanModCanc, thanModEnd, thanModReplaceRedo, thanModReplaceUndo
+import thanundo
+from thancommod import thanModCanc, thanModEnd
 from thancomsel import thanSelect1, thanSelectGen
 from selutil import thanSel1line
 
@@ -50,183 +49,9 @@ def thanTkDrawElem(proj, elemClass, fn="thanTkGet", **kw):
 #    if elem.thanInbox(proj[1].viewPort): elem.thanTkDraw(proj[2].than)
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
-    proj[1].thanDoundo.thanAdd(comname, thanModReplaceRedo, ((), newelems),
-                                        thanModReplaceUndo, ((), newelems))
+    proj[1].thanDoundo.thanAdd(comname, thanundo.thanReplaceRedo, ((), newelems),
+                                        thanundo.thanReplaceUndo, ((), newelems))
     proj[2].thanGudCommandEnd()
-
-
-def thanTkGetlog(proj):
-    "Imports many raster images whose positions are stored in log format (bmp image)."
-    tit = T["Image file open failed"]
-    fildir = thanfiles.getFiledir()
-    fns = p_gtkuti.thanGudGetReadFile(proj[2], ".log", T["Choose image log files"],
-                                          initialdir=fildir, multiple=True)
-    if fns == None: return proj[2].thanGudCommandCan()   # Image canceled
-    newelems = []
-    for fi in fns:
-        elem = thandr.ThanImage()
-        try:
-            elem.thanLogGet(proj, fi)
-        except (IOError, ValueError), why:
-            p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
-        else:
-            proj[1].thanElementAdd(elem)     # thanTouch is implicitely called
-            elem.thanTkDraw(proj[2].than)    # This also sets thanImages
-            newelems.append(elem)
-    proj[2].thanRedraw()                 # Images regen probably violated draworder
-    proj[1].thanDoundo.thanAdd("imagelog", thanModReplaceRedo, ((), newelems),
-                                           thanModReplaceUndo, ((), newelems))
-    return proj[2].thanGudCommandEnd()
-
-
-def thanTkImageLocate(proj):
-    "Locate the image file of an image (usually when the image file was not found)."
-    elem = thanSelect1(proj, T["Select an image: "], filter=lambda e: isinstance(e, thandr.ThanImage))
-    if elem == Canc: return thanModCanc(proj)                         # Location cancelled
-    newelem = elem.thanClone()          #Note that this is a cheap (and low memory) operation
-    if newelem.thanTkLocate(proj) == Canc: return thanModCanc(proj)   # Location cancelled
-#    newelem.thanTags = elem.thanTags
-#    newelem.handle = elem.handle
-    selold = proj[2].thanSelold
-    delelems = (elem,)
-    newelems = set((newelem,))
-    thanModReplaceRedo(proj, delelems, newelems, newelems) # thanTouch is implicitely called
-    proj[2].thanRedraw()                # Image redraw probably violated draworder
-
-    proj[1].thanDoundo.thanAdd("imagelocate", thanModReplaceRedo, (delelems, newelems, newelems),
-                                              thanModReplaceUndo, (delelems, newelems, selold))
-    thanModEnd(proj)
-
-
-def thanTkImageDir(proj):
-    "Locate the directory where missing image files can be found."
-    for elem in proj[2].thanImages:
-        if isinstance(elem.image, ThanImageMissing): break
-    else:
-        return proj[2].thanGudCommandCan(T["No image files are missing."])
-    tit = T["Select directory for missing image files"]
-    fildir = thanfiles.getFiledir()
-    while True:
-        dn = p_gtkuti.thanGudGetDir(proj[2], tit, initialdir=fildir)
-        if dn == None: return proj[2].thanGudCommandCan()        # location canceled
-        dn = p_ggen.path(dn)
-        nmiss = 0
-        delelems = []
-        newelems = []
-        for elem in proj[2].thanImages:
-            if not isinstance(elem.image, ThanImageMissing): continue
-            fi = dn / p_ggen.path(elem.filnam).basename()
-            try:
-                im = Image.open(fi)
-            except (IOError, ValueError), why:
-                nmiss += 1
-            else:
-                newelem = thandr.ThanImage()
-                if elem.clipped: newelem.thanSet(fi, im, elem.c1ori, elem.c2ori, 0.0, elem.transpose, (elem.c1, elem.c2))
-                else:            newelem.thanSet(fi, im, elem.c1ori, elem.c2ori, 0.0, elem.transpose, None)
-                newelem.thanTags = elem.thanTags
-                newelems.append(newelem)
-                delelems.append(elem)
-        assert not (len(newelems) == 0 and nmiss == 0), "It should have been found!!"
-        if len(newelems) > 0: break
-        p_gtkuti.thanGudModalMessage(proj[2], T["No image files were found. Try again."], tit)
-
-    thanModReplaceRedo(proj, delelems, newelems)    # thanTouch is implicitely called
-    proj[2].thanRedraw()      # Image draw (replaceredo(): thanelementrestore()) probably violated draworder
-
-    proj[1].thanDoundo.thanAdd("imagedirectory", thanModReplaceRedo, (delelems, newelems),
-                                                 thanModReplaceUndo, (delelems, newelems))
-    if nmiss > 0: mes = T["Not all image files were found."]
-    else:         mes = None
-    proj[2].thanGudCommandEnd(mes)
-
-
-def thanTkImageClip(proj):
-    "Rectangular clip of image."
-    elem = thanSelect1(proj, T["Select an image: "], filter=lambda e: isinstance(e, thandr.ThanImage))
-    if elem == Canc: return thanModCanc(proj)                         # Location cancelled
-    if elem.transpose != 0:    #FIXME
-        return thanModCanc(proj, "For the moment, the image must not be rotated in order to clip it.")
-    while True:
-        if elem.clipped:
-            c1 = proj[2].thanGudGetPoint(T["First point (delete clip): "], options=("delete",))
-            if c1 == Canc: return proj[2].thanGudCommandCan()      # Rectangle cancelled
-            if c1 == "d":
-                elem.thanClipDel()
-                break
-        else:
-            c1 = proj[2].thanGudGetPoint(T["First point: "])
-            if c1 == Canc: return proj[2].thanGudCommandCan()      # Rectangle cancelled
-        c2 = proj[2].thanGudGetRect(c1, T["Second point: "])
-        if c2 == Canc: return proj[2].thanGudCommandCan()      # Rectangle cancelled
-        ok, terr = elem.thanClip((c1, c2))
-        if ok: break
-        proj[2].thanPrter("%s. %s" % (T[terr], T["Try again."]))
-
-    proj[1].thanDoundo.thanAdd("imageclip", __clipRedo, (elem, c1, c2),
-                                            __clipUndo, (elem,))
-    proj[2].thanAutoRegen(regenImages=True)    #FIXME: Actually only one image must be redisplayed
-    proj[1].thanTouch()
-    thanModEnd(proj)
-
-def __clipRedo(proj, elem, c1, c2):
-    ok, terr = elem.thanClip((c1, c2))
-    proj[2].thanAutoRegen(regenImages=True)    #FIXME: Actually only one image must be redisplayed
-
-def __clipUndo(proj, elem):
-    elem.thanClipDel()
-    proj[2].thanAutoRegen(regenImages=True)    #FIXME: Actually only one image must be redisplayed
-
-
-def thanTkImageBrighten(proj, verbose=True):
-    "Brighten all raster images."
-    db = 0.2
-    if proj[2].than.imageBrightness+db*0.1 >= 3.0-db:
-        if verbose: return proj[2].thanGudCommandEnd()
-        else: return
-    proj[2].than.imageBrightness += db
-    proj[2].thanAutoRegen(regenImages=True)
-    if verbose: return proj[2].thanGudCommandEnd()
-
-
-def thanTkImageDarken(proj, verbose=True):
-    "Darken all raster images."
-    db = 0.2
-    if proj[2].than.imageBrightness-db*0.1 <= db:
-        if verbose: return proj[2].thanGudCommandEnd()
-        else:       return
-    proj[2].than.imageBrightness -= db
-    proj[2].thanAutoRegen(regenImages=True)
-    if verbose: return proj[2].thanGudCommandEnd()
-
-
-def thanTkImageBreset(proj, verbose=True):
-    "Reset image brightness to original for each photo."
-    proj[2].than.imageBrightness = 1.0
-    proj[2].thanAutoRegen(regenImages=True)
-    return proj[2].thanGudCommandEnd()
-
-
-def thanTkImageFrame(proj):
-    "Set imageframe on or off."
-    prev = bool(proj[1].thanVar["imageframe"])
-    defa = ("OFF", "ON")[prev]
-    proj[2].thanPrt(T["Imageframe is %s."] % (defa, ))
-    mes = T["Enter image frame setting [ON/OFF] <%s>: "] % (defa, )
-    imfr = proj[2].thanGudGetOnoff(mes, default=defa)
-    if imfr == Canc: return proj[2].thanGudCommandCan()
-    __regenimages(proj, imfr)
-    proj[1].thanDoundo.thanAdd("imageframe", __regenimages, (imfr,),
-                                             __regenimages, (prev,))
-    proj[2].thanGudCommandEnd()
-
-def __regenimages(proj, imfr):
-    "Regenerate images, set variables and print result."
-    imfr = bool(imfr)
-    proj[1].thanVar["imageframe"] = imfr
-    proj[2].than.imageFrameOn = imfr
-    proj[2].thanAutoRegen(regenImages=True)
-    proj[2].thanPrtbo(T["Imageframe is now %s."] % ( ("OFF", "ON")[imfr], ))
 
 
 def thanTkDrawRect(proj):
@@ -249,23 +74,33 @@ def thanTkDrawRect(proj):
     proj[1].thanElementAdd(elem)
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
-    proj[1].thanDoundo.thanAdd("rectangle", thanModReplaceRedo, ((), newelems),
-                                            thanModReplaceUndo, ((), newelems))
+    proj[1].thanDoundo.thanAdd("rectangle", thanundo.thanReplaceRedo, ((), newelems),
+                                            thanundo.thanReplaceUndo, ((), newelems))
     proj[2].thanGudCommandEnd()
 
 
 def thanTkDrawPoint(proj):
     "Draws multiple points with the help of a GUI and stores them to database."
-    res = proj[2].thanGudGetPoint(T["Specify a point (m=multiple): "], options=("multiple",))
+    res = proj[2].thanGudGetPoint(T["Specify a point (e=explicit z): "], options=("explicit",))
     if res == Canc: return proj[2].thanGudCommandCan() # Point cancelled
-    if res != "m":
+    if res != "e":
         __housepoint(proj, res)
-        proj[2].thanGudCommandEnd()
-        return                                         # Point OK
-    while True:                                        # Get multiple points
-        res = proj[2].thanGudGetPoint(T["Specify a point (<enter>): "], options=("",))
-        if res == Canc: return proj[2].thanGudCommandCan()  # Point cancelled
+        while True:
+            res = proj[2].thanGudGetPoint(T["Specify a point (<enter>): "], options=("",))
+            if res == Canc: return proj[2].thanGudCommandEnd()    # No more points
+            if res == "":   return proj[2].thanGudCommandEnd()    # No more points
+            __housepoint(proj, res)
+
+    z = proj[1].thanVar["elevation"][2]                         # Get points with z given explicitelly
+    while True:
+        res = proj[2].thanGudGetPoint(T["Specify a point xy (<enter>): "], options=("",))
+        if res == Canc: return proj[2].thanGudCommandEnd()  # No more points
         if res == "": return proj[2].thanGudCommandEnd()    # No more points
+        z = proj[2].thanGudGetFloat(T["Specify point z: "], z)
+        if z == Canc:
+            proj[2].thanPrtCan("can1")
+            continue
+        res[2] = z
         __housepoint(proj, res)
 
 def __housepoint(proj, cc):
@@ -275,8 +110,91 @@ def __housepoint(proj, cc):
     proj[1].thanElementAdd(elem)
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
-    proj[1].thanDoundo.thanAdd("point", thanModReplaceRedo, ((), newelems),
-                                        thanModReplaceUndo, ((), newelems))
+    proj[1].thanDoundo.thanAdd("point", thanundo.thanReplaceRedo, ((), newelems),
+                                        thanundo.thanReplaceUndo, ((), newelems))
+
+
+gvalidc = [True, True, True]
+def thanTkDrawPointNamed(proj):
+    "Draws multiple points with the help of a GUI and stores them to database."
+    cvis = T["Coordinate usability (for DTM, etc)"]
+    res = __drawpnamed1(proj, cvis)
+    if   res == Canc: return proj[2].thanGudCommandCan()      # Point cancelled
+    elif res == "e":  __drawpnamed3(proj, cvis)
+    else:             __drawpnamed2(proj, cvis)
+    proj[2].thanGudCommandEnd()
+
+def __drawpnamed1(proj, cvis):
+    "get the first point and check for explicit z."
+    while True:
+        statonce = "%s: X=%r Y=%r Z=%r\n" % (cvis, gvalidc[0], gvalidc[1], gvalidc[2])
+        res = proj[2].thanGudGetPoint(T["Specify a point (e=explicit z/toggle X/toggle Y/toggle Z): "],
+            statonce, options=("explicit", "X", "Y", "Z"))
+        if res == Canc: return res
+        if res == "e": return res
+        if res in ("x", "y", "z"):
+            i = "xyz".index(res)
+            gvalidc[i] = not gvalidc[i]
+            continue
+        name = proj[2].thanGudGetText0(T["Point name: "])
+        if name == Canc:
+            proj[2].thanPrtCan("can1")
+            continue
+        __housepnamed(proj, res, name)
+        return ""
+
+def __drawpnamed2(proj, cvis):
+    "Get multiple points without asking for z."
+    while True:
+        statonce = "%s: X=%r Y=%r Z=%r\n" % (cvis, gvalidc[0], gvalidc[1], gvalidc[2])
+        res = proj[2].thanGudGetPoint(T["Specify a point (toggle X/toggle Y/toggle Z): "],
+              statonce, options=("", "X", "Y", "Z"))
+        if res == Canc: return    # No more points
+        if res == "":   return    # No more points
+        if res in ("x", "y", "z"):
+            i = "xyz".index(res)
+            gvalidc[i] = not gvalidc[i]
+            continue
+        name = proj[2].thanGudGetText0(T["Point name: "])
+        if name == Canc:
+            proj[2].thanPrtCan("can1")
+            continue
+        __housepnamed(proj, res, name)
+
+def __drawpnamed3(proj, cvis):
+    "Get multiple points asking explicitly for z."
+    proj[2].thanPrt(T["Points with explicit z"])
+    z = proj[1].thanVar["elevation"][2]                         # Get points with z given explicitelly
+    while True:
+        statonce = "%s: X=%r Y=%r Z=%r\n" % (cvis, gvalidc[0], gvalidc[1], gvalidc[2])
+        res = proj[2].thanGudGetPoint(T["Specify a point xy (toggle X/toggle Y/toggle Z): "],
+              statonce, options=("", "X", "Y", "Z"))
+        if res == Canc: return    # No more points
+        if res == "":   return    # No more points
+        if res in ("x", "y", "z"):
+            i = "xyz".index(res)
+            gvalidc[i] = not gvalidc[i]
+            continue
+        z = proj[2].thanGudGetFloat(T["Specify point z: "], z)
+        if z == Canc:
+            proj[2].thanPrtCan("can1")
+            continue
+        name = proj[2].thanGudGetText0(T["Point name: "])
+        if name == Canc:
+            proj[2].thanPrtCan("can1")
+            continue
+        res[2] = z
+        __housepnamed(proj, res, name)
+
+def __housepnamed(proj, cc, name):
+    "Create and draw the named point and do housekeeping."
+    elem = thandr.ThanPointNamed()
+    elem.thanSet(cc, name, gvalidc)
+    proj[1].thanElementAdd(elem)              # thanTouch is implicitely called
+    elem.thanTkDraw(proj[2].than)
+    newelems = (elem,)
+    proj[1].thanDoundo.thanAdd("point", thanundo.thanReplaceRedo, ((), newelems),
+                                        thanundo.thanReplaceUndo, ((), newelems))
 
 
 def thanTkDrawPolygon(proj):
@@ -289,8 +207,8 @@ def thanTkDrawPolygon(proj):
     proj[1].thanElementAdd(elem)          # thanTouch is implicitely called
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
-    proj[1].thanDoundo.thanAdd("polygon", thanModReplaceRedo, ((), newelems),
-                                          thanModReplaceUndo, ((), newelems))
+    proj[1].thanDoundo.thanAdd("polygon", thanundo.thanReplaceRedo, ((), newelems),
+                                          thanundo.thanReplaceUndo, ((), newelems))
     proj[2].thanGudCommandEnd()
 
 
@@ -501,44 +419,6 @@ def thanTkDrawText(proj):
         ct[:2] = ct[0]-1.2*_texset.size*nn[0], ct[1]-1.2*_texset.size*nn[1]
 
 
-gvalidc = [True, True, True]
-def thanTkDrawPointNamed(proj):
-    "Draws multiple points with the help of a GUI and stores them to database."
-    cvis = T["Coordinate usability (for DTM, etc)"]
-    while True:
-        statonce = "%s: X=%r Y=%r Z=%r\n" % (cvis, gvalidc[0], gvalidc[1], gvalidc[2])
-        res = proj[2].thanGudGetPoint(T["Specify a point (Multiple/toggle X/toggle Y/toggle Z): "],
-              statonce, options=("multiple", "X", "Y", "Z"))
-        if res == Canc: return proj[2].thanGudCommandCan()      # Point cancelled
-        if res not in ("x", "y", "z"): break
-        i = "xyz".index(res)
-        gvalidc[i] = not gvalidc[i]
-    if res != "m":
-        name = proj[2].thanGudGetText0(T["Point name: "])
-        if name == Canc: return proj[2].thanGudCommandCan() # Point cancelled
-        elem = thandr.ThanPointNamed()
-        elem.thanSet(res, name, gvalidc)
-        proj[1].thanElementAdd(elem)              # thanTouch is implicitely called
-        elem.thanTkDraw(proj[2].than)
-        proj[2].thanGudCommandEnd()
-        return                                         # Point OK
-
-    while True:                                        # Get multiple points
-        while True:
-            statonce = "%s: X=%r Y=%r Z=%r\n" % (cvis, gvalidc[0], gvalidc[1], gvalidc[2])
-            res = proj[2].thanGudGetPoint(T["Specify a point (toggle X/toggle Y/toggle Z): "],
-                  statonce, options=("", "X", "Y", "Z"))
-            if res == Canc: return proj[2].thanGudCommandCan()  # Point cancelled
-            if res == "": return proj[2].thanGudCommandEnd()    # No more points
-            if res not in ("x", "y", "z"): break
-            i = "xyz".index(res)
-            gvalidc[i] = not gvalidc[i]
-        name = proj[2].thanGudGetText0(T["Point name: "])
-        if name == Canc: return proj[2].thanGudCommandCan() # Point cancelled
-        elem = thandr.ThanPointNamed()
-        elem.thanSet(res, name, gvalidc)
-        proj[1].thanElementAdd(elem)              # thanTouch is implicitely called
-        elem.thanTkDraw(proj[2].than)
 
 
 def thanPointNamedReplace(proj):
@@ -603,9 +483,9 @@ def thanToSpline(proj):
     proj[2].thanCanvas.delete(lin.thanTags[0])
     lt = proj[1].thanLayerTree
     lay = lt.dilay[lin.thanTags[1]]
-    if lay != lt.thanCur: lay.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    if lay != lt.thanCur: lay.thanTkSet(proj[2].than)
     lin.thanTkDraw(proj[2].than)
-    if lay != lt.thanCur: lt.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    if lay != lt.thanCur: lt.thanCur.thanTkSet(proj[2].than)
 
     thanModEnd(proj, T["Line was succesfully transformed to cubic spline curve."])
 
@@ -625,8 +505,8 @@ def thanDecurve(proj):
         proj[2].thanCanvas.delete(elem.thanTags[0])
         lt = proj[1].thanLayerTree
         lay = lt.dilay[elem.thanTags[1]]
-        if lay != lt.thanCur: lay.thanTkSet(proj[2].than, proj[1].thanTstyles)
+        if lay != lt.thanCur: lay.thanTkSet(proj[2].than)
         elem.thanTkDraw(proj[2].than)
-        if lay != lt.thanCur: lt.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
+        if lay != lt.thanCur: lt.thanCur.thanTkSet(proj[2].than)
 
     thanModEnd(proj, T["%d curves were succesfully decurved."] % len(proj[2].thanSelall))

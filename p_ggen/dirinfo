@@ -1,0 +1,13 @@
+21-10-2004
+
+There are some changes in the jorpath.py:
+
+1. In walkfiles method, the statement
+        for child in self:
+   was changed to
+        for child in self.listdir():    # Thanasis Stamos Oct. 21, 2004
+
+2. IMHO, the expand method should be changed from:
+        return self.expandvars().expanduser().normpath()
+   to:
+        return self.expandvars().expanduser().normpath().abspath()

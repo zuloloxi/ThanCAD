@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the base for the dialogs related to arhitectural algorithms.
 """
@@ -52,7 +52,7 @@ class ThanArchCom(p_gtkwid.ThanComDialog):
         self.thanValsWriteSec(sec="FLOOR PLAN CONSTRAINTS", keys="entWidth entHeight")
 
 
-    def fraLogo(self, win, ir, theme=Tarch["Automated Floor Plan Design Algorithms"], year=2012):
+    def fraLogo(self, win, ir, theme=Tarch["Automated Floor Plan Design Algorithms"], year=2013):
         "Display the logo."
         fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
@@ -81,7 +81,7 @@ class ThanArchCom(p_gtkwid.ThanComDialog):
         fra.columnconfigure(3, weight=1)
 
 
-    def fraLogo2(self, win, ir, theme=None, year=2012):
+    def fraLogo2(self, win, ir, theme=None, year=2013):
         "Display the logo."
         fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")

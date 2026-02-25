@@ -117,7 +117,7 @@ def okMedFile1():
       "This sr reports OK into file mediate.tmp."
       import openfile
       global fw
-      print "okMedFile1a: fw=", fw
+#      print "okMedFile1a: fw=", fw
       if fw == None:
 
 #---------If mediate.tmp was not open, then it could not be accessed.
@@ -134,7 +134,7 @@ def okMedFile1():
 
 #---------Intemediate file is not needed by the following programs. Delete it.
 
-          print "okMedFile1b: fw=", fw
+#          print "okMedFile1b: fw=", fw
           fw.close()
           try: pathMed.remove()
           except Exception, why: pass

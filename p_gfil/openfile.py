@@ -10,6 +10,7 @@ ppro = 'egn', 'ydr'
 lang = -1
 files1 = []
 proth = ["", ""]
+descp = "(None)"
 
 if 1:
           DLERRLIN = 'Error at line'
@@ -171,7 +172,7 @@ def inpFile1(mhn, kat, stat):
 #-----Get and open file
 
       while True:
-          filnam = path(inpStrB(mhn1, "")).rstrip()
+          filnam = path(inpStrB(mhn1, "").rstrip())
           kat1 = filnam.ext.rstrip()
           if filnam == "":
               prg(DLTRYAGA, "can1")                        # Try again
@@ -179,8 +180,8 @@ def inpFile1(mhn, kat, stat):
               prg(DLFILSUF, "can1")                        # No suffix allowed
               prg(DLTRYAGA, "can1")
           else:
-              if kat != "": filnam = filnam.parent / filnam.namebase     #Delete dot
-              if kat[:1] == ".": kat = kat[1:]
+              if kat != "": filnam = filnam.parent / filnam.namebase
+              if kat[:1] == ".": kat = kat[1:]                 #Delete dot
               frw, terr = opFile1(1, kat, stat, filnam, "")
               if frw != None: return frw
               prg("\n%s: %s" % (filnam+kat, DLFILACC), "can")  # Can't access file
@@ -204,11 +205,11 @@ def xinpFile1(win, mhn, kat, stat):
 #-----Get and open file
 
       while True:
-          fn , f = opgui.thanTxtopen(win, mhn, kat, stat1, initialfile=None, initialdir=None)
+          fn , f = opgui.thanTxtopen(win, mhn1, kat, stat1, initialfile=None, initialdir=None)
           if f == Canc: return None     # File open cancelled
-          kat = fn.ext
-          fn = fn.parent / fn.namebase
-          if kat[:1] == ".": kat = kat[1:]
+#          kat = fn.ext
+#          fn = fn.parent / fn.namebase
+#          if kat[:1] == ".": kat = kat[1:]
           f.close()
           frw, terr = opFile1(1, kat, stat, fn, "")
           if frw != None: return frw
@@ -229,7 +230,9 @@ def medFile1(iun, mes, kat, stat):
       if kat != "": filnam = filnam.parent / filnam.namebase     #Delete dot
       if kat[:1] == ".": kat = kat[1:]
       frw, terr = opFile1(1, kat, stat, filnam, "")
-      if frw != None: return
+      if frw != None:
+          prg('FILE %s= %s' % (mes, filnam))
+          return frw
       fildat.er1s('Σφάλμα κατά την ανάγνωση αρχείου %s:\n%s\n%s: %s' % (filmed.FILNAMMED, mes, filnam, DLFILACC))
 
 #===========================================================================

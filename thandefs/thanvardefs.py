@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,32 +21,34 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the ThanCad TextStyle, and an object used if an image is
 not found or if Python Image Library is not installed.
 """
 import copy
 
+
 class ThanTstyle:
     def __init__(self, name, font, height=0.0, widthfactor=1.0, obliqueangle=0.0,
                  upsidedown=False, backwards=False, vertical=False):
         "Initialise textstyle object."
-	self.thanName = name
-	self.thanFont       = font.thanCopy()
-	self.thanHeight     = height
-	self.thanWidthfactor= widthfactor
-	self.thanOblique    = obliqueangle
+        self.thanName = name
+        self.thanFont       = font.thanCopy()
+        self.thanHeight     = height
+        self.thanWidthfactor= widthfactor
+        self.thanOblique    = obliqueangle
         self.thanUpsidedown = upsidedown
-	self.thanBackwards  = backwards
-	self.thanVertical   = vertical
-#	self.thanRecreate()
+        self.thanBackwards  = backwards
+        self.thanVertical   = vertical
+#        self.thanRecreate()
+
 
     def thanCopy(self):
         "Make a distinct copy of self."
-	c = copy.copy(self)
-	c.thanFont = self.thanFont.thanCopy()
-	return c
+        c = copy.copy(self)
+        c.thanFont = self.thanFont.thanCopy()
+        return c
 
 
 class ThanImageMissing:
@@ -65,6 +67,20 @@ class ThanImageMissing:
         if rot == ROTATE_180: dxp, dyp = self.size
         else:                 dyp, dxp = self.size
         return ThanImageMissing(size=(dxp, dyp))
+
+
+def imageOpen(fi, size=None):
+    "Get an image from a file and report errors."
+    import Image
+    try:
+        im = Image.open(fi)
+        if im.size[0] < 2 or im.size[1] < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
+        im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
+        return im, ""
+    except (IOError, ValueError), e:
+        if size == None: im = ThanImageMissing(size)
+        else: im = ThanImageMissing()                   #Default size
+        return im, str(e)
 
 
 class ThanCoor(list):
@@ -162,8 +178,16 @@ class ThanMultiSet:
 
 
 class ThanId:
-    """Class to return unique ids (e.g. for wxWindows windows).
+    """Class to return unique ids (e.g. for Tkinter windows).
 
+    The tag of an element is its id prefixed by a prefix. The id of an element
+    is its handle (id and handle are refer to the same thing).
+    If an element has not a valid handle (for example when it has just been created)
+    the new2() method creates a handle and a tag for the element. The tag is the
+    handle prefixed by self.prefix.
+    If an element already has a handle (for example it was read from a dxf file),
+    then its tag is computed as its handle orefixed by self.prefix. The next
+    available handle is adjusted to be the element's handle plus one.
     Ids 0-99 are reserved. It seems that when ids are plain integers
     or plain integers converted to strings with str(), Tkinter will
     neither work, nor complain about it. A prefix with a letter is

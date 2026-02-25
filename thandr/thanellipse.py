@@ -1,0 +1,310 @@
+##############################################################################
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# 
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
+# URL:     http://thancad.sourceforge.net
+# e-mail:  cyberthanasis@excite.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##############################################################################
+
+"""\
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+
+This module defines the ellipse element.
+"""
+from math import fabs, cos, sin, atan2, hypot, pi
+from p_ggen import Canc, thanUnicode
+from p_gmath import (dpt, thanNearx, thanNear2, ellipse2Line, ellipse5Lsm, ellipse4Lsm,
+                     ellipse5Fit, ellipse4Fit, PI05, PI2)
+from thantrans import T
+from thanline import ThanCurve, ThanLine
+from thanelem import ThanElement
+from thanpoint import ThanPoint
+
+
+class ThanEllipse(ThanCurve):
+    """An ellipse represented by a polygon."""
+    thanElementName = "ELLIPSE"    # Name of the element's class
+
+    def thanSet (self, cc, a, b, theta1, theta2, phi, full, spin=1):
+        "Sets the attributes of the ellipse."
+        self.a = fabs(a)
+        self.b = fabs(b)
+        self.cc = list(cc)
+        self.full = bool(full)
+        if self.a < self.b:
+            self.a, self.b = self.b, self.a
+            phi += PI05
+            theta1 -= PI05
+            theta2 -= PI05
+        if self.full:
+            self.theta1 = 0.0
+            self.theta2 = PI2
+        else:
+            self.theta1 = theta1 % PI2        # radians assumed
+            self.theta2 = theta2 % PI2        # radians assumed
+            if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
+        self.phi = dpt(phi)
+        self.spin = spin             #By default we assume counterclockwise (1)
+#        self.setBoundBoxRect(cc[0], cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
+#        self.thanTags = ()          #thanTags is initialised in ThanElement
+
+        cp, tp = self.than2Line()    # temporarily with default dt, until thanTkDraw is called
+        ThanCurve.thanSet(self, cp, tp) #This also sets boundbox
+        self.thanSetToldeg(20.0)     # Set angle tolerance for smoothness (we _know_ than ellipse is smooth :))
+
+
+    def than2Line(self, dt=0.0, ta=None, tb=None):
+        "Represent an ellipse with straight line segments."
+        if dt == None: return True               #than2Line IS implemented
+        if ta == None:
+            ta = self.theta1
+            tb = self.theta2
+        cs, tp = ellipse2Line(self.cc[0], self.cc[1], self.a, self.b, ta, tb, self.phi, dt)
+        cc = self.cc
+        cp = []
+        for c1 in cs:
+            c2 = list(cc)
+            c2[:2] = c1[:2]
+            cp.append(c2)
+        return cp, tp
+
+
+    def thanIsNormal(self):
+        "Returns False if the ellipse is degenerate (1 or 2 zero semi-axes)."
+        a = min(self.a, self.b)
+        if thanNearx(self.cc[0], self.cc[0]+a): return False    # Degenerate ellipse
+        if thanNearx(self.cc[1], self.cc[1]+a): return False    # Degenerate ellipse
+        return True
+
+
+    def thanRotate(self):
+        "Rotates the element within XY-plane with predefined angle and rotation angle."
+        self.cc = self.thanRotateXy(self.cc)
+        self.phi = dpt(self.phi + self.rotPhi)
+        self.setBoundBoxRect(self.cc[0], self.cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
+
+
+    def thanChelev(self, z):
+        "Set constant elevation of z."
+        ThanElement.thanChelev(self, z)
+
+
+    def thanChelevn(self, celev):
+        "Set constant elevation of z and higher dimensions."
+        ThanElement.thanChelevn(self, celev)
+
+
+    def getInspnt(self):
+        "Returns the insertion point of the element."
+        return ThanElement.getInspnt(self)
+
+
+    def thanReverse(self):
+        "Reverse the spin of the ellipse."
+        self.spin = -self.spin
+
+
+    def thanTkGet(self, proj):
+        "Gets the attributes of the ellipse spline interactively from a window."
+        un = proj[1].thanUnits
+        cc = proj[2].thanGudGetPoint(T["Center (5=tilted through 5 points/4=horizontal through 4 points): "], options=("5", "4"))
+        if cc == Canc: return Canc                                  #Ellipse was cancelled
+        if cc == "5": return self.__getTiltHor(proj, 5)
+        if cc == "4": return self.__getTiltHor(proj, 4)
+        a = proj[2].thanGudGetCircle(cc, T["Semi-major axis: "])
+        if a == Canc: return Canc                                   #Ellipse was cancelled
+        b = proj[2].thanGudGetEllipseB(cc, a, 0.0, T["Semi-minor axis: "])
+        if b == Canc: return Canc                                   #Ellipse was cancelled
+        mes = "%s (enter=%s): " % (T["Rotation angle"], un.strang(0.0))
+        phi = proj[2].thanGudGetAngle(cc, mes, un.rad2unit(0.0))
+        if phi == Canc: return proj[2].thanGudCommandCan()        #Ellipse was cancelled
+        phi = un.unit2rad(phi)
+        self.thanSet(cc, a, b, 0.0, PI2, phi, full=True, spin=1)
+        return True                              # Spline OK
+
+
+    def __getTiltHor(self, proj, nmin):
+        "Fit a tilted or horizontal ellipse through at least 5 or 4 points respectively."
+        cs = self.__getPoints(proj, nmin)
+        if cs == Canc: return Canc
+        x = [cc[0] for cc in cs]
+        y = [cc[1] for cc in cs]
+        if nmin == 5: v, terr = ellipse5Lsm(x, y)
+        else:         v, terr = ellipse4Lsm(x, y)
+        if v != None:
+            cc = list(cs[0])
+            cc[:2] = v[2], v[3]
+            self.thanSet(cc, v[0], v[1], 0.0, PI2, v[4], full=True, spin=1)
+            return True
+        proj[2].thanPrter(terr)
+        if "define" not in terr: return Canc
+        ans = proj[2].thanGudGetYesno(T["Do you want to try the best fit to ellipse (Yes/No) <No>: "], default=False)
+        if not ans: return Canc
+        if nmin == 5: v, terr = ellipse5Fit(x, y)
+        else:         v, terr = ellipse4Fit(x, y)
+        if v != None:
+            cc = list(cs[0])
+            cc[:2] = v[2], v[3]
+            self.thanSet(cc, v[0], v[1], 0.0, PI2, v[4], full=True, spin=1)
+            return True
+        proj[2].thanPrter(terr)
+        return Canc
+
+
+    def __getPoints(self, proj, nmin):
+        "Gets nmin points or more from user and fit an ellipse if possible."
+        cs = []
+        while True:
+            n = len(cs)
+            if n == 0:
+                c1 = proj[2].thanGudGetPoint(T["Point 1 of ellipse (points from a Line/Select point elements): "],
+                    options=("Line", "Select"))
+                if c1 == Canc: return Canc                                   #Ellipse was cancelled
+                if c1 == "l": return self.__getPointsLine(proj, nmin)
+                if c1 == "s": return self.__getPointsSel (proj, nmin)
+                cs.append(c1)
+            elif n < nmin:
+                c1 = proj[2].thanGudGetPoint(T["Point %s of ellipse (Undo/enter=finish): "]%(n+1,), options=("u",))
+                if c1 == Canc:  return Canc                                  #Ellipse was cancelled
+                elif c1 == "u": del cs[-1]
+                else:           cs.append(c1)
+            else:
+                c1 = proj[2].thanGudGetPoint(T["Point %s of ellipse (Undo/enter=finish): "]%(n+1,), options=("u",""))
+                if c1 == Canc:  return Canc                                  #Ellipse was cancelled
+                elif c1 == "":  break
+                elif c1 == "u": del cs[-1]
+                else:           cs.append(c1)
+        return cs
+
+
+    def __getPointsLine(self, proj, nmin):
+        "Select a line which has at least nmin nodes and returns its nodes."
+        from thancom import thancomsel
+        while True:
+            e = thancomsel.thanSelect1(proj, stat=T["Select a line which has at least %d nodes: "]%(nmin,),
+                filter=lambda e: isinstance(e, ThanLine))
+            proj[2].thanGudSetSelRestore()                   # Restores previous selection
+            if e == Canc: return Canc
+            try:    cp = e.cpori      #In case it is a spline
+            except: cp = e.cp
+            if thanNear2(cp[-1], cp[-1]): cp = cp[:-1]       #If closed line delete the last point (which coincides with the first)
+            if len(cp) >= nmin: break
+            proj[2].thanPrter(T["Line has only %d nodes. Try again."]%(len(cp),))
+        return cp
+
+
+    def __getPointsSel(self, proj, nmin):
+        "Select point elemnents and return thier coordinates."
+        from thancom import thancomsel
+        while True:
+            proj[2].thanPrt(T["Select least %d point elements:"]%(nmin,))
+            r = thancomsel.thanSelectGen(proj, standalone=False,
+                filter=lambda e: isinstance(e, ThanPoint))
+            elems = proj[2].thanSelall
+            proj[2].thanGudResetSelColor()                   # Unmarks the selection
+            proj[2].thanGudSetSelRestore()                   # Restores previous selection
+            proj[2].thanUpdateLayerButton()                  # Show current layer again
+            if r == Canc: return Canc
+            if len(elems) >= nmin: break
+            proj[2].thanPrter(T["Only %d point elements were selected. Try again."]%(len(elems),))
+        return [e.cc for e in elems]
+
+
+    def thanTkDraw1(self, than):
+        "Draws the spline to a Tk Canvas."
+        dx, dy = than.ct.global2LocalRel(1.0, 1.0)
+        dt = hypot(1.0, 1.0)/hypot(dx, dy)*10.0    #This means that dt is about 10 pixels
+        self.cp, self.tp = self.than2Line(dt)
+        ThanCurve.thanTkDraw1(self, than)
+
+
+    def thanExpThc1(self, fw):
+        "Save the ellipse in thc format."
+        f = fw.formFloat
+        fw.writeNode(self.cc)
+        fw.writeln((f+f) % (self.a, self.b))
+        fw.writeln((f+f) % (self.theta1, self.theta2))
+        fw.writeln(f % (self.phi,))
+        fw.writeln("%d" % (self.full,))
+        fw.writeln("%d" % (self.spin,))
+
+
+    def thanImpThc1(self, fr, ver):
+        "Read the ellipse from thc format."
+        cc = fr.readNode()                   #May raise ValueError, IndexError, StopIteration
+        a, b = map(float, fr.next().split()) #May raise ValueError, IndexError, StopIteration
+        theta1, theta2 = map(float, fr.next().split()) #May raise ValueError, IndexError, StopIteration
+        phi = float(fr.next())               #May raise ValueError, StopIteration
+        full = bool(int(fr.next()))          #May raise ValueError, StopIteration
+        spin = int(fr.next())                #May raise ValueError, StopIteration
+        if spin not in (1, -1): raise ValueError, "spin must br 1, or -1"
+        self.thanSet(cc, a, b, theta1, theta2, phi, full, spin)
+
+
+    def thanExpDxf(self, fDxf):
+        "Exports the arc to dxf file."
+        rd = 180.0 / pi
+        fDxf.thanDxfPlotEllipse(self.cc[0], self.cc[1], self.a, self.b,
+            self.theta1*rd, self.theta2*rd, self.phi*rd)
+
+
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the ellipse according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property."""
+        cc = list(self.cc)
+        cc[:3] = fun(cc[:3])
+        cf = cos(self.phi)
+        sf = sin(self.phi)
+        cr = list(self.cc)
+        cr[0] += self.a*cf
+        cr[1] += self.a*sf
+        cr = fun(cr[:3])
+        a = hypot(cr[1]-cc[1], cr[0]-cc[0])
+        phi = atan2(cr[1]-cc[1], cr[0]-cc[0])  #Note that python ensures than atan2(0,0) = 0!!!
+
+        cr = list(self.cc)
+        cr[0] -= self.b*sf       #cos(t+90) = -sin(t)
+        cr[1] += self.b*cf       #sin(t+90) =  cos(t)
+        cr = fun(cr[:3])
+        b = hypot(cr[1]-cc[1], cr[0]-cc[0])
+
+        ths = [self.theta1, self.theta2]
+        for i,th in enumerate(ths):
+            cr = list(self.cc)
+            dx = r * cos(th)
+            dy = r * sin(th)
+            cr[0] += dx*cf - dy*sf
+            cr[1] += dy*sf + dy*cf
+            cr = fun(cr[:3])
+            ths[i] = atan2(cr[1]-cc[1], cr[0]-cc[0])   #Note that python ensures than atan2(0,0) = 0!!!
+        self.thanSet(cc, a, b, ths[0], ths[1], phi, self.full, self.spin)
+
+
+    def thanList(self, than):
+        "Shows information about the arc element."
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
+        than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
+        than.write("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
+        t = ("%s%s" % (T["Center: "], than.strcoo(self.cc)),
+             "%s%s    %s%s" % (T["Semi-major axis: "], than.strdis(self.a), T["Semi-minor axis: "], self.b),
+             "%s%s    %s%s" % (T["Angle from X axis: "], than.strang(self.phi), T["Spin: "], self.spin),
+             T["Spans: %s    to: %s\n"]% (than.strdir(self.theta1), than.strdir(self.theta2)),
+            )
+        than.write("\n".join(t))

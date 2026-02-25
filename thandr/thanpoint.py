@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the point element.
 """
@@ -133,9 +133,17 @@ class ThanPoint(ThanElement):
     def thanTkDraw1(self, than):
         "Draws the point on the window."
         xa, ya = than.ct.global2Local(self.cc[0], self.cc[1])
-        temp = than.thanPoints["chi"](than.dc, xa, ya, self.psize,
-            color=than.outline, fill=than.fill, tags=self.thanTags)
-        self.wsize, _ = than.ct.local2GlobalRel(self.psize, 0.0)    #Recalculate the size in world coordinates
+        dc = than.dc
+#        print "point thanTkDraw1(): stereo = %s stereoon=%s" % (than.stereo, dc.thanStereoOn)
+        if than.stereo != None and dc.thanStereoOn:
+            size = 3
+            iparal = than.stereo.dpix(self.cc[2])
+            dc.pointpair(xa, ya, size, iparal, tags=self.thanTags)
+            self.wsize, _ = than.ct.local2GlobalRel(size, 0.0)    #Recalculate the size in world coordinates
+        else:
+            temp = than.thanPoints["chi"](than.dc, xa, ya, self.psize,
+                color=than.outline, fill=than.fill, tags=self.thanTags)
+            self.wsize, _ = than.ct.local2GlobalRel(self.psize, 0.0)    #Recalculate the size in world coordinates
         self._setbbox()
 
     thanTkDraw = thanTkDraw1     #A point will always be visible, so it does not need the visibility mechanism
@@ -156,7 +164,7 @@ class ThanPoint(ThanElement):
         "Save the point in thc format."
         fw.writeNode(self.cc)
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver):
         "Read the point from thc format."
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         self.thanSet(c1)
@@ -177,9 +185,21 @@ class ThanPoint(ThanElement):
 	p = pyx.path.circle(ca[0], ca[1], 0.05)
 	than.dc.stroke(p)
 
+
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property."""
+        cc = self.cc
+        cc[:3] = fun(cc[:3])
+        self._setbbox()
+
+
     def thanList(self, than):
         "Shows information about the point element."
-        than.writecom("%s: %s" % (T["Element"], "POINT"))
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         than.write("    %s %s\n" % (T["Layer:"], p_ggen.thanUnicode(than.laypath)))
         than.write("%s: %s\n" % (T["Insertion point"], than.strcoo(self.cc)))
 
@@ -275,7 +295,7 @@ class ThanPointNamed(ThanPoint):
         fw.writeValid(self.validc)
         fw.writeTextln(self.name)
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver):
         "Read the named point from thc format."
         cc = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         validc = fr.readValid()          #May raise ValueError, IndexError, StopIteration
@@ -296,7 +316,7 @@ class ThanPointNamed(ThanPoint):
 
     def thanList(self, than):
         "Shows information about the point element."
-        than.writecom("%s: %s" % (T["Element"], "NAMED POINT"))
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         than.write("    %s %s\n" % (T["Layer:"], p_ggen.thanUnicode(than.laypath)))
         than.write("%s: %s\n" % (T["Insertion point"], than.strcoo(self.cc)))
         than.write("Name: %s\n" % self.name)

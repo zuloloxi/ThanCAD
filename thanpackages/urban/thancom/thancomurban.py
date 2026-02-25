@@ -1,0 +1,199 @@
+# -*- coding: iso-8859-7 -*-
+##############################################################################
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# 
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
+# URL:     http://thancad.sourceforge.net
+# e-mail:  cyberthanasis@excite.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##############################################################################
+
+"""\
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+
+The package provides tools and automation for urban analysis/design.
+The subpackage contains the commands which handle urban related procedures.
+This module implements various urban commands.
+"""
+
+from math import hypot, fabs, atan2, pi
+import collections
+import p_ggen
+from p_gmath import thanNearx, dpt
+import thandr
+from thanvar import Canc, thanShowFile
+from thantrans import T, Turban, Tarch, Tmatch
+
+
+grademax = 5.0
+def thanUrbanSlope(proj):
+    "Finds roads (lines or parts of lines) with less slope than a threshold."
+    from thancom.thancomsel import thanSelectGen
+    from thancom import thanundo
+    from thancom.thancommod import thanModCanc, thanModEnd
+    global grademax
+    proj[2].thanPrt(Turban["Locates roads (lines) whose slope is less than arbitrary threshold"]+".", "info")
+    s = Turban["Please enter grade threshold (enter=%.1f%%): "] % (grademax,)
+    a = proj[2].thanGudGetFloat2(s, default=5.0, limits=(0.0, 100.0))
+    if a == Canc: return proj[2].thanGudCommandCan()  # Urban grade cancelled
+    proj[2].thanPrt(Turban["Please select lines to search:"])
+    res = thanSelectGen(proj, standalone=False, filter=lambda e, cl=thandr.ThanLine: isinstance(e, cl))
+    if res == Canc: return thanModCanc(proj)          # Urban grade cancelled
+    grademax = a
+    roads = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    newelems = set()
+    nig = 0
+    for e in roads:
+        for cc in e.cp:
+            if cc[2] != 0.0: break
+        else:
+            nig += 1
+            continue
+        cn = []
+        for a, b in p_ggen.iterby2(e.cp):
+            d = hypot(b[1]-a[1], b[0]-a[0])
+            if thanNearx(d, 0.0): continue
+            g = fabs((b[2]-a[2])/d)*100.0
+            if g > grademax: continue
+            if len(cn) == 0:
+                cn = [a, b]
+                cn.append(b)
+            elif a == cn[-1]:
+                cn.append(b)
+            else:
+                __addli(proj, newelems, cn)
+                cn = [a, b]
+        __addli(proj, newelems, cn)
+    if nig > 0: proj[2].thanPrter1(Turban["%d roads have elevation zero and were ignored."] % (nig,))
+    if len(newelems) == 0: return thanModCanc(proj, Turban["No suitable roads were found!"])
+    thanundo.thanReplaceRedo(proj, set(), newelems, roads)
+    proj[1].thanDoundo.thanAdd("urbangrade", thanundo.thanReplaceRedo, (set(), newelems, roads),
+                                             thanundo.thanReplaceUndo, (set(), newelems, selold))
+    thanModEnd(proj, Turban["%d suitable roads were copied to current layer."] % (len(newelems),), "info")
+
+
+def __addli(proj, newelems, cn):
+    "Add a line if it is not degenerate."
+    if len(cn) < 2: return
+    e = thandr.ThanLine()
+    e.thanSet(cn)
+    if e.thanIsNormal():
+        proj[1].thanElementTag(e) #  "Adds tags to an elements and gets it ready for 'restore'."
+        newelems.add(e)
+
+
+def __biodirlines(e):
+    "Filters elements that can be used as roads."
+    from thandr import ThanLine, ThanCurve, ThanLineFilled
+    if isinstance(e, ThanCurve): return False
+    if isinstance(e, ThanLineFilled): return False
+    return isinstance(e, ThanLine)
+
+
+def thanUrbanBioazim(proj):
+    "Computation of the azimuth of roads (lines) for bioclimatic analysis."
+    from thancom.thancomsel import thanSelectGen
+    from thancom import thanundo
+    from thancom.thancommod import thanModCanc, thanModEnd
+    prt = proj[2].thanPrt
+    prt(Tarch["This command computes statistics of the azimuth of roads (lines) for bioclimatic evaluation of city plans."], "info")
+    ncat = proj[2].thanGudGetInt2(Tarch["Number of azimuth categories (enter=4): "], default=4, limits=(2, None), statonce="", strict=True)
+    if ncat == Canc: return proj[2].thanGudCommandCan()    # azimuth computation was cancelled
+    prt(Tarch["Select roads to process:"])
+    res = thanSelectGen(proj, standalone=False, filter=__biodirlines)
+    if res == Canc: return thanModCanc(proj)               # azimuth computation was cancelled
+    roads = proj[2].thanSelall
+    selold = proj[2].thanSelold
+    dth = 180.0/ncat
+    dsum = collections.Counter()
+    isum = collections.Counter()
+    roadc = collections.defaultdict(set)
+    for e in roads:
+        for ca, cb in p_ggen.iterby2(e.cp):
+            dy, dx = cb[1]-ca[1], cb[0]-ca[0]
+            th = dpt(atan2(dy, dx))
+            if th > pi: th -= pi
+            d = hypot(dy, dx)
+            n = int(th*180.0/pi/dth+0.5) % ncat     #When n == ncat, then the azimuth is in the category of the azimuth of n=0
+            dsum[n] += d
+            isum[n] += 1
+            roadc[n].add((tuple(ca), tuple(cb)))
+    proj[1].thanDoundo.thanAdd("edubiodir", thanundo.thanReplaceRedo, ((), (), roads),
+                                            thanundo.thanReplaceUndo, ((), (), selold))
+    fw = __openbio(proj, proj[2].thanPrter)
+    if fw != None:
+        prt = lambda s, tags=(), fw=fw: fw.write("%s\n" % (s,))
+    prt("Γωνία (deg)\t  Πλήθος οδών\t  Συνολικό μήκος", "info")
+    for i in xrange(ncat):
+        s = "%11.1f\t%13d\t%16.1f" % (dth*i, isum[i], dsum[i])
+        prt(s.replace(".", ","), "info1")
+    prt("Εύρος μετρήσεων για κάθε γωνία ± %.1f deg" % (dth*0.5,))
+    fn = None
+    if fw != None:
+        fn = p_ggen.path(fw.name)
+        fw.close()
+    __biocolor(proj, dth, ncat, roadc, fn)
+    if fn != None: thanShowFile(proj, fn, "Statistics of the azimuth of roads")
+    thanModEnd(proj)
+
+
+def __biocolor(proj, dth, ncat, roadc, fn):
+    "Create a new drawing with the roads coloured according to azimuth."
+    from thaneng.thanprofile import defDxf
+    from thancom.thancomview import thanZoomExt
+    from thancom.thancomfile import thanFileSavePath
+    layers = []
+    colors = []
+    for i in xrange(ncat):
+        th = dth*i
+        layers.append("theta%d_%03.1f" % (i, th))
+        if th < 22.5:      colors.append(3)        #green
+        elif th < 90-22.5: colors.append(2)        #yellow
+        elif th < 90+22.5: colors.append(5)        #blue
+        else:              colors.append(2)        #yellow
+    projnew, dxf = defDxf(proj, layers, colors)
+
+    for i in xrange(ncat):
+        dxf.thanDxfSetLayer(layers[i])
+        for ca, cb in roadc[i]:
+            dxf.thanDxfPlot3(ca[0], ca[1], ca[2], 3)
+            dxf.thanDxfPlot3(cb[0], cb[1], cb[2], 2)
+    dxf.thanDxfPlot(0, 0, 999)
+    projnew[1].thanLayerTree.thanDictRebuild()
+#    projnew[2].geometry("%dx%d" % (640, 480))
+    projnew[2].update()
+    projnew[2].thanRegen()
+    thanZoomExt(projnew)
+    if fn != None:
+        fn = fn.parent / fn.namebase + ".thcx"
+        thanFileSavePath(projnew, fn)
+
+
+def __openbio(proj, prt):
+    "Open files to save the azimuth results."
+    name = proj[0].namebase
+    par = p_ggen.path(proj[0].parent)
+    try:
+        for i in xrange(1000):
+            p = par / ("%s%03d.txt" % (name, i))
+            if not p.exists():
+                fw = open(p, "w")
+                return fw
+        raise IOError, "It seems the directory is full"
+    except IOError, why:
+        prt("%s:\n%s" % (Tmatch["Could not write results to file."], why), "can")
+        return None

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This package contains definitions (classes etc.) which do not
 depend on (do not import) any other ThanCad Package.
@@ -29,5 +29,6 @@ They may depend on p_g*.py libraries.
 """
 
 from thanunits import ThanUnits
-from thanvardefs import ThanTstyle, ThanImageMissing, ThanCoor, ThanMultiSet, ThanId
+from thanvardefs import ThanTstyle, ThanImageMissing, imageOpen, ThanCoor, ThanMultiSet, ThanId
 import thanplotcups
+from thandashes import ThanLtype, thanDashes

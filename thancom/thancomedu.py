@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -22,20 +22,15 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module processes commands for educational/research purposes.
 """
-from math import atan2, hypot, pi
-import collections
-from p_gmath import dpt
-import p_ggen, p_gtri
-import thandr, thancomdraw
-from thanvar import Canc, thanShowFile
-from thantrans import T, Tarch, Tmatch
-import thancomsel, thancomfile
-from thancommod import thanModEnd, thanModCanc, thanModReplaceRedo, thanModReplaceUndo
+import thandr
+from thanvar import Canc
+from thantrans import T, Tarch
+from thancommod import thanModEnd
 from thantkdia import ThanElemtext, ThanBcplan
 
 
@@ -116,9 +111,9 @@ def thanEdubiocityplan(proj):
     bcps[0] = bcp
     proj[1].thanTouch()                    #Drawing IS modified
     if v.doPrepro:
-        dtms = proj[1].thanObjects["DTMLINES"]
-        if len(dtms) == 0: return proj[2].thanGudCommandCan(T["Can't preprocess: No DTM has been defined!"])
-        dtm = dtms[0]
+        dtmobjs = proj[1].thanObjects["DTMLINES"]
+        if len(dtmobjs) == 0: return proj[2].thanGudCommandCan(T["Can't preprocess: No DTM has been defined!"])
+        dtm = dtmobjs[0].dtm
         proj[2].thanPrt(Tarch["Please wait, preprocessing may take several minutes.."])
         bcp.pc.pol.build_cache(dtm, proj[2].thanPrt)
         bcp.pc.repairState()
@@ -131,107 +126,9 @@ def thanEdubiocityplan(proj):
             proj[2].thanPrter("%s %s: %s" % (Tarch["Warning: Could not save preprocessing results to"], fn, why))
         return proj[2].thanGudCommandEnd()
     else:
-        if bcp.pc.pol.roadenx == None: return proj[2].thanGudCommandCan(Tarch["Please do preprocessing and retry."])
+        if bcp.pc.pol.cache.roadenx == None: return proj[2].thanGudCommandCan(Tarch["Please do preprocessing and retry."])
         for i in xrange(v.entMult):            #Run multiple times
             bcp.run(proj)
             bcp.tkDraw(proj, bcp.pc.state)     #thanTouch is implicitely called
             bcp.wrState(proj)
         return proj[2].thanGudCommandEnd()
-
-def __biodirlines(e):
-    "Filters alaments that can be used as cutting edges."
-    from thandr import ThanLine, ThanCurve, ThanLineFilled
-    if isinstance(e, ThanCurve): return False
-    if isinstance(e, ThanLineFilled): return False
-    return isinstance(e, ThanLine)
-
-
-def thanEduBioazim(proj):
-    "Computation of the azimuth of roads (lines) for bioclimatic analysis."
-    prt = proj[2].thanPrt
-    prt(Tarch["This command computes statistics of the azimuth of roads (lines) for bioclimatic evaluation of city plans."], "info")
-    ncat = proj[2].thanGudGetInt2(Tarch["Number of azimuth categories (enter=4): "], default=4, limits=(2, None), statonce="", strict=True)
-    if ncat == Canc: return proj[2].thanGudCommandCan()    # azimuth computation was cancelled
-    prt(Tarch["Select roads to process:"])
-    res = thancomsel.thanSelectGen(proj, standalone=False, filter=__biodirlines)
-    if res == Canc: return thanModCanc(proj)               # azimuth computation was cancelled
-    roads = proj[2].thanSelall
-    selold = proj[2].thanSelold
-    dth = 180.0/ncat
-    dsum = collections.Counter()
-    isum = collections.Counter()
-    roadc = collections.defaultdict(set)
-    for e in roads:
-        for ca, cb in p_ggen.iterby2(e.cp):
-            dy, dx = cb[1]-ca[1], cb[0]-ca[0]
-            th = dpt(atan2(dy, dx))
-            if th > pi: th -= pi
-            d = hypot(dy, dx)
-            n = int(th*180.0/pi/dth+0.5) % ncat     #When n == ncat, then the azimuth is in the category of the azimuth of n=0
-            dsum[n] += d
-            isum[n] += 1
-            roadc[n].add((tuple(ca), tuple(cb)))
-    proj[1].thanDoundo.thanAdd("edubiodir", thanModReplaceRedo, ((), (), roads),
-                                            thanModReplaceUndo, ((), (), selold))
-    fw = __openbio(proj, proj[2].thanPrter)
-    if fw != None:
-        prt = lambda s, tags=(), fw=fw: fw.write("%s\n" % (s,))
-    prt("Γωνία (deg)\t  Πλήθος οδών\t  Συνολικό μήκος", "info")
-    for i in xrange(ncat):
-        s = "%11.1f\t%13d\t%16.1f" % (dth*i, isum[i], dsum[i])
-        prt(s.replace(".", ","), "info1")
-    prt("Εύρος μετρήσεων για κάθε γωνία ± %.1f deg" % (dth*0.5,))
-    fn = None
-    if fw != None:
-        fn = p_ggen.path(fw.name)
-        fw.close()
-    __biocolor(proj, dth, ncat, roadc, fn)
-    if fn != None: thanShowFile(proj, fn, "Statistics of the azimuth of roads")
-    thanModEnd(proj)
-
-
-def __biocolor(proj, dth, ncat, roadc, fn):
-    "Create a new drawing with the roads coloured according to azimuth."
-    from thaneng.thanprofile import defDxf
-    from thancom.thancomview import thanZoomExt
-    layers = []
-    colors = []
-    for i in xrange(ncat):
-        th = dth*i
-        layers.append("theta%d_%03.1f" % (i, th))
-        if th < 22.5:      colors.append(3)        #green
-        elif th < 90-22.5: colors.append(2)        #yellow
-        elif th < 90+22.5: colors.append(5)        #blue
-        else:              colors.append(2)        #yellow
-    projnew, dxf = defDxf(proj, layers, colors)
-
-    for i in xrange(ncat):
-        dxf.thanDxfSetLayer(layers[i])
-        for ca, cb in roadc[i]:
-            dxf.thanDxfPlot3(ca[0], ca[1], ca[2], 3)
-            dxf.thanDxfPlot3(cb[0], cb[1], cb[2], 2)
-    dxf.thanDxfPlot(0, 0, 999)
-    projnew[1].thanLayerTree.thanDictRebuild()
-#    projnew[2].geometry("%dx%d" % (640, 480))
-    projnew[2].update()
-    projnew[2].thanRegen()
-    thanZoomExt(projnew)
-    if fn != None:
-        fn = fn.parent / fn.namebase + ".thcx"
-        thancomfile.thanFileSavePath(projnew, fn)
-
-
-def __openbio(proj, prt):
-    "Open files to save the azimuth results."
-    name = proj[0].namebase
-    par = p_ggen.path(proj[0].parent)
-    try:
-        for i in xrange(1000):
-            p = par / ("%s%03d.txt" % (name, i))
-            if not p.exists():
-                fw = open(p, "w")
-                return fw
-        raise IOError, "It seems the directory is full"
-    except IOError, why:
-        prt("%s:\n%s" % (Tmatch["Could not write results to file."], why), "can")
-        return None

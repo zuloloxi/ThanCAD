@@ -109,6 +109,53 @@ def thanGrabRelease():
     win1().focus_set()
     win1().grab_set()
 
+
+
+
+def thanRobustDim(self=None):
+        """Returns the dimensions of a toplevel window and screen in pixels and in mm.
+
+        If it is not a toplevel widget, the toplevel widget is found.
+        If Tkinter answers wrong values, it is assumed that the monitor is
+        19 inches, the ratio of height/width is assumed 0.75 and the resolution
+        1024 x 768.
+        """
+        MON = 19.0; RATIO = 0.75; RESOL = (1024, 768)
+        if self == None:
+            self = Tkinter._default_root
+        else:
+            self.update_idletasks()              # _idletasks breaks WinDoze (98?) support. Skotistika
+            self = self.windfo_toplevel()
+        self.update_idletasks()                  # _idletasks breaks WinDoze (98?) support. Skotistika
+        width  = self.winfo_screenwidth()        # Pixels
+        height = self.winfo_screenheight()       # Pixels
+        widthmm  = float(self.winfo_screenmmwidth())   # mm
+        heightmm = float(self.winfo_screenmmheight())  # mm
+
+        if widthmm < 2.0:
+#            thanLogTk.warning("TkCoor:robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+            if heightmm < 2.0:
+                widthmm = MON*25.4 / sqrt(1+RATIO**2)
+                heightmm = widthmm * RATIO
+            else:
+                witdhmm = heightmm / RATIO
+        elif heightmm < 2.0:
+#            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+            heightmm = widthmm * RATIO
+
+        if width < 2:
+#            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
+            if height < 2:
+                width, height = RESOL
+            else:
+                witdh = int(height / RATIO)
+        elif height < 2:
+#            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
+            height = int(width * RATIO)
+
+        return width, height, widthmm, heightmm
+
+
 #=============================================================================
 
 def __testGrab():

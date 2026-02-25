@@ -12,7 +12,7 @@ class File1:
         self.linesf    = 0
         self.isSavedf  = False
         self.isEOFf    = False
-        self.dlineSavf = ""                 # In case someone call unerfile1 before reading anything
+        self.dlineSavf = ""                 # In case someone calls unerfile1 before reading anything
         self.icodf     = 0
 #        if self.lang ==  0: self.optFile1(0, -1) #-----If language is not set, then set language to Greek
 #        self.opened.append(weakref.ref(self))

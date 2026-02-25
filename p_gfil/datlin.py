@@ -16,7 +16,8 @@ class Datlin:
 	self.dlPrev = []
 	self.dlUnread = False
 	self._comment = comment
-	if comment == "*": comment = r"\*"
+        self.ncom = len(comment)
+        if comment == "*": comment = r"\*"
 #        self._splitter = re.compile(r"""'.+'|".+"|%s.*|\S+""" % comment)
         self._splitter = re.compile(r"""'[^']+'|"[^"]+"|%s.*|\S+""" % comment)
 
@@ -27,8 +28,8 @@ class Datlin:
 
     def __setstate__(self, odict):
         self.__dict__.update(odict)
-	comment = self._comment
-	if comment == "*": comment = r"\*"
+        comment = self._comment
+        if comment == "*": comment = r"\*"
         self._splitter = re.compile(r"""'[^']+'|"[^"]+"|%s.*|\S+""" % comment)   # Restore regular expression
 
     def __iter__(self):
@@ -39,7 +40,8 @@ class Datlin:
         if self.datLin(failoneof=False): return self.dlPrev
         raise StopIteration
 
-    def datLin(self, failoneof=False):
+
+    def datLinold(self, failoneof=False):
         "Reads a new line, unless the previous line was unread."
         if not self.dlUnread:
 	    while 1:
@@ -50,18 +52,42 @@ class Datlin:
 	        self.dlPrev = dl.strip("\n")
 	        self.lin += 1
 		dl = dl.strip()
-		if dl != "" and dl[0] != self._comment: break
+		if dl != "" and dl[0:self.ncom] != self._comment: break
 #        self.dl = self.dlPrev.strip().split()
         self.dl = self._splitter.findall(self.dlPrev)
 	if len(self.dl) > 0:
-	    if self.dl[-1][0] == self._comment: del self.dl[-1]       # Delete trailing comment
+	    if self.dl[-1][0:self.ncom] == self._comment: del self.dl[-1]       # Delete trailing comment
 	for i,dl1 in enumerate(self.dl):
 	    if dl1[0] == "'" == dl1[-1] or dl1[0] == '"' == dl1[-1]:
 	        self.dl[i] = self.dl[i][1:-1]           # Delete apostrophis in strings
 	self.dlUnread = False
 	self.itok = 0
         return True
-	
+
+
+    def datLin(self, failoneof=False):
+        "Reads a new line, unless the previous line was unread."
+        if not self.dlUnread:
+            for dl in self.fr:
+                self.dlPrev = dl.strip("\n")
+                self.lin += 1
+                dl = dl.strip()
+                if dl != "" and dl[0:self.ncom] != self._comment: break
+            else:
+                if not failoneof: return False
+                raise IOError, "Unexpected end of file after line %d." % self.lin
+#        self.dl = self.dlPrev.strip().split()
+        self.dl = self._splitter.findall(self.dlPrev)
+        if len(self.dl) > 0:
+            if self.dl[-1][0:self.ncom] == self._comment: del self.dl[-1]       # Delete trailing comment
+        for i,dl1 in enumerate(self.dl):
+            if dl1[0] == "'" == dl1[-1] or dl1[0] == '"' == dl1[-1]:
+                self.dl[i] = self.dl[i][1:-1]           # Delete apostrophis in strings
+        self.dlUnread = False
+        self.itok = 0
+        return True
+
+
     def datCurline(self):
         "Returns current whole raw dataline."
 	return self.dlPrev
@@ -170,10 +196,15 @@ class Datlin:
         if amin <= a <= amax: return a
         raise ValueError, "Error at line %d: '%d'\nThe integer number was expected in range %d and %d" % (self.lin, a, amin, amax)
 
-    def er(self, mes):
+    def er1s(self, mes):
         "Prints error message and exits."
         t = "Error at line %d of file %s:\n%s" % (self.lin, str(self.fr.name), tog(mes))
         raise ValueError, t
+
+    def er1(self, mes):
+        "Prints error message and continues."
+        t = "Error at line %d of file %s:\n%s" % (self.lin, str(self.fr.name), tog(mes))
+        self.prt(t)
 
     def syntaxEr(self):
         "Prints error message and exits."

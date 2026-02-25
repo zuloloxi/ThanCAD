@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,20 +21,21 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module processes file related commands.
 """
 
-import cPickle, bz2
+import cPickle, bz2, copy
 from tkMessageBox import ERROR
-from p_ggen import path, Struct
+from p_ggen import path, Struct, doNothing, ThanImportError
 import p_gtkuti
-import thanvers, thandr, thanimp, thantkgui, thantkdia, thansupport, thanopt
+import thanvers, thandr, thanimp, thanexp, thantkgui, thantkdia, thansupport
+import thanopt, thanlayer
 from thantrans import T, Tmatch
-from thanvar import Canc, thanfiles, ThanImportError
-import thanrwf
+from thanvar import Canc, thanfiles
+import thancommod, thanrwf, thanundo
 
 mm = p_gtkuti.thanGudModalMessage
 
@@ -65,8 +66,9 @@ _importClass = { ".dxf": ("Drawing Interchange",     thanimp.ThanImportDxf),
                  ".brk": ("3D Lines",                thanimp.ThanImportBrk),
                  ".syn": ("Topographic Points",      thanimp.ThanImportSyn),
                  ".lin": ("Linicad Drawing",         thanimp.ThanImportLin),
+                 ".xyz": ("3D Lines, Intermap xyz format", thanimp.ThanImportXyzIntermap),
                }
-_ser = ".dxf .syk .brk .syn .lin".split()
+_ser = ".dxf .syk .brk .syn .lin .xyz".split()
 if thanopt.thancon.thanFrape.civil:
     import thanprocivil
     from thanprocivil.thanproimp import ThanImportMhk
@@ -79,7 +81,7 @@ _exts.insert(0, ("ThanCad xml", ".thcx"))
 _exts.append(("All Files", "*"))
 
 
-def thanFileOpen(proj, suf1=None):
+def thanFileOpen(proj, suf1=None, forceunload=False):
     """Opens a file which contains thancad drawing.
 
     The following are not saved, but they are automatically rebuilt when
@@ -101,15 +103,15 @@ def thanFileOpen(proj, suf1=None):
                 break
     fildir = thanfiles.getFiledir()
     while True:
-        fns = p_gtkuti.thanGudGetReadFile(proj[2], exts, T["Choose file to open"],
+        fns = p_gtkuti.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
                  initialdir=fildir, multiple=True)
         if fns == None: return proj[2].thanGudCommandCan()     # Open cancelled
-        nopened = thanFileOpenPaths(proj, fns)
+        nopened = thanFileOpenPaths(proj, fns, forceunload)
         if nopened > 0: return proj[2].thanGudCommandEnd()
 
 
-def thanFileOpenPaths(proj, fns):
-    """Opens a files with known paths.
+def thanFileOpenPaths(proj, fns, forceunload=False):
+    """Opens files with known paths.
 
     This is needed to implement opening of recent files (as shown in the menus).
     It is also needed to open files given as command line arguments when
@@ -121,7 +123,7 @@ def thanFileOpenPaths(proj, fns):
                 dr = impFile(proj, fn, _importClass[fn.ext][1])
                 success = "%s: %s" % (fn.name, T["file has been successfully imported."])
             elif fn.ext == ".thcx":
-                dr = openThcx(proj, fn)
+                dr = openThcx(proj, fn, forceunload)
                 success = T["Existing drawing has been opened."]
             else:
                 try:
@@ -147,7 +149,8 @@ def thanFileOpenPaths(proj, fns):
     return nopened
 
 
-def openThcx(proj, fn):
+
+def openThcx(proj, fn, forceunload):
     "Opens a thancad xml like file."
     dr = thandr.ThanDrawing()
     try:
@@ -159,7 +162,7 @@ def openThcx(proj, fn):
                 frf.thanDestroy()
                 fr = open(fn)
                 frf = thanrwf.ThanRfile(fr, projtemp)
-            dr.thanImpThc(frf)
+            dr.thanImpThc(frf, forceunload)
         except StopIteration, why:
             raise IOError, "Incomplete file: end of file encountered"
     except (IOError, ValueError, IndexError, ImportError), e:    # ImportError happens if BZ2file can not import its base class
@@ -167,7 +170,7 @@ def openThcx(proj, fn):
         try:
             frf
         except:
-            pass
+            why = e
         else:
             why = frf.er(e)
             frf.thanDestroy()
@@ -177,8 +180,8 @@ def openThcx(proj, fn):
     return dr
 
 
-def impFile(proj, fn, ImportClass):
-    "Imports a drawing saved in .dxf .syk .brk .syn .lin .mhk format."
+def impFile(proj, fn, ImportClass, defaultLayer="0"):
+    "Imports a drawing saved in .dxf .syk .brk .syn .lin .mhk .xyz format."
     fail = "%s: %s" % (fn.name, T["import failed."])
     try:
         finp = fn.open()
@@ -190,7 +193,7 @@ def impFile(proj, fn, ImportClass):
     dr = thandr.ThanDrawing()
 #---import
     ts = thanimp.ThanCadDrSave(dr, proj[2].thanPrt)
-    imp = ImportClass(finp, ts)
+    imp = ImportClass(finp, ts, defaultLayer)
     try:
         imp.thanImport()
     except ThanImportError, e:
@@ -203,9 +206,11 @@ def impFile(proj, fn, ImportClass):
         mm(proj[2], str(e.message), "%s: %s" % (fn.name, fail), ERROR)            # (Gu)i (d)ependent
         proj[2].thanGudCommandEnd(fail, "can")
         return None
-    del imp
     finp.close()
     ts.thanAfterImport()
+#    del imp.thanDr._dr, imp.thanDr.prt
+#    del imp.thanDr
+#    del imp
     dr.thanLayerTree.thanDictRebuild()
     return dr
 
@@ -265,6 +270,108 @@ def __openHouseReplace(proj, fn, dr, mes):
     projnew[2].thanTkSetFocus()
     return projnew
 
+#=============================================================================
+
+def thanFileMerge(proj, copyelems=False, forceunload=False):
+    """Opens files which contains thancad drawing for mergeing with current project."""
+    exts = _exts                      #Make a shallow copy
+    fildir = thanfiles.getFiledir()
+    while True:
+        fns = p_gtkuti.thanGudGetReadFile(proj[2], exts, T["Choose files to import"],
+                 initialdir=fildir, multiple=True)
+        if fns == None: return proj[2].thanGudCommandCan()     # Open cancelled
+        projothers = thanFileMergePaths(proj, fns, forceunload)
+        if len(projothers) > 0: break
+
+    projothers, newcl, newroot = thanMergeHier(proj, projothers, copyelems)
+    if len(projothers) < 1: return thanGudCommandCan(T["No files were inserted"])
+    oldcl, oldroot, newelemsdrawn, newelemsnot = thanMergeDo(proj, projothers, newcl, newroot, copyelems)
+    newcl.thanTkSet(proj[2].than)
+    proj[2].thanUpdateLayerButton()
+    proj[1].thanTouch()                                        # Drawing IS modified
+#    thanundo.thanLtRestore(proj, newcl, newroot)
+    proj[2].thanGudCommandEnd(T["%d file(s) were inserted"] % (len(projothers),), "info")
+
+
+def thanFileMergePaths(proj, fns, forceunload=False):
+    """Opens files with known paths for merging with current proj.
+
+    This closely resembled thanFileOpenPaths on purpose. Any change must be
+    done to both functions."""
+    projothers = []
+    cl = proj[1].thanLayerTree.thanCur
+    clname = cl.thanAtts[thanlayer.THANNAME].thanVal
+    for fn in fns:
+            fn = path(fn)
+            if fn.ext in _importClass:
+                dr = impFile(proj, fn, _importClass[fn.ext][1], defaultLayer=clname)
+            elif fn.ext == ".thcx":
+                dr = openThcx(proj, fn, forceunload)
+            else:
+                assert 0, 'old thc files are not supported for mergeing'
+            if dr != None:
+                projothers.append([fn, dr, None])
+    return projothers
+
+
+def thanMergeHier(proj, projothers, copyelems=False):
+    "Copy all the elements (references or distinct) of other projects to current."
+    from thancom import thanundo
+    lt = proj[1].thanLayerTree
+    newcl, newroot = thanundo.thanLtClone2(lt.thanCur, lt.thanRoot)
+    projoks = []
+    for fn, dr, _ in projothers:
+        bakcl, bakroot = thanundo.thanLtClone2(newcl, newroot)
+        ltother = dr.thanLayerTree
+        other2lay, newcl, terr = newroot.thanMergeHier(newcl, ltother.thanRoot)
+        if other2lay == None:
+            terr = "Error while importing %s: %s" % (fn, terr)
+            proj[2].thanPrt(terr, "can1")
+            newcl, newroot = bakcl, bakroot
+        else:
+            projoks.append((fn, dr, _, other2lay))
+    return projoks, newcl, newroot
+
+
+def thanMergeDo(proj, projothers, newcl, newroot, copyelems=False):
+    "Copy all the elements (references or distinct) of other projects to current."
+    lt = proj[1].thanLayerTree                   #Please note that oldroot contains just a reference to the set of elements
+    oldcl, oldroot = lt.thanCur, lt.thanRoot     #..and thus we waste no memory here
+    lt.thanCur, lt.thanRoot = newcl, newroot
+    lt.thanDictRebuild()
+
+    self = proj[1]
+    xymm = self.thanExtViewPort()           #Return twice the viewport window
+    than = proj[2].than
+    newelemsdrawn = []
+    newelemsnot = []
+
+    for _, dr, _, other2lay in projothers:
+        ltother = dr.thanLayerTree
+        for layother in ltother.dilay.itervalues():
+            lay = other2lay[layother]
+            frozen = lay.thanAtts["frozen"].thanVal
+            if not frozen: lay.thanTkSet(than)
+            for e in layother.thanQuad:
+                if copyelems: e = e.thanClone()
+                if e.handle != None and e.handle > 0:
+                    e1 = self.thanTagel.get(e.handle)
+                    if e1 != None: e.thanUntag()   #It is not safe to keep the old handle
+                self.thanElementAdd(e, lay)
+                if frozen:
+                    newelemsnot.append(e)
+                    continue
+                if e.thanXymm[0] < self.xMinAct: self.xMinAct = e.thanXymm[0]
+                if e.thanXymm[1] < self.yMinAct: self.yMinAct = e.thanXymm[1]
+                if e.thanXymm[2] > self.xMaxAct: self.xMaxAct = e.thanXymm[2]
+                if e.thanXymm[3] > self.yMaxAct: self.yMaxAct = e.thanXymm[3]
+                if e.thanInbox(xymm):
+                    newelemsdrawn.append(e)
+                    e.thanTkDraw(than)
+                else:
+                    newelemsnot.append(e)
+    return oldcl, oldroot, newelemsdrawn, newelemsnot
+
 
 #=============================================================================
 
@@ -272,7 +379,7 @@ _docSave = """
 1. When we open a file we retain its the extension, which means that the
    extension is not converted to .thcx. This means that the extension
    may be
-       .dxf .syk .brk .syn .lin .mhk
+       .dxf .syk .brk .syn .lin .mhk .xyz
    as defined in _importClass dictionary.
 2. When we open a file, the drawing is marked as NOT modified regardless of
    the extension, so that the user can close it, without ThanCad asking if it
@@ -280,12 +387,12 @@ _docSave = """
 3. When the user presses save:
    a. If the file extension is .thcx, a backup copy is created as .thcx.bak
       and the file is saved in .thcx format. If the backup copy can not be made
-      or the drawinng can not be saved in .thcx file, the user is notified
+      or the drawing can not be saved in .thcx file, the user is notified
       and ThanCad asks the user for a new file name with .thcx extension.
    b. If the file extension is .thcx but the prefix is a temporary file,
       it means that the drawing was created as new, and ThanCad prompts the
       user for a filename with the .thcx extrension. No backup file is created.
-   c. If the file exdtension is not .thcx the user is prompted to save
+   c. If the file extension is not .thcx the user is prompted to save
       the drawing with the .thcx extension. No backup is created
 4. When the users presses saveas:
    a. If the file extension is .thcx, ThanCad asks the user for a new file
@@ -408,7 +515,14 @@ def thanFileSavePath(proj, fn):
 
 
 def __saveHouse(proj, fn):
-    "House keeping for file open."
+    "House keeping for file save."
+#---Save drawing in active drawings
+    thanRenameHouse(proj, fn)
+    proj[2].thanGudCommandEnd(T["Drawing has been saved."], "info")
+
+
+def thanRenameHouse(proj, fn):
+    "House keeping for file rename."
 #---Save drawing in active drawings
     fnold = proj[0]
     thanfiles.delOpened(proj)    #It should be already there
@@ -420,7 +534,7 @@ def __saveHouse(proj, fn):
     thanfiles.setFiledir(fn.parent)
     thanfiles.addOpened(proj)
     if not thanfiles.isTempname(fnold.name): thanfiles.addRecent(fnold)
-    proj[2].thanGudCommandEnd(T["Drawing has been saved."], "info")
+
 
 #=============================================================================
 
@@ -536,7 +650,41 @@ def thanPlotPil(proj):
     if v == None: return proj[2].thanGudCommandCan()  # Export cancelled
     try:
 #        proj[1].thanExpPil(fpath, mode, width, height, drwin)
-        proj[1].thanExpPil(v.filIm, v.choMode, v.entWidth, v.entHeight, v.choPlotCode)
+        proj[1].thanExpPil(v.filIm, v.choMode, v.entWidth, v.entHeight, v.choPlotCode, v.choBackGr)
     except IOError, why:
         return proj[2].thanGudCommandCan("%s:\n%s" % (T["Image could not be exported"], why))
     proj[2].thanGudCommandEnd(T["Image has been exported."], "info")
+
+
+def thanImpLin(proj):
+    "Import the linetypes defintitions from a .lin file to current drawing."
+    fn, fr = thanTxtopen(proj, T["Choose .lin file to import"], suf=".lin")
+    if fr == Canc: return proj[2].thanGudCommandCan()    #Import cancelled
+    ltypes = thanimp.thanImpLin(fr, prt=proj[2].thanPrter1)
+    fr.close()
+    if len(ltypes) == 0: return proj[2].thanGudCommandCan(T["No line types were imported."])
+    ltypesold = copy.deepcopy(proj[1].thanLtypes)        #This is fast, because ThanLtype consists of only immutable attributes
+    n = sum(1 for namlt in ltypes if namlt in ltypesold)
+    proj[1].thanLtypes.update(ltypes)
+    ltypesnew = copy.deepcopy(proj[1].thanLtypes)        #This is fast, because ThanLtype consists of only immutable attributes
+    proj[1].thanDoundo.thanAdd("linin", thanLtRestore, (ltypesnew,),       #redo
+                                        thanLtRestore, (ltypesold,))       #undo
+    proj[1].thanTouch()
+    proj[2].thanGudCommandEnd("%d linetypes were added (%d were updated)." % (len(ltypes)-n, n), "info")
+
+def thanLtRestore(proj, ltypes):
+    "Restore previously save line types."
+    proj[1].thanLtypes.clear()
+    proj[1].thanLtypes.update(ltypes)
+    proj[1].thanTouch()
+
+
+def thanExpLin(proj):
+    "Export the linetypes defintitions to a .lin file from current drawing."
+    fn, fw = thanTxtopen(proj, T["Choose .lin file to export"], suf=".lin", mode="w")
+    if fw == Canc: return proj[2].thanGudCommandCan()    #Export cancelled
+    thanexp.thanExpLin(fw, proj[1].thanLtypes, proj[2].thanPrter1)
+    proj[1].thanDoundo.thanAdd("linout", doNothing, (),
+                                         doNothing, ())
+    proj[2].thanGudCommandEnd("%d linetypes were exported." % (len(proj[1].thanLtypes),), "info")
+

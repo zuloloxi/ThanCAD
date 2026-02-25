@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module provides plot capabilities except content.
 """
@@ -45,8 +45,12 @@ class ThanPlot:
         c2 = list(c1)
         c2[:2] = 10.0, 10.0
         self.butPick = c1, c2
+        print "ThanPlot.init(): name=", name
         name = p_ggen.path(name)
+        print "ThanPlot.init(): name=", name
+        print "ThanPlot.init(): name.parent=", name.parent
         self.filPlot = name.parent / name.namebase + ".ps"
+        print "ThanPlot.init(): self.filPlot=", self.filPlot
 
 
     def __defprinter(self, choPr=None):
@@ -61,11 +65,12 @@ class ThanPlot:
 
     def thanSet(self, choPr, radWhat, butPick, filPlot):
         "Set new values if valid."
+        print "ThanPlot.thanSet() called: filplot=", filPlot
         ccups, printers, _ = getPrinters(host=None)
         if choPr in printers: self.choPr = choPr
         if 0 <= radWhat < 2: self.radWhat = radWhat
         if butPick[0][:2] != butPick[1][:2]: self.butPick = butPick
-        if len(filPlot.strip()) > 0: self.filPlot = filPlot
+        if len(filPlot.strip()) > 0: self.filPlot = p_ggen.path(filPlot)
 
 
     def thanRepair(self, proj):
@@ -77,8 +82,10 @@ class ThanPlot:
         if self.butPick[0][:2] == self.butPick[1][:2]:
             self.butPick[1][0] += 1.0
             self.butPick[1][1] += 1.0
-        if self.filPlot.namebase.strip() in (thanTempPrefix, ""):
+        print "thanplotcups.ThanPlot.thanrepair(): filPlot=", self.filPlot
+        if self.filPlot.namebase.strip() in (thanTempPrefix, "", proj[0].namebase):   #Note:the thcx file may have been moved elsewhere
             self.filPlot = proj[0].parent / proj[0].namebase + ".ps"
+        print "thanplotcups.ThanPlot.thanrepair(): filPlot=", self.filPlot
 
 
     def thanExpThc(self, fw):

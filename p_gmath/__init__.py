@@ -14,3 +14,7 @@ from coor import ThanRectCoorTransf, thanRoundCenter
 from lineq import lineq
 
 from thanintersect import *
+from ellipse import (ellipse5Fit, ellipse4Fit, ellipse5Lsm, ellipse4Lsm, 
+                     ellipseLength, ellipseArea, ellipse2Line,
+
+                    )

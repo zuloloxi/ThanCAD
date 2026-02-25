@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module displays a dialog for the user to export to a raster image
 using Python Image Library.
@@ -31,6 +31,7 @@ import Tkinter
 import p_ggen, p_gtkwid
 from thantrans import T
 from thanvar import thanfiles
+from thandefs.thanatt import ThanAttCol
 
 
 thanImageTypes = ( (".bmp", "BMP"),
@@ -48,6 +49,12 @@ thanPlotCodes = ( ("display", T["Display"]),
                 )
 
 
+thanBackGrs = [ (ThanAttCol("white"), T["White"]),
+                (ThanAttCol("black"), T["Black"]),
+                (ThanAttCol("gray"),  T["Gray"]),
+                (None,                T["Other"]),
+              ]
+
 class ThanTkExppil(p_gtkwid.ThanComDialog):
     "Dialog for plotting the drawing to an image."
 
@@ -60,6 +67,7 @@ class ThanTkExppil(p_gtkwid.ThanComDialog):
         v.choMode = "RGB"
         v.entWidth = 1024
         v.entHeight = 1024
+        v.choBackGr = thanBackGrs[0][0]      #white
         v.choPlotCode = "display"
         return v
 
@@ -138,7 +146,32 @@ class ThanTkExppil(p_gtkwid.ThanComDialog):
             wid.grid(row=ir, column=2, sticky="we")
             self.thanWids.append((key, tit, wid, val))
 
+
+        ir += 1
+        key = "choBackGr"
+        tit = "Background colour"
+        val = p_gtkwid.ThanValidator()
+        lab = Tkinter.Label(fra, text=T[tit])
+        lab.grid(row=ir, column=1, sticky="e")
+        wid = p_gtkwid.ThanChoiceRef(fra, objects=thanBackGrs, command=self.__onBackGr,
+                        width=10, relief=Tkinter.RIDGE, anchor="w")
+        wid.grid(row=ir, column=2, sticky="we")
+        self.thanWids.append((key, tit, wid, val))
+
         self.columnconfigure(2, weight=1)
+
+
+    def __onBackGr(self, i, obj, text):
+        "If user selected other, display the colour dialog."
+        import thantkdia
+        print "__onBackGr:", text
+        if i != 3: return              #If not "other", there is nothing to do
+        colold = thanBackGrs[2][0]     #Previous "other" colour
+        print "colold=", colold
+        w = thantkdia.ThanColor(self, colold, special=False, title=T["Select background colour"])
+        colnew = w.result
+        if colnew != None: thanBackGrs[2] = (colnew, str(colnew))
+        self.after(200, self.choBackGr.thanSet, thanBackGrs[2][0])
 
 
     def fraPlot(self, win, ir):

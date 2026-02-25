@@ -72,10 +72,33 @@ def inpFiles(mes, suf="", nest=False):
                 fildats.extend(f)
             else:
                 if not fentry.lower().endswith(suf): fentry += suf
-                fildats.append(path(fentry+suf))
+                fildats.append(fentry)
         if len(fildats) > 0: return fildats
         prg("Error: No %s files defined or found." % suf)
         prg("Try again.")
+
+
+def inpImage(mes, initialfile=""):
+    "Open an image with PIL."
+    import p_gbmp
+    while True:
+        fn = p_ggen.inpStrB(mes, initialfile)
+        im, ter = p_gbmp.imageOpen(fn)
+        if im != None: return fn, im
+        ter = "Error while accessing %s:\n%s\nTry again." % (fn, ter)
+        prg(ter, "can1")
+
+
+def inpSaveFile(ext, mes, mode="w", initialfile=""):
+    "Gets a filename that exists, from user."
+    while True:
+        filnam = inpStrB(mes, initialfile)
+        try:
+            fw = file(filnam, mode)
+        except IOError, why:
+            prg("Error opening file %s: %s\nTry again.\n" % (filnam, why), "can1")
+        else:
+            return filnam, fw
 
 
 def inpDir(mes, mustexist=False, mustnotexist=False, default=None):

@@ -33,9 +33,10 @@ class SimulatedAnnealing:
       self.anim = SAAnimation()
       self.config(**kw)
 
-  def config(self, treduce=None, prt=None, animon=None, animsize=None, animnframe=None, animpref=None):
+  def config(self, treduce=None, tsteps=None, prt=None, animon=None, animsize=None, animnframe=None, animpref=None):
       "Change default values."
       if treduce != None: self.tFactr = treduce
+      if tsteps != None: self.nTsteps = int(tsteps)
       if prt != None: self.prt = prt
       self.anim.config(on=animon, size=animsize, nframe=animnframe, pref=animpref)
 
@@ -48,7 +49,7 @@ class SimulatedAnnealing:
           import sys
           f = sys.stderr
           f.write("initState() failed to calibrate temperature.\n")
-          f.write("Either the intial state is the worst possible one,\n")
+          f.write("Either the initial state is the worst possible one,\n")
           f.write("or changeState() makes insignificant changes which do not affect\n")
           f.write("the energy of the configuration.\n")
           sys.exit(1)
@@ -98,7 +99,7 @@ class SimulatedAnnealing:
       self.iSchNeg = 0     # number of succesful energy-negative state changes
       iChan = 0
 
-      self.anim.saveImage(obj, self.t, self.e1)                     # For animation
+      self.anim.saveImage(obj, self.t, self.e1/obj.efact)           # For animation
       while True:
           iChan += 1
 #         print "iChan=", iChan
@@ -122,10 +123,10 @@ class SimulatedAnnealing:
               if self.e2-self.e1 <  0.0: self.iSchNeg += 1
               if self.e2-self.e1 != 0.0: self.iSch += 1
               self.e1 = self.e2
-              self.anim.saveImage(obj, self.t, self.e2)                # For animation
+              self.anim.saveImage(obj, self.t, self.e2/obj.efact)                # For animation
               if self.iSch > self.nSch: return
           else:
-              self.anim.saveImage(obj, self.t, self.e1, colot="green") # For animation
+              self.anim.saveImage(obj, self.t, self.e1/obj.efact, colot="green") # For animation
               obj.restorePrevState()
 
 
@@ -147,7 +148,7 @@ class SAAnnealable:
         self.r = random.Random()
         self.efact = 1.0         # Factor to make energy compatible with the temperature
         self.ndimState = 20
-        self.stateMin = self.statePrev = None;
+        self.stateMin = self.statePrev = None
 
     def analenergy(self):
         "It is called after every temperature step; for debugging."
@@ -235,7 +236,7 @@ class SAAnnealable:
       return True
 
 
-    def imageForegroundState(self, im, ct, colot, T, e):    #Minimal example
+    def imageForegroundState(self, im, ct, colot, T=-1.0, e=-1.0):    #Minimal example
         "Superimpose image foreground to the given the background image."
         import ImageDraw
         imd = ImageDraw.Draw(im)
@@ -251,8 +252,8 @@ class SAAnnealable:
         im = Image.new("RGB", imsize, (255,255,255))
         return im, ct
 
-    def imageForegroundState1(self, im, ct, colot, T, e):   #Example of imageForegroundState
-        "Superimpose image foreground to the given the backgorund image."
+    def imageForegroundState1(self, im, ct, colot, T=-1.0, e=-1.0):   #Example of imageForegroundState
+        "Superimpose image foreground to the given the background image."
         ot = list(self.pol.iterOT(self.state))
         imd = ImageDraw.Draw(im)
         self.pol.topil(imd, ct, ot=ot, colot=colot)
@@ -303,7 +304,7 @@ class SAAnimation:
             anim.imblue = anim.im.copy()
         if colot =="blue": im = anim.im.copy()
         else:              im = anim.imblue.copy()
-        obj.imageForegroundState(im, anim.ct, colot, T, e)
+        obj.imageForegroundState(anim.iframe, im, anim.ct, colot, T, e)
         anim.ipref += 1
         im.save("%s%05d.jpg" % (anim.impref, anim.ipref))
         if colot == "blue": anim.imblue = im

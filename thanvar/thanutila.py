@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines various functions needed by other ThanCad's modules.
 """
@@ -40,6 +40,20 @@ def thanCleanLine2(c):
         if thanNear2(cn[-1], c1): continue
         cn.append(list(c1))
     return cn
+
+
+def thanCleanLine2t(c, t):
+    """Clean zero lengthed segments (in 2 dimensions) of a continuous multiline.
+
+    Do the same changes to parallel list of scalar parameters."""
+    if len(c) < 2: return [list(c1) for c1 in c], list(t)
+    cn = [list(c[0])]
+    tn = [t[0]]
+    for i in xrange(1, len(c)):
+        if thanNear2(cn[-1], c[i]): continue
+        cn.append(list(c[i]))
+        tn.append(t[i])
+    return cn, tn
 
 
 def thanCleanLine3(c):

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines a Tkinter window to display a ThanCad drawing.
 """
@@ -30,6 +30,7 @@ import weakref, Tkinter
 import p_ggen, p_gtkuti, p_gtkwid
 import thantk, thanvar, thancom, thanvers, thaneng, thanmenus, thanfonts
 from thanopt import thancadconf
+from thanopt.thancon import thanFrape
 from thandefs.thanatt import ThanAttCol
 from thantrans import T
 import thantkguicoor, thantkguihighget, thantkguihighdraw, thantkguilowget
@@ -81,10 +82,12 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
 
         thantkguicoor.ThanTkGuiCoor.__init__(self)
         self.than.ct = self.thanCt                            # Just a reference
+        self.than.thanTstyles = self.thanTstyles              # Just a reference
+        self.than.thanLtypes = self.thanLtypes                # Just a reference
         self.than.thanImages = self.thanImages = set()        # For image zoom reasons
         self.thanImageCur = None
 
-        self.thanProj[1].thanLayerTree.thanCur.thanTkSet(self.than, self.thanProj[1].thanTstyles)
+        self.thanProj[1].thanLayerTree.thanCur.thanTkSet(self.than)
         self.thanTkSetFocus()
 
 
@@ -120,6 +123,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         self.than.thanPoints = thanfonts.thanPoints
         self.than.thanFonts = thanfonts.thanFonts
         self.than.imageFrameOn = dr.thanVar["imageframe"]
+        self.than.stereo = None
         self.than.imageBrightness = 1.0
         self.than.strang = dr.thanUnits.strang
         self.than.strdir = dr.thanUnits.strdir
@@ -127,11 +131,18 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         self.than.strcoo = dr.thanUnits.strcoo
         self.than.markselected = set()    #These element will be drawn with the "selall" tag
         self.than.ct = self.thanCt                            # Just a reference
+        self.than.thanTstyles = dr.thanTstyles                # Just a reference
+        self.than.thanLtypes  = dr.thanLtypes                 # Just a reference
         self.than.thanImages = self.thanImages = set()        # For image zoom reasons
+
+        width, height, widthmm, heightmm = p_gtkuti.thanRobustDim()
+        self.than.pixpermm = (float(width)/widthmm + float(height)/heightmm) * 0.5   #Average of the two axes
+        self.than.dash = []               #Dash pattern for lines (default is continuous)
+
         self.thanImageCur = None
         self.thanScriptComs = ()
 
-        self.thanProj[1].thanLayerTree.thanCur.thanTkSet(self.than, self.thanProj[1].thanTstyles)
+        self.thanProj[1].thanLayerTree.thanCur.thanTkSet(self.than)
         self.thanUpdateLayerButton()
         self.thanStatusBar.setProj(self.thanProj)
         self.thanCom.setProj()    #Notify that new drawing has been set into the project
@@ -160,7 +171,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
-        self.thanMenu = thanmenus.ThanCadTkMenu(self)
+
 
         fra = Tkinter.Frame(self)
         fra.grid(row=0, column=0, sticky="we")
@@ -177,7 +188,16 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
 
         self.thanStatusBar = thantkstatus.ThanStatusBar(self)
         self.thanStatusBar.grid(row=3, column=0, columnspan=2, sticky="swne")
-        self.thanCanvas = thantkguilowget.ThanTkGuiLowGet(self.thanProj,
+
+        self.thanMenu = thanmenus.ThanCadTkMenu(self)
+
+        if thanFrape.stereo:
+            import thanprostereo.thanprotkgui.thantkbluered
+            cl = thanprostereo.thanprotkgui.thantkbluered.ThanTkBlueRed
+        else:
+            cl = thantkguilowget.ThanTkGuiLowGet
+
+        self.thanCanvas = cl(self.thanProj,
             width=thancadconf.thanCanvasdim[0], height=thancadconf.thanCanvasdim[1],
             background=thancadconf.thanColBack.thanTk,
             xscrollincrement=1, yscrollincrement=1)
@@ -199,7 +219,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
 	dr = self.thanProj[1]
 	if elem == None: lay = dr.thanLayerTree.thanCur
 	else:            lay = dr.thanLayerTree.dilay[elem.thanTags[1]]
-	lay.thanTkSet(self.than, dr.thanTstyles)
+	lay.thanTkSet(self.than)
 
 
     def thanUpdateLayerButton(self, selected=False):
@@ -230,7 +250,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         if lay == Canc: return
         proj = self.thanProj
         proj[1].thanLayerTree.thanCur = lay
-        lay.thanTkSet(proj[2].than, proj[1].thanTstyles)    # Set Attributes of the current layer
+        lay.thanTkSet(proj[2].than)                         # Set Attributes of the current layer
         proj[1].thanTouch()                                 # Drawing IS modified
         self.thanUpdateLayerButton()
 

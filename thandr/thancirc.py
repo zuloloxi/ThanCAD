@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the circle element.
 """
@@ -43,7 +43,7 @@ class ThanCircle(ThanElement):
     "A Basic circle."
     thanElementName = "CIRCLE"    # Name of the element's class
 
-    def thanSet (self, cc, r, spin=1):
+    def thanSet(self, cc, r, spin=1):
         "Sets the attributes of the circle."
         self.setBoundBox([cc[0]-r, cc[1]-r, cc[0]+r, cc[1]+r])
         self.cc = list(cc)
@@ -196,16 +196,16 @@ class ThanCircle(ThanElement):
 
     def thanBreak(self, c1=None, c2=None):
         "Breaks a circle and produces an arc."
-	if c1 == None: return True          # Break IS implemented
-	cp1, r1, theta1 = self.thanPntNearest2(c1)
-	assert cp1 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
-	cp2, r2, theta2 = self.thanPntNearest2(c2)
-	assert cp2 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
-	from thanarc import ThanArc
-	e1 = ThanArc()
+        if c1 == None: return True          # Break IS implemented
+        cp1, r1, theta1 = self.thanPntNearest2(c1)
+        assert cp1 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
+        cp2, r2, theta2 = self.thanPntNearest2(c2)
+        assert cp2 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
+        from thanarc import ThanArc
+        e1 = ThanArc()
         e1.thanSet(self.cc, self.r, theta2, theta1)
         if not e1.thanIsNormal(): e1 = None
-	return e1, None
+        return e1, None
 
 
     def thanOffset(self, through=None, distance=None, sidepoint=None):
@@ -251,16 +251,16 @@ class ThanCircle(ThanElement):
         "Draws the circle on a window."
         xc, yc = than.ct.global2Local(self.cc[0], self.cc[1])
         r, temp = than.ct.global2LocalRel(self.r, self.r)
-        temp = than.dc.create_oval(xc-r, yc-r, xc+r, yc+r, outline=than.outline,
+        temp = than.dc.create_oval(xc-r, yc-r, xc+r, yc+r, outline=than.outline, dash=than.dash,
                                    fill=than.fill, tags=self.thanTags)
 
     def thanTkDrawAsPolygon(self, than):
         """Draws the circle on a window as a polyline.
 
-        Here we want to work around tk bug which doen not show a cirvle (or
+        Here we want to work around tk bug which doen not show a circle (or
         an arc) if the magnification is too big, so that the visible segment of
         the arc or circle is virtually a straight line.
-        For this, when regen, an element must have the ablilty to tell ThanDwg
+        For this, when regen, an element must have the ability to tell ThanDwg
         that not all the element is drawn, only the part that is 2 screen width
         left and right, and 2 screen heights on top and bottom.
         Have a nice day, Thanasis2010_12_09.
@@ -272,7 +272,7 @@ class ThanCircle(ThanElement):
         dth = 2*pi/n
         th2 = 2*pi-dth*0.1
         xy = [(xc+r*cos(th), yc+r*sin(th)) for th in xfrange(0.0, th2, dth)]
-        temp = than.dc.create_polygon(xy, outline=than.outline,
+        temp = than.dc.create_polygon(xy, outline=than.outline, dash=than.dash,
                                       fill=than.fill, tags=self.thanTags)
 
     def thanExpDxf(self, fDxf):
@@ -286,7 +286,7 @@ class ThanCircle(ThanElement):
         fw.writeln(f % self.r)
         fw.writeln("%d" % (self.spin,))
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver):
         "Read the circle from thc format."
         cc = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         r = float(fr.next())             #May raise ValueError, StopIteration
@@ -302,9 +302,28 @@ class ThanCircle(ThanElement):
         for i in xrange(*than.widtharc):
             than.dc.arc((x1-i, y1-i, x2+i, y2+i), 0, 360, fill=than.outline)
 
+
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property."""
+        cc = list(self.cc)
+        cc[:3] = fun(cc[:3])
+
+        cr = list(self.cc)
+        cr[0] += self.r
+        cr = fun(cr[:3])
+        r = hypot(cr[1]-cc[1], cr[0]-cc[0])
+
+        self.thanSet(cc, r, self.spin)
+
+
+
     def thanList(self, than):
         "Shows information about the circle element."
-        than.writecom("%s: %s" % (T["Element"], "CIRCLE"))
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
         than.write("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
         t = ("%s%s" % (T["Center: "], than.strcoo(self.cc)),

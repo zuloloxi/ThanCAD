@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 from math import fabs
+import p_ggen
 
-def _prtnone(*args): pass
 
-def goldSect(func, cka=0.0, ckb=1.0, eps=None, prt2=_prtnone):
+def goldSect(func, cka=0.0, ckb=1.0, eps=None, prt2=p_ggen.doNothing):
       "Golden section minimisation."
       assert ckb > cka
       t = 0.6180339887  # t= (sqrt(5.)-1.)/2. : αριΘΜΟΣ ΧΡΥΣΗΣ ΤΟΜΗΣ

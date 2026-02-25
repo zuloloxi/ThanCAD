@@ -132,7 +132,19 @@ class path(_base):
         This is commonly everything needed to clean up a filename
         read from a configuration file, for example.
         """
-        return self.expandvars().expanduser().normpath()
+        return self.expandvars().expanduser().expandsep().normpath()  #Thanasis2012_04_06:added expandsep()
+
+
+    def expandsep(self):                    #Thanasis2012_04_06:new function
+        "Change the separator to native one."
+        otherseps = [sep for sep in "/\\" if sep != os.sep]
+        if os.sep in self: return self      #Probably the separator is OK (insane if "/" is in a pathname in windows
+        for sep in otherseps:
+            if sep in self: break           #Othger separator found
+        else:
+            return self                     #No separators at all
+        return path(self.replace(sep, os.sep))
+
 
     def _get_namebase(self):
         base, ext = os.path.splitext(self.name)
@@ -614,7 +626,8 @@ class path(_base):
 
     exists = os.path.exists
     isabs = os.path.isabs
-    isdir = os.path.isdir
+#    isdir = os.path.isdir                         #Thanasis2012_05_09:Does not work with python7.3 for windows
+    def isdir(self): return os.path.isdir(self)    #Thanasis2012_05_09
     isfile = os.path.isfile
     islink = os.path.islink
     ismount = os.path.ismount
@@ -713,8 +726,10 @@ class path(_base):
         os.makedirs(self, mode)
 
     def makedirs1(self, mode=0777):  #Thanasis2011_02_23:new method
-        try: os.makedirs(self, mode)
-        except: pass
+        try: 
+	    os.makedirs(self, mode)
+        except:
+	    pass
         if not self.exists(): raise    #makedirs did not succeed to make directory
         if not self.isdir(): raise     #makedirs did not succeed because a file with this name exists
 

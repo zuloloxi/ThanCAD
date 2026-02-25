@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which provides for ThanCad and/or ThanCad drawings customisation.
 This module provides for ThanCad initialisation.
@@ -95,10 +95,18 @@ def thanInitPregui():
     "Initial values before the gui instantiation."
     import thancadconf
     thancadconf.thanOptsGet()
+    import thandefs
+    import thantrans
+    import thanlayer
+    import thandr
+    thantrans.thanLangMore()        #Add more translations
+    import thancom
+
 
 def thanInitPostgui():
     "Initial values just after the gui instantiation."
     pass
+
 
 def thanInitEndgui():
     "Final values just afte the gui shutdown."

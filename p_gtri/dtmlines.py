@@ -2,7 +2,7 @@ from bisect import bisect_left, bisect_right
 from math import hypot, fabs
 from p_ggen import iterby2
 from p_gmath import thanSegSeguw
-from dtmvar import ThanDTMDEM, interpolatez
+from dtmvar import ThanDTMDEM, interpolatez, _uniqint
 
 
 class ThanDTMlines(ThanDTMDEM):
@@ -14,7 +14,7 @@ class ThanDTMlines(ThanDTMDEM):
         self.thanDxmax = dxmax   #Max X distance of the end points of a line segment
         self.thanDext = dext     #X distance that a line segment is Max extended at both ends..
                                  #..in order to find an intersection
-        self.thanCen = [0.0, 0.0, 0.0]  #Centroid of the area of the dtm
+        self.thanCena = (0.0, 0.0, 0.0)  #Centroid of the area of the dtm
         self.thanNori = 0        #Number of original line segments (just for information)
 
 
@@ -57,10 +57,15 @@ class ThanDTMlines(ThanDTMDEM):
             for i in xr:
                 cc[i] += (ca[i]+cb[i])*0.5 * dis
             sdis += dis
-        self.thanCen[:] = [cc1/dis for cc1 in cc]
+        self.thanCena = tuple(cc1/dis for cc1 in cc)
 
+    def thanMinxy(self):
+        "Find the minimun x and y coordinates (the DTM is assumed ordered)."
+        cmin = list(thanLines[0][0])
+        cmin[1] = min(c[1] for c in lin1 for lin1 in self.thanLines)
+        return cmin
 
-    def thanIntersegZ(self, ca, cb):
+    def thanIntersegZ(self, ca, cb, native=False):
         "Compute intersections of segment with DEM lines; don't sort intersections from ca to cb."
         ca = tuple(ca)
         cb = tuple(cb)
@@ -84,7 +89,7 @@ class ThanDTMlines(ThanDTMDEM):
         return cint
 
 
-    def thanPointZ(self, cp):
+    def thanPointZ(self, cp, native=False):
         "Calculate the z coordinate of a point."
         for p in (1, 2, 4):
             cp = list(cp)     # bisect (called in __z1) needs cp as a list
@@ -101,19 +106,22 @@ class ThanDTMlines(ThanDTMDEM):
             d2, z2 = self.__z1(cp, ca, cb)     # Try to find intersections along y direction
 #            if z2 != None and fabs(z2) < 1.0: stop()
 
+#            print "thanPointZ: d1, z1=", d1, z1
+#            print "thanPointZ: d2, z2=", d2, z2
             if   z1 == None: z = z2            # Note that z2 may be None
             elif z2 == None: z = z1
             elif d1 < d2:    z = z1
             else:            z = z2
+#            print "thanPointZ: z     =", z
             if z != None: break
 #        if z != None and fabs(z) < 1.0: stop()
         return z
 
 
     def __z1(self, cp, ca, cb):
-        "Calclulate z with cp between ca and cb."
-        cint = self.thanIntersegZ(ca, cb)
-#        print "cint=", cint, "len=", len(cint)
+        "Calculate z with cp between ca and cb."
+        cint = _uniqint(self.thanIntersegZ(ca, cb, native=True))
+#        print "__z1: cint=", cint, "len=", len(cint)
         if len(cint) < 1: return None, None
         if len(cint) < 2:
             d1 = fabs(cint[0][0]-0.5)
@@ -132,6 +140,31 @@ class ThanDTMlines(ThanDTMDEM):
         zi = cint[i][1][2]
         dj = cint[j][0]
         zj = cint[j][1][2]
+        if dj-di == 0.0:
+#           The problem is as follows. Assume the very common case that two line segments
+#           share an endnode. And now assume the rare case (but in certain applications
+#           very common indeed) where we seek the z of exactly
+#           this endnode. The program will find two intersections (one intersection for
+#           each segment) that will have exactly the same coordinates, and the di and dj
+#           (generalized distance) will be exactly 0.5 (for both intesections). This can
+#           also happen if we have duplicate line segments.
+#           Because we seek distance 0.5 in the bisect_left() function, the position
+#           returned should be the first 0.5 (counting from left), so that if we have
+#           only 2 points in cint, the i=j-1 will return -1 and we have the problem that
+#           di==dj.
+#           However bisect_left() does not work, because if distances are the same, then
+#           it compares the lists (coordinates) that follow the distance. THUS PARALLEL
+#           LISTS SHOULD BE USED. But then how do we do the sort?
+#           Dirty solution follows:
+#            for i,c in enumerate(cint): print i, ":", c
+#            print "i=", i, "j=", j
+            if dj == 0.5: return dj-0.5, zj
+            for i in xrange(j-2, -1, -1):
+                if cint[i][0] < dj: break
+            else:
+                assert 0, "Dirty solution unsuccessful; see comments above this statement!"
+            di = cint[i][0]
+            zi = cint[i][1][2]
         z1 = zi+(zj-zi)/(dj-di)*(0.5-di)
         d1 = min((0.5-di, dj-0.5))
 #        print "z1=", z1, "d1=", d1
@@ -144,7 +177,7 @@ class ThanDTMlines(ThanDTMDEM):
         f3 = "  ".join((f, f, f))
         fw.writeAtt("maxdistancex", f % (self.thanDxmax,))
         fw.writeAtt("extensionx", f % (self.thanDext,))
-        fw.writeSnode("centroid", 3, self.thanCen)
+        fw.writeSnode("centroid", 3, self.thanCena)
         fw.writeAtt("Original_segments", "%d" % (self.thanNori,))
         fw.writeNodes(c for lin in self.thanLines for c in lin)
 
@@ -152,7 +185,7 @@ class ThanDTMlines(ThanDTMDEM):
         "Reads the lines of the DTM from a .thc file."
         self.thanDxmax  = float(fr.readAtt("maxdistancex")[0])
         self.thanDext   = float(fr.readAtt("extensionx")[0])
-        self.thanCen[:] = fr.readSnode("centroid", 3)
+        self.thanCena   = tuple(fr.readSnode("centroid", 3))
         self.thanNori   = int(fr.readAtt("Original_segments")[0])
         it = fr.iterNodes()
         for ca in it:

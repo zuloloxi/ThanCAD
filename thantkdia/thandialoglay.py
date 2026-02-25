@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module displays a dialog which shows all the layers and their attributes.
 It lets the user edit the layers.
@@ -39,7 +39,7 @@ class ThanDialogLay(p_gtkuti.ThanDialog):
                  objs, current, atts, cargo, widths, height, vscroll, hscroll, onclick,
                  *args, **kw):
         "Prepare the dialog."
-        self.__val = dict(objs=objs, current=current, atts=atts, cargo=cargo, widths=widths,
+        self.__val = dict(objs=objs, current=current, hlen=90, atts=atts, cargo=cargo, widths=widths,
                           height=height, vscroll=vscroll, hscroll=hscroll, onclick=onclick)
         p_gtkuti.ThanDialog.__init__(self, master, *args, **kw)
 
@@ -56,28 +56,27 @@ class ThanDialogLay(p_gtkuti.ThanDialog):
 
     def cancel(self, *args):
         "What to do when user cancels."
-	if self.__li.thanModified:
+        if self.__li.thanModified:
             ok = p_gtkuti.thanGudAskOkCancel(self,
-	    message=T["The layer hierarchy has been modified\nAbandon changes?"],
-	    title=T["Layers modified"])
-	    if not ok: return "break"
-	p_gtkuti.ThanDialog.cancel(self, *args)
+            message=T["The layer hierarchy has been modified\nAbandon changes?"],
+            title=T["Layers modified"])
+            if not ok: return "break"
+        p_gtkuti.ThanDialog.cancel(self, *args)
 
 
     def ok(self, *args):
         "What to do when user OKs."
         if self.__li.thanClipMovePending(): return "break"
         self.result = self.__li.thanLeaflayers, self.__li.thanCur
-	self.__li.thanModified = False
-	print "***tra1"
-	p_gtkuti.ThanDialog.ok(self, *args)
+        self.__li.thanModified = False
+        p_gtkuti.ThanDialog.ok(self, *args)
 
 
     def destroy(self):
         "Deletes references to widgets, so that it breaks circular references."
-	self.__li.destroy()
-	del self.__li
-	p_gtkuti.ThanDialog.destroy(self)
+        self.__li.destroy()
+        del self.__li
+        p_gtkuti.ThanDialog.destroy(self)
 
 
     def __del__(self):

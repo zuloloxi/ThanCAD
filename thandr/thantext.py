@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,12 +21,12 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the text element.
 """
 
-from math import sin, cos, fabs, pi, atan2
+from math import sin, cos, fabs, pi, atan2, hypot
 from itertools import izip, islice
 from p_ggen import thanUnicode
 from p_gmath import PI2
@@ -107,9 +107,9 @@ class ThanText(ThanElement):
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
         "Return a point of type otype nearest to xcu, ycu."
-	if "ena" not in otypes: return None            # Object snap is disabled
+        if "ena" not in otypes: return None            # Object snap is disabled
         if "end" in otypes:
-	    return fabs(self.cc[0]-ccu[0])+fabs(self.cc[1]-ccu[1]), "end", self.cc
+            return fabs(self.cc[0]-ccu[0])+fabs(self.cc[1]-ccu[1]), "end", self.cc
         return None
 
 
@@ -214,7 +214,7 @@ class ThanText(ThanElement):
         fw.writeTextln(self.text)
 
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver):
         "Read the aligned dimension from thc format."
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         size  = float(fr.next())         #May raise ValueError, StopIteration
@@ -223,7 +223,7 @@ class ThanText(ThanElement):
         self.thanSet(text, c1, size, theta)
 
 
-    def thanExpPilpil(self, than):
+    def thanExpPilold(self, than):
         "Exports the text to a PIL raster image, using the pil text mechanism and fonts."
         x1, y1 = than.ct.global2Locali(self.x1, self.y1)
         than.dc.text((x1, y1), self.text, font=than.font, fill=than.outline)
@@ -242,7 +242,7 @@ class ThanText(ThanElement):
         from thanline import ThanLine
         xa, ya = self.cc[0], self.cc[1]
         h = self.h1
-        lines = than.thanFont.than2lines(xa, ya, h, self.text, self.theta, mirrory=True)
+        lines = than.font.than2lines(xa, ya, h, self.text, self.theta, mirrory=True)
         e = ThanLine()
         for cp in lines:
             e.thanSet([(c[0], c[1], 0) for c in cp])
@@ -274,9 +274,38 @@ class ThanText(ThanElement):
 	    than.dc.stroke(p)
 
 
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property.
+        Like circle and arc, the size of the font is changes (in case that the
+        transformation has scale."""
+        cc = list(self.cc)
+        cc[:3] = fun(cc[:3])
+
+        th = self.theta
+        cr = list(self.cc)
+        s = min(self.size, 1.0)                   #Avoid zero size
+        cr[0] += s * cos(th)
+        cr[1] += s * sin(th)
+        cr = fun(cr[:3])
+        theta = atan2(cr[1]-cc[1], cr[0]-cc[0])   #Note that python ensures than atan2(0,0) = 0!!!
+
+        th = theta + 0.5*pi
+        cr = list(self.cc)
+        cr[0] += self.size*cos(th)
+        cr[1] += self.size*sin(th)
+        cr = fun(cr[:3])
+        size = hypot(cr[1]-cc[1], cr[0]-cc[0])
+
+        self.thanSet(self.text, cc, size, theta)
+
+
     def thanList(self, than):
         "Shows information about the text element."
-        than.writecom("%s: %s" % (T["Element"], "TEXT"))
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
         than.write("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
         t = ('%s"%s"' % (T["Text: "], thanUnicode(self.text)),

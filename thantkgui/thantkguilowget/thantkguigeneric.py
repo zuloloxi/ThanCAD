@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines generic state, i.e. how ThanCad reacts to events for a
 defined job. This generic state which does nothing
@@ -44,7 +44,7 @@ class ThanStateGeneric:
 
 
     def thanOnClick(self, event, x, y, cc):
-        "Shows the elevation of the lineor point as shortlived small infowindow."
+        "Shows the elevation of the line or point as shortlived small infowindow."
         from thandr import ThanLine, ThanPoint
         from hw import InfoWin
         proj = self.thanProj
@@ -93,3 +93,5 @@ class ThanStateGeneric:
         else:                            fill = ""
         proj[2].thanGudGetSelElemx([e])
         proj[2].thanGudSetSelColorx(outline, fill)
+
+

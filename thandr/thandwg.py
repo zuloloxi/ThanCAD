@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines a ThanCad drawing, which contains elements, has layers,
 viewports, etc."
@@ -31,7 +31,7 @@ import weakref
 import p_ggen, p_gdxf
 from p_gmath   import ThanRectCoorTransf, thanRoundCenter
 import thanfonts, thandefs
-from thanlayer import ThanLayerTree
+from thanlayer import ThanLayerTree, col2tuple
 from thandefs  import ThanId
 from thanelem  import ThanElement
 from thanline  import ThanLine
@@ -82,9 +82,6 @@ class ThanDoundo:
         self.__i = 0
 
 
-############################################################################
-############################################################################
-
 class ThanTagel(dict):
     "A dictionary with predefined/readonly items."
 
@@ -122,19 +119,39 @@ class ThanTagel(dict):
         if v != None: return v
         v = dict.get(self, self.prefix+str(key))
         if v != None: return v
-        raise ValueError, "Tag/handle %s not found in this drawing" % (key,)   # Raise ValueError to acommonate ThanRfile/ThanWfile
+        raise ValueError, "Tag/handle %s not found in this drawing" % (key,)   # Raise ValueError to acommodate ThanRfile/ThanWfile
 
-
-############################################################################
-############################################################################
 
 class ThanDrawing:
     "Represents a whole drawing."
+    thanThcVersions = ((0,1,0), (0,1,1), (0,2,0), (0,2,1))   #All supported versions of .thcx files
 
     def __init__ (self):
-        "Creates a new drawing instance."
-        self.thanAreaIterated = (None, None, None, None)     # No element -> no limit in regen
-        self.xMinAct = self.yMinAct = self.xMaxAct = self.yMaxAct = None
+        """Creates a new drawing instance.
+
+        xyminmaxact: Smallest rectangle which contains all active elements (for zoom extents)
+             active elements are all the elements of the drawing that are not in a
+             frozen layer.
+        thanAreaIterated: a rectangle >= viewport. All active elements inside (or partly inside)
+            this rectangle are drawn in the Canvas.
+        thanLayerTree: the layer hierarchy and related dictionaries
+        __idTag: id (or handle) generator for elements
+        thanTagel: maps id (handle) to element
+        thanDoundo: the do/undo hisrory
+        __modified: True if the drawing has been modified since last save
+        thanEdus: elements which are hilighted when the mouse gets near them
+        thanThcVersion: the version of .thcx file
+        viewPort: The part of the drawing thant matches exactly the canvas
+        thanTstyles: text styles dictionary of the drawing
+        thanLtypes: line types dictionary of the drawing
+        thanUnits: the units of the drawing
+        thanVar: a dictionary of variables/values
+        thanPlotDef: the previous plot parameters (window, plotter etc)
+        thanObjects: a dictionary of names/objects of the drawing. Objects are elements
+                     with no graphic representation
+        """
+        self.thanAreaIterated = (None, None, None, None)  # No element -> no limit in regen
+        self.xMinAct = self.yMinAct = self.xMaxAct = self.yMaxAct = None  #Smallest rectangle which contains all active elements
         self.thanLayerTree = ThanLayerTree()
         self.__idTag = ThanId(prefix="E")
         self.thanTagel = ThanTagel(prefix="E")
@@ -142,11 +159,11 @@ class ThanDrawing:
         self.__modified = False
         self.thanEdus = weakref.WeakKeyDictionary()
 
-        self.thanThcVersion = "0.1.0"
+        self.thanThcVersion = self.thanThcVersions[-1]
         self.viewPort = [-10.0, -10.0, 100.0, 100.0]
         t = thandefs.ThanTstyle("standard", thanfonts.thanFonts["thanprime1"])
         self.thanTstyles = {t.thanName: t}
-        self.thanLtypes = {}
+        self.thanLtypes = thandefs.thanDashes()
         self.thanUnits = thandefs.ThanUnits()
         self.thanVar = thanVarsDef()
         self.thanPlotDef = thandefs.thanplotcups.ThanPlot()  # Previous plot settings
@@ -160,7 +177,7 @@ class ThanDrawing:
 
         fw.writeBeg("ATTRIBUTES")
         fw.pushInd()
-        fw.writeAtt("version",  self.thanThcVersion)
+        fw.writeAtt("version",  "%d.%d.%d" % self.thanThcVersion)
         fw.writeAtt("viewport", (f*4) % tuple(self.viewPort))
         fw.popInd()
         fw.writeEnd("ATTRIBUTES")
@@ -173,12 +190,12 @@ class ThanDrawing:
         fw.writeBeg("LINETYPES")
         fw.pushInd()
         for t in self.thanLtypes.itervalues():
-            pass
+            t.thanExpThc(fw)
         fw.popInd()
         fw.writeEnd("LINETYPES")
 
         self.thanUnits.thanExpThc(fw)
-        thanVarsExpThc(fw, self.thanVar)
+        thanVarsExpThc(fw, self.thanVar, self.thanThcVersion)
         self.thanPlotDef.thanExpThc(fw)
         self.thanLayerTree.thanExpThc(fw)
 #        thanEdus
@@ -187,30 +204,40 @@ class ThanDrawing:
         fw.writeEnd("THANCAD_DRAWING")
 
 
-    def thanImpThc(self, fr):
+    def thanImpThc(self, fr, forceunload=False):
         "Read all attributes of the drawing except the elements from a thc format file."
         fr.readBeg("THANCAD_DRAWING")
 
         fr.readBeg("ATTRIBUTES")
-        self.thanThcVersion = fr.readAtt("version")[0]
-        if self.thanThcVersion != "0.1.0": raise ValueError, "Unknown thc version: "+self.thanThcVersion
+        t = fr.readAtt("version")[0]
+        self.thanThcVersion = tuple(map(int, t.split(".")))
+        if self.thanThcVersion not in self.thanThcVersions: raise ValueError, "Unknown thc version: %r" % (self.thanThcVersion,)
         self.viewPort = map(float, fr.readAtt("viewport"))
         if len(self.viewPort) != 4: raise ValueError, "Invalid viewport"
         fr.readEnd("ATTRIBUTES")
         fr.readBeg("TEXTSTYLES")
         fr.readEnd("TEXTSTYLES")
         fr.readBeg("LINETYPES")
+        for name in fr:
+            name = name.strip()[1:-1]
+            fr.unread()
+            if name == "/LINETYPES": break
+            lt = thandefs.ThanLtype()
+            lt.thanImpThc(fr, self.thanThcVersion)
+            if lt.thanName != "continuous":
+                self.thanLtypes[lt.thanName] = lt
         fr.readEnd("LINETYPES")
 
         self.thanUnits.thanImpThc(fr)
-        d = thanVarsImpThc(fr)
+        d = thanVarsImpThc(fr, self.thanThcVersion)
         self.thanVar.update(d)
         self.thanPlotDef.thanImpThc(fr)
-        self.thanLayerTree.thanImpThc(fr)
+        self.thanLayerTree.thanImpThc(fr, self.thanThcVersion)
 #        thanEdus
-        self.thanImpThcElements(fr)
+        self.thanImpThcElements(fr, forceunload)
         thanObjsImpThc(fr, self.thanObjects)
         fr.readEnd("THANCAD_DRAWING")
+        self.thanThcVersion = self.thanThcVersions[-1]
 
 
     def thanExpThcElements(self, fw):
@@ -225,9 +252,9 @@ class ThanDrawing:
         fw.writeEnd("ELEMENTS")
 
 
-    def thanImpThcElements(self, fr):
+    def thanImpThcElements(self, fr, forceunload=False):
         "Read all the elements from a thc format file."
-        from thanclasses import thanElemClass
+        from thanclasses import thanElemClass, thanImageClasses
         fr.readBeg("ELEMENTS")
         lt = self.thanLayerTree
         layori = lt.thanCur
@@ -239,7 +266,10 @@ class ThanDrawing:
             class_ = thanElemClass.get(name)
             if class_ == None: raise ValueError, "Unknown element type: %s" % name
             e1 = class_()
-            layname = e1.thanImpThc(fr)
+            if forceunload and name in thanImageClasses:
+                layname = e1.thanImpThc(fr, self.thanThcVersion, forceunload)
+            else:
+                layname = e1.thanImpThc(fr, self.thanThcVersion)
             if layname != laynamecur:
                 lt.thanCur = lt.thanFindic(layname)
                 if lt.thanCur == None: raise ValueEror, "Layer %s was not found in layer hierarchy" % (layname,)
@@ -289,7 +319,7 @@ class ThanDrawing:
             elem.handle, tag = self.__idTag.new2()
         else:
             elem1 = self.thanTagel.get(elem.handle)
-            assert elem1 == None, "New element added has the same tag/handle with existing element: %s" % (elem.handle,)
+            if elem1 != None: raise IndexError, "New element added has the same tag/handle with existing element: %s" % (elem.handle,)
             tag = self.__idTag.addprefix(elem.handle)
         if elem.thanTkCompound > 1:
             elem.thanTags = tag, cl.thanTag
@@ -307,33 +337,33 @@ class ThanDrawing:
         cl.thanQuad.add(elem)
         if not cl.thanAtts["frozen"].thanVal:
             if self.xMinAct == None:
-	        self.xMinAct = elem.thanXymm[0]
-	        self.yMinAct = elem.thanXymm[1]
-	        self.xMaxAct = elem.thanXymm[2]
-	        self.yMaxAct = elem.thanXymm[3]
+                self.xMinAct = elem.thanXymm[0]
+                self.yMinAct = elem.thanXymm[1]
+                self.xMaxAct = elem.thanXymm[2]
+                self.yMaxAct = elem.thanXymm[3]
             else:
-	        if elem.thanXymm[0] < self.xMinAct: self.xMinAct = elem.thanXymm[0]
-	        if elem.thanXymm[1] < self.yMinAct: self.yMinAct = elem.thanXymm[1]
-	        if elem.thanXymm[2] > self.xMaxAct: self.xMaxAct = elem.thanXymm[2]
-	        if elem.thanXymm[3] > self.yMaxAct: self.yMaxAct = elem.thanXymm[3]
-	self.__modified = True
+                if elem.thanXymm[0] < self.xMinAct: self.xMinAct = elem.thanXymm[0]
+                if elem.thanXymm[1] < self.yMinAct: self.yMinAct = elem.thanXymm[1]
+                if elem.thanXymm[2] > self.xMaxAct: self.xMaxAct = elem.thanXymm[2]
+                if elem.thanXymm[3] > self.yMaxAct: self.yMaxAct = elem.thanXymm[3]
+        self.__modified = True
 
 #===========================================================================
 
     def thanTkDraw(self, than, lays="all"):
         """Draws the active elements (inside the viewport) into a gui window.
 
-	Active are the elements which do not belong to a layer which is 'off'.
-	This function checks each element of ThanDrawing and if it, or part of it,
-	is inside the viewport (which is just a rectangle), draws it into 'win'.
-	Thus, in general, 'win' has less elements than ThanDrawing.
-	'win' has all the elements that are, at least partialy, inside viewport.
+        Active are the elements which do not belong to a layer which is 'off'.
+        This function checks each element of ThanDrawing and if it, or part of it,
+        is inside the viewport (which is just a rectangle), draws it into 'win'.
+        Thus, in general, 'win' has less elements than ThanDrawing.
+        'win' has all the elements that are, at least partialy, inside viewport.
 
             If we assume that all elements of ThanDrawing are partialy inside
 	viewport, then 'win' has actually all ThanDrawing's elements, even
 	though viewport is smaller than the viewport that fully covers all
 	the elements.
-	    It is also possible that 'win' does not have all ThanDrawing's elements,
+            It is also possible that 'win' does not have all ThanDrawing's elements,
 	but all elements that are covered by a bigger rectangle than viewport.
 	This bigger rectangle is called 'thanAreaIterated'. 'thanAreaIterated' is
 	the rectangle which is smaller (i.e. it does not cover) any part of the
@@ -343,50 +373,47 @@ class ThanDrawing:
 	thus not necessary to redraw (actualy regenerate) the elements, since
 	these elements are already in 'win'. All that is needed is that 'win'
 	pans or zooms its elements, which is usually much faster.
-	    This feature is so useful that when thanDraw is called, it draws the
+            This feature is so useful that when thanDraw is called, it draws the
 	elements of a rectangle 5 (or 25) times bigger than the viewport, so
 	that pan and zoom can be done faster.
 
 	    Another concept, completely unrelated to the above, is the smallest
 	rectangle 'xyMinMaxAct', which covers all the active elements of
-	ThanDrawing. This is needed when the user wants to zoom all.
+       ThanDrawing. This is needed when the user wants to zoom all.
 	    xyMinMaxAct are the x and y min and max of the active elements
 	(elements of the visible layers). When a drawing is read, 'xyMinMaxAct'
 	is computed. When an element is added, 'xyMinMaxAct' is updated.
 	When a layer is turned on, all its elements are checked, to see if
 	they are inside the viewport, and xyMinMaxAct is updated.
-	    However, when an element is deleted, and its rectangle share at
+            However, when an element is deleted, and its rectangle share at
 	least one edge with xyMinMaxAct, then xyMinMaxAct may no longer be valid.
 	It will always cover all the active elements, but it may not be the
-	smaller	rectangle which covers all the elements.
+        smaller rectangle which covers all the elements.
 	    Since thanDraw iterates through all visible elements, xyMinMaxAct
 	is also computed.
 	    When a user zooms all, and xyMinMaxAct is within thanAreaIterated,
 	thanDraw() is not called. However, it should be possible to ask the gui
 	window for its version of xyMinMaxAct, and pass it here.
-	"""
+        """
 
-	self.thanAreaIterated = (1, 1, -1, -1)                            # Set as invalid in case user aborts
-	self.xMinAct = self.yMinAct = self.xMaxAct = self.yMaxAct = None  # Set as invalid in case user aborts
-        xymm = self.viewPort
-	dx = xymm[2] - xymm[0]
-	dy = xymm[3] - xymm[1]
-	xymm = [xymm[0]-2*dx, xymm[1]-2*dy, xymm[2]+2*dx, xymm[3]+2*dy]   # xymm is a new list now: not viewPort.thanXymm
+        self.thanAreaIterated = (1, 1, -1, -1)                            # Set as invalid in case user aborts
+        self.xMinAct = self.yMinAct = self.xMaxAct = self.yMaxAct = None  # Set as invalid in case user aborts
+        xymm = self.thanExtViewPort()
 
 #------Initialise min,max with first element
 
         if lays == "all": lays = self.thanLayerTree.dilay.values()
         lays = [(lay.thanAtts["draworder"].thanVal, lay) for lay in lays]
         lays.sort()
-	lays = [lay for i,lay in lays]
+        lays = [lay for i,lay in lays]
         for lay in lays:
 	    if lay.thanAtts["frozen"].thanVal: continue
             for e in lay.thanQuad:
-	        self.xMinAct = e.thanXymm[0]
+                self.xMinAct = e.thanXymm[0]
 	        self.yMinAct = e.thanXymm[1]
-	        self.xMaxAct = e.thanXymm[2]
+                self.xMaxAct = e.thanXymm[2]
 	        self.yMaxAct = e.thanXymm[3]
-		break
+                break
 	    else: continue
 	    break
 	else:
@@ -398,13 +425,13 @@ class ThanDrawing:
 #-------Now iterate through all elements of active layers
 
         for lay in lays:
-	    if lay.thanAtts["frozen"].thanVal: continue
-	    lay.thanTkSet(than, self.thanTstyles)
+            if lay.thanAtts["frozen"].thanVal: continue
+            lay.thanTkSet(than)
             for e in lay.thanQuad:
-	        if e.thanXymm[0] < self.xMinAct: self.xMinAct = e.thanXymm[0]
-	        if e.thanXymm[1] < self.yMinAct: self.yMinAct = e.thanXymm[1]
-	        if e.thanXymm[2] > self.xMaxAct: self.xMaxAct = e.thanXymm[2]
-	        if e.thanXymm[3] > self.yMaxAct: self.yMaxAct = e.thanXymm[3]
+                if e.thanXymm[0] < self.xMinAct: self.xMinAct = e.thanXymm[0]
+                if e.thanXymm[1] < self.yMinAct: self.yMinAct = e.thanXymm[1]
+                if e.thanXymm[2] > self.xMaxAct: self.xMaxAct = e.thanXymm[2]
+                if e.thanXymm[3] > self.yMaxAct: self.yMaxAct = e.thanXymm[3]
                 if e.thanInbox(xymm):
                     if e in than.markselected:   #Add the "selall" tag
                         temp = e.thanTags
@@ -421,7 +448,16 @@ class ThanDrawing:
         if xymm[2] >= self.xMaxAct: xymm[2] = None
         if xymm[3] >= self.yMaxAct: xymm[3] = None
         self.thanAreaIterated = tuple(xymm)
-        self.thanLayerTree.thanCur.thanTkSet(than, self.thanTstyles)
+        self.thanLayerTree.thanCur.thanTkSet(than)
+
+
+    def thanExtViewPort(self):
+        "Extend the viewport twice and return it as a rectangle."
+        xymm = self.viewPort
+        dx = xymm[2] - xymm[0]
+        dy = xymm[3] - xymm[1]
+        return [xymm[0]-2*dx, xymm[1]-2*dy, xymm[2]+2*dx, xymm[3]+2*dy]   # xymm is a new list now: not viewPort.thanXymm
+
 
     def thanTkHiwin(self, than):
         "Lengthens (a little) very small elements so that they become visible."
@@ -429,14 +465,15 @@ class ThanDrawing:
         tagel = self.thanTagel
         dc = than.dc
         for item in dc.find_all():
-	    tags = dc.gettags(item)
-	    if not tags: continue             # Sentinel elements
+            tags = dc.gettags(item)
+            if not tags: continue             # Sentinel elements
 	    titem = tags[0]
 	    if titem[0] != "E": continue      # not a ThanCad Element
 	    if titem in seen: continue
 	    seen.add(titem)
 	    el = tagel[titem]
 	    el.thanTkHiwin(than)
+
 
 #===========================================================================
 
@@ -547,10 +584,10 @@ class ThanDrawing:
         for e in elems:
             elay.setdefault(e.thanTags[1], set()).add(e)
             del self.thanTagel[e.thanTags[0]]
-	for tlay,eset in elay.iteritems():
-	    lay = taglay[tlay]
-	    lay.thanQuad -= eset
-	self.thanTouch()
+        for tlay,eset in elay.iteritems():
+            lay = taglay[tlay]
+            lay.thanQuad -= eset
+        self.thanTouch()
 
 
     def thanElementRestore(self, elems, proj):
@@ -566,13 +603,13 @@ class ThanDrawing:
         than = proj[2].than
         for e in elems:
             lay = taglay[e.thanTags[1]]
-            lay.thanTkSet(than, self.thanTstyles)
+            lay.thanTkSet(than)
             self.__elementAddHouse(e, lay)
             if not lay.thanAtts["frozen"].thanVal:
                 e.thanTkDraw(than)
                 if isinstance(e, ThanImage): than.thanImages.add(e)
         self.thanTouch()
-        self.thanLayerTree.thanCur.thanTkSet(than, self.thanTstyles)
+        self.thanLayerTree.thanCur.thanTkSet(than)
 
 
     def thanElementDelete(self, elems, proj):
@@ -617,6 +654,7 @@ class ThanDrawing:
             layname = lay.thanGetPathname("__")
             dxf.thanDxfSetLayer(layname)
             than.layname = layname  #Active layername is needed by namedpoint
+            than.fill = lay.thanAtts["fill"].thanVal   #Needed by ThanLineFilled element
             for e in lay.thanQuad:
                 e.thanExpDxf(dxf)
         dxf.thanDxfPlot(0.0, 0.0, 999)
@@ -685,35 +723,47 @@ class ThanDrawing:
 	x2 = y2 = 1.0
 	than.ct.set((x1, y1, x2, y2), (0, 0, (x2-x1)*scale, (y2-y1)*scale))
         for lay in self.thanLayerTree.dilay.itervalues():
-	    lay.thanPdfSet(than, self.thanTstyles)
+	    lay.thanPdfSet(than)
             for e in lay.thanQuad:
                 e.thanPlotPdf(than)
 	return than
 
 
-    def thanExpPil(self, filpath, mode, width, height, drwin):
+    def thanExpPil(self, filpath, mode, width, height, drwin, bcol):
         "Exports the circle to a PIL raster image."
-	import p_ggen, Image, ImageDraw, ImageFont, ImageFilter, thanvar
-	from thandefs.thanatt import ThanAttCol
+        import p_ggen, Image, ImageDraw, ImageFont, ImageFilter, thanvar
+        from thandefs.thanatt import ThanAttCol
         than = p_ggen.Struct("ThanCad PIL image and options container")
-	page = 19.5, 29.5
+        page = 19.5, 29.5
 #	dpi = 300.0 #120.0
 #	imsize = [int(p*dpi/2.54+0.5) for p in page]
 #	than.mode = "RGB"
 
         than.mode = mode
-	imsize = width, height
+        imsize = width, height
         dpi = imsize[1]/(page[1]/2.54)
-	if than.mode == "1" or than.mode == "L": bcol = 255
-	else:                                    bcol = 255,255,255
-	than.im = Image.new(than.mode, imsize, bcol)
-	ib, ih = than.im.size
-	than.viewPort = x1, y1, x2, y2 = self.__roundCenter(self.viewPort, (0, ih, ib, 0))
-	than.dc = ImageDraw.Draw(than.im)
-	than.ct = ThanRectCoorTransf()
-	than.ct.set((x1, y1, x2, y2), (0, ih, ib, 0))
-	than.imageFrameOn = self.thanVar["imageframe"]
-	than.imageBrightness = 1.0     #FIXME: it should be equal to proj[2].than.imageBrightness
+        than.pixpermm = dpi/25.4
+        than.dash = []
+#        bcol = bcol.thanVal
+#        if than.mode == "1":
+#            bcol = thanRgb2Gray(bcol)
+#            if bcol < 128: bcol = 0
+#            else:          bcol = 255
+#        elif than.mode == "L":
+#            bcol = thanRgb2Gray(bcol)
+        than.bcol = bcol
+        bcolpil = col2tuple(than.bcol, than.mode)
+        if than.mode != "RGB": bcolpil = bcolpil[0]    #If gray or b/w PIL needs one integer
+        than.im = Image.new(than.mode, imsize, bcolpil)
+        ib, ih = than.im.size
+        than.viewPort = x1, y1, x2, y2 = self.__roundCenter(self.viewPort, (0, ih, ib, 0))
+        than.dc = ImageDraw.Draw(than.im)
+        than.ct = ThanRectCoorTransf()
+        than.ct.set((x1, y1, x2, y2), (0, ih, ib, 0))
+        than.imageFrameOn = self.thanVar["imageframe"]
+        than.imageBrightness = 1.0     #FIXME: it should be equal to proj[2].than.imageBrightness
+        than.thanTstyles = self.thanTstyles                # Just a reference
+        than.thanLtypes  = self.thanLtypes                 # Just a reference
 #	than.fill = ThanAttCol("red").thanVal
 #	than.outline = ThanAttCol("yellow").thanVal
 #	than.width = int((9+1)/2)    # for the bugged version of ThanLine.thanExpPil()
@@ -721,35 +771,35 @@ class ThanDrawing:
 #        f = ImageFont.load_path("/home/a12/work/tcadtree.23/grhelv-b-10.pil")
 # 	 than.font = f
 
-
         lays = self.thanLayerTree.dilay.values()
         lays = [(lay.thanAtts["draworder"].thanVal, lay) for lay in lays]
         lays.sort()
-	lays = [lay for i,lay in lays]
+        lays = [lay for i,lay in lays]
         for lay in lays:
-	    if lay.thanAtts["frozen"].thanVal: continue
-	    lay.thanPilSet(than, dpi, self.thanTstyles)
-
-	    than.width  = int(than.rwidth + 0.5)
-	    than.widthline = int((than.width+1)/2)               # Get around PIL bug for line width
-	    i2 = int(than.width/2)
-	    i1 = -i2
-	    if i2-i1+1 > than.width: i1 += 1
-	    than.widtharc = i1, i2+1                             # Simulate widths in ars, circles
-	    assert than.width == than.widtharc[1]-than.widtharc[0]
+            if lay.thanAtts["frozen"].thanVal: continue
+            lay.thanPilSet(than, dpi)
+            print "PIL: outline=", than.outline
+            than.width  = int(than.rwidth + 0.5)
+            than.widthline = int((than.width+1)/2)               # Get around PIL bug for line width
+            i2 = int(than.width/2)
+            i1 = -i2
+            if i2-i1+1 > than.width: i1 += 1
+            than.widtharc = i1, i2+1                             # Simulate widths in ars, circles
+            assert than.width == than.widtharc[1]-than.widtharc[0]
             for e in lay.thanQuad:
                 e.thanExpPil(than)
 
-	del than.dc
-	x1, y1, x2, y2 = self.viewPort
-	ix1, iy1 = than.ct.global2Locali(x1, y2)  # PIL need left,upper and ..
+        del than.dc
+        x1, y1, x2, y2 = self.viewPort
+        ix1, iy1 = than.ct.global2Locali(x1, y2)  # PIL need left,upper and ..
         ix2, iy2 = than.ct.global2Locali(x2, y1)  # ..right,lower
         box = ix1, iy1, ix2, iy2
-	im1 = than.im.crop(box)                   # Crop lines etc. outside the user defined window.
-#	im1 = im1.filter(ImageFilter.SMOOTH)
-	than.im = Image.new(than.mode, imsize, bcol)
-	than.im.paste(im1, box)
-	than.im.save(filpath)
+        im1 = than.im.crop(box)                   # Crop lines etc. outside the user defined window.
+#        im1 = im1.filter(ImageFilter.SMOOTH)
+        than.im = Image.new(than.mode, imsize, bcolpil)
+        than.im.paste(im1, box)
+        than.im.save(filpath)
+
 
     def __roundCenter(self, w, pixPort):
         "Rounds an abstract window w, so that it fits exactly to the actual (GuiDependent) window."
@@ -787,7 +837,7 @@ class ThanDrawing:
                 if "handle" in elem.__dict__: continue
                 elem.handle = self.__idTag.delprefix(elem.thanTags[0])
         try: self.thanThcVersion
-        except: self.thanThcVersion = "0.1.0"
+        except: self.thanThcVersion = self.thanThcVersions[-1]
 
 
 #MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE

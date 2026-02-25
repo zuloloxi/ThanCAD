@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module displays a dialog for the user to define the necessary elements
 and options for automated floor plan architectural design.
@@ -99,8 +99,8 @@ class ThanFplan(ThanArchCom):
 
     def body2(self, win):
         "Create the body of the dialog in steps."
-#        self.fraLogo(win, 0, theme=Tarch["Automated Floor Plan Design Algorithms"], year=2012)
-        self.fraLogo2(win, 0, year="2010-2012")
+#        self.fraLogo(win, 0, theme=Tarch["Automated Floor Plan Design Algorithms"], year=2013)
+        self.fraLogo2(win, 0, year="2010-2013")
         self.fraGeom(win, 1)
         self.fraConstraints(win, 2)
         self.fraPenalties(win, 3)

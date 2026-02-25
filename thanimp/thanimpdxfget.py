@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines an object which reads a .dxf file and it creates
 ThanCad's elements to represent it in ThanCad.
@@ -32,7 +32,7 @@ import sys, time
 from types import *
 from math import pi
 from p_gimdxf import ThanImportDxf, ThanDrWarn
-from thandefs import ThanImageMissing
+from thandefs import ThanImageMissing, ThanLtype
 from thandefs.thanatt import ThanAttCol
 from thanlayer import THANNAME
 from thanvar import ThanLayerError
@@ -42,11 +42,12 @@ COLSENT = ThanAttCol("0 222 255", inherit=False)  # This color does not exist in
                                                   # If one of already defined layers has this color, it will
                                                   # probably lose it
 
-############################################################################
-############################################################################
-
 class ThanCadDrSave(ThanDrWarn):
-    "A class which stores the elements read by ThanImportDxf into a ThanCad drawing."
+    """A class which stores the elements read by p_gimdxf.ThanImportDxf into a ThanCad drawing.
+
+    This class is also used to save the elements read from ThanImportSyk,
+    ThanImportSyk, ThanImportBrk, ThanImportSyn, ThanImportLin,
+    ThanImportXyzIntermap, ThanImportMhk into a ThanCad drawing."""
 
     def __init__(self, dr, prt):
         "Creates an instance of the class."
@@ -55,14 +56,22 @@ class ThanCadDrSave(ThanDrWarn):
         self._elev = dr.thanVar["elevation"]
         self.ielems = self.ieldeg = 0
         self.t1 = self.t2 = time.time()
-        self.addElem = dr.thanElementAdd     # Oprimisation: it is freqently needed
+        self.newelems = []                   # Records elements which are added to the drawing
 #-------Use already defined layers
-	self.dxfLayers = {}
-#	for lay in self.thanDr.thanLayerTree.thanRoot.thanChildren:
-#	    nam = str(lay.thanAtts[THANNAME])
-#	    col = "%03d" % lay.thanAtts["moncolor"].thanDxf()
-#	    self.dxfLayers[nam, col] = self.dxfLayers[nam, None] =\
-#	        self.dxfLayers[nam] = lay
+        self.dxfLayers = {}   #This is just a cache; no need to fill it with existing layers (if not a new drawing)
+#       for lay in self._dr.thanLayerTree.thanRoot.thanChildren:
+#           nam = str(lay.thanAtts[THANNAME])
+#           col = "%03d" % lay.thanAtts["moncolor"].thanDxf()
+#           self.dxfLayers[nam, col] = self.dxfLayers[nam, None] = lay
+
+
+    def addElem(self, e, handle=None):
+        "Add the element to ThanCad's database."
+        if handle != None and handle > 0:
+            e1 = self._dr.thanTagel(handle)
+            if e1 == None: elem.handle = handle   #It is safe to keep the handle of the dxf
+        self._dr.thanElementAdd(e)
+        self.newelems.append(e)
 
 
     def _addTempCol(self, laypar):
@@ -96,34 +105,36 @@ class ThanCadDrSave(ThanDrWarn):
         self._count()
 
 
-    def dxfXymm(self, x1, y1, x2, y2):
-        "Saves xmin,ymin,xmax,ymax of the dxf drawing."
-        dr = self._dr
-        dr.xMinAct = x1
-        dr.yMinAct = y1
-        dr.xMaxAct = x2
-        dr.yMaxAct = y2
-        self._count()
-
-
     def dxfLayer(self, name, atts):
         "Saves a layer."
         lay = self._createHierarchyLayer(name, self._dr.thanLayerTree)
-	a = lay.thanAtts
-	try: v = str(atts["color"])
-	except KeyError: a["moncolor"] = a["plotcolor"] = COLSENT
-	else:
-	    a["moncolor"]  = ThanAttCol(v, inherit=False)
-	    a["plotcolor"] = ThanAttCol(v, inherit=False)
-	try: v = atts["frozen"]
-	except KeyError: pass
-	else: class_ = a["frozen"].__class__; a["frozen"] = class_(v, False)
-	self._count()
+        a = lay.thanAtts
+        try:
+            v = str(atts["color"])
+        except KeyError:
+            a["moncolor"] = a["plotcolor"] = COLSENT
+        else:
+            a["moncolor"]  = ThanAttCol(v, inherit=False)
+            a["plotcolor"] = ThanAttCol(v, inherit=False)
+        try:
+            v = atts["frozen"]
+        except KeyError:
+            pass
+        else:
+            class_ = a["frozen"].__class__
+            a["frozen"] = class_(v, False)
+        self._count()
 
 
-#    def dxfLtype(self, name, desc, elems):    # Let ThanWarn base class inform the user
-#        "Saves a line type."
-#        self._count()
+    def dxfLtype(self, name, desc, elems):    # Let ThanWarn base class inform the user
+        "Saves a line type; name is in lower letters and free of preceding and trailing blanks."
+        ltypes1 = {"continuous", "bylayer", "byblock"} #bylayer, byblock are not real linetypes, just sentinels..
+                                                       #..and continuous is automatically inside ThanCad
+        if name in ltypes1: return
+        lt = ThanLtype()
+        lt.thanFromDxf(name, desc, elems)
+        self._dr.thanLtypes[name] = lt
+        self._count()
 
 
     def dxfPolyline(self, xx, yy, zz, lay, handle, col):
@@ -193,72 +204,81 @@ class ThanCadDrSave(ThanDrWarn):
         if e.thanIsNormal():
             self.thanSetLay(lay, col)
             self.addElem(e)
-	    self._count()
-	else:
-	    self._count(degenerate=True)
+            self._count()
+        else:
+            self._count(degenerate=True)
+
+
+    def dxfEllipse(self, xx, yy, zz, lay, handle, col, a, b, phia, phib, theta, full):
+        "Saves an elliptic arc."
+        cc = list(self._elev)
+        cc[0] = xx
+        cc[1] = yy
+        cc[2] = zz
+        e = ThanEllipse()
+        dr = pi/180.0
+        print "thanCad.imp.dxfEllipse:", xx, yy, a, b, phia, phib, theta, full
+        e.thanSet(cc, a, b, phia*dr, phib*dr, theta*dr, full)
+        if e.thanIsNormal():
+            self.thanSetLay(lay, col)
+            self.addElem(e)
+            self._count()
+        else:
+            self._count(degenerate=True)
 
 
     def dxfText(self, xx, yy, zz, lay, handle, col, text, h, theta):
         "Saves a text."
-	cc = list(self._elev)
-	cc[0] = xx
-	cc[1] = yy
-	cc[2] = zz
+        cc = list(self._elev)
+        cc[0] = xx
+        cc[1] = yy
+        cc[2] = zz
         e = ThanText()
         e.thanSet(text, cc, h, theta*pi/180)
         if e.thanIsNormal():
             self.thanSetLay(lay, col)
             self.addElem(e)
-	    self._count()
-	else:
-	    self._count(degenerate=True)
+            self._count()
+        else:
+            self._count(degenerate=True)
 
 
     def dxfThanImage(self, xx, yy, zz, lay, handle, col, filnam, size, scale, theta):
         "Saves an ThanImage."
-	cc1 = list(self._elev)
-	cc1[0] = xx
-	cc1[1] = yy
-	cc1[2] = zz
-	cc2 = list(self._elev)
-	cc2[0] = xx+width*scale
-	cc2[1] = yy+height*scale
-	cc2[2] = zz
+        cc1 = list(self._elev)
+        cc1[0] = xx
+        cc1[1] = yy
+        cc1[2] = zz
+        cc2 = list(self._elev)
+        cc2[0] = xx+width*scale
+        cc2[1] = yy+height*scale
+        cc2[2] = zz
         try:
-	    im = Image.open(filnam)
+            im = Image.open(filnam)
         except IOError, why:
-	    self.prt("Error loading image from file %s\n    %s" % (filnam, why))
-	    im = ThanImageMissing(size=size)
+            self.prt("Error loading image from file %s\n    %s" % (filnam, why))
+            im = ThanImageMissing(size=size)
         width, height = im.size
 
         e = ThanImage()
-        e.thanSet(filnam, im, cc1, cc2, theta*pi/190)
+        e.thanSet(filnam, im, cc1, cc2, theta*pi/180.0)
         if e.thanIsNormal():
             self.thanSetLay(lay, col)
             self.addElem(e)
-	    self._count()
-	else:
-	    self._count(degenerate=True)
+            self._count()
+        else:
+            self._count(degenerate=True)
 
 
-#    def dxfBlockAtt(self, xx, yy, zz, lay, handle, col, blname, blatts):    # Let ThanWarn base class inform the user
-#        "Block instance."
-#	self.iblocks += 1
-#	if self.iblocks == 1:
-#	    self.prt("Block mechanism not yet implemented: blocks are ignored.")
-#	self._count()
-
-
-#    def dxf3dface  (self, xx, yy, zz, lay, handle, col):    # Let ThanWarn base class inform the user
-#        "3d face."
-#	self.prt("3dface can not be handled by 2d ThanCad. It is Ignored.")
+#    def dxfBlockAtt(self, xx, yy, zz, lay, handle, col, blname, blatts)    # Let ThanWarn base class inform the user
+#    def dxf3dface  (self, xx, yy, zz, lay, handle, col)    # Let ThanWarn base class inform the user
 
 
     def thanSetLay(self, named, col):
         """Sets as current layer the top layer whose name is named.
 
-	If color is not the same as the color of the layer, create a child layer
-	which will have this color."""
+        If color is not the same as the color of the layer, create a child layer
+        which will have this color."""
 
 #-------Layer, color pair in cache
 
@@ -272,67 +292,67 @@ class ThanCadDrSave(ThanDrWarn):
             lay0 = lt.thanRoot.thanChildren[0]
             if len(lt.thanRoot.thanChildren) == 1 and len(lay0.thanChildren) == 0:
                 self._setCol(lay0, None)    #This is probably a new empty drawing, so that we chan change the color of layer 0
-	if (named, col) in self.dxfLayers:             # LAYER AND COLOR IS ALREADY THERE
-	    lt.thanCur = self.dxfLayers[named, col]
+        if (named, col) in self.dxfLayers:             # LAYER AND COLOR IS ALREADY THERE
+            lt.thanCur = self.dxfLayers[named, col]
             assert lt.thanCur != None
-	    return lt.thanCur
-	assert named.strip() != "__root", "__root layer should not be accessed here :("  # Shortcircuit to childlayer "0"
+            return lt.thanCur
+        assert named.strip() != "__root", "__root layer should not be accessed here :("  # Shortcircuit to childlayer "0"
 
-	lay = self._createHierarchyLayer(named, lt)    # Create layer if it doesn't exist (child of root)
+        lay = self._createHierarchyLayer(named, lt)    # Create layer if it doesn't exist (child of root)
         if col == None: col = lay.tempCol
-	if lay.tempCol == None: self._setCol(lay, col)
+        if lay.tempCol == None: self._setCol(lay, col)
         if col == lay.tempCol and len(lay.thanChildren) == 0: # If colours match return the created layer
-	    lt.thanCur = self.dxfLayers[named, col] = self.dxfLayers[named, None] = lay
+            lt.thanCur = self.dxfLayers[named, col] = self.dxfLayers[named, None] = lay
             assert lt.thanCur != None
-	    return lay
+            return lay
 #       todo: what happens if layer has grandchildren? elements can not be written to child!?
         self._move2ChildLayer(lay)                     # Move elements to child layer
         laych = self._createChildLayer(lay, col)
-	self._setCol(laych, col)
-	lt.thanCur = self.dxfLayers[named, col] = self.dxfLayers[named, None] = laych
+        self._setCol(laych, col)
+        lt.thanCur = self.dxfLayers[named, col] = self.dxfLayers[named, None] = laych
         assert lt.thanCur != None
-	return laych
+        return laych
 
 
     def _createHierarchyLayer(self, named, lt):
         "Create base layer if it doesn't exist (child of root)."
-	if named.strip() == "__root": return lt.thanRoot
-	names = named.split("__")
-	laypar = lt.thanRoot
-	for named in names:
+        if named.strip() == "__root": return lt.thanRoot
+        names = named.split("__")
+        laypar = lt.thanRoot
+        for named in names:
             name = named.strip().replace(" ", "_")     # Erase blanks
             if name[:1] == ".": name = "*"+name[1:]    # Erase initial dot
-	    for lay in laypar.thanChildren:
-	        if name == str(lay.thanAtts[THANNAME]): break # name is an existing layer
-	    else:
+            for lay in laypar.thanChildren:
+                if name == str(lay.thanAtts[THANNAME]): break # name is an existing layer
+            else:
                 lay = self._createChildUnknown(laypar, name, named)
-	    laypar = lay
-	return laypar
+            laypar = lay
+        return laypar
 
 
     def _createChildUnknown(self, laypar, name, named):
         "Create a new child layer with name name, or with name unknown."
         try:
             lay = laypar.thanChildNew(name)            # Create new layer if possible
-	    self._setCol(lay, None)
-	    return lay
-	except ThanLayerError, why:
-	    pass
-	name = "unknown"                               # Layer is invalid; create default
-	self.prt("Dxf layer '%s' can not be created and it is ignored:" % named)
-	self.prt("    %s" % why)
-	self.prt("    Layer '%s' is used instead." % name)
-	for lay in laypar.thanChildren:
-	    if name == str(lay.thanAtts[THANNAME]): return lay # Return existing default layer
+            self._setCol(lay, None)
+            return lay
+        except ThanLayerError, why:
+            pass
+        name = "unknown"                               # Layer is invalid; create default
+        self.prt("Dxf layer '%s' can not be created and it is ignored:" % named)
+        self.prt("    %s" % why)
+        self.prt("    Layer '%s' is used instead." % name)
+        for lay in laypar.thanChildren:
+            if name == str(lay.thanAtts[THANNAME]): return lay # Return existing default layer
         lay = laypar.thanChildNew(name)                # No error is expected here
         self._setCol(lay, None)
-	return lay
+        return lay
 
 
     def _move2ChildLayer(self, laypar):
         "Move current colour to child layer if not already there."
-	if len(laypar.thanChildren) > 0: return
-	if len(laypar.thanQuad) == 0: return
+        if len(laypar.thanChildren) > 0: return
+        if len(laypar.thanQuad) == 0: return
         colpar = laypar.tempCol
         lay = laypar.thanMove2child("col%03d"%colpar, force=True) # No error is expected here
         self._setCol(lay, colpar)
@@ -341,20 +361,20 @@ class ThanCadDrSave(ThanDrWarn):
 
     def _createChildLayer(self, laypar, col):
         "Create child layer if it doesn't exist (child of root)."
-	name = "col%03d" % col
-	for lay in laypar.thanChildren:
-	    if str(lay.thanAtts[THANNAME]) == name: return lay
+        name = "col%03d" % col
+        for lay in laypar.thanChildren:
+            if str(lay.thanAtts[THANNAME]) == name: return lay
         lay = laypar.thanChildNew(name)                # No error expected here
         self._setCol(lay, col)
-	return lay
+        return lay
 
 
     def _setCol(self, lay, col):
         "Set the colour of the layer to col."
         if col == None: tc = COLSENT
         else:           tc = ThanAttCol(str(col), inherit=False)
-	lay.thanAtts["moncolor"]  = lay.thanAtts["plotcolor"] = tc
-	lay.tempCol = col
+        lay.thanAtts["moncolor"]  = lay.thanAtts["plotcolor"] = tc
+        lay.tempCol = col
 
 
     def _count(self, degenerate=False, force=False):
@@ -367,17 +387,11 @@ class ThanCadDrSave(ThanDrWarn):
             self.t1 = self.t2
 
 
-    def __delete__(self):
-        "So that object is dead for debuggin reasons."
-	from p_ggen import prg
-	prg("ThanCadDrSave %s is deleted." % self)
+    def __del__(self):
+        "So that object is dead for debugging reasons."
+        from p_ggen import prg
+        prg("ThanCadDrSave %s is deleted." % self)
 
-
-
-############################################################################
-############################################################################
-
-#MODULE LEVEL CODE: THIS IS EXECUTED ONLY ONCE
 
 if 0:
     print __doc__

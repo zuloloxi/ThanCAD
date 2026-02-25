@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module displays a dialog for the user to define the necessary elements
 and options for bioclimatic city plan design.
@@ -70,8 +70,8 @@ class ThanBcplan(ThanArchCom):
 
     def body2(self, win):
         "Create the body of the dialog in steps."
-#        self.fraLogo(win, 0, theme=Tarch["Bioclimatic City Plan Design Algorithms"], year="2010-2012")
-        self.fraLogo2(win, 0, year="2010-2012")
+#        self.fraLogo(win, 0, theme=Tarch["Bioclimatic City Plan Design Algorithms"], year="2010-2013")
+        self.fraLogo2(win, 0, year="2010-2013")
         self.fraDefine(win, 1)
         self.fraParams(win, 2)
 
@@ -260,7 +260,7 @@ class ThanBcplan(ThanArchCom):
         refnew = ref.shallowClone()        #Shallow copy
 #        refnew.hull = hull
         try:
-            refnew.read_cache(fr)
+            refnew.readGrid(fr)
         except Exception, why:
             p_gtkuti.thanGudModalMessage(proj[2], "%s:\n%s" % (Tarch["Import failed"], why),
                 title=Tarch["Import failed"], icon= p_gtkuti.ERROR)
@@ -271,7 +271,7 @@ class ThanBcplan(ThanArchCom):
 
     def __textcache(self, ref):
         "Check if a RoadGrid instance has cache of roads."
-        if ref.roadenx != None:
+        if ref.cache.roadenx != None:
             self.refPrepro.config(bg="green")
             return Twid["Yes"]
         else:

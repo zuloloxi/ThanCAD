@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the generic ThanCad object. A ThanCad object is an element
 without graphical representation, such as DTM, It can be also used as a null
@@ -31,12 +31,12 @@ element - this is NOT an asbtract class.
 import copy
 import Image
 import p_ggen, p_gtri, p_gmath, p_grun
-from thantrans import T, Tarch
+from thantrans import T, Tarch, Tmatch
 import thanimp, thansupport, thanopt
 
 
 
-class ThanObject:
+class ThanObject(object):
     """Base class for thancad's objects.
 
     This class of elements may ne used whenever a dummy, or Null element
@@ -57,7 +57,6 @@ class ThanObject:
 
     def thanExpThc(self, fw):
         "Saves the object name and its version to a .thc file."
-        f = fw.formFloat
         fw.writeBeg(self.thanObjectName)
         fw.pushInd()
         fw.writeAtt("version", self.thanVersions[-1])
@@ -93,10 +92,15 @@ class ThanObject:
 
 
 
-class ThanDTMlines(p_gtri.ThanDTMlines, ThanObject):
+class ThanDTMlines(ThanObject):
     thanObjectName = "DTMLINES"    # Name of the objects's class
     thanObjectInfo = "Set of 3D lines which behaves as a Digital Terrain Model."
     thanVersions = ("1.0",)
+
+    def __init__(self, dxmax=20.0, dext=50.0):
+        "Initialize DEM."
+        self.dtm = p_gtri.ThanDTMlines(dxmax, dext)
+
 
     def thanIsNormal(self):
         "Returns False if the image the DEM was not found."
@@ -105,53 +109,71 @@ class ThanDTMlines(p_gtri.ThanDTMlines, ThanObject):
     def thanList(self, than):
         "Shows information about the DTMLines object."
         than.writecom("%s: %s\n" % (T["Object"], self.thanObjectName))
-        scen = " ".join(map(than.strdis, self.thanCen))
+        scen = " ".join(map(than.strdis, self.dtm.thanCen()))
         than.write("%s %s\n" % (T["Centroid:"], scen))
-        than.write("%s %s\n" % (T["Max X distance of line segments:"], than.strdis(self.thanDxmax)))
-        than.write("%s %s\n" % (T["X extension for intersections  :"], than.strdis(self.thanDext)))
-        than.write("%s %d\n" % (T["Original  line segments: "], self.thanNori))
-        than.write("%s %d\n" % (T["Processed line segments: "], len(self.thanLines)))
+        than.write("%s %s\n" % (T["Max X distance of line segments:"], than.strdis(self.dtm.thanDxmax)))
+        than.write("%s %s\n" % (T["X extension for intersections  :"], than.strdis(self.dtm.thanDext)))
+        than.write("%s %d\n" % (T["Original  line segments: "], self.dtm.thanNori))
+        than.write("%s %d\n" % (T["Processed line segments: "], len(self.dtm.thanLines)))
+
+    def thanExpThc1(self, fw):
+        "Saves the lines of the DTM to a .thc file."
+        self.dtm.thanExpThc1(fw)
+
+    def thanImpThc1(self, fr, ver):
+        "Reads the lines of the DTM from a .thc file."
+        self.dtm.thanImpThc1(fr, ver)
 
 
-class ThanDEMusgs(p_gtri.ThanDEMusgs, ThanObject):
+class ThanDEMusgs(ThanObject):
     thanObjectName = "DEMUSGS"    # Name of the objects's class
     thanObjectInfo = "DEM stores in TIF files (USGS format)."
     thanVersions = ("1.0",)
 
+    def __init__(self):
+        "Some initial values to make the object variables clear."
+        self.dtm = p_gtri.ThanDEMusgs()
+
+
     def thanList(self, than):
         "Shows information about the DEMusgs object."
         than.writecom("%s: %s\n" % (T["Object"], self.thanObjectName))
-        scen = " ".join(map(than.strdis, self.thanCen))
-        than.write("%s %s\n" % (T["TIF filename:"], self.filnam))
+        than.write("%s %s\n" % (T["TIF filename:"], self.dtm.filnam))
+        if self.dtm.im == "GDEM": return
         if self.thanIsNormal():
+            scen = " ".join(map(than.strdis, self.dtm.thanCen()))
             than.write("%s %s\n" % (T["Centroid:"], scen))
             ca = list(than.elevation)
-            ca[:2] = self.X0, self.Y0
+            ca[:2] = self.dtm.X0, self.dtm.Y0
             than.write("%s %s\n" % (T["Upper left corner:"], than.strcoo(ca)))
-            than.write("%s %s %s\n" % (T["X and Y distance between DEM points :"], than.strdis(self.DX), than.strdis(self.DY)))
+            than.write("%s %s %s\n" % (T["X and Y distance between DEM points :"], than.strdis(self.dtm.DX), than.strdis(self.dtm.DY)))
         else:
             than.write(T["Invalid tif image or image not found.\n"])
 
     def thanIsNormal(self):
         "Returns False if the image the DEM was not found."
-        return self.im != None
+        return self.dtm.im != None
 
     def thanExpThc1(self, fw):
-        "Saves the origin of the next floor plan to a .thc file."
-        fw.writeAtt("TIF", self.filnam)
+        "Saves the name of the tif which contains the USGS DEM."
+        fw.writeAtt("TIF", self.dtm.filnam)
 
     def thanImpThc1(self, fr, ver):
-        "Reads the origin of the next floor plan from a .thc file."
+        "Reads the name of the tif which contains the USGS DEM, and loads it."
         self.filnam = fr.readAtt("TIF")[0]
+        if self.filnam.startswith("%%%") and self.filnam.endswith("%%%"):
+            import p_gearth
+            self.dtm = p_gearth.gdem(self.filnam)   #May raise ValueError
+            return
         try:
             im = Image.open(self.filnam)
             dxp, dyp = im.size
             if dxp < 2 or dyp < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
             im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
-            self.thanSet(self.filnam, im)  #This will raise ValueError is something is wrong
+            self.dtm.thanSet(self.filnam, im)  #This will raise ValueError is something is wrong
         except (IOError, ValueError), why:
             fr.prter("Invalid/missing TIF in while reading %s: %s:\n%s" % (self.thanObjectName, self.filnam, why))
-            self.im = None
+            self.dtm.im = None
 
 
 class ThanTri(p_gtri.ThanTri, ThanObject):
@@ -555,7 +577,7 @@ class ThanProjection(ThanTransformation):
     def thanList(self, than):
         "Shows information about the transformation object."
         than.writecom("%s: %s\n" % (T["Object"], self.thanObjectName))
-        than.write("Transformation type: %s\n" % (self.transformation.name,))
+        than.write("%s: %s\n" % (Tmatch["Transformation type"], self.transformation.name,))
 
     def thanExpThc1(self, fw):
         "Saves the projection coefficients to a .thc file."
@@ -577,7 +599,7 @@ class ThanBiocityplan(ThanObject):
         import thanpackages.biocityplan
         self.xor = self.yor = 0.0
         self.dxor = self.dyor = None
-        self.pc = thanpackages.biocityplan.PolConfiguration()
+        self.pc = thanpackages.biocityplan.HippoAnneal()
 
     def toDialog(self, proj):
         "Return the data in a form needed by ThanBcplan dialog."
@@ -679,7 +701,7 @@ class ThanBiocityplan(ThanObject):
         fw.pushInd()
         if pc.pol.roadenx != None:
             fw.writeAtt("computed", "%d" % (True,))
-            pc.pol.write_cache(fw)
+            pc.pol.writeGrid(fw)
         else:
             fw.writeAtt("computed", "%d" % (False,))
         fw.popInd()
@@ -708,7 +730,7 @@ class ThanBiocityplan(ThanObject):
         fr.readBeg("road_grid")
         computed = bool(int(fr.readAtt("computed")[0]))
         if computed:
-            pc.pol.read_cache(fr)
+            pc.pol.readGrid(fr)
         else:
             pc.pol.roadenx = pc.pol.roadeny = None
         fr.readEnd("road_grid")
@@ -719,7 +741,13 @@ class ThanProfile(ThanObject):
     thanOjectInfo = "Profile of a roads, conduits etc.."
     thanVersions = ("1.0",)
 
-    def __init__(self, aa, xth, hed, cori=None, xthmin=None, hmin=None, dscale=10.0):
+    def __init__(self, aa=None, xth=None, hed=None, cori=None, xthmin=None, hmin=None, dscale=10.0):
+        "Set initial values to the profile plan and paraphernalia (if they are defined)."
+        if aa == None: return
+        self.thanSet(aa, xth, hed, cori=None, xthmin=None, hmin=None, dscale=10.0)
+
+
+    def thanSet(self, aa, xth, hed, cori=None, xthmin=None, hmin=None, dscale=10.0):
         "Set initial values to the profile plan and paraphernalia."
         assert len(aa) > 1
         self.aa = tuple(aa)
@@ -747,7 +775,7 @@ class ThanProfile(ThanObject):
         import p_gmhk
         try:
             fw = p_ggen.uniqfile(proj[0].parent/proj[0].namebase, suf=".ger", stat="w", n=3)
-            if fw == None: raise IOError, "Can not create unique name withe prefix %s" % (proj[0],)
+            if fw == None: raise IOError, "Can not create unique name with prefix %s" % (proj[0],)
             fn = p_ggen.path(fw.name)
             fns = [fn.parent / fn.namebase + suf for suf in ".ger .mhk .nmh".split()]
             fns.append(fn.parent / "mediate.tmp")
@@ -761,6 +789,7 @@ class ThanProfile(ThanObject):
             fw.write("%15.3f%15.3f%15.3f%15.3f\n" % aklisTim)
             fw.write("%15.3f\n" % (rErola,))
             fw.close()
+            fn.remove()
 
             fw = open(fns[1], "w")
             p_gmhk.wrMhk1ti(fw, ngram=2)

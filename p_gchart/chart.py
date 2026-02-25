@@ -32,10 +32,10 @@ class ThanChart:
 	It is assumed that the size of the image is 'size' units. This means that the image
 	will be scaled to take 'size' units on the canvas, regardless of the resolution
 	and the number of pixels in the image.
-	"""
+        """
 	b,h = im.size
 	h1 = size
-	b1 = int(b * size / h)
+        b1 = int(b * size / h)
 #	print "Image=", b, h, "-->", b1, h1
 #	im1 = im.resize((b1, h1))
 #        im1 = ImageTk.PhotoImage(im1)
@@ -52,7 +52,7 @@ class ThanChart:
         for curve in self.curves:
 	    x, y = curve[0:2]
 	    self.xmin = min(self.xmin, min(x))
-	    self.ymin = min(self.ymin, min(y))
+            self.ymin = min(self.ymin, min(y))
 	    self.xmax = max(self.xmax, max(x))
 	    self.ymax = max(self.ymax, max(y))
 
@@ -82,7 +82,7 @@ class ThanChart:
 	    if style != "image": continue
 	    if c == "2":
                 if im.mode == "1":
-		    pass
+                    pass
                 elif im.mode == "L":
                     print "Converting to black and white.."
                     im = im.convert("1")
@@ -91,7 +91,7 @@ class ThanChart:
                     im = im.convert("L")
                     print "Converting to black and white.."
                     im = im.convert("1")
-	    elif c == "3":
+            elif c == "3":
                 if im.mode == "1":
                     print "Inverting.."
                     im = im.point(finv)
@@ -138,8 +138,8 @@ class ThanChart:
                 if size == 6: size = (6, -6)
                 self.dashedsym(xp, yp, size, color, fill, dc)
 	    elif style == "image":
-		im = fill
-   	        print "regen:size=", size, "  ysc=", ysc
+                im = fill
+                print "regen:size=", size, "  ysc=", ysc
                 item = dc.create_image(int(xp[0]), int(yp[0]), image=self.thanTkImage(im, fabs(size*ysc)), anchor="sw")
 	    else:
 	        p = thanPoints[style]
@@ -170,13 +170,13 @@ class ThanChart:
 	self.wy = dc.winfo_height()
 	dx = (self.xmax - self.xmin)
 	dy = (self.ymax - self.ymin)
-	
+
 	xsc = self.wx / (dx*(1+margin))
 	ysc = self.wy / (dy*(1+margin))
-	xsc = ysc = min(xsc, ysc)
+        xsc = ysc = min(xsc, ysc)
 	xmi = self.xmin - (self.wx/xsc-dx)/2
 	ymi = self.ymin - (self.wy/ysc-dy)/2
-	
+
         for xc, yc, color, fill, style, width, size in self.curves:
 	    xp = [         (x-xmi)*xsc for x in xc ]
 	    yp = [ self.wy-(y-ymi)*ysc for y in yc ]
@@ -269,7 +269,7 @@ class ThanChart:
                     x1 += dx*as_/d
 	            y1 += dy*as_/d
 	            dc.create_line(((xt, yt), (x1, y1)), fill=color, width=width)
-		elif s < 0:
+                elif s < 0:
                     x1 += dx*as_/d
 	            y1 += dy*as_/d
 	        else:
@@ -298,7 +298,7 @@ class ThanChart:
 	        if s > 0: dc.create_line(((x1, y1), (xp[i], yp[i])), fill=color)
 	        x1, y1 = xp[i], yp[i]
 	        as_ -= d
-		i += 1
+                i += 1
 		if i >= len(xp): return
 	    else:
 		if s > 0:		
@@ -326,7 +326,7 @@ class ThanChart:
     def onSize(self, dc):
 	dc.update()
 	wx = dc.winfo_width()
-	wy = dc.winfo_height()
+        wy = dc.winfo_height()
 	if wx != self.wx or wy != self.wy: self.redraw(dc)
 
 

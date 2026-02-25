@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines various information for the translation from English to Greek.
 """
@@ -41,6 +41,8 @@ en2gr = \
 "Delete"                                          : u"Διαγραφή",
 "&New"                                            : u"&Νέο",
 "&Open"                                           : u"Ανοιγμα",
+"Open &without images"                            : u"Ανοιγμα χωρίς εικόνες",
+"Opens an existing drawing with the images unloaded": u"Ανοίγει ένα υφιστάμενο σχέδιο με απόκρυψη των εικόνων",
 "&Save"                                           : u"Αποθήκευση",
 "Save"                                            : u"Αποθήκευση",
 "S&ave as"                                        : u"Αποθήκευση ως",
@@ -68,7 +70,7 @@ en2gr = \
 "Display"                                         : u"Οθόνη",
 "Window"                                          : u"Παράθυρο",
 
-"Choose file to open"                             : u"Επιλέξτε αρχείο για άνοιγμα",
+"Choose files to open"                            : u"Επιλέξτε αρχεία για άνοιγμα",
 "file has been successfully imported (into another window).": u"Το αρχείο εισήχθη επιτυχώς (σε άλλο παράθυρο).",
 "import failed."                                  : u"η εισαγωγή απέτυχε.",
 "file has been successfully exported."            : u"Το αρχείο εξήχθη επιτυχώς.",
@@ -99,7 +101,7 @@ en2gr = \
 "Exports a raster image"                          : u"Εξάγει το σχέδιο σε αρχείο εικόνας",
 "Plots the drawing to a PDF file"                 : u"Εκτυπώνει το σχέδιο σε αρχείο pdf",
 "&Purge"                                          : u"Εκκαθάριση",
-"Removes unused items, such as layers, from drawing": u"Αφαιρεί αχρησιμοποίητα στοιχέια, όπως διαφάνειες, από το σχέδιο",
+"Removes unused items, such as layers, from drawing": u"Αφαιρεί αχρησιμοποίητα στοιχεία, όπως διαφάνειες, από το σχέδιο",
 "E&xit"                                           : u"Έξοδος",
 "&Edit"                                           : u"Επεξεργασία",
 "&Undo"                                           : u"Αναίρεση εντολής",
@@ -138,7 +140,13 @@ en2gr = \
 "Image file"                                      : u"Αρχείο εικόνας",
 "Insert Raster &Image"                            : u"Εισαγωγή Eικόνας",
 "&Clip image"                                     : u"Απόκρυψη περιθωρίων εικόνας",
-"Import &log Image"                               : u"Εισαγωγή εικόνας μορφής log",
+"Import &log Image"                               : u"Εισαγωγή εικόνας μορφής .log",
+"Import &tfw Image"                               : u"Εισαγωγή εικόνας μορφής .tfw",
+"Inserts images (tif) whose positions are defined in .tfw files": u"Εισάγει εικόνες (tif) των οποίων οι θέσεις καθορίζονται σε αρχεία .log",
+"Inserts images (bmp) whose positions are defined in .log files": u"Εισάγει εικόνες (tif) των οποίων οι θέσεις καθορίζονται σε αρχεία .tfw",
+"Import &Cadastre"                                : u"Εισαγωγή εικόνας κτηματολογίου",
+"Inserts Greek cadastre map image to its correct position using standardised file naming conventions":
+    u"Εισάγει εικόνα εληνικού κτηματολογίου στη σωστή της θέση χρησιμοποιώντας προτυποποιημένη σύμβαση ονοματισμού αρχείων",
 "Image &Render"                                   : u"Ποιότητα εικόνας",
 "Select rendering mode of images (Quick/Best) <Quick>: ": u"Επιλογή ποιότητας εμφάνισης εικόνων [Q=γρήγορη/B=καλύτερη] <Q>: ",
 "Current image rendering mode: Quick\n"           : u"Τρέχουσα ποιότητα εμφάνισης εικόνων: Γρήγορη\n",
@@ -153,6 +161,11 @@ en2gr = \
 "Enter image frame setting [ON/OFF] <%s>: "       : u"Ρύθμιση πλαισίων γύρω από εικόνες [ON/OFF] <%s>: ",
 "Imageframe is now "                              : u"Η προβολή πλαισίων γύρω από εικόνες είναι τώρα ",
 "On or Off is required. Try again.\n"             : u"Χρειάζεται On ή Off. Προσπαθείστε πάλι.\n",
+"Unload images"                                   : u"Απόκρυψη εικόνων",
+"Load images"                                     : u"Προβολή εικόνων",
+"Hides the content of images and conserves memory": u"Αποκρύπτει το περιεχόμενο εικόνων και εξοικονομεί μνήμη",
+"Reshows the content of the image allocating memory": u"Επαναπροβάλλει το περιεχόμενο εικόνων με δέσμευση μνήμης",
+"Choose image file"                               : u"Επιλογή αρχείου εικόνας",
 
 "Joins 2 or more adjacent lines"                  : u"Ενώνει 2 ή περισσότερες διαδοχικές γραμμές",
 "This command will join lines even if they have different z or higher dimensions":
@@ -192,6 +205,14 @@ en2gr = \
 "&Engineering"                                    : u"Μηχανική",
 "&Grid"                                           : u"Κάναβος",
 "&Rectify Map"                                    : u"Ορθοαναγωγή χάρτη",
+
+"Load DE&Ms"                                      : u"Εισαγωγή ΨΜΕπ",
+"Loads DEMs (USGS format) stored in .tif files"   : u"Εισαγωγή Ψηφιακών Μοντέλων Επιφανείας (μορφή USGS) που είναι αποθηκευμένα σε αρχεία .tif",
+"Manage DE&Ms"                                    : u"Διαχείριση ΨΜΕπ",
+"Manages DEMs (USGS format) stored in .tif files" : u"Διαχείριση Ψηφιακών Μοντέλων Επιφανείας (μορφή USGS) που είναι αποθηκευμένα σε αρχεία .tif",
+"Locate DEM directory"                            : u"Εντοπισμός φακέλλου με ΨΜΕπ",
+"Locates the directory for missing files of DEMs" : u"Εντοπισμός του φακέλλου που περιέχει ανεντόπιστα αρχεία ΨΜΕπ",
+
 "&Trace"                                          : u"Ιχνηλάτηση",
 "Nothing to cancel."                              : u"Δεν υπάρχει τίποτα να ακυρωθεί.",
 "First line point (c=continue previous): "        : u"Πρώτο σημείο της γραμμής (c=συνέχιση προηγούμενης): ",
@@ -203,7 +224,14 @@ en2gr = \
 "Drawing has been saved."                         : u"Το σχέδιο έχει αποθηκευθεί.",
 "&Interchange"                                    : u"Κυκλοφοριακός κόμβος",
 "Creates an interchange between 2 highways"       : u"Υπολογίζει και σχεδιάζει κυκλοφορικαό κόμβο μεταξύ 2 εθνικών οδών",
-"Select an element (w=window/c=crossing/l=layers/p=previous): ": u"Επιλογή ενός στοιχείου (w=παράθυρο/c=παράθυρο τομής/l=διαφάνεια/p=προηγούμενα): ",
+
+"Select an element (w=window/c=crossing/l=layers/f=layer of/p=previous): ":
+                                                    u"Επιλογή ενός στοιχείου (w=παράθυρο/c=παράθυρο τομής/"\
+                                                    u"l=διαφάνειες/f=διαφάνεια του/p=προηγούμενα): ",
+"Select an element (w=window/c=crossing/l=layers/f=layer of/p=previous/%s): ":
+                                                    u"Επιλογή ενός στοιχείου (w=παράθυρο/c=παράθυρο τομής/"\
+                                                    u"l=διαφάνειες/f=διαφάνεια του/p=προηγούμενα/%s): ",
+
 "First window corner: "                           : u"Πρώτη κορυφή παραθύρου: ",
 "Other window corner: "                           : u"Αντιδιαγώνια κορυφή παραθύρου: ",
 "elements added"                                  : u"στοιχεία προστέθηκαν",
@@ -235,7 +263,9 @@ en2gr = \
 "Press enter to continue.."                       : u"(Πατείστε enter για συνέχεια..",
 
 "Edit ThanCad Text styles"                        : u"Επεξεργασία ύφους κειμένου του ThanCad",
-"Image file open failed"                          : u"Αποτυχία ανοίγματος αρχείοθ εικόνας",
+"Image file open failed"                          : u"Αποτυχία ανοίγματος αρχείου εικόνας",
+"Choose image .log files"                         : u"Επιλογή αρχείων εικόνων .log",
+"Choose image .tfw files"                         : u"Επιλογή αρχείων εικόνων .tfw",
 "Plot to pdf file"                                : u"Εκτύπωση σε αρχείο pdf",
 "Engineering scale 1:x (enter=500): "             : u"Κλίμακα 1:x (enter=500): ",
 "First grid corner (Quadrilateral): "             : u"Πρώτο σημείο της περιοχής κανάβου (q=τετράπλευρο):",
@@ -296,10 +326,10 @@ en2gr = \
 "Origin or Delta coordinates: "                   : u"Σημείο προέλευσης ή Δέλτα συντεταγμένες: ",
 "Destination or <enter>: "                        : u"Σημείο προορισμού ή <enter>: ",
 "Zoom &Selection"                                 : u"Εστίαση σε επιλογή",
-"Create &DTM"                                     : u"Δημιουργία DTM",
-"Creates a DTM from 3D lines"                     : u"Δημιουργία DTM από τρισδιάστατες γραμμές",
+"Create &DTM"                                     : u"Δημιουργία ΨΜΕδ",
+"Creates a DTM from 3D lines"                     : u"Δημιουργία Ψηφιακού Μοντέλου Εδάφους από τρισδιάστατες γραμμές",
 "Computes and shows the z coordinate at an arbitrary point": u"Υπολογίζει και τυπώνει τη συντεταγμένη z σε αυθαίρετο σημείο",
-"DTM &Z"                                          : u"ΨΜΕ Z",
+"DTM/DEM &Z"                                      : u"ΨΜΕδ/ΨΜΕπ Z",
 "Add Z to &Points"                                : u"Πρόσθεση Z σε σημεία",
 "Supplies z coordinates to existing points"       : u"Προμηθεύει συντεταγμένες Z σε υφιστάμενα σημεία",
 "Add Z to &Lines"                                 : u"Πρόσθεση Z σε γραμμές",
@@ -343,7 +373,6 @@ en2gr = \
 "Invalid Point. Try again.\n"                     : u"Μη έγκυρο σημείο. Προσπαθείστε πάλι.\n",
 "Invalid point or option. Try again.\n"           : u"Μη έγκυρο σημείο ή επιλογή. Προσπαθείστε πάλι.\n",
 "&Research"                                       : u"Έρευνα",
-"Mark &Region"                                    : u"Σημείωση περιοχής",
 "D&eveloper"                                      : u"Προγραμματιστής",
 "Show &font"                                      : u"Προβολή γραμματοσειράς",
 "Show &dimensions"                                : u"Προβολή διαστάσεων",
@@ -381,6 +410,27 @@ en2gr = \
 "Please save scanned Image"                       : u"Παρακαλώ να αποθηκεύεσετε τη σαρωμένη Εικόνα",
 "Spans: %s    to: %s\n"                           : u"Καλύπτει: %s    έως: %s\n",
 "Vertices %d (X Y Z Radius):\n"                   : u"Κορυφές %d (X Y Z Ακτίνα):\n",
+
+
+
+"Extend"                                          : u"Επέκταση",
+"Extends lines and arcs until they cross other elements being the boundary edges":
+                                                    u"Επεκτέινει γραμμές και τόξα κύκλου μέχρι να τμήσουν"\
+                                                    u"άλλα στοιχεία που είναι τα όρια",
+"Select elements to be used as boundary edges, or press enter to select all elements on display:":
+                                                    u"Επιλογή στοιχείων (που δρουν ως όρια), ή πατείστε "\
+                                                    u"enter για επιλογή όλων των στοιχείων στην οθόνη",
+"Extension method"                                : u"Μέθοδος επέκτασης",
+"The extended element replaces the original element": u"Το επεκταμένο στοιχείο αντικαθιστά το αρχικό στοιχείο",
+"The extended element replaces the original element but retains the original end node (lines only)":
+                                                     u"Το επεκταμένο στοιχείο αντικαθιστά το αρχικό "\
+                                                     u"στοιχείο αλλά διατηρεί το αρχικό άκρο (μόνο σε γραμμές)",
+"The extended element contains only the net extension and the original element is retained":
+                                                    u"Το επεκταμένο στοιχείο περιέχει μόνο την καθαρή "\
+                                                    u"επέκταση και το αρχικό στοιχείο διατηρείται",
+"Select extension method (1/2/3) <1>: "           : u"Επιλογή μεθόδου επέκτασης (1/2/3) <1>: ",
+"Select an element to extend"                     : u"Επιλογή στοιχείου προς επέκταση",
+"Element extension does not intersect boundary edges": u"Η επέκταση του στοιχείου δεν τέμνει κανένα όριο",
 
 "F&ractal demo"                                   : u"Επίδειξη κλασματικού",
 "&Units"                                          : u"Μονάδες",

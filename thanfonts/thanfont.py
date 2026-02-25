@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines base class for ThanCad fonts made by straight lines.
 """
@@ -263,10 +263,10 @@ class ThanFontLine(ThanFont):
 
     def thanObliqueMake(self, phi):
         "Make the font oblique; rotate only y coordinate; affects only x coordinate."
-	assert -90 < phi < 90
-	phi = phi * pi / 180; c = cos(phi); s = sin(phi)
+        assert -90.0 < phi < 90.0
+        phi = phi * pi / 180; c = cos(phi); s = sin(phi)
         for lines in self.thanDilines.itervalues():
-	    lines[:] = [ [(x + y*s, y) for x,y in li] for li in lines]
+            lines[:] = [ [(x + y*s, y) for x,y in li] for li in lines]
 
     def thanUpsidedownMake(self):
         "Makes the font upside down; essentialy the letters are mirrored."

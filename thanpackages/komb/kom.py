@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -22,7 +22,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which creates a highway interchange.
 """
@@ -92,6 +92,7 @@ def thanMainTcad(proj, lin1):
       dxf.thanDxfPlot(A.x, A.y, 2)
       dxf.thanDxfPlot(B.x, B.y, 3)
       dxf.thanDxfPlot(x3, y3, 2)
+      ts.thanAfterImport()
       sxedVec(dxf, A, v1, v2, v3, v4, v5)
       sxedCurve(dxf, A1, A2, A3, R1, R2, A, B, L1, L2a, L2b, L3, LC1, LC2, th0, th1, th2, th3, th4, pr)
       dxf.thanDxfPlot(0, 0, 999)

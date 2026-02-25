@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines a mixin that copes with Tkinter's 2 coordinate systems -
 plus the world (user) coordinate system of ThanCad. All the zoom, pan,
@@ -113,8 +113,8 @@ class ThanTkGuiCoor:
 
     def thanGudGetWincm(self):
         "Returns the width and height of the window in cm."
-	width, height, widthmm, heightmm, w, h = self.__robustDim()
-	return 0.1*widthmm*w/width, 0.1*heightmm*h/height
+        width, height, widthmm, heightmm, w, h = self.__robustDim()
+        return 0.1*widthmm*w/width, 0.1*heightmm*h/height
 
 
     def __robustDim(self):
@@ -226,70 +226,44 @@ class ThanTkGuiCoor:
     def thanAutoRegen(self, regenImages=False):
         """Checks if a regen is required, usually after a pan or a zoom.
 
-	Pan, as implemented with Tkinter, handles images as expected.
-	However, zoom, as implemented with Tkinter, does not affect the size
-	of the images; it affects only the insertion point of the image.
-	Thus, when a zoom is performed, or when there is a possibility that
-	a zoom was performed, regenImages should be set to True.
-	IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
-	if self.__autoregen_preempt:
-	    print "thanAutoRegen() called preemptively; returning immediately"
-	    return
+        Pan, as implemented with Tkinter, handles images as expected.
+        However, zoom, as implemented with Tkinter, does not affect the size
+        of the images; it affects only the insertion point of the image.
+        Thus, when a zoom is performed, or when there is a possibility that
+        a zoom was performed, regenImages should be set to True.
+        IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
+        """
+        if self.__autoregen_preempt:
+            print "thanAutoRegen() called preemptively; returning immediately"
+            return
         self.__autoregen_preempt = True
 
         if self.__isRegenNeeded():
-	    self.thanRegen()                      # This, of course, regenerates images too
-	else:
-	    d = self.thanImages.copy()
-	    self.thanImages.clear()
-	    n = 0
-	    lt = self.thanProj[1].thanLayerTree
-	    dilay = lt.dilay
-	    tstyles = self.thanProj[1].thanTstyles
-	    dc = self.thanCanvas
-	    for im in d:
+            self.thanRegen()                      # This, of course, regenerates images too
+        else:
+            d = self.thanImages.copy()            # Shallow copy (i.e fast)
+            self.thanImages.clear()
+            n = 0
+            lt = self.thanProj[1].thanLayerTree
+            dilay = lt.dilay
+            dc = self.thanCanvas
+            for im in d:
                 if regenImages or self.__isImageRegenNeeded(im):
                     n += 1
                     lay = dilay[im.thanTags[1]]
-                    lay.thanTkSet(self.than, tstyles)
+                    lay.thanTkSet(self.than)
                     titem = im.thanTags[0]
-                    selected = "selall" in dc.gettags(titem)
+                    selected = "selall" in dc.gettags(titem)         #If we pan/zoom inside a selection command, check if image is selected
                     dc.delete(titem)              # Delete Rectangle and image (if not already deleted)
                     im.thanTkDraw(self.than)      # Restore this image
-                    if selected: dc.addtag_withtag("selall", titem)  # reselect image
+                    if selected: dc.addtag_withtag("selall", titem)  # reselect image if it was selected
                 else:
                     self.thanImages.add(im)
             if n > 0:
                 self.thanRedraw()                          # Image regen probably violated draworder
-                lt.thanCur.thanTkSet(self.than, tstyles)   # set current layer's attributes
+                lt.thanCur.thanTkSet(self.than)            # set current layer's attributes
 
         self.__autoregen_preempt = False
-
-
-    def thanRegenold(self):
-        "Regenerates the current drawing."
-        if self.__regen_preempt:
-            print "thanRegen() called preemptively; returning immediately"
-            return
-        self.__regen_preempt = True
-        self.thanCom.thanAppend(T["Regenerating drawing.."])
-        self.thanImages.clear()
-        self.thanCanvas.thanTkClear()           # Clear window
-        self.__resetWinCoor()                   # Reset coordinates so that Canvas logical coordinates are near 0,0
-        self.thanGudCalcScale()                 # It is neeeded because logical port was changed
-        import time
-        t1 = time.time()
-        print "Redrawing elements..",
-        self.thanProj[1].thanTkDraw(self.than)  # Repaint all the elements in the window
-        t2 = time.time()
-        print t2-t1, "secs"
-        print "Reselecting previous selction..",
-        self.thanGudSetSelElem(self.thanSelall) # Add tag "selall" to previously selected elements
-        t3 = time.time()
-        print t3-t2, "secs"
-        self.__regen_preempt = False
-        self.thanCom.thanAppend(T["end of regeneration.\n"])   # Inform that regeneration finished
 
 
     def thanRegen(self):
@@ -306,7 +280,7 @@ class ThanTkGuiCoor:
         self.thanCanvas.thanGudCoorChanged()
         import time
         t1 = time.time()
-        print "Redrawing elements..",
+        print "Regenerating elements..",
         temp = self.than.markselected
         self.than.markselected = self.thanSelall
         self.thanProj[1].thanTkDraw(self.than)  # Repaint all the elements in the window
@@ -320,18 +294,18 @@ class ThanTkGuiCoor:
     def thanRedraw(self):
         """Ensures the relative draworder of the layers.
 
-	Redraw is really needed only when the drawing has raster images (and/or
-	solid fill in the future). So when there are no raster images, it should
-	simply return.
-	On the other hand, thanRedraw() is called only when regenerating images
-	(or the entire drawing), so the argument is mute. thanRedraw() is also called
-	when the user changes the draw order of a layer (which is rare anyway).
-	So, no optimisation to the code (Thanasis 2007_03_18).
-	"""
-        leaflayers = [(lay.thanAtts["draworder"].thanVal, taglay) \
-            for taglay,lay in self.thanProj[1].thanLayerTree.dilay.iteritems() \
-	    if not lay.thanAtts["frozen"].thanVal]
-        leaflayers.sort()
+        Redraw is really needed only when the drawing has raster images (and/or
+        solid fill in the future). So when there are no raster images, it should
+        simply return.
+        On the other hand, thanRedraw() is called only when regenerating images
+        (or the entire drawing), so the argument is mute. thanRedraw() is also called
+        when the user changes the draw order of a layer (which is rare anyway).
+        So, no optimisation to the code (Thanasis 2007_03_18).
+        """
+        leaflayers = sorted((lay.thanAtts["draworder"].thanVal, taglay)
+                            for taglay,lay in self.thanProj[1].thanLayerTree.dilay.iteritems()
+                            if not lay.thanAtts["frozen"].thanVal
+                           )
         dc = self.thanCanvas
         for i,tag in leaflayers: dc.lift(tag)
         self.thanUpdateLayerButton()                  # Show current layer again
@@ -340,41 +314,42 @@ class ThanTkGuiCoor:
     def __isRegenNeeded(self):
         """Checks if the visible part of the drawing is already in the Tkinter Canvas.
 
-	This routine is needed because if a drawing is big, it is not rendered
-	onto the Tkinter canvas as a whole, but only the part that is actually
-	visible (and maybe a little more, so that we can avoid a regenerate
-	when a small pan is done afterwards).
-	This routine checks if any of the unrendered part of the drawing has
-	become visible after a pan or a zoom.
-	IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
+        This routine is needed because if a drawing is big, it is not rendered
+        onto the Tkinter canvas as a whole, but only the part that is actually
+        visible (and maybe a little more, so that we can avoid a regenerate
+        when a small pan is done afterwards).
+        This routine checks if any of the unrendered part of the drawing has
+        become visible after a pan or a zoom.
+        IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
+        """
         v = self.thanProj[1].viewPort
-	q = self.thanProj[1].thanAreaIterated
-	return q[0] != None and v[0] < q[0] or\
-	       q[1] != None and v[1] < q[1] or\
+        q = self.thanProj[1].thanAreaIterated
+        return q[0] != None and v[0] < q[0] or\
+               q[1] != None and v[1] < q[1] or\
                q[2] != None and v[2] > q[2] or\
-	       q[3] != None and v[3] > q[3]
+               q[3] != None and v[3] > q[3]
 
 
     def __isImageRegenNeeded(self, im):
         """Checks if the visible part of the image is already in the Tkinter Canvas after a pan.
 
-	Note that, after a zoom, the images must be regenerated anyway,
-	since the Tkinter scale does not scale images.
-	This routine is needed because if an image is big, it is not rendered
-	onto the Tkinter canvas as a whole, but only the part that is actually
-	visible (and maybe a little more, so that we can avoid a regenerate
-	when a small pan is done afterwards).
-	This routine checks if any of the unrendered part of the image has
-	become visible after a pan.
-	IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
+        Note that, after a zoom, the images must be regenerated anyway,
+        since the Tkinter scale does not scale images.
+        This routine is needed because if an image is big, it is not rendered
+        onto the Tkinter canvas as a whole, but only the part that is actually
+        visible (and maybe a little more, so that we can avoid a regenerate
+        when a small pan is done afterwards).
+        This routine checks if any of the unrendered part of the image has
+        become visible after a pan.
+        IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
+        """
         v = self.thanProj[1].viewPort
         q = im.view
-        return q[0] != None and v[0] < q[0] or\
-               q[1] != None and v[1] < q[1] or\
-               q[2] != None and v[2] > q[2] or\
-	       q[3] != None and v[3] > q[3]
+        if im.imagez == None: return True    #The image object will not render the image if it is outside viewport
+        return (q[0] != None and v[0] < q[0] or    #if q[0] is none then it means q[0]=0 (nothing more to render in this direction)
+                q[1] != None and v[1] < q[1] or
+                q[2] != None and v[2] > q[2] or
+                q[3] != None and v[3] > q[3])
 
 #===========================================================================
 

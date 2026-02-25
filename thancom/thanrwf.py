@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -22,7 +22,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module implements read/write mechanism for ThanCad files..
 """
@@ -165,6 +165,16 @@ class ThanRfile:
         if dl[-1] != footer: raise ValueError, "Footer %s not found" % footer
         return dl[1:-1]
 
+    def readAttb(self, name, s2=None):
+        "Read an attribute which may contain blanks inside it and an attribute which does not."
+        self.readBeg(name)
+        s = self.readTextln()
+        if s2 != None: s2 = self.next().strip()
+        self.readEnd(name)
+        if s2 == None: return s
+        return s, s2
+
+
     def readTextln(self):
         """Reads a line of text.
 
@@ -261,6 +271,17 @@ class ThanWfile:
     def writeAtt(self, name, s):
         "Write an attribute."
         self.fw.write("%s<%s %s />\n" % (self.ind, name, s))
+
+
+    def writeAttb(self, name, s, s2=None):
+        "Write an attribute which may contain blanks inside it and an attribute which does not."
+        self.writeBeg(name)
+        self.pushInd()
+        self.writeTextln(s)
+        if s2 != None: self.writeln(s2)
+        self.popInd()
+        self.writeEnd(name)
+
 
     def writeTextln(self, s):
         "Writes a line of text with quotes and indent."

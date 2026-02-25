@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-7 -*-
-from math import hypot
+from math import hypot, atan2, pi
 from p_ggen import xfrange
-from p_gmath import linint
+from p_gmath import linint, dpt
 
 
 def prnone(t): pass
@@ -78,6 +78,15 @@ class ThanYpyka:
       d2 = hypot(l[0]-k[0], l[1]-k[1])
       return d2 > self.apOrioMax
 
+    def xasma(self, k, l, lp, ibhm):   #Thanasis2012_05_16
+      "Tests if there is gap >= pi between 2 consecutive points."
+      if ibhm < 0: l, lp = lp, l                #If ibhm == -1 then lp, l are counter-clockwise, so we correct them
+      thl = atan2(l[0]-k[0], l[1]-k[1])
+      thlp = atan2(lp[0]-k[0], lp[1]-k[1])
+      dth = dpt(thl-thlp)
+      if dth >= pi: return True                 #There is xasma from previous point
+      return False
+
 #==========================================================================
 
     def ypyka2(self, his, karx, iarx):
@@ -133,8 +142,9 @@ class ThanYpyka:
           lp = l
 #---------ΕΠΟΜΕΝΗ ΕΝΩΣΗ ΤΟΥ ΣΗΜΕΙΟΥ ksp(k)
           i = (i + ibhm) % len(linksk)
-#---------ΕΞΕΤΑΣΕ ΤΕΛΟΣ,ΚΥΚΛΟ
           l = linksk[i]
+#---------ΕΞΕΤΑΣΕ ΤΕΛΟΣ,ΚΥΚΛΟ
+          if self.xasma(k, l, lp, ibhm): return 0 # Υπάρχει χάσμα >=pi μεταξύ lp και l: τέλος περιοχής  #Thanasis2012_05_16
           hl = l[2]
           if hl == his: hl -= dhis
           if lp not in self.ls[l]: return 0    # ΤΕΛΟΣ ΠΕΡΙΟΧΗΣ

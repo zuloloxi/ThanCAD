@@ -1,6 +1,6 @@
 from math import fabs
 from p_ggen import iterby2
-from polyg import area
+from area import area
 
 
 class MesaHull:

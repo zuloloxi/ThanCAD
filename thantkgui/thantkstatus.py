@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module implements an information status bar.
 """
@@ -44,7 +44,7 @@ class ThanStatusBar(Frame):
         self.thanCoor.grid(row=0, column=1, sticky="w")
         self.thanInfo = Label(self, text="This is ThanCad", bd=1, relief=SUNKEN, anchor=W, width=20)
         self.thanInfo.grid(row=0, column=2, sticky="we")
-        self.columnconfigure(1, weight=2)
+        self.columnconfigure(2, weight=1)
         self.rowconfigure(0, weight=1)
 
         self.__info = [""]
@@ -156,6 +156,11 @@ class ThanStatusBar(Frame):
         self.thanConfig(every=every1)
         return every1
 
+    def thanInfoSet(self, text):
+        "Sets a new message to the info label overwritting current."
+        self.__info[-1] = text
+        self.thanInfo.config(text=text)
+        self.thanInfo.update_idletasks()
 
     def thanInfoPush(self, text):
         "Pushes a new message to the info label."

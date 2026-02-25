@@ -2,12 +2,6 @@
 import sys
 from fnmatch import fnmatch
 import p_ggen
-from thanimpdxf import ThanImportDxf, ThanImportError
-
-
-def _prt(s):
-    "This function consumes a string that should be printed, but prints nothing."
-    pass
 
 
 class ThanDrIgnore:
@@ -15,7 +9,7 @@ class ThanDrIgnore:
 
     def __init__(self, prt=p_ggen.prg):
         "Just get print function."
-        if prt == None: self.prt = _prt   # No message will be printed
+        if prt == None: self.prt = p_ggen.doNothing   # No message will be printed
         else:           self.prt = prt
 
     def dxfVport   (self, name, x1, y1, x2, y2):  pass
@@ -27,6 +21,7 @@ class ThanDrIgnore:
     def dxfCircle  (self, xx, yy, zz, lay, handle, col, r):pass
     def dxfPoint   (self, xx, yy, zz, lay, handle, col):   pass
     def dxfArc     (self, xx, yy, zz, lay, handle, col, r, theta1, theta2): pass
+    def dxfEllipse (self, xx, yy, zz, lay, handle, col, a, b, phia, phib, theta, full): pass
     def dxfText    (self, xx, yy, zz, lay, handle, col, text, h, theta):    pass
     def dxfBlockAtt(self, xx, yy, zz, lay, handle, col, blname, blatts):    pass
     def dxfThanImage(self, xx, yy, zz, lay, handle, col, filnam, size, ale, theta): pass
@@ -46,7 +41,7 @@ class ThanDrLayer(ThanDrIgnore):
         self.layer[name] = atts
 
 
-class ThanDrWarn:
+class ThanDrWarn(ThanDrIgnore):
     """A class which warns about unknown object/layer pairs.
 
     I think that this is the safest class to derive from. If new functionality is 
@@ -55,15 +50,14 @@ class ThanDrWarn:
     or not accessed, or ignored.
     """
 
-    def __init__(self, laykno=(), prt=p_ggen.prg):
+    def __init__(self, laykno=(), **kw):
         "Set known and unknown layers."
+        ThanDrIgnore.__init__(self, **kw)
         self._objunk = {}  # Unknown objects: objects which the user is not interested in
         self._functy = {}  # Functionality which the user is not interested in
         self._laykno = {}  # Layers which the user expects
         self._layunk = {}  # Layers which the user is not interested in
         self._layknopat = [lay.lower() for lay in laykno]
-        if prt == None: self.prt = _prt   # No message will be printed
-        else:           self.prt = prt
 
 
     def warnObj(self, lay, obj):
@@ -113,6 +107,7 @@ class ThanDrWarn:
     CIRCLE   = "circle"
     POINT    = "point"
     ARC      = "arc"
+    ELLIPSE  = "ellipse"
     TEXT     = "text"
     BLOCK    = "block"
     IMAGE    = "image"
@@ -124,6 +119,8 @@ class ThanDrWarn:
     def dxfPoint    (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.POINT)
     def dxfArc      (self, xx, yy, zz, lay, handle, col, r, theta1,
                      theta2):                                             self.warnObj(lay, self.ARC)
+    def dxfEllipse  (self, xx, yy, zz, lay, handle, col, a, b, phia,
+                     phib, theta, full):                                  self.warnObj(lay, self.ELLIPSE)
     def dxfText     (self, xx, yy, zz, lay, handle, col, text, h, theta): self.warnObj(lay, self.TEXT)
     def dxfBlockAtt (self, xx, yy, zz, lay, handle, col, blname, blatts): self.warnObj(lay, self.BLOCK)
     def dxfThanImage(self, xx, yy, zz, lay, handle, col, filnam, size, 
@@ -155,14 +152,12 @@ class ThanDrLine(ThanDrWarn):
         self.prt("Line x1=%.3f  y1=%.3f z1=%.3f ... in layer=%s" % (xx[0], yy[0], zz[0], lay), "info1")
 
 
-class ThanDrSave:
+class ThanDrSave(ThanDrIgnore):
     "A class which stores the elements read by ThanImportDxf."
 
-    def __init__(self, prt=p_ggen.prg):
+    def __init__(self, **kw):
         "Creates an instance of the class."
-        if prt == None: self.prt = _prt   # No message will be printed
-	else:           self.prt = prt
-	
+        ThanDrIgnore.__init__(self, **kw)
         self.thanVports = [ ]
 	self.thanLayers = [ ]
 	self.thanLtypes = [ ]
@@ -171,7 +166,8 @@ class ThanDrSave:
         self.thanLines = [ ]
 	self.thanCircles = [ ]
 	self.thanPoints = [ ]
-	self.thanArcs = [ ]
+        self.thanArcs = [ ]
+        self.thanEllipses = [ ]
 	self.thanTexts = [ ]
 	self.thanBlocks = []
 	self.thanImages = []
@@ -207,11 +203,15 @@ class ThanDrSave:
 
     def dxfPoint(self, xx, yy, zz, lay, handle, col):
         "Saves a point."
-        self.thanPoints.append((xx, yy, lay, col))
+        self.thanPoints.append((xx, yy, zz, lay, col))
 
     def dxfArc(self, xx, yy, zz, lay, handle, col, r, theta1, theta2):
-        "Saves a point."
-        self.thanArcs.append((xx, yy, lay, col, r, theta1, theta2))
+        "Saves an arc."
+        self.thanArcs.append((xx, yy, zz, lay, col, r, theta1, theta2))
+
+    def dxfEllipse (self, xx, yy, zz, lay, handle, col, a, b, phia, phib, theta, full):
+        "Saves an elliptic arc."
+        self.thanEllipses.append((xx, yy, zz, lay, col, a, b, phia, phib, theta, full))
 
     def dxfText(self, xx, yy, zz, lay, handle, col, text, h, theta):
         "Saves a text."
@@ -245,6 +245,7 @@ class ThanDrSave:
 	self.prt("Number of points    : %d" % len(self.thanPoints), "info1")
 	self.prt("Number of circles   : %d" % len(self.thanCircles), "info1")
         self.prt("Number of arcs      : %d" % len(self.thanArcs), "info1")
+        self.prt("Number of ellipses  : %d" % len(self.thanEllipses), "info1")
         self.prt("Number of blocks ins: %d" % len(self.thanBlocks), "info1")
         self.prt("Number of thanImages: %d" % len(self.thanImages), "info1")
         self.prt("Number of 3dfaces   : %d" % len(self.than3dfaces), "info1")
@@ -259,13 +260,8 @@ class ThanDxfDrawing(ThanDrSave):
     a. Plot the draing into a new dxf file translated, scaled and rotated.
     b. Find its reference point, either the center or the lower-left point.
     c. Find text element with a given text value.
-    d. Replace the text value of a text element, and optinally justify it (left, center, right).
+    d. Replace the text value of a text element, and optionally justify it (left, center, right).
     """
-
-    def __init__(self, *args, **kw):
-        "Initialise parent class."
-        ThanDrSave.__init__(self, *args, **kw)
-
 
     def findRef(self, kind="min"):
         "Finds the reference point of the drawing: minx, miny in lines."
@@ -298,7 +294,7 @@ class ThanDxfDrawing(ThanDrSave):
             self.xref = xref/max((n, 1))
             self.yref = yref/max((n, 1))
         else:
-            raise ThanImportError, "Unknown reference kind: "+kind
+            assert 0, "Unknown reference kind: %s" % (kind,)
 
 
     def textFind(self, searchstring):
@@ -442,7 +438,7 @@ class ThanDrConpas(ThanDrWarn):
 
     def findHeight(self):
         "Tests and finds the height for the EGSA87 coordinates, or put zero height for pixel coordinates."
-	if self.ctype == "nonamez":
+        if self.ctype == "nonamez":
 	    for j,(t,xt,yt) in enumerate(self.cname):
 	        try:
 	            ht = float(t)
@@ -450,7 +446,7 @@ class ThanDrConpas(ThanDrWarn):
 	            self.prt("Error in file %s: Illegal height '%s':" % (self.filnam, t), "can")
 		    self.prt("The height must be a numeric value.", "can")
 		    self.prt("For example: '128.89' or '12.989'", "can")
-		    raise ThanImportError, "Errors recorded above."
+		    raise p_ggen.RecordedError, "Errors recorded above."
 		self.cname[j] = "noname", xt, yt, ht
 	elif self.ctype != "pixel":
 	    for j,(t,xt,yt) in enumerate(self.cname):
@@ -462,7 +458,7 @@ class ThanDrConpas(ThanDrWarn):
 		    self.prt("The point should be of the form:", "can")
 		    self.prt(" <name> / <height>", "can")
 		    self.prt("For example: 'P1 / 128.89' or '1/12.989'", "can")
-		    raise ThanImportError, "Errors recorded above."
+		    raise p_ggen.RecordedError, "Errors recorded above."
 		self.cname[j] = t1.strip(), xt, yt, ht
 	else:
 	    for j,(t,xt,yt) in enumerate(self.cname):
@@ -487,7 +483,7 @@ class ThanDrConpas(ThanDrWarn):
 	        self.prt("Error in file %s: Point with %s coordinates %.1f %.1f:" % (self.filnam, self.ctype, x,y), "can")
 		self.prt("The name and/or the height of this point was not defined.", "can")
 	        self.prt("(The number of point names and/or heights is less than the number of points!)", "can")
-		raise ThanImportError, "Errors recorded above."
+		raise p_ggen.RecordedError, "Errors recorded above."
 	    ds = [((x-xt)**2+(y-yt)**2, j) for j,(t,xt,yt,ht) in enumerate(self.cname)]
 	    d, j = min(ds); t,xt,yt,ht = self.cname[j]
 	    ds = [((x1-xt)**2+(y1-yt)**2, i1) for i1,(aa1,x1,y1,h1) in enumerate(self.cxypix) if aa1 == None]
@@ -497,7 +493,7 @@ class ThanDrConpas(ThanDrWarn):
 		self.prt("The name and/or height of this point was probably not defined.", "can")
 		self.prt("The nearest name and/or height to this point is: '%s' but it was found to refer to" % t, "can")
 		self.prt("point with pixel coordinates %.1f %.1f" % (x1,y1))
-		raise ThanImportError, "Errors recorded above."
+		raise p_ggen.RecordedError, "Errors recorded above."
 	    self.cxypix[i][0] = t
 	    if self.ctype != "pixel": self.cxypix[i][3] = ht
 	    del self.cname[j]
@@ -549,7 +545,7 @@ def testThanDxfGetConpas():
 
 def testThanDrSave():
     "Test dxf import."
-    from p_gimdxf import ThanImportDxf, ThanImportError
+    from p_gimdxf import ThanImportDxf
     f = file("116.dxf", "r")
     dr = ThanDrSave()
     t = ThanImportDxf(f, dr)
@@ -581,7 +577,7 @@ def testThanDrLayer():
 
 def testThanDrWarn():
     "Test dxf import."
-    from p_gimdxf import ThanImportDxf, ThanImportError
+    from p_gimdxf import ThanImportDxf
     f = file("116.dxf", "r")
     dr = ThanDrWarn()
     t = ThanImportDxf(f, dr)
@@ -591,7 +587,7 @@ def testThanDrWarn():
 
 def testThanDrConpas():
     "Test dxf import."
-    from p_gimdxf import ThanImportDxf, ThanImportError
+    from p_gimdxf import ThanImportDxf
     f = file("trap1.dxe", "r")
     xy = thanDxfGetConpas(f, ctype="EGSA87")
     for xy1 in xy: print xy1

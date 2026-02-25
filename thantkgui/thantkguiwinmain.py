@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines a Tkinter window to display ThanCad's main window.
 """
@@ -43,7 +43,7 @@ class ThanTkGuiWinMain(Tkinter.Tk):
 
     def __init__ (self):
         "Initialise base classes and mixins and then this class."
-        Tkinter.Tk.__init__(self)
+        Tkinter.Tk.__init__(self, className="ThanCad")
 
         self.__fonts()
         self.__position()
@@ -113,15 +113,15 @@ class ThanTkGuiWinMain(Tkinter.Tk):
 
     def thanPrt(self, mes, tag="info"):
         "Print to the command window; this is info, warnings, error etc."
-	self.thanCom.thanAppend("%s\n" % mes, tag)
+        self.thanCom.thanAppend("%s\n" % mes, tag)
 
 
     def thanGudCommandBegin(self, t):
         "The user entered a command; launch it."
-	w = self
-	n = len(t); t = t.lower()
-	c, fun = thancom.thanComFun(t)
-	assert fun, "Unrecognised command"
+        w = self
+        n = len(t); t = t.lower()
+        c, fun = thancom.thanComFun(t)
+        assert fun, "Unrecognised command"
         fun(thanfiles.ThanCad)
 
 

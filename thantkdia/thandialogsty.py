@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module displays a dialog for the user to create/modify/delete a text style.
 """
@@ -34,11 +34,11 @@ from thandefs import ThanTstyle
 from thantrans import T
 
 class ThanTkStyle(p_gtkuti.ThanDialog):
-    "Dialog for the visibility of a layer."
+    "Dialog for creating and editing linetyles."
 
     def __init__(self, master, tstyles, val, tstyleinuse, *args, **kw):
         "Extract initial style."
-	c = {}
+        c = {}
 	for k,v in tstyles.iteritems(): c[k] = v.thanCopy()
 	self.__val = c.get(str(val), v)     # If val is unknown, choose arbitrarily another one
 	self.thanTstyles = c
@@ -120,7 +120,7 @@ class ThanTkStyle(p_gtkuti.ThanDialog):
 
 	w = Label(f, text=T["Width Factor:"]); w.grid(row=1, column=2, sticky="e", padx=5)
 	self.thanWidthf = Entry(f, width=8); self.thanWidthf.grid(row=1, column=3, sticky="e", padx=5)
-	w = Label(f, text=T["Oblique Angle:"]); w.grid(row=2, column=2, sticky="e", padx=5)
+	w = Label(f, text=T["Oblique Angle:\n(deg clockwise)"]); w.grid(row=2, column=2, sticky="e", padx=5)
 	self.thanObliq = Entry(f, width=8); self.thanObliq.grid(row=2, column=3, sticky="e", padx=5)
 
     def __previewForm(self, fra, ir, ic):
@@ -145,14 +145,14 @@ class ThanTkStyle(p_gtkuti.ThanDialog):
 #			)
         self.thanValidate(strict=False)
         text = "AaBb"
-	f = self.thanVals[1].thanCopypartial(text)
+        f = self.thanVals[1].thanCopypartial(text)
         obl = self.thanVals[4]
-	if obl != 0: f.thanObliqueMake(obl)
-	fact = self.thanVals[3]
-	if fact != 1: f.thanWidthScale(fact)
-	if self.thanVals[5]: f.thanUpsidedownMake()
-	if self.thanVals[6]: f.thanBackwardsMake()
-	if self.thanVals[7]: f.thanVerticalMake()
+        if obl != 0: f.thanObliqueMake(obl)
+        fact = self.thanVals[3]
+        if fact != 1: f.thanWidthScale(fact)
+        if self.thanVals[5]: f.thanUpsidedownMake()
+        if self.thanVals[6]: f.thanBackwardsMake()
+        if self.thanVals[7]: f.thanVerticalMake()
 
 	tk = p_ggen.Struct(); tk.fill = tk.outline = None
 	import Tkinter
@@ -249,13 +249,13 @@ class ThanTkStyle(p_gtkuti.ThanDialog):
     def apply2(self):
         "The user pressed the apply button."
         self.__changed = True
-        return ThanDialog.apply(self)
+        return p_gtkuti.ThanDialog.apply(self)
 
     def validate(self):
         "If everything is ok, it stores the changes and writes the result."
-	if self.thanValidate(strict=True):
-	    sty = ThanTstyle(*self.thanVals)
-	    self.thanTstyles[sty.thanName] = sty
+        if self.thanValidate(strict=True):
+            sty = ThanTstyle(*self.thanVals)
+            self.thanTstyles[sty.thanName] = sty
 	    self.__updateChosen()
 	    self.result = self.thanTstyles
 	    return True
@@ -264,8 +264,8 @@ class ThanTkStyle(p_gtkuti.ThanDialog):
 
     def thanValidate(self, strict=True):
         "Returns true if the value chosen by the user is valid."
-	ok = True
-	try:
+        ok = True
+        try:
 	    height = float(self.thanHeight.get())
 	    if height < 0: raise ValueError
 	except:
@@ -284,10 +284,10 @@ class ThanTkStyle(p_gtkuti.ThanDialog):
 	        return False
 	    fact = 1.0; ok = False
 	try:
-	    obl = float(self.thanObliq.get())
-	    if obl <= -90 or obl >= 90: raise ValueError
-	except:
-	    if strict:
+            obl = float(self.thanObliq.get())
+            if obl <= -90.0 or obl >= 90.0: raise ValueError
+        except:
+            if strict:
 	        p_gtkuti.thanGudModalMessage(self, "Invalid oblique angle", "Error Message")
 	        self.thanObliq.focus_set()
 	        return False
@@ -302,7 +302,7 @@ class ThanTkStyle(p_gtkuti.ThanDialog):
         "The user pressed ok."
 	if not self.validate(): return
         self.__changed = False
-	p_gtkuti.ThanDialog.ok(self, *args)
+        p_gtkuti.ThanDialog.ok(self, *args)
 
     def cancel(self, *args):
         "The user pressed cancel."

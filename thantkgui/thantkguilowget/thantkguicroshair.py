@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines various croshairs for ThanCad's canvas.
 """
@@ -95,6 +95,7 @@ class CrosHair(object):
         self.thanX1p = None
         self.thanY1p = None
         self.thanOn = True
+        self.thanChx = []
         self.resize()
 
 
@@ -121,8 +122,8 @@ class CrosHair(object):
         if self.thanExists:
 #            self.thanX1p = dc.coords(self.thanCh1)[0]
 #            self.thanY1p = dc.coords(self.thanCh2)[1]
-            dc.delete(self.thanCh1)
-            dc.delete(self.thanCh2)
+            for it in self.thanChx:
+                dc.delete(it)
             self.thanExists = 0
 
         if x1 == None: x1 = self.thanX1p; y1 = self.thanY1p
@@ -141,13 +142,14 @@ class CrosHair(object):
             if self.thanExists:
 #                dc.move(self.thanCh1, x1-self.thanX1p, 0)
 #                dc.move(self.thanCh2, 0, y1-self.thanY1p)
-                dc.coords(self.thanCh1, x1, self.thanMiny, x1, self.thanMaxy,)
-                dc.coords(self.thanCh2, self.thanMinx, y1, self.thanMaxx, y1)
-                dc.lift(self.thanCh1)
-                dc.lift(self.thanCh2)
+                dc.coords(self.thanChx[0], x1, self.thanMiny, x1, self.thanMaxy,)
+                dc.coords(self.thanChx[1], self.thanMinx, y1, self.thanMaxx, y1)
+                for it in self.thanChx:
+                    dc.lift(it)
             else:
-                self.thanCh1 = dc.create_line(x1, self.thanMiny, x1, self.thanMaxy, fill="red")
-                self.thanCh2 = dc.create_line(self.thanMinx, y1, self.thanMaxx, y1, fill="green")
+                it1 = dc.create_line(x1, self.thanMiny, x1, self.thanMaxy, fill="red")
+                it2 = dc.create_line(self.thanMinx, y1, self.thanMaxx, y1, fill="green")
+                self.thanChx[:] = it1, it2
                 self.thanExists = 1
         self.thanX1p = x1
         self.thanY1p = y1
@@ -157,8 +159,8 @@ class CrosHair(object):
         "Deletes the croshair from the canvas - if it exists."
         if self.thanExists:
             dc = self.thanDc
-            dc.delete(self.thanCh1)
-            dc.delete(self.thanCh2)
+            for it in self.thanChx:
+                dc.delete(it)
             self.thanExists = 0
 
 
@@ -191,12 +193,12 @@ class CrosHairRect(CrosHair):
         if self.thanOn:
             dc = self.thanDc
             if self.thanExists:
-                dc.coords(self.thanCh1, x1-self.dx, y1-self.dy, x1+self.dx, y1+self.dy)
-                dc.lift(self.thanCh1)
+                dc.coords(self.thanChx[0], x1-self.dx, y1-self.dy, x1+self.dx, y1+self.dy)
+                dc.lift(self.thanChx[0])
             else:
-                self.thanCh1 = dc.create_rectangle(x1-self.dx, y1-self.dy, x1+self.dx, y1+self.dy,
-                               outline=thancadconf.thanColSel.thanTk)
-                self.thanCh2 = None
+                it1 = dc.create_rectangle(x1-self.dx, y1-self.dy, x1+self.dx, y1+self.dy,
+                    outline=thancadconf.thanColSel.thanTk)
+                self.thanChx[:] = (it1,)
                 self.thanExists = 1
         self.thanX1p = x1
         self.thanY1p = y1
@@ -252,12 +254,12 @@ class CrosHairRectangle(CrosHairResizeable):
             dx = dy = self.thanSize*0.5
             dc = self.thanDc
             if self.thanExists:
-                dc.coords(self.thanCh1, x1-dx, y1-dy, x1+dx, y1+dy)
-                dc.lift(self.thanCh1)
+                dc.coords(self.thanChx[0], x1-dx, y1-dy, x1+dx, y1+dy)
+                dc.lift(self.thanChx[0])
             else:
-                self.thanCh1 = dc.create_rectangle(x1-dx, y1-dy, x1+dx, y1+dy,
-                               outline=thancadconf.thanColSel.thanTk)
-                self.thanCh2 = None
+                it1 = dc.create_rectangle(x1-dx, y1-dy, x1+dx, y1+dy,
+                    outline=thancadconf.thanColSel.thanTk)
+                self.thanChx[:] = (it1,)
                 self.thanExists = 1
         self.thanX1p = x1
         self.thanY1p = y1
@@ -272,12 +274,12 @@ class CrosHairCircle(CrosHairResizeable):
             dx = dy = self.thanSize*0.5
             dc = self.thanDc
             if self.thanExists:
-                dc.coords(self.thanCh1, x1-dx, y1-dy, x1+dx, y1+dy)
-                dc.lift(self.thanCh1)
+                dc.coords(self.thanChx[0], x1-dx, y1-dy, x1+dx, y1+dy)
+                dc.lift(self.thanChx[0])
             else:
-                self.thanCh1 = dc.create_oval(x1-dx, y1-dy, x1+dx, y1+dy,
-                               outline=thancadconf.thanColSel.thanTk)
-                self.thanCh2 = None
+                it1 = dc.create_oval(x1-dx, y1-dy, x1+dx, y1+dy,
+                   outline=thancadconf.thanColSel.thanTk)
+                self.thanChx[:] = (it1,)
                 self.thanExists = 1
 
         self.thanX1p = x1
@@ -293,15 +295,16 @@ class CrosHairChi(CrosHairResizeable):
             dx = dy = self.thanSize*0.5
             dc = self.thanDc
             if self.thanExists:
-                dc.coords(self.thanCh1, x1-dx, y1-dy, x1+dx, y1+dy)
-                dc.coords(self.thanCh2, x1-dx, y1+dy, x1+dx, y1-dy)
-                dc.lift(self.thanCh1)
-                dc.lift(self.thanCh2)
+                dc.coords(self.thanChx[0], x1-dx, y1-dy, x1+dx, y1+dy)
+                dc.coords(self.thanChx[1], x1-dx, y1+dy, x1+dx, y1-dy)
+                for it in self.thanChx:
+                    dc.lift(it)
             else:
-                self.thanCh1 = dc.create_line(x1-dx, y1-dy, x1+dx, y1+dy,
-                               fill=thancadconf.thanColSel.thanTk)
-                self.thanCh2 = dc.create_line(x1-dx, y1+dy, x1+dx, y1-dy,
-                               fill=thancadconf.thanColSel.thanTk)
+                it1 = dc.create_line(x1-dx, y1-dy, x1+dx, y1+dy,
+                   fill=thancadconf.thanColSel.thanTk)
+                it2 = dc.create_line(x1-dx, y1+dy, x1+dx, y1-dy,
+                   fill=thancadconf.thanColSel.thanTk)
+                self.thanChx[:] = (it1, it2)
                 self.thanExists = 1
         self.thanX1p = x1
         self.thanY1p = y1
@@ -316,13 +319,14 @@ class CrosHairCros(CrosHairResizeable):
             dx = dy = self.thanSize*0.5
             dc = self.thanDc
             if self.thanExists:
-                dc.coords(self.thanCh1, x1, y1-dy, x1, y1+dy)
-                dc.coords(self.thanCh2, x1-dx, y1, x1+dx, y1)
-                dc.lift(self.thanCh1)
-                dc.lift(self.thanCh2)
+                dc.coords(self.thanChx[0], x1, y1-dy, x1, y1+dy)
+                dc.coords(self.thanChx[1], x1-dx, y1, x1+dx, y1)
+                for it in self.thanChx:
+                    dc.lift(it)
             else:
-                self.thanCh1 = dc.create_line(x1, y1-dy, x1, y1+dy, fill="red")
-                self.thanCh2 = dc.create_line(x1-dx, y1, x1+dx, y1, fill="green")
+                it1 = dc.create_line(x1, y1-dy, x1, y1+dy, fill="red")
+                it2 = dc.create_line(x1-dx, y1, x1+dx, y1, fill="green")
+                self.thanChx[:] = (it1, it2)
                 self.thanExists = 1
         self.thanX1p = x1
         self.thanY1p = y1
@@ -340,8 +344,7 @@ class CrosHairDummy(CrosHair):
             if self.thanExists:
                 pass
             else:
-                self.thanCh1 = None
-                self.thanCh2 = None
+                self.thanChx[:] = ()
                 self.thanExists = 1
         self.thanX1p = x1
         self.thanY1p = y1

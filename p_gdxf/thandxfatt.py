@@ -1,6 +1,3 @@
-#############################################################################
-#############################################################################
-
 class ThanDxfAtt:
     "Mixin for setting and writting attributes."
 
@@ -10,11 +7,11 @@ class ThanDxfAtt:
 
     def thanDxfWrEntry(self, icod, whatever):
         "Writes a basic entry to dxf file."
-	self.thanFdxf.write(str(icod) + "\n" + str(whatever) + "\n")
+        self.thanFdxf.write(str(icod) + "\n" + str(whatever) + "\n")
 
     def thanDxfWrLayer(self):
         "Writes layer name of a entity."
-	self.thanFdxf.write("8\n" + self.thanLayer + "\n")
+        self.thanFdxf.write("8\n" + self.thanLayer + "\n")
 
     def thaDxfWrLtype(self):
         "Writes linetype of a linear entity."
@@ -23,12 +20,12 @@ class ThanDxfAtt:
 
     def thanDxfWrColor(self):
         "Writes color of an entity."
-        if self.thanColor <= 0:
+        if self.thanColor > 0:
             self.thanFdxf.write("62\n" + str(self.thanColor) + "\n")
 
     def thanDxfWrTstyle(self):
         "Writes text style of text entity."
-	if self.thanTstyle != "DEFAULT":
+        if self.thanTstyle != "DEFAULT":
             self.thanFdxf.write("7\n" + self.thanTstyle + "\n")
 
     def thanDxfWrLinatts(self):
@@ -36,32 +33,32 @@ class ThanDxfAtt:
         self.thanFdxf.write("8\n" + self.thanLayer + "\n")
         if self.thanLtype != "BYLAYER":
             self.thanFdxf.write("6\n" + self.thanLtype + "\n")
-        if self.thanColor <= 0:
+        if self.thanColor > 0:
             self.thanFdxf.write("62\n" + str(self.thanColor) + "\n")
 
     def thanDxfWrXy(self, x, y):
         "Writes xy coordinates."
-	self.thanFdxf.write("10\n" + str(x) + "\n20\n" + str(y) + "\n")
+        self.thanFdxf.write("10\n" + str(x) + "\n20\n" + str(y) + "\n")
 
     def thanDxfWrXyz(self, x, y, z):
         "Writes xyz coordinates."
-	self.thanFdxf.write("10\n" + str(x) + "\n20\n" + str(y) + "\n30\n" + str(z) + "\n")
+        self.thanFdxf.write("10\n" + str(x) + "\n20\n" + str(y) + "\n30\n" + str(z) + "\n")
 
     def thanDxfWrXy1(self, x, y):
         "Writes xyz coordinates."
-	self.thanFdxf.write("11\n" + str(x) + "\n21\n" + str(y) + "\n")
+        self.thanFdxf.write("11\n" + str(x) + "\n21\n" + str(y) + "\n")
 
     def thanDxfWrXyz1(self, x, y, z):
         "Writes xyz coordinates."
-	self.thanFdxf.write("11\n" + str(x) + "\n21\n" + str(y) + "\n31\n" + str(z) + "\n")
+        self.thanFdxf.write("11\n" + str(x) + "\n21\n" + str(y) + "\n31\n" + str(z) + "\n")
 
     def thanDxfWrXyc(self, c, x, y):
         "Writes xy coordinates."
-	self.thanFdxf.write("%d\n%f\n%d\n%f\n" % (10+c, x, 20+c, y))
+        self.thanFdxf.write("%d\n%f\n%d\n%f\n" % (10+c, x, 20+c, y))
 
     def thanDxfWrXyzc(self, c, x, y, z):
         "Writes xyz coordinates."
-	self.thanFdxf.write("%d\n%f\n%d\n%f\n%d\n%f\n" % (10+c, x, 20+c, y, 30+c, z))
+        self.thanFdxf.write("%d\n%f\n%d\n%f\n%d\n%f\n" % (10+c, x, 20+c, y, 30+c, z))
 
     def thanDxfSetLayer(self, la):
         "Sets the linetype for subsequent entities."
@@ -83,16 +80,6 @@ class ThanDxfAtt:
         "Sets the text style for subsequent text entities."
         self.thanTstyle = lt
 
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL FUNCTIONS
-
-
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
 
 if __name__ == "__main__":
     dxf = ThanDxfAtt()

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines line states, i.e. as the user moves the mouse, a road
 (which is a line with circular arcs) is drawn from a given point to mouse
@@ -64,7 +64,7 @@ class ThanStateRoadp(ThanStateGeneric):
         x, y = dc.thanOrtho.orthoxy(x, y)
         draggedp = self.__dragged
         self.__dragged, ct = tkRoadNode(self.__x1, self.__y1, self.__x2, self.__y2,
-                             x, y, self.__r1, dc, fill="blue", tags=())
+                             x, y, self.__r1, dc, fill="blue", dash=(), tags=())
         for i1 in draggedp:
             dc.delete(i1)
             dc.thanTempItems.remove(i1)
@@ -124,7 +124,7 @@ class ThanStateRoadr(ThanStateGeneric):
         ct = self.thanProj[2].thanCt
         draggedp = self.__dragged
         self.__dragged, ct = tkRoadNodeR(self.__x1, self.__y1, self.__x2, self.__y2,
-                                         self.__x3, self.__y3, x, y, dc, ct, fill="blue", tags=())
+                                         self.__x3, self.__y3, x, y, dc, ct, fill="blue", dash=(), tags=())
         for i1 in draggedp:
             dc.delete(i1)
             dc.thanTempItems.remove(i1)

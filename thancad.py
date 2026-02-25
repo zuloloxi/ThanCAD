@@ -1,8 +1,8 @@
 #! /usr/bin/python
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -22,15 +22,21 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 """
 print __doc__
 developer = 0
 if developer and __name__ == "__main__":
-    import sys
-    if sys.platform == "win32": sys.path.append("x:\\binwi\\libs")         # Developer environment
-    else:                       sys.path.append("/home/a12/x/binwi/libs")  # Developer environment
+    import platform, sys
+    mach = platform.machine().lower()
+    Amd64 = ("x86" in mach or "amd" in mach) and "64" in mach  #If machine is x86-64 compatible (OS may still run in 32bits
+    mach = sys.platform.lower()
+    Windows = mach == "win32" or mach == "win64"       #If we run Windoze
+    if Amd64: binp = "binwm"
+    else:     binp = "binwi"
+    if Windows: sys.path.append("x:\\"+binp+"\\libs")         # Developer environment
+    else:       sys.path.append("/home/a12/x/"+binp+"/libs")  # Developer environment
 import thanopt             # This runs a test for the needed modules automatically
 thanopt.thanInitPregui()
 import thantkgui
@@ -38,7 +44,6 @@ thanCad = thantkgui.ThanTkGuiWinMain()
 thanopt.thanInitPostgui()
 #Comment out the following imports to disable importing the packages
 #to make ThanCad lighter for common use
-import thanpackages
 if __name__ == "__main__":
     thanCad.mainloop()
     thanopt.thanInitEndgui()

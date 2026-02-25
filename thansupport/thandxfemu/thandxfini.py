@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -22,13 +22,14 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This package emulates the dxf library in ThanCad.
 """
 
 from os.path import splitext
 from math import fabs
+from p_gimdxf import ThanImportBase
 
 from thandxflin import ThanDxfLin
 from thandxfsym import ThanDxfSym
@@ -39,28 +40,39 @@ from thandxfatt import ThanDxfAtt
 from thandxfext import thanCadCodes
 
 
-
-class ThanDxfEmu(ThanDxfLin, ThanDxfSym, ThanDxfDra,
+class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
                     ThanDxfGeo, ThanDxfAtt):
     "Class to create drawings directly into .dxf files."
+    """A producer class to import a drawing as it is being created.
 
-    def __init__(self, extensions=0):
+    The class is based on the importation of dxf files; it works like the class
+    ThanImportDxf of the p_gimdxf library.
+    The class sends drawing commands to the drawing object dr (self.thanDr)
+    which is a receiver class instance.
+    Here the receiver class is the ThanCadDrSave class.
+    The class emulates the p_gdxf library so that a program which calls p_gdxf
+    to create drawing (in a .dxf file), can now create the drawing into ThanCad
+    in real time, with no modifications.
+    """
+
+    def __init__(self, fDxf=None, dr=None, defaultLayer="0", extensions=0):
         "Initialisation of class."
-
-	ThanDxfLin.__init__(self)
-	ThanDxfSym.__init__(self)
-	ThanDxfDra.__init__(self)
-	ThanDxfGeo.__init__(self)
-	ThanDxfAtt.__init__(self)
-
-	self.__tabExist = 0
+        ThanImportBase.__init__(self, fDxf=fDxf, dr=dr, defaultLayer=defaultLayer)
+        ThanDxfLin.__init__(self)
+        ThanDxfSym.__init__(self)
+        ThanDxfDra.__init__(self)
+        ThanDxfGeo.__init__(self)
+        ThanDxfAtt.__init__(self)
+        self.__tabExist = 0
         self.__blocks   = 0
         self.__entities = 0
-	self.thanExt = extensions
+        self.thanExt = extensions
 
 
-    def thanDxfPlots(self, uDxf1=None):
+    def thanDxfPlots(self, uDxf1=None, defaultLayer=None):
         "User initialisation 1."
+        if uDxf1 != None: self.thanDr = uDxf1
+        if defaultLayer != None: self.defLay = defaultLayer
 
         self.thanDxfPlots1(uDxf1)
         self.thanDxfTableDef (' ', 0)
@@ -79,11 +91,13 @@ class ThanDxfEmu(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 #-------ENTITIES follow--------------------------------------------
 
         self.thanDxfTableDef ('ENTITIES', 1)
-	self.thanDxfSetTstyle("GRSTYLE")
+        self.thanDxfSetTstyle("GRSTYLE")
 
-    def thanDxfPlots1 (self, uDxf1=None):
+
+    def thanDxfPlots1 (self, uDxf1=None, defaultLayer=None):
         "Initialisation 2."
-        self._imp = uDxf1
+        if uDxf1 != None: self.thanDr = uDxf1
+        if defaultLayer != None: self.defLay = defaultLayer
 
         self.thanDxfSetLayer('P1')
         self.thanDxfSetLtype ('BYLAYER')
@@ -184,8 +198,8 @@ class ThanDxfEmu(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         290: 0   : no plot is on (the layer is NOT plotted)
                    If code 290 is absent, then no plot is off (the layer is plotted)
         Any other attribute not defined above are ignored.
-	"""
-        self._imp.thanSetLay(name, color)
+        """
+        self.thanDr.thanSetLay(name, color)
 
     def thanDxfCrLtype (self, linName, linDescr, rElems):
         """Creates a line type entry in the dxf file.

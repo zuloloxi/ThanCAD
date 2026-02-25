@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 It implements ThanCad command line window.
 """
@@ -89,12 +89,12 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
     def _mouseWheelp(self, evt):
         "Just trap the event and send it to canvas."
         self.__proj[2].thanCanvas._mouseWheelp(evt)
-	return "break"
+        return "break"
 
     def _shiftmouseWheelp(self, evt):
         "Just trap the event and send it to canvas."
         self.__proj[2].thanCanvas._shiftmouseWheelp(evt)
-	return "break"
+        return "break"
 
     def setProj(self):
         "A new drawing is inserted to the current project; do some preprosessing."
@@ -146,14 +146,15 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             m = ord(event.char)
             if m == 27:              self.thanOnCharEsc(event)
             elif m == 13 or m == 32: self.__onCharRet(event)
+#            elif m == 13: self.__onCharRet(event)
         self.__oncharPreempt = False
 
 
     def __onPageup(self, event):
         "Pageup pressed; if idle, pan drawing 1 page up."
-	if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
-	self.thanEnter("panpageup", "com")
-	return "break"                                  # Pageup does not go to the command window
+        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        self.thanEnter("panpageup", "com")
+        return "break"                                  # Pageup does not go to the command window
 
 
     def __onPagedown(self, event):
@@ -164,15 +165,15 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def __onPageleft(self, event):
         "Page left pressed; if idle, pan drawing 1 page up."
-	if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
-	self.thanEnter("panpageleft", "com")
-	return "break"                                  # Pageup does not go to the command window
+        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        self.thanEnter("panpageleft", "com")
+        return "break"                                  # Pageup does not go to the command window
 
     def __onPageright(self, event):
         "Page right pressed; if idle, pan drawing 1 page up."
-	if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
-	self.thanEnter("panpageright", "com")
-	return "break"                                  # Pageup does not go to the command window
+        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        self.thanEnter("panpageright", "com")
+        return "break"                                  # Pageup does not go to the command window
 
     def __onCtrlGrayplus(self, event):
         "Gray plus pressed; if idle, zoom in 2 times."
@@ -203,14 +204,14 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         self.__reprompt()
         return "break"                                  # Grayminus does not go to the command window
 
-    def __donothing(self, event):
-        """Shift-Pageup pressed; do nothing.
-
-        This function exists so that shift-pageup will not trigger __onPageup.
-        Tkinter will happily route shift-pageup, control-pageup etc. to the
-        pageup handler, if specialised handlers do not exist for these key-presses.
-        """
-        pass
+#    def __donothing(self, event):
+#        """Shift-Pageup pressed; do nothing.
+#
+#        This function exists so that shift-pageup will not trigger __onPageup.
+#        Tkinter will happily route shift-pageup, control-pageup etc. to the
+#        pageup handler, if specialised handlers do not exist for these key-presses.
+#        """
+#        pass
 
 
     def __onF2(self, event):
@@ -229,6 +230,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         "Toggle object snap."
         if self.__oncharPreempt: return "break"    # Avoid preemptive call
         if "ena" in thancadconf.thanOsnapModes:
+            self.__proj[2].thanCanvas.thanOsnap.thanClear()
             del thancadconf.thanOsnapModes["ena"]
             self.thanAppend(T["\n<Object snap is off>\n"], "info")
         else:
@@ -325,7 +327,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
     PNTSTATES = frozenset((THAN_STATE_POINT, THAN_STATE_LINE, THAN_STATE_LINE2,
         THAN_STATE_RECTANGLE, THAN_STATE_MOVE, THAN_STATE_ROADP, THAN_STATE_SPLINEP,
         THAN_STATE_POLAR,
-        THAN_STATE_CIRCLE, THAN_STATE_ARC))
+        THAN_STATE_CIRCLE, THAN_STATE_ARC, THAN_STATE_ELLIPSEB))
 
     def __processEntry(self, t):
         "Deals with the text the user entered."
@@ -363,7 +365,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 	        print "cmd: last result string: '%s'" % t
 	    else:
 	        self.__crel = tuple(cc)
-		self.thanLastResult = cc
+                self.thanLastResult = cc
 	        print "cmd: last result point: ", cc
 	    self.thanState = THAN_STATE_NONE
 	elif s == THAN_STATE_RECTRATIO:

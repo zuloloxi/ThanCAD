@@ -1,8 +1,8 @@
 from math import hypot
 from p_ggen import iterby2
-from p_gmath import thanNear2
+from p_gmath import thanLineSeg3, thanNear2
 
-class ThanDTMDEM:
+class ThanDTMDEM(object):
     "Base class for DTMs and DEMs."
 
     def thanLineZendpointstoo(self, cp):
@@ -10,14 +10,14 @@ class ThanDTMDEM:
         cn = []
         for ca, cb in iterby2(cp):
             c = list(ca)
-            c[2] = self.thanPointZ(ca)     # May be None
+            c[2] = self.thanPointZ(ca, native=True)     # May be None
             cn.append(c)
-            for d, c in self.thanIntersegZ(ca, cb):
+            for d, c in _uniqint(self.thanIntersegZ(ca, cb, native=True)):
                 if d < 0.001: continue     # Avoid points near ca
                 if d > 0.999: break        # Avoid points near cb
                 cn.append(c)
         c = list(cb)
-        c[2] = self.thanPointZ(cb)         # May be None
+        c[2] = self.thanPointZ(cb, native=True)   # May be None
         cn.append(c)
         ni = interpolatez(cn)
         return ni, cn
@@ -25,6 +25,8 @@ class ThanDTMDEM:
 
     def thanLineZ(self, cp):
         "Calculate the z coordinates along the line cp."
+        if len(cp) < 1: return -1, []     #No points at all
+        cb  = cp[0]                       #In case that line has exactly 1 point
         cn = []
         zb = None
         for ca, cb in iterby2(cp):
@@ -32,7 +34,7 @@ class ThanDTMDEM:
             can[2] = zb
             cn.append(can)
             za = zb = None
-            for d, c in _uniqint(self.thanIntersegZ(ca, cb)):
+            for d, c in _uniqint(self.thanIntersegZ(ca, cb, native=True)):
                 if d < -0.001: continue               # Avoid points outside ca-cb
                 if d < 0.001: za = c[2]; continue     # Avoid points near ca
                 if d > 1.001: break                   # Avoid points outside ca-cb
@@ -40,11 +42,54 @@ class ThanDTMDEM:
                 cn.append(c)
             if can[2] == None: can[2] = za
         c = list(cb)
-        c[2] = self.thanPointZ(cb)         # May be None
+        c[2] = self.thanPointZ(cb, native=True)         # May be None
         cn.append(c)
-        cn[0][2] = self.thanPointZ(cn[0])  # May be None
+        cn[0][2] = self.thanPointZ(cn[0], native=True)  # May be None
         ni = interpolatez(cn)
         return ni, cn
+
+
+    def thanCen(self):
+        "Return the coordinates of the centroid."
+        return self.thanCena
+
+
+
+def thanPolygonLine(cpol, pn, n):
+    "Finds the intersection between convex polygon segment and line perpendicular to n, whose projection on n axis is pn."
+    cts = []
+    for i in xrange(len(cpol)):
+        ct = thanLineSeg3(pn, n, cpol[i-1], cpol[i])
+        if ct != None: cts.append(ct)
+    if len(cts) == 0: return None, None
+    cts.sort()
+    j = 1
+    while j < len(cts):
+        i = j - 1
+        if thanNear2(cts[j], cts[i]):
+            del cts[j]
+        else:
+            j += 1
+    if len(cts) != 2:
+        print "cts="
+        for cp in cts:
+            print "%15.3f%15.3f" % (cp[0], cp[1])
+        print "cpol="
+        for cp in cpol:
+            print "%15.3f%15.3f" % (cp[0], cp[1])
+        import p_gfil, p_gchart
+        ch = p_gchart.ThanChart("xexexe")
+        xx = [cp[0] for cp in cpol]
+        yy = [cp[1] for cp in cpol]
+        ch.curveAdd(xx, yy, color="blue")
+        xx = [cp[0] for cp in cts]
+        yy = [cp[1] for cp in cts]
+        ch.curveAdd(xx, yy, color="red")
+        winmain, _, _ = p_gfil.openfileWinget()
+        if winmain == None: p_gchart.vis(ch, bg="yellow")
+        else:               p_gchart.viswin(winmain, ch, bg="yellow")
+        assert len(cts) == 2, "There should be exactly 2 intersections"
+    return cts[0], cts[1]
 
 
 def interpolatez(cp):
@@ -122,6 +167,25 @@ def thanLineZ(dtms, cp):
         c[2] = thanPointZ(dtms, cb)         # May be None
         cn.append(c)
         cn[0][2] = thanPointZ(dtms, cn[0])  # May be None
+        ni = interpolatez(cn)
+        return ni, cn
+
+
+def thanLineZendpointstoo(dtms, cp):
+        "Calculate the z coordinates along the line cp."
+        dtms = tuple(dtms)
+        cn = []
+        for ca, cb in iterby2(cp):
+            c = list(ca)
+            c[2] = thanPointZ(dtms, ca)     # May be None
+            cn.append(c)
+            for d, c in _uniqint(thanIntersegZ(dtms, ca, cb)):
+                if d < 0.001: continue     # Avoid points near ca
+                if d > 0.999: break        # Avoid points near cb
+                cn.append(c)
+        c = list(cb)
+        c[2] = thanPointZ(dtms, cb)   # May be None
+        cn.append(c)
         ni = interpolatez(cn)
         return ni, cn
 

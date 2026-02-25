@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the dimension element.
 """
@@ -83,11 +83,7 @@ class ThanDimali(ThanElement):
         return not thanNear2(cp[0], cp[1])  # Degenerate dimension
 
 
-#    def thanClone(self):
-#        "Makes a geometric clone of the aligned dimension."
-#        el = ThanDimali()
-#        el.thanSet(self.text, self.cp[0], self.cp[1], self.perp)
-#        return el
+#    def thanClone(self): Inherited from ThanElement: deepcopy of the instance is OK
 
 
     def thanRotate(self):
@@ -283,7 +279,7 @@ class ThanDimali(ThanElement):
         fw.writeTextln(self.text)
 
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver):
         "Read the aligned dimension from thc format."
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         c2 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
@@ -326,6 +322,17 @@ class ThanDimali(ThanElement):
 	        if cp[0] == cp[-1]: xy1[-1] = closepath()
 	        p = pyx.path.path(*xy1)
 	    than.dc.stroke(p)
+
+
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property."""
+        cp = [list(cc) for cc in self.cp[:2]]
+        for cc in cp: cc[:3] = fun(cc)
+        self.thanSet(self.text, cp[0], cp[1], self.perp)
 
 
     def thanList(self, than):

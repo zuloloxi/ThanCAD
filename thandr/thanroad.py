@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the road element. It is a polyline with its corners rounded
 with circular arcs of given radius.
@@ -74,12 +74,6 @@ class ThanRoad(ThanElement):
     def thanClean(self):
         "Clean zero lengthed segments."
         self.cpr = thanCleanLine2(self.cpr)
-
-#    def thanClone(self):
-#        "Makes a geometric clone of itself."
-#        el = ThanRoad()
-#        el.thanSet(self.cpr)
-#        return el
 
 
     def thanRotate(self):
@@ -244,7 +238,7 @@ class ThanRoad(ThanElement):
 	        xp3, yp3 = g2l(c1[0], c1[1])
 	        rp2, _ = g2lr(cpr[-2][-1], 0.0)
 	        tags = "e0", "e"+str(len(cpr))
-                items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, tags)
+                items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, (), tags)
 		dc.delete(items[2])
 		ctr[-2] = l2g(*ct)
 		print "----------------------------------------------"
@@ -286,12 +280,12 @@ class ThanRoad(ThanElement):
 
 	n = len(self.cpr)
 	if n < 3:
-            item = dc.create_line(xp1, yp1, xp2, yp2, fill=fi, tags=tags)
+            item = dc.create_line(xp1, yp1, xp2, yp2, fill=fi, dash=than.dash, tags=tags)
 	    return
         for i in xrange(1, n-1):
             xp3, yp3 = g2l(self.cpr[i+1][0], self.cpr[i+1][1])
 	    rp2, _ = g2lr(self.cpr[i][-1], 0.0)
-            items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, tags)
+            items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, than.dash, tags)
    	    if i < n-2: dc.delete(items[2])
 	    xp1, yp1 = ct
 	    xp2, yp2 = xp3, yp3
@@ -380,7 +374,7 @@ class ThanRoad(ThanElement):
         fw.writeSnodes("SNODES", 4, self.cpr)
 
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver):
         "Read the line from thc format."
         cp = fr.readSnodes("SNODES", 4)
         self.thanSet(cp)
@@ -425,13 +419,30 @@ class ThanRoad(ThanElement):
 	e.thanSet([c1, self.cpr[-1]])
 	e.thanExpPil(than)
 
+
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property."""
+        cpr = [list(cc) for cc in self.cpr]
+        for cc in cpr:
+            ce = list(cc)
+            ce[0] += cc[-1]                             #Add the radius
+            cc[:3] = fun(cc[:3])
+            ce[:3] = fun(ce[:3])
+            cc[-1] = hypot(ce[1]-cc[1], ce[0]-cc[0])    #Recompute radius
+        self.thanSet(cpr)
+
+
     def thanList(self, than):
         "Shows information about the road element."
         wr = than.write
         coo = than.strcoo
         dis = than.strdis
         cpr = self.cpr
-        than.writecom("%s: %s" % (T["Element"], "ROAD"))
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         wr("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
         wr("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
         wr(T["Vertices %d (X Y Z Radius):\n"] % len(cpr))

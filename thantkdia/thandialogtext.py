@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module displays a dialog for the user to enter some text associated with a
 ThanCad element.
@@ -50,12 +50,12 @@ class ThanElemtext(p_gtkuti.ThanDialog):
 
     def __position(self):
         "Position self."
-	w = self.__master
+        w = self.__master
         w.update()
         x = w.winfo_rootx() + 20
         y = w.winfo_rooty() + 15
         self.geometry("%+d%+d" % (x, y))
-	del self.__master
+        del self.__master
 
 
     def destroy(self):
@@ -72,8 +72,8 @@ class ThanElemtext(p_gtkuti.ThanDialog):
 
     def body(self, win):
         fra = Frame(win)
-	fra.grid(row=0, column=0, sticky="we")
-	but = Button(fra, text="Do nothing", background="lightcyan", activebackground="cyan")
+        fra.grid(row=0, column=0, sticky="we")
+        but = Button(fra, text="Do nothing", background="lightcyan", activebackground="cyan")
 	but.grid(row=0, column=0, sticky="w")
 	fra.columnconfigure(0, weight=1)
 
@@ -92,7 +92,7 @@ class ThanElemtext(p_gtkuti.ThanDialog):
         "Sets focus to the command window."
         self.lift()
         self.focus_set()
-	self.thanHelp.focus_sette()
+        self.thanHelp.focus_sette()
 
     def thanSet(self, vals):
         self.thanHelp.thanSet(vals[1])
@@ -100,20 +100,20 @@ class ThanElemtext(p_gtkuti.ThanDialog):
 
     def validate(self, strict=True):
         "Returns true if the value chosen by the user is valid."
-	self.result = [None, self.thanHelp.thanGet()]
-	return True
+        self.result = [None, self.thanHelp.thanGet()]
+        return True
 
 
     def cancel(self, *args):
         "Ask before cancel."
-	if not self.validate(strict=False):   # If anything is wrong, then it must have been changed
-	    print "cancel: not validated"
-	    a = p_gtkuti.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
+        if not self.validate(strict=False):   # If anything is wrong, then it must have been changed
+            print "cancel: not validated"
+            a = p_gtkuti.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
-	elif self.result != self.thanValsSaved: # If anything is wrong, then it must have been changed
-	    print self.thanValsSaved
-	    print self.result
-	    a = p_gtkuti.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
+        elif self.result != self.thanValsSaved: # If anything is wrong, then it must have been changed
+            print self.thanValsSaved
+            print self.result
+            a = p_gtkuti.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
         p_gtkuti.ThanDialog.cancel(self, *args)
 

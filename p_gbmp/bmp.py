@@ -144,12 +144,13 @@ def readHead2Bmp(uBmp, bmp):
       n = bmp.hs - 40
       if n > 0:
           head = uBmp.read(n)
-	  if len(head) < n: return 3             # Incomplete header 2
+          if len(head) < n: return 3             # Incomplete header 2
       return 0                                   # No errors
+
 
 def test():
     bmp = ThanBmp(open("test.bmp", "r"))
     print "Bmp resolution = %ddpi x %ddpi" % (bmp.head.hr*0.0254, bmp.head.vr*0.0254)
 
+
 if __name__ == "__main__": test()
-    

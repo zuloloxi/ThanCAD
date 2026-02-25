@@ -173,6 +173,29 @@ class Vector3:
         yield self.y
         yield self.z
 
+
+def planeaxes2(a, b, z):
+    """Find coordinate system of a plane so that the second axis is paralel to z.
+
+    Given two vectors a and b which define a plane (a x b <> 0), find two
+    perpendicular unit vectors u and v (u * v <> 0) which define a coordinate
+    system in the plane, so that v is parallel to arbitrary vector z and has the
+    same direction as z.
+    If z is perpendicular to the plane, or z is zero, or a and b do not define
+    a plane (they are colinear ore one of the is zero) return None.
+    """
+    z = z.unit()
+    if z == None: return None, None
+    ab = a + b
+    tv = ab * z
+    v = fabs(tv) * z     #v vector has the same direction as z
+    u = ab - v
+    if u*v < 0.0: u = -u #Make the system convex
+    u = u.unit()
+    v = v.unit()
+    if u == None or v == None: return None, None
+    return u, v
+
 #===========================================================================
 
 def testV():

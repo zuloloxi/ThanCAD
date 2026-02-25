@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module provides for the commands of the tool menu.
@@ -36,18 +36,23 @@ import thandr, thantkdia, thanlayer
 from thanvar import Canc
 from thanopt import thancadconf
 from thantrans import T
-import thancomsel
+import thancomsel, thanundo
 
 
 def thanToolSimplif(proj):
     "Simplifies a line."
-    from thancommod import (thanModEnd, thanModCanc, thanModCancSel,
-        thanModReplaceRedo, thanModReplaceUndo)
+    from thancommod import thanModEnd, thanModCanc, thanModCancSel
     import thantkdia
     ThanLine = thandr.ThanLine
-    lss = proj[1].thanObjects["LINESIMPLIFICATION"]
-    if len(lss) == 0: lss.append(thandr.thanobject.LineSimplification())
-    s = copy.deepcopy(lss[0])
+    name = "LINESIMPLIFICATION"
+    lss = proj[1].thanObjects[name]
+    if len(lss) == 0:
+        objold = []
+        s = thandr.thanobject.LineSimplification()
+    else:
+        objold = [(name, lss[0])]
+        s = copy.deepcopy(lss[0])
+    objnew = [(name, s)]
     strd = proj[1].thanUnits.strdis
     while True:
         statonce = "Max mean xy error=%s / Max absolute xy error=%s /\n"\
@@ -85,9 +90,9 @@ def thanToolSimplif(proj):
     lss[:] = [s]
     if s.choKeep: selelems = elems
     else:         selelems = newelems
-    thanModReplaceRedo(proj, delelems, newelems, selelems)
-    proj[1].thanDoundo.thanAdd("simplify", thanModReplaceRedo, (delelems, newelems, selelems),
-                                           thanModReplaceUndo, (delelems, newelems, selold))
+    thanundo.thanReplaceRedo(proj, delelems, newelems, selelems)
+    proj[1].thanDoundo.thanAdd("simplify", thanundo.thanReplaceRedo, (delelems, newelems, selelems, {}, objold, objnew),
+                                           thanundo.thanReplaceUndo, (delelems, newelems, selold  , {}, objold, objnew))
     thanModEnd(proj)
 
 
@@ -97,6 +102,73 @@ def __lineSimplify(cp, ermeanmax=0.15, erabsmax=0.20, zerabsmax=0.10):
     r = p_ggeom.lineSimplify3d(temp, ermeanmax, erabsmax, zerabsmax)
     temp = [c1[1:] for c1 in r]
     return temp
+
+
+__disint = 20.0
+__dismin = 0.1
+def thanToolInterpolate(proj):
+    "Simplifies a line."
+    from thancommod import thanModEnd, thanModCanc, thanModCancSel
+    import thantkdia
+    global __disint, __dismin
+    disint = __disint
+    dismin = __dismin
+    ThanLine = thandr.ThanLine
+    strd = proj[1].thanUnits.strdis
+    while True:
+        statonce = "Interpolation XY distance=%s / Min point distance allowed=%s" % \
+                   (strd(disint), strd(dismin))
+        proj[2].thanPrt(statonce)
+        res = thancomsel.thanSelectOr(proj, standalone=False, filter=lambda e:isinstance(e, ThanLine),
+              optionname="settings", optiontext="s=settings")
+        if res == Canc: return thanModCanc(proj)
+        if res == "s":
+            thanModCancSel(proj)   #The user did not select anything so cancel current (empty) selection
+            t = T["Interpolation distance (enter=%s): "] % (strd(disint),)
+            res = proj[2].thanGudGetPosFloat(t, disint)
+            if res == Canc: continue
+            t = T["Min point distance (enter=%s): "] % (strd(dismin),)
+            res1 = proj[2].thanGudGetPosFloat(t, dismin)
+            if res1 == Canc: continue
+            disint = res
+            dismin = res1
+            continue
+        break
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    delelems = set()
+    newelems = set()
+    for lin1 in elems:
+        cp = list(iterdis2(lin1.cp, disint, dismin))
+        lin2 = ThanLine()
+        lin2.thanSet(cp)
+        lin2.thanTags = lin1.thanTags
+        delelems.add(lin1)
+        newelems.add(lin2)
+    selelems = newelems
+    __disint = disint
+    __dismin = dismin
+
+    thanundo.thanReplaceRedo(proj, delelems, newelems, selelems)
+    proj[1].thanDoundo.thanAdd("interpolate", thanundo.thanReplaceRedo, (delelems, newelems, selelems),
+                                           thanundo.thanReplaceUndo, (delelems, newelems, selold))
+    thanModEnd(proj)
+
+
+def iterdis2(a, dd, dismin=0.0):
+    "Iterate through polyline a, returning a point every d units distance."
+    for a, b in p_ggen.iterby2(a):
+        xa,ya,za = a[:3]
+        xb,yb,zb = b[:3]
+        d = hypot(xb-xa, yb-ya)
+        for d1 in p_ggen.xfrange(0.0, d-dismin, dd):
+#            print "iterdis2: %15.3f%15.3f" % (d1, d)
+            x = xa + (xb-xa)/d*d1
+            y = ya + (yb-ya)/d*d1
+            z = za + (zb-za)/d*d1
+            yield x, y, z
+    yield xb, yb, zb
 
 
 def thanToolHull(proj):
@@ -178,13 +250,13 @@ def thanToolAngle(proj):
     cc = proj[2].thanGudGetPoint(T["First point (corner): "])
     if cc == Canc: return proj[2].thanGudCommandCan()      # Angle cancelled
 
-    c1 = proj[2].thanGudGetLine(cc, T["First side: "])
+    c1 = proj[2].thanGudGetLine(cc, T["First side (or direction angle): "])
     if c1 == Canc: return proj[2].thanGudCommandCan()      # Angle cancelled
     theta1 = atan2(c1[1]-cc[1], c1[0]-cc[0])
     r = hypot(c1[1]-cc[1], c1[0]-cc[0]) * 0.5
     than.dc.create_line(g2l(cc[0], cc[1]), g2l(c1[0], c1[1]), fill="blue", tags=("e0",))
 
-    theta2 = proj[2].thanGudGetArc(cc, r, theta1, T["Second side: "])
+    theta2 = proj[2].thanGudGetArc(cc, r, theta1, T["Second side (or direction angle): "])
     if theta2 == Canc:
         than.dc.delete("e0")
         return proj[2].thanGudCommandCan()  # Angle cancelled
@@ -270,7 +342,7 @@ def __getnext(proj, elems, i, st, it):
         return -1, None
 
 def __gettext(proj, st):
-    "Text element in active layers; gnerator."
+    "Text element in active layers; generator."
     dilay = proj[1].thanLayerTree.dilay
     TT = thandr.ThanText
     PN = thandr.ThanPointNamed

@@ -345,7 +345,7 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
 
 #============================================================================
 
-    def __init__(self, master, objs, current, **kw):
+    def __init__(self, master, objs, current, hlen=70, **kw):
         "Create the parallel lists boxes, bare plus selection buttons."
 	self.thanCargo = kw.pop("cargo", None)
 	ThantkClistHierBare.__init__(self, master, **kw)
@@ -356,7 +356,7 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         self.thanCreateButtonsup(self, 0, 0)
         (nr, nc) = self.thanListsPlace(1, 0)
 	self.thanListsFill(objs)
-	self.thanMakePartial(hlen=70)
+	self.thanMakePartial(hlen=hlen)
 	self.thanLeaflayers = {}
 
 #============================================================================

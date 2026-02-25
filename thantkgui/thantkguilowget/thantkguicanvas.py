@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines functionality necessary for user lowlevel interaction in
 a drawing window.
@@ -45,6 +45,7 @@ from thantkguicircle    import ThanStateCircle, ThanStateArc
 from thantkguirect      import ThanStateRectangle, ThanStateRectratio
 from thantkguiroad      import ThanStateRoadp, ThanStateRoadr
 from thantkguispline    import ThanStateSplinep
+from thantkguiellipse   import ThanStateEllipseb
 from thantkguivar       import ThanStatePoint, ThanStateSelem
 
 
@@ -82,9 +83,9 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
 
         if not p_ggen.Pyos.Windows:
             self.bind("<Page_Up>",        self.thanPanpageup)
-            self.bind("<Shift-Page_Up>",  self.__donothing)
+            self.bind("<Shift-Page_Up>",  p_ggen.doNothing)
             self.bind("<Page_Down>",      self.thanPanpagedown)
-            self.bind("<Shift-Page_Down>",self.__donothing)
+            self.bind("<Shift-Page_Down>",p_ggen.doNothing)
         self.bind("<Control-Up>",    self.thanPanpageup)
         self.bind("<Control-Down>",  self.thanPanpagedown)
         self.bind("<Control-Left>",  self.thanPanpageleft)
@@ -106,6 +107,8 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
 
         self.thanOsnap = ThanOsnap(proj)
         self.thanOrtho = ThanOrtho()
+        self.thanStereoGridOn = True          # Support for red/blue stereo vision
+        self.thanStereoOn = False             # Support for red/blue stereo vision
         self.thanFloatMenu = None
         self.thanProj = proj
 
@@ -150,7 +153,6 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
     def thanPanpageleft (self, evt): return self.thanPanPage(evt, -1,  0)
     def thanPanpageright(self, evt): return self.thanPanPage(evt,  1,  0)
     def thanPanpageup   (self, evt): return self.thanPanPage(evt,  0,  1)
-    def __donothing(self, evt): pass
 
     def __onF7(self, event): self.thanProj[2].thanCom.thanOnF7(event)
 
@@ -281,7 +283,7 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
 
 #============================================================================
 
-    def thanPrepare(self, state, cc1=None, cc2=None, cc3=None, r1=None, t1=None):
+    def thanPrepare(self, state, cc1=None, cc2=None, cc3=None, r1=None, t1=None, t2=None):
         "Sets the appropriate state and lets gui take on."
         ct = self.thanProj[2].thanCt
         x1, y1 = None, None
@@ -311,7 +313,7 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
         elif state == THAN_STATE_CIRCLE:
             self.thanOState = ThanStateCircle(self.thanProj, x1, y1)
         elif state == THAN_STATE_ARC:
-            self.thanOState = ThanStateArc(self.thanProj, x1, y1, r1, t1)
+            self.thanOState = ThanStateArc(self.thanProj, x1, y1, r1, t1, clockwise=t2)
         elif state == THAN_STATE_POINT:
             self.thanOState = ThanStatePoint(self.thanProj)
         elif state == THAN_STATE_RECTANGLE:
@@ -326,6 +328,8 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
                                              x3, y3, r1)
         elif state == THAN_STATE_SPLINEP:
             self.thanOState = ThanStateSplinep(self.thanProj, x1, y1, x2, y2)
+        elif state == THAN_STATE_ELLIPSEB:
+            self.thanOState = ThanStateEllipseb(self.thanProj, x1, y1, r1, t1)
         elif state == THAN_STATE_SNAPELEM:
             self.thanOState = ThanStateSelem(self.thanProj)
 

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module processes photogrammetry related commands.
@@ -39,9 +39,6 @@ from thansupport import thanToplayerCurrent
 from thanopt import thancadconf
 from thandefs import ThanImageMissing
 
-from thancom.thancommod import thanModReplaceUndo, thanModReplaceRedo, thanModObjsRestore
-from thancom.thancomvar import thanModLTClone, thanModLTRestore
-from thancom.thancomfile import thanTxtopen
 
 mm = p_gtkuti.thanGudModalMessage
 
@@ -51,6 +48,7 @@ def thanPhotF7(proj): proj[2].thanCom.thanOnF7(None)
 
 def thanPhotImage(proj, insertmode="p"):
     "Draws an element with the help of a GUI and stores it to database."
+    from thancom import thanundo
     dimitra(proj, "interior")
     im, terr, nim = thanFindImage(proj)
     if nim > 0:
@@ -62,7 +60,7 @@ def thanPhotImage(proj, insertmode="p"):
     ret = elem.thanTkGet(proj, insertmode=insertmode)      # insert image with units in mm or pixels
     if ret == Canc: return proj[2].thanGudCommandCan()     # insert was cancelled
 
-    oldcl, oldroot = thanModLTClone(proj)   # This is not needed if no layers are created, but for simplicity...
+    oldcl, oldroot = thanundo.thanLtClone(proj)   # This is not needed if no layers are created, but for simplicity...
     lay, terr = __crlayer(proj, "photogrammetry/raster", moncolor="red", draworder=500)
     if lay == None: return proj[2].thanGudCommandCan(terr)
 
@@ -72,10 +70,10 @@ def thanPhotImage(proj, insertmode="p"):
         proj[1].thanElementDelete(delelems, proj)
 
     proj[1].thanElementAdd(elem, lay)                   # thanTouch is implicitely called
-    lay.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lay.thanTkSet(proj[2].than)
     elem.thanTkDraw(proj[2].than)
     lt = proj[1].thanLayerTree
-    lt.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lt.thanCur.thanTkSet(proj[2].than)
 
     v = proj[1].viewPort
     oldport = list(v)
@@ -90,24 +88,27 @@ def thanPhotImage(proj, insertmode="p"):
 
 def __photImageRedo(proj, newcl, newroot, delelems, newelems, newport, newobjs, oldobjs):
     "Redoes new layers, new elements and zooms (with this order)."
-    thanModLTRestore(proj, newcl, newroot)
-    thanModReplaceRedo(proj, delelems, newelems)
-    thanModObjsRestore(proj, oldobjs, newobjs)
+    from thancom import thanundo
+    thanundo.thanLtRestore(proj, newcl, newroot)
+    thanundo.thanReplaceRedo(proj, delelems, newelems)
+    thanundo.thanObjsRestore(proj, oldobjs, newobjs)
     proj[1].viewPort[:] = proj[2].thanGudZoomWin(newport)
     proj[2].thanAutoRegen(regenImages=True)
 
 
 def __photImageUndo(proj, oldcl, oldroot, delelems, newelems, oldport, newobjs, oldobjs):
     "Undoes new elements and new layers and unzooms (with this order)."
-    thanModReplaceUndo(proj, delelems, newelems)
-    thanModLTRestore(proj, oldcl, oldroot)
-    thanModObjsRestore(proj, newobjs, oldobjs)
+    from thancom import thanundo
+    thanundo.thanReplaceUndo(proj, delelems, newelems)
+    thanundo.thanLtRestore(proj, oldcl, oldroot)
+    thanundo.thanObjsRestore(proj, newobjs, oldobjs)
     proj[1].viewPort[:] = proj[2].thanGudZoomWin(oldport)
     proj[2].thanAutoRegen(regenImages=True)
 
 
 def thanPhotCosys(proj):
     "Defines an internal orientation coordinate system."
+    from thancom import thanundo
     def __can():
         proj[2].thanCanvas.delete("e0")
         proj[2].thanGudCommandCan()
@@ -142,7 +143,7 @@ def thanPhotCosys(proj):
         s = "%s:\n" % (Tphot["Interior orientation system was not defined"], terr)
         return thanGudCommandCan(s)
 
-    oldcl, oldroot = thanModLTClone(proj)   # This is not needed if no layers are created, but for simplicity...
+    oldcl, oldroot = thanundo.thanLtClone(proj)   # This is not needed if no layers are created, but for simplicity...
     lay, terr = __crlayer(proj, "photogrammetry/axes", moncolor="red")
     if lay == None: return proj[2].thanGudCommandCan(terr)
     oldcosyses = proj[1].thanObjects["COSYS"][:]
@@ -150,12 +151,12 @@ def thanPhotCosys(proj):
     proj[2].thanStatusBar.thanConfig(typ="image", every="move")
 
     proj[1].thanElementAdd(elemx, lay)                   # thanTouch is implicitely called
-    lay.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lay.thanTkSet(proj[2].than)
     elemx.thanTkDraw(proj[2].than)
     proj[1].thanElementAdd(elemy, lay)                   # thanTouch is implicitely called
     elemy.thanTkDraw(proj[2].than)
     lt = proj[1].thanLayerTree
-    lt.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lt.thanCur.thanTkSet(proj[2].than)
 
     newelems = (elemx, elemy)
     proj[1].thanDoundo.thanAdd("photimage", __photCosysRedo, (lt.thanCur, lt.thanRoot, newelems, [cosys]),
@@ -165,16 +166,18 @@ def thanPhotCosys(proj):
 
 def __photCosysRedo(proj, newcl, newroot, newelems, newcosyses):
     "Redoes new layers, new elements and zooms (with this order)."
-    thanModLTRestore(proj, newcl, newroot)
-    thanModReplaceRedo(proj, (), newelems)
+    from thancom import thanundo
+    thanundo.thanLtRestore(proj, newcl, newroot)
+    thanundo.thanReplaceRedo(proj, (), newelems)
     proj[1].thanObjects["COSYS"][:] = newcosyses
     proj[2].thanStatusBar.thanConfig(typ="image", every="move")
 
 
 def __photCosysUndo(proj, oldcl, oldroot, newelems, oldcosyses):
     "Undoes new elements and new layers and unzooms (with this order)."
-    thanModReplaceUndo(proj, (), newelems)
-    thanModLTRestore(proj, oldcl, oldroot)
+    from thancom import thanundo
+    thanundo.thanReplaceUndo(proj, (), newelems)
+    thanundo.thanLtRestore(proj, oldcl, oldroot)
     proj[1].thanObjects["COSYS"][:] = oldcosyses
 
 
@@ -202,7 +205,8 @@ def __crarrow(ca, cb, size=10.0):
 
 def __crlayer(proj, layname, moncolor, draworder=None):
     "Create, make current and set color of layer if it does not exist; else make current."
-    oldcl, oldroot = thanModLTClone(proj)
+    from thancom import thanundo
+    oldcl, oldroot = thanundo.thanLtClone(proj)
     lt = proj[1].thanLayerTree
     atts = {"moncolor":moncolor}
     if draworder != None: atts["draworder"] = draworder
@@ -262,6 +266,8 @@ def thanPhotCamera(proj):
 
 def thanPhotIntcamera(proj):
     "Open, read and check a photogrammetric camera file."
+    from thancom import thanundo
+    from thancom.thancomfile import thanTxtopen
     im, terr = __getimage(proj)
     if im == None: return proj[2].thanGudCommandCan(terr)
     iors = proj[1].thanObjects["PHOTINTERIOR"]
@@ -295,9 +301,9 @@ def thanPhotIntcamera(proj):
     newobjs = [("PHOTINTERIOR", ior)]
     oldobjs = []
     if len(iors) > 0: oldobjs = [("PHOTINTERIOR", iors[0])]
-    thanModObjsRestore(proj, oldobjs, newobjs)
-    proj[1].thanDoundo.thanAdd("photintimage", thanModObjsRestore, (oldobjs, newobjs),
-                                               thanModObjsRestore, (newobjs, oldobjs))
+    thanundo.thanObjsRestore(proj, oldobjs, newobjs)
+    proj[1].thanDoundo.thanAdd("photintimage", thanundo.thanObjsRestore, (oldobjs, newobjs),
+                                               thanundo.thanObjsRestore, (newobjs, oldobjs))
     proj[2].thanGudCommandEnd(Tphot["Camera file was successfuly loaded."])
 
 
@@ -347,6 +353,7 @@ def __checkCam(fr):
 
 def thanPhotInterior(proj):
     "Display the dialog for computing photogrammetric interior orientation."
+    from thancom import thanundo
     im, terr = __getimage(proj)
     if im == None: return proj[2].thanGudCommandCan(terr)
     iors = proj[1].thanObjects["PHOTINTERIOR"]
@@ -356,11 +363,11 @@ def thanPhotInterior(proj):
 
     v = proj[1].viewPort
     oldport = list(v)
-    oldcl, oldroot = thanModLTClone(proj)   # This is not needed if no layers are created, but for simplicity...
+    oldcl, oldroot = thanundo.thanLtClone(proj)   # This is not needed if no layers are created, but for simplicity...
     lay, terr = __crlayer(proj, "photogrammetry/fiducials", moncolor="red")
     if lay == None: return proj[2].thanGudCommandCan(terr)   #Laters could not be created
     lt = proj[1].thanLayerTree
-    lay.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lay.thanTkSet(proj[2].than)
 
     ior = iors[0].thanClone()
     ior.setImage(im)
@@ -370,14 +377,14 @@ def thanPhotInterior(proj):
     other.newelems = newelems
     w = thanprotkdia.ThanInterior(proj[2], vals, proj, Tphot, other)
     if w.result == None:                         #Interior cancelled
-        thanModReplaceUndo(proj, delelems, newelems.values())
-        thanModLTRestore(proj, oldcl, oldroot)   #It also calls thanTkSet for current layer
+        thanundo.thanReplaceUndo(proj, delelems, newelems.values())
+        thanundo.thanLtRestore(proj, oldcl, oldroot)   #It also calls thanTkSet for current layer
         proj[1].viewPort[:] = proj[2].thanGudZoomWin(oldport)
         proj[2].thanAutoRegen(regenImages=True)
         return proj[2].thanGudCommandCan()
     ior.fromDialog(w.result, w.other)
     proj[1].thanObjects["PHOTINTERIOR"][:] = [ior]
-    lt.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lt.thanCur.thanTkSet(proj[2].than)
 
     newelems = w.other.newelems.values()
     oldobjs = [("PHOTINTERIOR", iors[0])]
@@ -406,6 +413,7 @@ def thanFindImage(proj):
 
 def thanPhotModel(proj):
     "Display the dialog which defines the photogrammetric model."
+    from thancom import thanundo
     phs = proj[1].thanObjects["PHOTMODEL"]
     vals = None
     if len(phs) > 0 and phs[0].model != None: vals = phs[0].model2dialog()
@@ -415,7 +423,7 @@ def thanPhotModel(proj):
     phot = thandr.thanobject.ThanPhot(model=v)
     newobjs = [("PHOTMODEL", phot)]
     oldobjs = [("PHOTMODEL", phs[0])]
-    thanModObjsRestore(proj, oldobjs, newobjs)
-    proj[1].thanDoundo.thanAdd("purge", thanModObjsRestore, (oldobjs, newobjs),
-                                        thanModObjsRestore, (newobjs, oldobjs))
+    thanundo.thanObjsRestore(proj, oldobjs, newobjs)
+    proj[1].thanDoundo.thanAdd("purge", thanundo.thanObjsRestore, (oldobjs, newobjs),
+                                        thanundo.thanObjsRestore, (newobjs, oldobjs))
     proj[2].thanGudCommandEnd(Tphot["Photogrammetric model was defined successfuly."])

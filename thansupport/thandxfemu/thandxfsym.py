@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This package emulates the dxf library in ThanCad.
 """
@@ -47,7 +47,7 @@ class ThanDxfSym:
     def thanDxfPlotSymbol3(self, xx, yy, zz, hh, text, th):
         "Plots a 3d string to a .dxf file."
         (px, py, pz) = self.thanDxfTop3(xx, yy, zz)
-        self._imp.dxfText(px, py, pz, self.thanLayer, None, self.thanColor, text, hh, th)
+        self.thanDr.dxfText(px, py, pz, self.thanLayer, None, self.thanColor, text, hh, th)
 #-------find current pen position--------------------------------------
         pt = th * pi / 180.0
         al = hh * self.thanXfac * len(text)
@@ -58,7 +58,7 @@ class ThanDxfSym:
     def thanDxfPlotSymbol(self, xx, yy, hh, text, th):
         "Plots a string to a .dxf file."
         (px, py) = self.thanDxfTop(xx, yy)
-        self._imp.dxfText(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, text, hh, th)
+        self.thanDr.dxfText(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, text, hh, th)
 #-------find current pen position--------------------------------------
         pt = th * pi / 180.0
         al = hh * self.thanXfac * len(text)

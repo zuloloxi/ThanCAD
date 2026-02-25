@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,22 +21,57 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module defines various constants.
 """
 
 import thandr, thanopt
-import thancomsel, thancommod, thancomedit, thancomdraw, thancomfile, thancomvar
-import thancomview, thancomedu, thancomtool, thancomhatch, thancomeng, thancompr
-import thancomtest
+import thancomsel, thancommod, thancommodext, thancomedit, thancomdraw, thancomfile
+import thancomvar, thancomview, thancomedu, thancomtool, thancomhatch, thancomeng
+import thancompr, thancomim, thancomtest
 __all__ = "thanComFun",
+
+
+def __prepare():
+    "Prepare commands for easy look up."
+    coms.sort()
+    coms.reverse()
+    for c,f in coms:
+        thanComs[c] = c, f
+        if c == "exit": continue     #Do not abbreviate exit; it is very similar to extend :)
+        for i in xrange(1, min(len(c), 10)):
+            thanComs[c[:i]] = c, f
+    for c,f in abbrevs: thanComs[c] = thanComs[f]
+
+
+def __packages():
+    "Import command from various optional packages."
+    import sys
+    thanFrape = thanopt.thancon.thanFrape
+    for name in "civil ortho fflf photo stereo".split():
+        ok = getattr(thanFrape, name)
+        if not ok: continue
+        name1 = "thanpro%s.thanprocom.thanprocomcon" % (name,)
+        print "importing", name1
+        __import__(name1)
+        coms.extend(getattr(sys.modules[name1], "coms"))
+
+    for name in "urban architect thermo".split():
+        ok = getattr(thanFrape, name)
+        if not ok: continue
+        name1 = "thanpackages.%s.thancom.thancomcon" % (name,)
+        print "importing", name1
+        __import__(name1)
+        coms.extend(getattr(sys.modules[name1], "coms"))
+
 
 def thanComFun(com):
     "Tries to match com to a command, and returns the command's function."
     try: return thanComs[com]
     except KeyError: return None, None
+
 
 dr = thancomdraw.thanTkDrawElem
 coms = \
@@ -45,6 +80,7 @@ coms = \
   ("angle",       thancomtool.thanToolAngle),
   ("area",        thancomtool.thanToolArea),
   ("edubiocityplan", thancomedu.thanEdubiocityplan),
+  ("background",  thancomvar.thanBackroundColor),
   ("break",       thancommod.thanModBreak),
   ("brkout",      lambda w: thancomfile.thanFileSaveas(w, ".brk")),
   ("centroid",    thancomtool.thanToolCen),
@@ -80,20 +116,21 @@ coms = \
   ("dtmz",        thancomeng.thanEngDtmpoint1),
   ("dxfin",       lambda w, cl=".dxf": thancomfile.thanFileOpen(w, cl)),
   ("dxfout",      lambda w: thancomfile.thanFileSaveas(w, ".dxf")),
-  ("edubioazimuth",thancomedu.thanEduBioazim),
   ("eduedit",     thancomedu.thanEduEdit),
   ("edufloorplan",thancomedu.thanEduFplan),
   ("edurectangle",thancomedu.thanEduRect),
   ("elevation",   thancomvar.thanVarElev),
   ("elevn",       thancomvar.thanVarElevn),
+  ("ellipse",     lambda w, cl=thandr.ThanEllipse,dr=dr: dr(w, cl)),
   ("erase",       thancommod.thanModErase),
   ("enggrid",     thancomeng.thanEngGrid),
   ("enginterchange", thancomeng.thanEngInterchange),
   ("engquickprofile", thancomeng.thanEngQuickprofile),
   ("engtrace",    thancomeng.thanEngTrace),
   ("exit",        thancomfile.thanFileExit),
+  ("extend",      thancommodext.thanModExtend),
   ("explode",     thancommod.thanModExplode),
-  ("filet",       thancommod.thanModFilet),
+  ("filet",       thancommodext.thanModFilet),
   ("fill",        thancomvar.thanVarFill),
   ("find",        thancomtool.thanToolTextfind),
   ("fractal",     thancomvar.thanFractal),
@@ -103,29 +140,40 @@ coms = \
   ("hull",        thancomtool.thanToolHull),
   ("id",          thancomtool.thanToolId),
   ("imageattach", lambda w, cl=thandr.ThanImage, dr=dr: dr(w, cl)),
-  ("imagebreset", thancomdraw.thanTkImageBreset),
-  ("imagebrighten", thancomdraw.thanTkImageBrighten),
+  ("imagebreset", thancomim.thanTkImageBreset),
+  ("imagebrighten", thancomim.thanTkImageBrighten),
   ("imagecadastre", lambda w, cl=thandr.ThanImage, dr=dr: dr(w, cl, fn="thanTkGet", insertmode="c")),
-  ("imageclip",   thancomdraw.thanTkImageClip),
-  ("imagedarken", thancomdraw.thanTkImageDarken),
-  ("imagedirectory", thancomdraw.thanTkImageDir),
-  ("imageframe",  thancomdraw.thanTkImageFrame),
-  ("imagelocate", thancomdraw.thanTkImageLocate),
-  ("imagelog",    thancomdraw.thanTkGetlog),
-  ("imagerender", thancomvar.thanVarImageRendering),
-  ("imagescan",   thancompr.thanVarImageScan),
+  ("imageclip",   thancomim.thanTkImageClip),
+  ("imagedarken", thancomim.thanTkImageDarken),
+  ("imagedirectory", thancomim.thanTkImageDir),
+  ("imageembed",  thancomim.thanTkImageEmbed),
+  ("imageframe",  thancomim.thanTkImageFrame),
+  ("imagegeotiff",thancomim.thanTkGetGeotif),
+  ("imageload",   thancomim.thanTkImageLoad),
+  ("imagelocate", thancomim.thanTkImageLocate),
+  ("imagelog",    thancomim.thanTkGetlog),
+  ("imagerender", thancomim.thanImageRendering),
+  ("imagescan",   thancompr.thanImageScan),
+  ("imagetfw",    thancomim.thanTkGetTfw),
+  ("imageunload", thancomim.thanTkImageUnload),
+  ("insert",       thancomfile.thanFileMerge),
+  ("insertunload",  lambda w: thancomfile.thanFileMerge(w, forceunload=True)),
+  ("interpolate", thancomtool.thanToolInterpolate),
   ("join",        lambda w: thancommod.thanModJoin(w, 3)),
   ("join2d",      lambda w: thancommod.thanModJoin(w, 2)),
   ("joingap",     thancommod.thanModJoinGap),
   ("joingap2d",   thancommod.thanModJoinGap),
   ("language",    thancomvar.thanVarLang),
   ("line",        lambda w, cl=thandr.ThanLine,  dr=dr: dr(w, cl)),
+  ("linin",       thancomfile.thanImpLin),
+  ("linout",      thancomfile.thanExpLin),
   ("list",        thancomvar.thanList),
   ("mirror",      thancommod.thanModMirror),
   ("move",        thancommod.thanModMove),
   ("new",         thancomfile.thanFileNew),
   ("osnap",       thancomtool.thanToolOsnap),
   ("open",        thancomfile.thanFileOpen),
+  ("openunload",  lambda w: thancomfile.thanFileOpen(w, forceunload=True)),
   ("panpagedown", lambda win: thancomview.thanPanPage(win,  0, -1)),
   ("panpageleft", lambda win: thancomview.thanPanPage(win, -1,  0)),
   ("panpageright",lambda win: thancomview.thanPanPage(win,  1,  0)),
@@ -203,30 +251,7 @@ abbrevs = \
   ("zw", "zoomwin"),
 )
 
-thanFrape = thanopt.thancon.thanFrape
-if thanFrape.civil:
-    import thanprocivil.thanprocom.thanprocomcon
-    coms.extend(thanprocivil.thanprocom.thanprocomcon.coms)
-    del thanprocivil.thanprocom.thanprocomcon
-if thanFrape.ortho:
-    import thanprortho.thanprocom.thanprocomcon
-    coms.extend(thanprortho.thanprocom.thanprocomcon.coms)
-    del thanprortho.thanprocom.thanprocomcon
-if thanFrape.fflf:
-    import thanprofflf.thanprocom.thanprocomcon
-    coms.extend(thanprofflf.thanprocom.thanprocomcon.coms)
-    del thanprofflf.thanprocom.thanprocomcon
-if thanFrape.photo:
-    import thanprophoto.thanprocom.thanprocomcon
-    coms.extend(thanprophoto.thanprocom.thanprocomcon.coms)
-    del thanprophoto.thanprocom.thanprocomcon
-coms.sort()
-coms.reverse()
 thanComs = {}
-for c,f in coms:
-    thanComs[c] = c, f
-    for i in xrange(1, min(len(c), 10)):
-        thanComs[c[:i]] = c, f
-for c,f in abbrevs: thanComs[c] = thanComs[f]
-
-del dr, coms, abbrevs, c, f, thanFrape
+__packages()
+__prepare()
+del dr, coms, abbrevs

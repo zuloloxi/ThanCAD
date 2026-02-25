@@ -30,6 +30,7 @@ import p_ggen
 
 
 thanPartialCols = """\
+  0    0   0   0  black
   1  255   0   0  red
   2  255 255   0  yellow
   3    0 255   0  green
@@ -1043,31 +1044,36 @@ thanNamedCols = """\
 144 238 144		LightGreen"""
 
 
-def __tra(cols1):
+def __tra():
     "Transforms the data to a dictionary."
-    cols = {}; names = {}
-    for dline in cols1.split("\n"):
-        dl = dline.split()
-        col = tuple(map(int, dl[1:4]))
-        cols[int(dl[0])] = col
-        try: names[dl[4]] = col
-        except IndexError: pass
-    for dline in thanNamedCols.split("\n"):
+    import sys, colrnames
+    cols = {}
+    names = {}
+    invnames = {}
+    for dline in thanNamedCols.split("\n"):         #XConsortium named colours
         dl = dline.split(None, 3)
         col = tuple(map(int, dl[:3]))
         names[dl[3].lower()] = col
-    import sys, colrnames
-    for dl, col in colrnames.THECOLORS.iteritems():
+        invnames[col] = dl[3].lower()
+    for dl, col in colrnames.THECOLORS.iteritems(): #Python Game Library
         names[dl.lower()] = col[:3]
-    try: del sys.modules["colrnames"]     # This is to assist cpy.py
+        invnames[col[:3]] = dl.lower()
+    for dline in thanPartialCols.split("\n"):       #thAtCad dxf partial colours
+        dl = dline.split()
+        col = tuple(map(int, dl[1:4]))
+        cols[int(dl[0])] = col
+        try:
+            names[dl[4]] = col
+            invnames[col] = dl[4]
+        except IndexError:
+            pass
+    try: del sys.modules["colrnames"]   # This is to assist cpy.py
     except: pass
-    return cols, names
+    return cols, names, invnames
 
 
-
-thanDxfColCode2Rgb, thanDxfColName2Rgb = __tra(thanPartialCols)
+thanDxfColCode2Rgb, thanDxfColName2Rgb, thanRgb2DxfColName = __tra()
 thanRgb2DxfColCode = p_ggen.dictInvert(thanDxfColCode2Rgb)
-thanRgb2DxfColName = p_ggen.dictInvert(thanDxfColName2Rgb)
 thanFormTkcol = "#%02x%02x%02x"
 
 #Dictionaries with self explanatory names; the above cryptic names 
@@ -1085,19 +1091,19 @@ def thanRgb2DxfColCodeApprox(rgb):
     r,g,b = rgb; difmin = 1e30
     for partial, (r1,g1,b1) in thanDxfColCode2Rgb.iteritems():
         dif = abs(r-r1)*max(r,128) + \
-	      abs(g-g1)*max(g,128) + \
-	      abs(b-b1)*max(b,128)
+              abs(g-g1)*max(g,128) + \
+              abs(b-b1)*max(b,128)
         if dif < difmin: difmin = dif; partmin = partial
     return partmin
 
 
 def thanRgb2DxfGrayCodeApprox(rgb):
     "Returns a dxf gray code that resembles the gray shade of the rgb colour."
-    igray = thanRgb2gray(rgb)
+    igray = thanRgb2Gray(rgb)
     return min( (abs(igray-r), cod) 
                 for cod,(r,g,b) in thanDxfColCode2Rgb.iteritems()
-	        if r == g == b
-	      )[1]
+                if r == g == b
+              )[1]
 
 
 def thanDxfColCode2DxfGrayCodeApprox(cod):
@@ -1106,8 +1112,8 @@ def thanDxfColCode2DxfGrayCodeApprox(cod):
     igray = int(0.299*r + 0.587*g + 0.114*b + 0.5)
     return min( (abs(igray-r), cod) 
                 for cod,(r,g,b) in thanDxfColCode2Rgb.iteritems()
-	        if r == g == b
-	      )[1]
+                if r == g == b
+              )[1]
 
 
 def thanRgb2Gray(rgb):

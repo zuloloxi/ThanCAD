@@ -1,6 +1,17 @@
 import Image
 import numnum
 
+#When the PIL image mode is I;16S it means that the (TIFF) file has the pixels
+#as 16 bits Signed integers. Although PIL reads the TIFF tags, its does not
+#load the image; it complains that the mode is not recognised.
+#A workaround is to explicitly set mode to "I" before loading the image.
+#The result is that the image loads, and strangely the getpixel() and the
+#tostring() methods now return 32bit signed integer!. These values can
+#be converted to numeric arrays as shown in the code below..
+#THIS CODE WHICH IS A DIRTY HACK, MUST BE REVISITED EVERY TIME A NEW PIL
+#IS RELEASED.
+#Please also see imageOpen in p_gbmp
+
 
 def im2num(im):
     "Convert a PIL image to numeric array."
@@ -20,6 +31,11 @@ def im2num(im):
             r = numnum.fromstring(im.tostring(), numnum.Float32)
         elif im.mode == "I":
             r = numnum.fromstring(im.tostring(), numnum.Int)
+        elif im.mode == "I;16S":
+            im.mode = "I"
+#            r = numnum.fromstring(im.tostring(), numnum.Int16)
+            r = numnum.fromstring(im.tostring(), numnum.Int32)
+            im.mode = "I;16S"
         else:
             raise ValueError, "im2num() does not support image mode '%s'" % (im.mode,)
         r = numnum.reshape(r, (h, w))       #reshape needs: a) number of rows. b) number of columns.

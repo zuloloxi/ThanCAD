@@ -3,7 +3,7 @@
 import codecs, bisect
 from Tkinter import *
 from tkMessageBox import ERROR
-from p_ggen import thanUnicode, thanUnunicode, prg, path, Struct
+from p_ggen import thanUnicode, thanUnunicode, prg, path, Struct, rdict
 from p_gtkuti import (thanGudGetSaveFile, thanGudGetReadFile,
                       thanGudGetDir, thanGudOpenSaveFile, thanAbsrelPath,
                       ThanDialog, thanFontRefSave, thanGudPosition,
@@ -126,7 +126,7 @@ class ThanMenu(Menu):
 
 class ThanListbox(Listbox):
     "A standard listbox with unicode capabilities."
-    
+
     def __init__(self, *args, **kw):
         "Save selection mode."
         self.__selectionmode = kw.get("selectmode", SINGLE)
@@ -155,7 +155,7 @@ class ThanListbox(Listbox):
 
     def thanAppend(self, items):
         "Append new values to the end of the listbox."
-        self.thanInsert(END, items)	
+        self.thanInsert(END, items)
 
     def thanGetSelection(self):
         "Gets the chosen value and returns it."
@@ -282,7 +282,7 @@ class ThanChoiceRef(Menubutton):
     def thanSet(self, obj):
         "Set object."
         for i, (o,t) in enumerate(self.thanObjs):
-            if o == o: break
+            if obj == o: break
         else:
             assert 0, "ThanChoiceRef: Object %s not in predetermined choices." % (obj,)
         self.thanChoice = i
@@ -324,18 +324,20 @@ class ThanChoiceRef(Menubutton):
 class ThanPoplist(ThanDialog):
     "Displays a popup window with a list of choices; cancel/ok buttons are not required."
 
-    def __init__(self, master, val, width=20, height=10, selectmode=SINGLE, default=0, *args, **kw):
+    def __init__(self, master, val, width=20, height=10, selectmode=SINGLE, default=0, font=None, *args, **kw):
         "Extract initial draw order."
-        self.__val = val
+	self.__val = val
         self.__opts = dict(width=width, height=height)
         self.__selectmode = selectmode
         self.__default = default
+	self.__font = font
 #        self.result = None
         ThanDialog.__init__(self, master, *args, **kw)
 
 
     def body(self, fra):
         "Create dialog widgets."
+	if self.__font != None: self.option_add("*%s*font" % (self.winfo_name(),), self.__font) 
         self.__listForm(fra, 0, 0)
         self.__filist()
         return self.__li                      # This widget has the focus
@@ -383,9 +385,16 @@ class ThanPoplist(ThanDialog):
     def apply(self):
         "Gets the chosen value and returns it."
         indexes = self.__li.curselection()
-        if len(indexes) < 1: self.result = [self.__val[self.__li.index(ACTIVE)]]
-        else:                self.result = [self.__val[int(i)] for i in indexes]
-        if self.__selectmode == SINGLE: self.result = self.result[0]
+        if len(indexes) < 1:
+            i = self.__li.index(ACTIVE)
+            self.result1 = [i]
+            self.result = [self.__val[i]]
+        else:
+            self.result1 = [int(i) for i in indexes]
+            self.result = [self.__val[i] for i in self.result1]
+        if self.__selectmode == SINGLE:
+            self.result = self.result[0]
+            self.result1 = self.result1[0]
         del self.__val
 
 
@@ -398,12 +407,8 @@ class ThanPoplist(ThanDialog):
 #        print "ThanPoplist ThanDialog", self, "dies.."
 
 
-
-
 ##############################################################################
 ##############################################################################
-
-
 
 class ThanPoplistCol(ThanDialog):
     "Displays a popup window with a list of choices; cancel/ok buttons are not required."
@@ -806,6 +811,10 @@ class ThanFile(Frame):
         t = path(t).expand()
         if t != t.abspath(): t = self.initialdir/t  #If not absolute path, then it is relative to ibitialdir
         return t.abspath()
+
+    def thanIsEmpty(self):
+        "Return true if user has input only blanks; mote that thanGet() returns initialdir if empty."
+        return self.thanText.thanGet().strip() == ""
 
     def invoke(self): self.thanMenubutton.invoke()
 
@@ -1564,15 +1573,6 @@ class ThanToolButton(Button):
 
 ##############################################################################
 ##############################################################################
-
-def rdict(kw, *allowed):
-    "Returns an reduced dictionary which contains only the keys *allowed."
-    kw1 = {}
-    for key in allowed:
-        try: kw1[key] = kw[key]
-        except KeyError: pass
-    return kw1
-
 
 thanDisabledforeground = None
 def _disfg(master):

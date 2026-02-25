@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module displays a dialog fro the user to enter a color.
 It also has the routine to get the user defined colors from the config files.
@@ -36,69 +36,113 @@ from thandefs import thanatt
 from thanopt import thancadconf
 
 
-#############################################################################
-#############################################################################
-
 class ThanColor(p_gtkuti.ThanDialog):
     "Dialog for the visibility of a layer."
     thanAttsTk = None
 
-    def __init__(self, master, val, *args, **kw):
+    def __init__(self, master, val, special=True, *args, **kw):
         "Extract initialcolor."
-	self.__val = str(val)
-	p_gtkuti.ThanDialog.__init__(self, master, *args, **kw)
+        self.__val = str(val)
+        self.__special = special
+        p_gtkuti.ThanDialog.__init__(self, master, *args, **kw)
 
     def body(self, fra):
         "Create dialog widgets."
-	self.__getAttrs()
-	if Pyos.Windows: buwi = 2
-	else:            buwi = 0
+        self.__getAttrs()
+        if Pyos.Windows: buwi = 2
+        else:            buwi = 0
 
-	ir = 0
+        ir = 0
         self.__commonColors(fra, ir, 0, buwi)
 
         ir += 1
-	fra1 = Frame(fra)
-	fra1.grid(row=ir, sticky="we", pady=4)
-	fra1.columnconfigure(1, weight=1)
+        fra1 = Frame(fra)
+        fra1.grid(row=ir, sticky="we", pady=4)
+        fra1.columnconfigure(1, weight=1)
         self.__grayShades(   fra1, 0, 0, buwi)
-	self.__specialVals(fra1, 0, 1)
+        if self.__special: self.__specialVals(fra1, 0, 1)
 
-	ir += 1
+        ir += 1
         self.__partialFullColor(fra, ir, 0)
-	ir += 1
+        ir += 1
         self.__userColors(fra, ir, 0, buwi)
-	ir += 1
+        ir += 1
         self.__chosenValue(fra, ir, 0, buwi)
-	self.thanCol.select_range(0, END)
-	return self.thanCol                      # This widget has the focus
+        self.thanCol.select_range(0, END)
+        return self.thanCol                      # This widget has the focus
+
 
     def __commonColors(self, fra, ir, ic, buwi):
         "Shows common colors."
-	f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="we", ipady=4, pady=4)
-	f.columnconfigure(10, weight=1)
-	w = Frame(f, width=5); w.grid(row=0, column=0)
-	w = Label(f, text=" Common Colors")
-	w.grid(row=0, column=1, columnspan=9, sticky="w")
-	w = Frame(f); w.grid(row=0, column=10)
+        f = Frame(fra, bd=2, relief=GROOVE)
+        f.grid(row=ir, column=ic, sticky="we", ipady=4, pady=4)
+        f.columnconfigure(11, weight=1)
+        w = Frame(f, width=5)
+        w.grid(row=0, column=0)
+        w = Label(f, text=" Common Colors")
+        w.grid(row=0, column=1, columnspan=9, sticky="w")
+        w = Frame(f)
+        w.grid(row=0, column=11)
 
         ic1 = 1
-	for jcol in xrange(1, 10):
-	    thc = thanatt.thanAttCol(p_gimdxf.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
+        for jcol in xrange(0, 10):
+            thc = thanatt.thanAttCol(p_gimdxf.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
             but = Button(f, width=buwi, bd=1, bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
-	    but.grid(row=1, column=ic1, padx=buwi)
-	    ic1 += 1
+            but.grid(row=1, column=ic1, padx=buwi)
+            ic1 += 1
+
+
+    def __grayShades(self, fra, ir, ic, buwi):
+        "Shows shades of gray."
+        grays = [rgb for rgb in p_gimdxf.thanDxfColCode2Rgb.itervalues()  if rgb[0] == rgb[1] == rgb[2]]
+        grays.sort()
+        n = len(grays)
+
+        f = Frame(fra, bd=2, relief=GROOVE)
+        f.grid(row=ir, column=ic, sticky="wsn", ipady=4)
+        w = Frame(f, width=5)
+        w.grid(row=0, column=0)
+        w = Label(f, text=" Gray Shades")
+        w.grid(row=0, column=1, columnspan=6, sticky="w")
+        w = Frame(f, width=5)
+        w.grid(row=0, column=n+1)
+
+        ic1 = 1
+        for rgb in grays:
+            thc = thanatt.thanAttCol(rgb)
+            but = Button(f, width=buwi, bd=1, bg=thc.thanTk, activebackground=thc.thanTk,
+                command=S(self.__updateChosen, str(thc)))
+            but.grid(row=1, column=ic1, padx=buwi)
+            ic1 += 1
+
+
+    def __specialVals(self, fra, ir, ic):
+        "Shows special values."
+        f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="esn", ipady=4)
+        f.columnconfigure(0, weight=1); f.columnconfigure(1, weight=1)
+        w = Frame(f, width=5); w.grid(row=0, column=0)
+        w = Label(f, text=" Special Colors")
+        w.grid(row=0, column=1, columnspan=2, sticky="w")
+        w = Frame(f, width=5); w.grid(row=0, column=3)
+
+        but = Button(f, text=str(thanvar.THANBYPARENT), bg="gold", activebackground="yellow",
+            command=S(self.__updateChosen, str(thanvar.THANBYPARENT)))
+        but.grid(row=1, column=1, sticky="we", padx=5)
+        but = Button(f, text=str(thanvar.THANPERSONAL), bg="darkcyan", activebackground="cyan",
+            command=S(self.__updateChosen, str(thanvar.THANPERSONAL)))
+        but.grid(row=1, column=2, sticky="we", padx=5)
+
 
     def __userColors(self, fra, ir, ic, buwi):
         "Shows common colors."
-	f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="we", ipady=4, pady=4)
-	f.columnconfigure(len(thancadconf.thanColUser)+1, weight=1)
-	w = Frame(f, width=5); w.grid(row=0, column=0)
-	w = Label(f, text=" User Defined Colors")
-	w.grid(row=0, column=1, columnspan=max((len(thancadconf.thanColUser),1)), sticky="w")
-	w = Frame(f, width=5); w.grid(row=0, column=len(thancadconf.thanColUser)+1)
+        f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="we", ipady=4, pady=4)
+        f.columnconfigure(len(thancadconf.thanColUser)+1, weight=1)
+        w = Frame(f, width=5); w.grid(row=0, column=0)
+        w = Label(f, text=" User Defined Colors")
+        w.grid(row=0, column=1, columnspan=max((len(thancadconf.thanColUser),1)), sticky="w")
+        w = Frame(f, width=5); w.grid(row=0, column=len(thancadconf.thanColUser)+1)
 
-	ic1 = 1
+        ic1 = 1
 	self.rbut = [None]*len(thancadconf.thanColUser)
 	for i,col in enumerate(thancadconf.thanColUser):
 	    if col == None:
@@ -117,6 +161,7 @@ class ThanColor(p_gtkuti.ThanDialog):
 	but = Button(f1, text="Define new...", command=S(self.__choosecol))
 	but.grid(row=0, column=1, sticky="e")
 
+
     def __nearest(self):
         "Find nearest 'full color palette' color to the one chosen."
 	thc = self.__updateChosen()
@@ -124,60 +169,31 @@ class ThanColor(p_gtkuti.ThanDialog):
 	col = thc.thanDxf()
 	self.__updateChosen(str(col))
 
-    def __grayShades(self, fra, ir, ic, buwi):
-        "Shows shades of gray."
-	f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="wsn", ipady=4)
-	w = Frame(f, width=5); w.grid(row=0, column=0)
-	w = Label(f, text=" Gray Shades")
-	w.grid(row=0, column=1, columnspan=6, sticky="w")
-	w = Frame(f, width=5); w.grid(row=0, column=7)
-
-        ic1 = 1
-	for jcol in xrange(250, 256):
-	    thc = thanatt.thanAttCol(p_gimdxf.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
-            but = Button(f, width=buwi, bd=1, bg=thc.thanTk, activebackground=thc.thanTk,
-	                 command=S(self.__updateChosen, str(thc)))
-	    but.grid(row=1, column=ic1, padx=buwi)
-	    ic1 += 1
-
-    def __specialVals(self, fra, ir, ic):
-        "Shows special values."
-	f = Frame(fra, bd=2, relief=GROOVE); f.grid(row=ir, column=ic, sticky="esn", ipady=4)
-	f.columnconfigure(0, weight=1); f.columnconfigure(1, weight=1)
-	w = Frame(f, width=5); w.grid(row=0, column=0)
-	w = Label(f, text=" Special Colors")
-	w.grid(row=0, column=1, columnspan=2, sticky="w")
-	w = Frame(f, width=5); w.grid(row=0, column=3)
-
-	but = Button(f, text=str(thanvar.THANBYPARENT), bg="gold", activebackground="yellow",
-	    command=S(self.__updateChosen, str(thanvar.THANBYPARENT)))
-	but.grid(row=1, column=1, sticky="we", padx=5)
-	but = Button(f, text=str(thanvar.THANPERSONAL), bg="darkcyan", activebackground="cyan",
-	    command=S(self.__updateChosen, str(thanvar.THANPERSONAL)))
-	but.grid(row=1, column=2, sticky="we", padx=5)
 
     def __partialFullColor(self, fra, ir, ic):
         """Shows partial "Full" Color Palette."""
-	f = Frame(fra, bd=2, relief=GROOVE)
-	f.grid(row=ir, column=ic, sticky="we", ipadx=5, ipady=4, pady=4)
-	ir1 = 0
-	w = Label(f, text=" Full Color Palette")
-	w.grid(row=ir1, column=0, columnspan=25, sticky="w")
+        f = Frame(fra, bd=2, relief=GROOVE)
+        f.grid(row=ir, column=ic, sticky="we", ipadx=5, ipady=4, pady=4)
+        ir1 = 0
+        w = Label(f, text=" Full Color Palette")
+        w.grid(row=ir1, column=0, columnspan=25, sticky="w")
 
         ir1 += 1; blankim1 = self.thanAttsTk[2]
-	for i in range(18, 9, -2)+range(11, 20, 2):
-	    ic1 = 0
-	    for jcol in xrange(i, 230+i+1, 10):
-	        thc = thanatt.thanAttCol(p_gimdxf.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
-                but = Button(f, image=blankim1, width=10, height=8, # Blank image instead of blank text, so that button is arbitrarily small
-	        bd=1, bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
-	        but.grid(row=ir1, column=ic1)
-	        ic1 += 1
-	    ir1 += 1
-	    if i == 10: ir2 = ir1; ir1 += 1   # Leave a row for some blank space
+        for i in range(18, 9, -2)+range(11, 20, 2):
+            ic1 = 0
+            for jcol in xrange(i, 230+i+1, 10):
+                thc = thanatt.thanAttCol(p_gimdxf.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
+#                but = Button(f, image=blankim1, width=10, height=8, # Blank image instead of blank text, so that button is arbitrarily small
+                but = Button(f, image=blankim1, width=14, height=8, # Blank image instead of blank text, so that button is arbitrarily small
+                bd=1, bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
+                but.grid(row=ir1, column=ic1)
+                ic1 += 1
+            ir1 += 1
+            if i == 10: ir2 = ir1; ir1 += 1   # Leave a row for some blank space
 
-	but = Frame(f, height=5)
-	but.grid(row=ir2, column=1, columnspan=25)
+        but = Frame(f, height=5)
+        but.grid(row=ir2, column=1, columnspan=25)
+
 
     def __chosenValue(self, fra, ir, ic, buwi):
         "Shows the chosen value and the capability to compose a new rgb one."
@@ -196,15 +212,16 @@ class ThanColor(p_gtkuti.ThanDialog):
 	self.__updateChosen(self.__val)
 	del self.__val
 
+
     def __updateChosen(self, txtcol=None):
         "Updates the button with the chosen value."
-	if txtcol == None: txtcol = self.thanCol.get()
-	txtcol = txtcol.strip()
-	thc = thanatt.thanAttCol(txtcol)
-	if thc != None:
-	    txtcol = str(thc)
-	    tkcol = thc.thanTk
-	    rgb = thc.rgbShow()
+        if txtcol == None: txtcol = self.thanCol.get()
+        txtcol = txtcol.strip()
+        thc = thanatt.thanAttCol(txtcol)
+        if thc != None:
+            txtcol = str(thc)
+            tkcol = thc.thanTk
+            rgb = thc.rgbShow()
 	elif txtcol == str(thanvar.THANBYPARENT):
 	    thc = thanvar.THANBYPARENT
 	    tkcol = self.thanAttsTk[1]
@@ -222,6 +239,7 @@ class ThanColor(p_gtkuti.ThanDialog):
 	self.thanCol.delete(0, END)
 	self.thanCol.insert(0, txtcol)
 	return thc
+
 
     def __getAttrs(self):
         "Returns suitable fonts, colors and images."
@@ -264,10 +282,12 @@ class ThanColor(p_gtkuti.ThanDialog):
 	    self.result = thc
 	return True
 
+
     def destroy(self):
         "Deletes references to widgets, so that it breaks circular references."
-	del self.rbut, self.thanCol, self.cbut, self.thanColRGB
-	p_gtkuti.ThanDialog.destroy(self)
+        del self.rbut, self.thanCol, self.cbut, self.thanColRGB
+        p_gtkuti.ThanDialog.destroy(self)
+
 
     def __del__(self):
         print "ThanColor ThanDialog", self, "dies.."

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the generic ThanCad element. It can be also used as a null
 element - this is NOT an asbtract class.
@@ -169,19 +169,30 @@ class ThanElement:
 
 
     def thanList(self, than):
-        "Shows information about the element."
+        "Shows information about the generic element."
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
+        than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
+        than.write("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
+        than.write("%s: %s" % (T["Insertion point"], than.strcoo(self.getInspnt())))
+
+
+    def thanExpThc1 (self, fw):
+        "Save the element in thc format; attributes other than the common."
+        raise ValueError, "Method thanExpThc1 must be overriden"
+
+
+    def thanImpThc1 (self, fw):
+        "Read the element from thc format; attributes other than the common."
+        raise ValueError, "Method thanExpThc1 must be overriden"
+
+
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property."""
         pass
-
-
-#    def thanExpThc1 (self, fw):
-#        "Save the element in thc format; attributes other than the common."
-#        pass
-
-
-#    def thanImpThc1 (self, fw):
-#        "Read the element from thc format; attributes other than the common."
-#        pass
-
 
 #---Reasonable default behavior of elements
 
@@ -220,7 +231,7 @@ class ThanElement:
 
 
     def thanInarea(self, xymm):
-        "Checks if element may (partialy) be in area xymm (whic may have None)."
+        "Checks if element may (partialy) be in area xymm (which may have None)."
         if xymm[2] == None or self.thanXymm[0] > xymm[2]: return False
         if xymm[1] == None or self.thanXymm[1] > xymm[3]: return False
         if xymm[2] == None or self.thanXymm[2] < xymm[0]: return False
@@ -254,12 +265,14 @@ class ThanElement:
         self.thanXymm = a
 
 
-    def setBoundBoxRect(self, xa, ya, w, h, theta):
+    def setBoundBoxRect(self, xa, ya, w, h, theta, center=False):
         "Finds the boundary box of a rectangle."
         t = theta
         cost = cos(t)
         sint = sin(t)
-
+        if center:     #This means xa is the center of the rectangle
+            xa -= (w*cost - h*sint)*0.5
+            ya -= (w*sint + h*cost)*0.5
         xb = xa + w*cost
         yb = ya + w*sint
         xc = xb - h*sint
@@ -299,26 +312,27 @@ class ThanElement:
         fw.writeEnd(self.thanElementName)
 
 
-    def thanImpThc(self, fr):
+    def thanImpThc(self, fr, ver):
         "Read the element from thc format; common attributes."
         fr.readBeg(self.thanElementName) #May raise ValueError, StopIteration
         layname = fr.readTextln()        #May raise StopIteration, ValueError
         self.handle = int(fr.next())     #May raise ValueError, StopIteration
-        self.thanImpThc1(fr)
+        self.thanImpThc1(fr, ver)
         fr.readEnd(self.thanElementName) #May raise ValueError, StopIteration
         return layname
 
 
 #---Rotate operations (for all elements)
 
+    @classmethod
     def thanRotateSet (clas, cc, phi):
         clas.rotPhi = phi
         clas.cosf = cos(clas.rotPhi)
         clas.sinf = sin(clas.rotPhi)
         clas.cc = cc
-    thanRotateSet = classmethod(thanRotateSet)
 
 
+    @classmethod
     def thanRotateXy(clas, ca):
         xa = ca[0] - clas.cc[0]
         ya = ca[1] - clas.cc[1]
@@ -326,46 +340,45 @@ class ThanElement:
         ct[0] = clas.cc[0] + xa*clas.cosf - ya*clas.sinf
         ct[1] = clas.cc[1] + xa*clas.sinf + ya*clas.cosf
         return ct
-    thanRotateXy = classmethod(thanRotateXy)
 
 
+    @classmethod
     def thanRotateXyn(clas, cc):
         xc = clas.cc[0]
-	yc = clas.cc[1]
-	cosf = clas.cosf
-	sinf = clas.sinf
+        yc = clas.cc[1]
+        cosf = clas.cosf
+        sinf = clas.sinf
         for ct in cc:
-	    xa = ct[0] - xc
-	    ya = ct[1] - yc
-	    xt = xa*cosf - ya*sinf
-	    yt = xa*sinf + ya*cosf
-	    ct[0] = xt + xc
-	    ct[1] = yt + yc
-    thanRotateXyn = classmethod(thanRotateXyn)
+            xa = ct[0] - xc
+            ya = ct[1] - yc
+            xt = xa*cosf - ya*sinf
+            yt = xa*sinf + ya*cosf
+            ct[0] = xt + xc
+            ct[1] = yt + yc
 
 
+    @classmethod
     def thanRotateSetp(clas, xc, yc, phi):
         clas.rotPhip = phi
-	clas.cosfp = cos(clas.rotPhip)
-	clas.sinfp = sin(clas.rotPhip)
-	clas.xcp = xc
-	clas.ycp = yc
-    thanRotateSetp = classmethod(thanRotateSetp)
+        clas.cosfp = cos(clas.rotPhip)
+        clas.sinfp = sin(clas.rotPhip)
+        clas.xcp = xc
+        clas.ycp = yc
 
 
+    @classmethod
     def thanRotateXypn2(clas, cc):
         xc = clas.xcp
-	yc = clas.ycp
-	cosf = clas.cosfp
-	sinf = clas.sinfp
+        yc = clas.ycp
+        cosf = clas.cosfp
+        sinf = clas.sinfp
         for i in xrange(0, len(cc), 2):
-	    xa = cc[i] - xc
-	    ya = cc[i+1] - yc
-	    xt = xa*cosf - ya*sinf
-	    yt = xa*sinf + ya*cosf
-	    cc[i]   = xt + xc
-	    cc[i+1] = yt + yc
-    thanRotateXypn2 = classmethod(thanRotateXypn2)
+            xa = cc[i] - xc
+            ya = cc[i+1] - yc
+            xt = xa*cosf - ya*sinf
+            yt = xa*sinf + ya*cosf
+            cc[i]   = xt + xc
+            cc[i+1] = yt + yc
 
 
     @classmethod

@@ -188,8 +188,8 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
         tableName:     Name of table to be created (STYLE, LAYER, LTYPE)
         iTableEntries: Number of elements of each table. For example, If we have 4 layers
-	               then ay TableName LAYER, iTableEntries=4.
-		       If iTableEntries==4 an initialisation is performed.
+                       then at TableName LAYER, iTableEntries=4.
+                       If iTableEntries==4 an initialisation is performed.
         """
 
         if iTableEntries == 0:
@@ -199,18 +199,16 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
             self.__blocks   = 0
             self.__entities = 0
         elif self.__entities:
-            print 'thanTableDef(): Table definitions must precede ENTITIES.'
-	    sys.exit(1)
+            assert False, 'thanTableDef(): Table definitions must precede ENTITIES.'
         elif tableName == 'ENTITIES':
-	    if self.__tabExist and not self.__blocks: self.thanDxfWrEntry(0, 'ENDTAB')
+            if self.__tabExist and not self.__blocks: self.thanDxfWrEntry(0, 'ENDTAB')
             self.thanDxfWrEntry(0, 'ENDSEC')
             self.thanDxfWrEntry(0, 'SECTION')
             self.thanDxfWrEntry(2, 'ENTITIES')
             self.__entities = 1
         elif tableName == 'BLOCKS':                        # TABLE start
             if self.__blocks:
-	        print 'thanTableDef(): Blocks already defined!'
-		sys.exit(1)
+                assert 0, 'thanTableDef(): Blocks already defined!'
             if self.__tabExist: self.thanDxfWrEntry(0, 'ENDTAB')
             self.thanDxfWrEntry(0, 'ENDSEC')
             self.thanDxfWrEntry(0, 'SECTION')
@@ -219,8 +217,7 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
             self.__tabExist = 1
         else:
             if self.__blocks:
-	        print 'ThanTableDef(): Table defs must precede blocks.'
-		sys.exit(1)
+                assert 0, 'ThanTableDef(): Table defs must precede blocks.'
             if self.__tabExist: self.thanDxfWrEntry(0, 'ENDTAB')
             self.thanDxfWrEntry(0, 'TABLE')
             self.thanDxfWrEntry(2, tableName)
@@ -300,8 +297,7 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         linName    : Line type name
         linDescr   : Line type description
         rElems     : Line elements
-	"""
-
+        """
         rlinLength = reduce(lambda x,y: x+fabs(y), rElems, 0.0)  # Calculation of line length
         self.thanDxfWrEntry(0, 'LTYPE')
         self.thanDxfWrEntry(2, linName)

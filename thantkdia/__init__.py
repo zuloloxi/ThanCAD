@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,19 +21,20 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This package includes dialogs (forms to get user input) implemented with Tkinter.
 """
-from thandialogcol  import ThanColor
-from thandialogdro  import ThanDro
-from thandialoglay  import ThanDialogLay
-from thandialogosn  import ThanTkOsnap
-from thandialogpen  import ThanPen
-from thandialogsty  import ThanTkStyle
-from thandiaexppil  import ThanTkExppil
-from thandialogtext import ThanElemtext
-from thandialogscan import ThanScan, getScanDpi
+from thandialogcol   import ThanColor
+from thandialogdro   import ThanDro
+from thandialoglay   import ThanDialogLay
+from thandialogltype import ThanDialogLtype
+from thandialogosn   import ThanTkOsnap
+from thandialogpen   import ThanPen
+from thandialogsty   import ThanTkStyle
+from thandiaexppil   import ThanTkExppil
+from thandialogtext  import ThanElemtext
+from thandialogscan  import ThanScan, getScanDpi
 from thandialogprint import ThanDiaPlot
 from thantkwinerror  import ThanTkWinError
 from thandialogunits import ThanDialogUnits

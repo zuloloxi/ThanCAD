@@ -34,9 +34,9 @@ def _orientation(p, q, r):
 
 def _hulls(cp):
     "Graham scan return the upper and lower hulls."
-    u = [] 
+    u = []
     l = []
-    cp.sort()
+    cp = sorted(cp)
     for p in cp:
         while len(u) > 1 and _orientation(u[-2], u[-1], p) <= 0.0:
             u.pop()

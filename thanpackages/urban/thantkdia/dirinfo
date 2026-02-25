@@ -1,0 +1,14 @@
+In order to save arbitrary info in a ThanCad's element.
+1. We define a new ThanCad object: database
+2. The database object contains a (NOT weak key) dictionary which maps the 
+   handle of a ThanCad's element to whatever info has the database for it.
+3. When the element is deleted the object's info for this element is lost.
+   We should warn the user about this and we should notify the object to
+   delete the info, or better save it somewhere so that we can undo/redo
+   the deletion.
+4. When an element is modified it should keep its handle, otherwise
+   the info is lost (a lot of research is needed here as some commands
+   delete and recreate objects).
+5. The database should read/write itself to a .thcx file, and should be
+   able to export to .csv format (LibreOffice). It should also
+   import from a .csv file.

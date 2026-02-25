@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -22,7 +22,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This package emulates the dxf library in ThanCad.
 """
@@ -32,7 +32,7 @@ from thandxfext import ZDEFAULT
 
 
 #Thanasis 2008_02_25: Instead of ZDEFAULT (which is zero) should I use
-#    self._imp._elev[2] instead? (which is the default height of a ThanCad drawing?)
+#    self.thanDr._elev[2] instead? (which is the default height of a ThanCad drawing?)
 #    I think not, because that is how p_gdxf library works; if the user does
 #    not specify the height, it is assumed to be zero.
 
@@ -59,12 +59,12 @@ class ThanDxfDra:
     def thanDxfPlotCircle (self, xc, yc, r):
         "Plots a circle."
         (px, py) = self.thanDxfTop(xc, yc)
-        self._imp.dxfCircle(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, r)
+        self.thanDr.dxfCircle(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, r)
 
     def thanDxfPlotCircle3 (self, xc, yc, zc, r):
         "Plots a 3d circle."
         (px, py, pz) = self.thanDxfTop3(xc, yc, zc)
-        self._imp.dxfCircle(px, py, pz, self.thanLayer, None, self.thanColor, r)
+        self.thanDr.dxfCircle(px, py, pz, self.thanLayer, None, self.thanColor, r)
 
     def thanDxfPlotArc(self, xc, yc, r, ang1, ang2):
         """Plots an arc of circle.
@@ -74,17 +74,17 @@ class ThanDxfDra:
         ang1 : angle of the beginning of the arc
         ang2 : angle of the end of the arc"""
         (px, py) = self.thanDxfTop(xc, yc)
-        self._imp.dxfArc(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, r, ang1, ang2)
+        self.thanDr.dxfArc(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, r, ang1, ang2)
 
     def thanDxfPlotPoint(self, xp, yp):
         "Plots a point."
         (px, py) = self.thanDxfTop(xp, yp)
-        self._imp.dxfPoint(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor)
+        self.thanDr.dxfPoint(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor)
 
     def thanDxfPlotPoint3(self, xp, yp, zp):
         "Plots a 3d point."
         (px, py, pz) = self.thanDxfTop3(xp, yp, zp)
-        self._imp.dxfPoint(px, py, pz, pz, self.thanLayer, None, self.thanColor)
+        self.thanDr.dxfPoint(px, py, pz, pz, self.thanLayer, None, self.thanColor)
 
     def thanDxfPlotSolid4 (self, xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4):
         "Plots a solid 4node polygon."
@@ -205,4 +205,4 @@ class ThanDxfDra:
         "Plots a string to a .dxf file."
 
         (px, py) = self.thanDxfTop(x1, y1)
-        self._imp.dxfThanImage(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, filnam, size, scale, theta)
+        self.thanDr.dxfThanImage(px, py, ZDEFAULT, self.thanLayer, None, self.thanColor, filnam, size, scale, theta)

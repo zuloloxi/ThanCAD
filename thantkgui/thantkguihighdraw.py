@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines functionality necessary for drawing elements on a Tkinter
 drawing window.
@@ -109,9 +109,7 @@ class ThanTkGuiHighDraw:
         for tlay in tlays:
             lay = dilay[tlay]
             proj[2].thanGudGetSelLayerxs(tlay)
-            outline = lay.thanAtts["moncolor"].thanTk
-            if lay.thanAtts["fill"].thanVal: fill = outline
-            else:                            fill = ""
+            outline, fill = lay.thanGetColour()
             proj[2].thanGudSetSelColorx(outline, fill)
 
 
@@ -457,12 +455,12 @@ class ThanTkGuiHighDraw:
         elems.sort()
         for lay, e in elems:
             if lay != lt.thanCur:
-                lay.thanTkSet(than, self.thanProj[1].thanTstyles)
+                lay.thanTkSet(than)
                 lt.thanCur = lay
             e.thanTkDraw(than)
         lay = thanCur1
         if lay != lt.thanCur:
-            lay.thanTkSet(than, self.thanProj[1].thanTstyles)
+            lay.thanTkSet(than)
             lt.thanCur = lay
 
 
@@ -542,6 +540,23 @@ class ThanTkGuiHighDraw:
                 dc.dtag(item, "linx")
         dc.itemconfig("linx", fill=col)
         dc.itemconfig("nlix", outline=col, fill=fillcol)
+
+
+    def thanGudSetSelDashx(self, dash=()):
+        """Changes the dash type of (linear) canvas items with tag 'selx'.
+
+        It does not interfere with normal selection mechanism."""
+        dc = self.thanCanvas
+        tagel = self.thanProj[1].thanTagel
+        dc.dtag("all", "linx")
+        dc.dtag("all", "nlix")
+        dc.addtag_withtag("linx", "selx")
+        linear = {"arc", "line", "oval", "polygon", "rectangle"}
+        for item in dc.find_withtag("selx"):
+            t = dc.type(item)
+            if t not in linear:
+                dc.dtag(item, "linx")
+        dc.itemconfig("linx", dash=dash)
 
 
 if __name__ == "__main__":

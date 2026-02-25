@@ -29,7 +29,7 @@ class DLTProjection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with 3D DLT projection."
         X, Y, Z = c3d[:3]
         L = self.L
         X -= L[12]; Y -= L[13]; Z -= L[14]
@@ -40,7 +40,7 @@ class DLTProjection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find 3D DLT coefficients using least square."
         fotsr, con, dcp = self.relative(fots)
         A, B = [], []
         for (X,Y,Z,x,y,zr,xyok,zok) in fotsr:
@@ -73,7 +73,7 @@ class DLTProjection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 17)
+            self.L = self.readCoefs(fr, self.NL)
             self.L.insert(0, None)
         else:                                   # Read coefficients from polynomial1 projection
             L = self.readCoefs(fr, 8)
@@ -149,7 +149,7 @@ class DLT2Projection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with 2D DLT projection."
         X, Y, Z = c3d[:3]
         L = self.L
         X = (X - L[9]) *L[12]
@@ -162,7 +162,7 @@ class DLT2Projection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find 2D DLT coefficients using least square."
         fotsr, con, dcp = self.relative(fots)
         A, B = [], []
         for (X,Y,Z,x,y,zr,xyok,zok) in fotsr:
@@ -234,7 +234,7 @@ Y = ------------------------------------------------------------------
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 15)
+            self.L = self.readCoefs(fr, self.NL)
             self.L.insert(0, None)
         else:                                   # Read coefficients from polynomial1 2D projection
             L = self.readCoefs(fr, 6)
@@ -309,7 +309,7 @@ class Rational1Projection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with 1st order rational projection."
         X, Y, Z = c3d[:3]
         L = self.L
         X -= L[14]; Y -= L[15]; Z -= L[16]
@@ -321,7 +321,7 @@ class Rational1Projection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find 1st order rational projection coefficients using least square."
         fotsr, con, dcp = self.relative(fots)
         self.L = []
         for i in 0, 1:
@@ -356,7 +356,7 @@ class Rational1Projection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 20)
+            self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
             L = self.readCoefs(fr, 8)
             self.L = [L[0], L[1], L[2], L[3],   # Coefs for xr
@@ -432,7 +432,7 @@ class Rational1_2DProjection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with 1st order rational polynomial projection."
         X, Y, Z = c3d[:3]
         L = self.L
         X -= L[10]; Y -= L[11]; Z -= L[12]
@@ -444,7 +444,7 @@ class Rational1_2DProjection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find 1st order rational projection coefficients using least square."
         fotsr, con, dcp = self.relative(fots)
         self.L = []
         for i in 0, 1:
@@ -479,7 +479,7 @@ class Rational1_2DProjection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 16)
+            self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
             L = self.readCoefs(fr, 6)
             self.L = [L[0], L[1], L[2],   # Coefs for xr
@@ -555,7 +555,7 @@ class Rational2Projection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with 2nd order rational projection."
         X, Y, Z = c3d[:3]
         L = self.L
         X -= L[30]; Y -= L[31]; Z -= L[32]
@@ -567,7 +567,7 @@ class Rational2Projection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find 2nd order rational projection coefficients using least square."
         fotsr, con, dcp = self.relative(fots)
         self.L = []
         for i in 0, 1:
@@ -602,7 +602,7 @@ class Rational2Projection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 36)
+            self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
             L = self.readCoefs(fr, 8)
             self.L = [L[0], L[1], L[2], L[3],  0.0, 0.0, 0.0, 0.0,  # Coefs for xr
@@ -657,7 +657,7 @@ class Rational2Projection(_Projection):
 ###############################################################################
 
 class Rational15Projection(_Projection):
-    "This class provides the machinery for the 2nd order mominmator, first order denominator polynomial projection."
+    "This class provides the machinery for the 2nd order mominator, first order denominator polynomial projection."
     icodp = 5
     name = "2nd and 1st order rational"
     NL = 28
@@ -678,7 +678,7 @@ class Rational15Projection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with rational (2nd and 1st) projection."
         X, Y, Z = c3d[:3]
         L = self.L
         X -= L[22]; Y -= L[23]; Z -= L[24]
@@ -690,7 +690,7 @@ class Rational15Projection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find rational (2nd and 1st) projection coefficients using least square."
         fotsr, con, dcp = self.relative(fots)
         self.L = []
         for i in 0, 1:
@@ -725,7 +725,7 @@ class Rational15Projection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 28)
+            self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
             L = self.readCoefs(fr, 8)
             self.L = [L[0], L[1], L[2], L[3],  0.0, 0.0, 0.0, 0.0,  # Coefs for xr
@@ -836,7 +836,7 @@ class Polynomial1Projection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         assert ic == self.icodp, "Well it IS a polynomial1 projection!"
-        self.L = self.readCoefs(fr, 8)
+        self.L = self.readCoefs(fr, self.NL)
 
 
     def write(self, fw):
@@ -957,7 +957,7 @@ Y =   ----------------- x + ---------------- y + -----------------
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         assert ic == self.icodp, "Well it IS a polynomial1 2D projection!"
-        self.L = self.readCoefs(fr, 6)
+        self.L = self.readCoefs(fr, self.NL)
 
 
     def write(self, fw):
@@ -992,7 +992,7 @@ class Polynomial2Projection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with 2nd order polynomial projection."
         x, y, z = c3d[:3]
         L = self.L
         xp = L[0]*x+L[1]*y+L[2] *z+L[3] +L[4] *x**2+L[5] *y**2+L[6] *z**2+L[7] *x*y
@@ -1001,7 +1001,7 @@ class Polynomial2Projection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find 2nd order polynomial projection coefficients using least square."
         L = []
         for i in 0, 1:
             A, B = [], []
@@ -1031,7 +1031,7 @@ class Polynomial2Projection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 16)
+            self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
             L = self.readCoefs(fr, 8)
             self.L = [L[0], L[1], L[2], L[3], 0.0, 0.0, 0.0, 0.0,     # Coefs for xr
@@ -1071,7 +1071,7 @@ class Polynomial2_2DProjection(_Projection):
 
 
     def project(self, c3d):
-        "Projects 3d point with polynomial projection."
+        "Projects 3d point with 2nd order polynomial projection."
         x, y, z = c3d[:3]
         L = self.L
         xp = L[0]*x+L[1]*y+L[2]+L[3]*x**2+L[4] *y**2+L[5] *x*y
@@ -1080,7 +1080,7 @@ class Polynomial2_2DProjection(_Projection):
 
 
     def lsm23(self, fots):
-        "Find polynomial coefficients using least square."
+        "Find 2nd order polynomial projection coefficients using least square."
         L = []
         for i in 0, 1:
             A, B = [], []
@@ -1110,7 +1110,7 @@ class Polynomial2_2DProjection(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 12)
+            self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
             L = self.readCoefs(fr, 6)
             self.L = [L[0], L[1], L[2], 0.0, 0.0, 0.0,     # Coefs for xr
@@ -1199,7 +1199,7 @@ class NonCartesian(_Projection):
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
-            self.L = self.readCoefs(fr, 6)
+            self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
             raise ValueError, "Projection code in file is wrong"   # Accept polynomial as a first approximation
 

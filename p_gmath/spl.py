@@ -36,7 +36,7 @@ class ThanSpline:
 
 
   def splder(self, ts):
-      "Evaluates the derivatives with respcet to parameter t of the spline at the parameter ts."
+      "Evaluates the derivatives with respect to parameter t of the spline at the parameter ts."
       def calc(x, xt):
           a = 3.0 * (x[k]-x[i]) / t[k]**2 - (2.0*xt[i]+xt[k]) / t[k]
           b = 2.0 * (x[i]-x[k]) / t[k]**3 + (xt[i]+xt[k]) / t[k]**2
@@ -208,7 +208,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
 #-----------------------------------------------------------------------
 
-    def SPLINE(self, X):
+    def spline(self, X):
       """
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C                                                                      C
@@ -237,7 +237,7 @@ C  RENE FORSBERG, JUNE 1983                                            C
 C                                                                      C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       """
-      X += 1.0
+#      X += 1.0
       Y = self.Y
       R = self.R
       N = len(Y) - 1
@@ -267,7 +267,7 @@ def testeqspline():
     ch.curveAdd(xx, yy, color="yellow")
 
     xs = p_ggen.frangec(-5.0, 15.0, 0.1)
-    ys = [s.SPLINE(x1) for x1 in xs]
+    ys = [s.spline(x1) for x1 in xs]
     ch.curveAdd(xs, ys, color="red")
     p_gchart.vis(ch)
 

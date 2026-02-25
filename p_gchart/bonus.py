@@ -8,9 +8,9 @@ def dashed_star(x, y, r, color, fill, size, chart):
     th = 0.0
     for i in range(8):
         x1 = x + r*cos(th)
-	y1 = y + r*sin(th)
-	chart.curveAdd((x, x1),  (y, y1), color=color, fill=fill, style="dashedsym", size=size)
-	th += pi*0.25
+        y1 = y + r*sin(th)
+        chart.curveAdd((x, x1),  (y, y1), color=color, fill=fill, style="dashedsym", size=size)
+        th += pi*0.25
 
 #=============================================================================
 
@@ -40,7 +40,7 @@ def thanSymbolLine7f(xz, yz, h, a, theta, tfont=thanFontPrime1, linefun=None):
 #                plr = [	(xz+xx*bx-yy*by, yz-(xx*by+yy*bx)) for (xx, yy) in pl ]
                 xpp = [	xz+xx*bx-yy*by for (xx, yy) in pl ]
                 ypp = [	yz+xx*by+yy*bx for (xx, yy) in pl ]
-	        linefun(xpp, ypp)
+                linefun(xpp, ypp)
 
             xz += hx2     # Advance character position
             yz -= hy2

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines utility functions to create/edit layers from within
 an embedded program.
@@ -75,15 +75,15 @@ def thanToplayerCurrent(proj, pname, current=True, **atts):
         for att, rawval in atts.iteritems():
             if att not in thanLayAtts: raise ThanLayerError, "Attribute %s is not recognised" % att
             if rawval == THANPERSONAL: raise ValueError, "New layer does not have PERSONAL attributes yet"
-	    class_ = thanLayAtts[att][3]        # Get class of attribute 'moncolor'
-	    if rawval == THANBYPARENT:
-	        val = class_(parent.thanAtts[att].thanVal, inherit=True)
-	    else:
-	        val = class_(rawval, inherit=False) # This will raise ValueError if rawval is invalid
+            class_ = thanLayAtts[att][3]        # Get class of attribute 'moncolor'
+            if rawval == THANBYPARENT:
+                val = class_(parent.thanAtts[att].thanVal, inherit=True)
+            else:
+                val = class_(rawval, inherit=False) # This will raise ValueError if rawval is invalid
             lay.thanAtts[att] = val             # No propagation is necessary
         if current:
             lt.thanCur = lay
-            lay.thanTkSet(proj[2].than, proj[1].thanTstyles)
+            lay.thanTkSet(proj[2].than)
             proj[2].thanUpdateLayerButton()
         proj[1].thanTouch()                     # Drawing IS modified
     else:
@@ -94,7 +94,7 @@ def thanToplayerCurrent(proj, pname, current=True, **atts):
 
         if current or lay == lt.thanCur:
             lt.thanCur = lay
-            lay.thanTkSet(proj[2].than, proj[1].thanTstyles)
+            lay.thanTkSet(proj[2].than)
             proj[2].thanUpdateLayerButton()
             proj[1].thanTouch()                 # Drawing IS modified
     return lay

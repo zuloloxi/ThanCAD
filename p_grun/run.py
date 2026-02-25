@@ -35,18 +35,18 @@ from subprocess import Popen, PIPE, STDOUT
 try: import pexpect
 except ImportError: pexpect = None
 from p_ggen import togi, path, thanUnicode, Pyos
-import p_gtkuti
-from winerror import ThanTkWinError
+import p_gtkuti, p_gfil
+from winerror import ThanTkWinError, ThanShellError
 
 
-def runExecWin(app, pdir, pexpectline=True, popen=False, shell=False, **kw):
+def runExecWin(app, pdir, pexpectline=True, popen=False, shell=False, env=None, **kw):
     "Opens a window, runs an executable and redirect the output to this window."
     from p_gfil import Tgui
     out = ThanTkWinError(**kw)
     p_gtkuti.thanGudPosition(out)
     out.thanTkSetFocus()
     try:
-        runExec(app, pdir, out, pexpectline, popen)
+        runExec(app, pdir, out, pexpectline, popen, env)
 #    except BaseException as e:
     except BaseException, e:
         dl = "%s '%s'" % (Tgui["Error while executing external program"], app)
@@ -61,22 +61,22 @@ def runExecWin(app, pdir, pexpectline=True, popen=False, shell=False, **kw):
     return True
 
 
-def runExec(app, pdir, out, pexpectline=True, popen=False, shell=False):
+def runExec(app, pdir, out, pexpectline=True, popen=False, shell=False, env=None):
     "Runs an executable and redirect the output to out window."
     if shell and Pyos.Windows and ";" in app:   #Transform: echo ThanCad;gcc -c x.c to: "echo ThanCad && gcc -c c.c"
         app = app.split(";")
-	app = " && ".join(app)
-#	app = '"%s"' % (app,)
+        app = " && ".join(app)
+#       app = '"%s"' % (app,)
     pdir = path(pdir)
     cdir = path(os.getcwd())
     try:
         pdir.chdir()
-        if pexpect == None or popen:
-            _popenrun(app, pdir, out, shell)
+        if pexpect == None or popen or shell:
+            _popenrun(app, pdir, out, shell, env)
         elif pexpectline:
-            _pexpectLinerun(app, out)
+            _pexpectLinerun(app, out, env)
         else:
-            _pexpectCharun(app, out)
+            _pexpectCharun(app, out, env)
 #    except BaseException, why:                                  #The exception is propagated to the caller
 #        prt = out.thanPrt
 #        prt("Error while executing %s:\n%s" % (app, why))
@@ -84,10 +84,10 @@ def runExec(app, pdir, out, pexpectline=True, popen=False, shell=False):
         cdir.chdir()
 
 
-def _pexpectCharun(app, out, timeout=2000):
+def _pexpectCharun(app, out, env=None, timeout=2000):
         "Run the program with pexpect."
 #        p1 = pexpect.spawn(app, cwd=pdir)
-        p1 = pexpect.spawn(app, timeout=timeout)
+        p1 = pexpect.spawn(app, timeout=timeout, env=_envmerge(env))
         prts = out.thanPrts
         try:
             while True:
@@ -98,10 +98,10 @@ def _pexpectCharun(app, out, timeout=2000):
             pass
 
 
-def _pexpectLinerun(app, out, timeout=2000):
+def _pexpectLinerun(app, out, env=None, timeout=2000):
         "Run the program with pexpect; a whole line must be submitted by the program in oprder yo be diaplyed in the window."
 #        p1 = pexpect.spawn(app, cwd=pdir)
-        p1 = pexpect.spawn(app, timeout=timeout)
+        p1 = pexpect.spawn(app, timeout=timeout, env=_envmerge(env))
         prts = out.thanPrts
         while True:
             dl = p1.readline()
@@ -110,12 +110,12 @@ def _pexpectLinerun(app, out, timeout=2000):
             out.update_idletasks()
 
 
-def _popenrun_with_communicate(app, pdir, out):
+def _popenrun_with_communicate(app, pdir, out, env=None):
         "Run the program with popen."
         prt = out.thanPrt
         try:
             prt("executing %s.." % (app,))
-            p1 = Popen(app, stdout=PIPE, stderr=STDOUT, cwd=pdir)
+            p1 = Popen(app, stdout=PIPE, stderr=STDOUT, cwd=pdir, env=_envmerge(env))
         except OSError:
             app1 = path(sys.path[0]).parent /"other" / app
             p1 = Popen(app1, stdout=PIPE, stderr=STDOUT, cwd=pdir)
@@ -135,13 +135,13 @@ def _popenrun_with_communicate(app, pdir, out):
             pass
 
 
-def _popenrun(app, pdir, out, shell=False):
+def _popenrun(app, pdir, out, shell=False, env=None):
         "Run the program with popen."
         prt = out.thanPrt
         prts = out.thanPrts
         try:
             prt("executing %s.." % (app,))
-            p1 = Popen(app, bufsize=0, stdout=PIPE, stderr=STDOUT, cwd=pdir, shell=shell)
+            p1 = Popen(app, bufsize=0, stdout=PIPE, stderr=STDOUT, cwd=pdir, shell=shell, env=_envmerge(env))
         except OSError:
             app1 = path(sys.path[0]).parent /"other" / app
             p1 = Popen(app1, stdout=PIPE, stderr=STDOUT, cwd=pdir)
@@ -161,6 +161,40 @@ def _popenrun(app, pdir, out, shell=False):
         except IOError:
             pass
 
+
+def runCompileScript(script, dir1=".", out=None, env=None):
+        "Runs a Thanasis' compile script."
+        if out == None:
+            winmain, _, _ = p_gfil.openfileWinget()
+            out = ThanShellError() if winmain == None else winmain
+        prt = out.thanPrt
+        if script == None:
+            prt("******Warning: no compile script found!", "can1")
+            return False
+        if Pyos.Openbsd:       coms = "ksh " +script      #We use ksh  because the script may not have the execution attribute set
+        elif not Pyos.Windows: coms = "bash "+script      #We use bash because the script may not have the execution attribute set
+        elif script[1] == "b": coms = "e fb;"+script
+        elif Pyos.Amd64:       coms = "e g64;"+script
+        elif script[1] == "f": coms = "e g77;"+script
+        else:                  coms = "e gcc;"+script
+
+        try:
+            if script[1] == "b": runExec(coms, dir1, out, popen=True, shell=True, env=env)
+            else:                runExec(coms, dir1, out, pexpectline=True, shell=True, env=env)
+        except Exception, e:
+            prt("******Error while running %s:\n******%s" % (script, e), "can1")
+            return False
+        return True
+
+
+def _envmerge(env):
+    "Add environmental variables in env to the environment given to the child process."
+    if env == None:
+        env1 = os.environ
+    else:
+        env1 = os.environ.copy()
+        env1.update(env)
+    return env1
 
 
 def test():

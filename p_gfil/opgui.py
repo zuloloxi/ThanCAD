@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-7 -*-
-import time, ConfigParser
+import time, ConfigParser, sys
 import Tkinter
 import p_ggen, p_gtkuti, p_gtkwid
 import opguitrans
@@ -9,6 +9,8 @@ root = None
 geom = None     #"200x200+1046+35"
 prevdir = p_ggen.path(".")
 prevpref = p_ggen.path("")
+iconxbm = None      #Icon to be shown near the title of the window
+tkclass = None
 
 
 class Root(Tkinter.Tk, p_gtkuti.ThanFontResize):
@@ -16,10 +18,14 @@ class Root(Tkinter.Tk, p_gtkuti.ThanFontResize):
 
     def __init__(self, descp, *args, **kw):
         "Create widgets."
+        if "className" not in kw: kw["className"] = "thanapps"
         Tkinter.Tk.__init__(self, *args, **kw)
         self.title(p_ggen.thanUnicode(descp))
         self.thanResizeFont()
-        self.tinfo = p_gtkwid.ThanScrolledText(root, font=self.thanFonts[0], readonly=True, width=100)
+        self.deficon()
+        thanFormTkcol = "#%02x%02x%02x"
+        col = thanFormTkcol % (254, 214, 254)
+        self.tinfo = p_gtkwid.ThanScrolledText(root, font=self.thanFonts[0], readonly=True, width=100, bg="orange")
         self.tinfo.grid(sticky="wesn")
         self.tinfo.tag_config("mes", foreground="blue")
         self.thanResizeBind([self.tinfo])
@@ -32,6 +38,19 @@ class Root(Tkinter.Tk, p_gtkuti.ThanFontResize):
         except: print "bad geometry:", geom; pass
         self.timep = time.time()
         self.dtimep = 5.0
+
+    def deficon(self):
+        "Decorates the window with the thancad icon."
+        global iconxbm
+        if iconxbm == None:
+            b = "@"+(p_ggen.path(sys.path[0]).parent/"thanapps.dir"/"than05.xbm")
+            try:    self.iconbitmap(b)
+            except: pass
+            else: return
+            b = "@"+(p_ggen.path(sys.path[0]).parent/"than05.xbm")  #This is when the script is run via py2exe or Freeze..
+            try:    self.iconbitmap(b)                              #..where sys.path[0] has an additional subdirectory at the end
+            except: pass
+
 
     def __crmenus(self):
         "Creates a description of the desired menus in a list."

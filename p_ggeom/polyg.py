@@ -5,6 +5,7 @@ from math import fabs
 from p_gmath import linEq2, linint
 from p_ggen import prg, iterby2
 from p_gvec import Vector2
+from area import area
 
 
 class Polygon:
@@ -461,28 +462,6 @@ def plotPols(pols):
 
 
 #============================================================================
-
-def areapn(cc):
-    """Finds the area of polygon cc (positive->clockwise, negative->counterclockwise).
-
-    The first point of the popygon should coincide with the last.
-    The points should be in order."""
-    xx = [c[0] for c in cc]
-    yy = [c[1] for c in cc]
-    if xx[0] != xx[-1] or yy[0] != yy[-1]: xx.append(xx[0]); yy.append(yy[0])
-    ymin = min(yy)
-    for i in xrange(len(yy)): yy[i] -= ymin 
-    e = 0.0
-    for i in xrange(len(yy)-1):
-        j = i + 1
-        e += (xx[j]-xx[i]) * (yy[j]+yy[i])
-    return e*0.5
-
-
-def area(cc):
-    "Finds the area of polygon cc as a positive number."
-    return abs(areapn(cc))
-
 
 def wrsyk (f, cs):
     "Writes a polyline in a syk file."

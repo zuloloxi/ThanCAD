@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which creates a fractal for demonstration purposes.
 """
@@ -75,7 +75,7 @@ def draw(pa, pb, rgb):
     if layname not in lay:
         lay[layname] = thanToplayerCurrent(proj, "fractal/"+layname, current=False, moncolor=rgb)
     lay1 = lay[layname]
-    lay[layname].thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lay[layname].thanTkSet(proj[2].than)
 
     ca = list(cor)
     ca[0] += pa[0]
@@ -87,7 +87,7 @@ def draw(pa, pb, rgb):
     e.thanSet((ca, cb))
 
     proj[1].thanElementAdd(e, lay1)                   # thanTouch is implicitely called
-    lay1.thanTkSet(proj[2].than, proj[1].thanTstyles)
+    lay1.thanTkSet(proj[2].than)
     e.thanTkDraw(proj[2].than)
 
 

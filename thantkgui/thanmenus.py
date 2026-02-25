@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,13 +23,13 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the menus and the mechanism to create and update them.
 """
 import p_ggen, p_gtkuti
 import thanvers, thanopt
-from thantrans import T, Tmatch, Tphot,Tarch
+from thantrans import T, Tmatch, Tphot, Tarch, Tcivil, Turban
 
 
 class ThanCadTkMenu:
@@ -41,7 +41,8 @@ class ThanCadTkMenu:
         else:    seq, menus = thanStandardMenus(win.thanGudCommandBegin)
         ms = []
         for m in seq: ms.extend(menus[m])
-        menubar, self.__submenus = p_gtkuti.thanTkCreateThanMenus2(win, ms)
+        if main: menubar, self.__submenus = p_gtkuti.thanTkCreateThanMenus2(win, ms)
+        else:    menubar, self.__submenus = p_gtkuti.thanTkCreateThanMenus2(win, ms, win.thanStatusBar.thanInfoSet)
         win["menu"] = menubar
         if not main:
             self.__submenus["File"]   = self.__submenus[T["&File"].replace("&", "")]
@@ -102,15 +103,19 @@ def thanStandardMenus(B):
         thanFrape = thanopt.thancon.thanFrape
         S = p_ggen.ThanStub
         s = "File Edit View Image Format Tools Draw Engineering Photogrammetry Modify Research Developer Window Help".split()
-        if not thanFrape.photo: s.remove("Photogrammetry")
+        if not thanFrape.photo and not thanFrape.stereo: s.remove("Photogrammetry")
         m = {}
         m["File"] = \
         [ ("menu", T["&File"], ""),            # Menu Title
           (S(B, "new"),    T["&New"],     T["Makes an empty drawing"]),
           (S(B, "open"),   T["&Open"],    T["Opens an existing drawing"]),
+          (S(B, "openunload"), T["Open &without images"], T["Opens an existing drawing with the images unloaded"]),
           (S(B, "save"),   T["&Save"],    T["Saves drawing into a file"]),
           (S(B, "saveas"), T["S&ave as"], T["Saves drawing into a file"]),
           (S(B, "close"),  T["&Close"],   T["Closes current drawing"]),
+          ("-",),               # Separator
+          (S(B, "insert"), T["Ins&ert"],    T["Inserts a drawing into current drawing"]),
+#          (S(B, "insertunload"), T["Insert &without images"], T["Inserts a drawing with the images unloaded"]),
           ("-",),               # Separator
           (S(B, "pilout"), T["Export &Image"], T["Exports a raster image"]),
           (S(B, "pdfout"), T["Plot to PDF"],   T["Plots the drawing to a PDF file"]),
@@ -138,6 +143,8 @@ def thanStandardMenus(B):
           (S(B, "pasteorig"), T["P&aste to Original Coordinates"], "Pastes elements from Clipboard"),
           ("-",),               # Separator
           (S(B, "select"),    T["&Select"], "Selects elements"),
+          ("-",),               # Separator
+          (S(B, "background"),T["&Background colour"],    T["Changes the canvas background colour"]),
           ("endmenu",),
         ]
 
@@ -160,16 +167,21 @@ def thanStandardMenus(B):
         m["Image"] = \
         [ ("menu", T["&Image"], ""), # Menu Title
           (S(B, "imageattach"), T["Insert Raster &Image"], "Inserts a new image to the current drawing"),
-          (S(B, "imagelog"),    T["Import &log Image"], "Inserts a new image whose position is defined in .logf file"),
-          (S(B, "imagecadastre"), T["Import &Cadastre"], "Inserts Greek cadastre map image to the correct poistion using standardised naming conventions"),
+          (S(B, "imagelog"),    T["Import &log Image"], T["Inserts images (bmp) whose positions are defined in .log files"]),
+          (S(B, "imagegeo"),    T["Import &geotiff"],   T["Inserts a (tif) image whose position is defined in the image"]),
+          (S(B, "imagetfw"),    T["Import &tfw Image"], T["Inserts images (tif) whose positions are defined in .tfw files"]),
+          (S(B, "imagecadastre"), T["Import &Cadastre"],T["Inserts Greek cadastre map image to its correct position using standardised file naming conventions"]),
           (S(B, "imagescan"),   T["&Scan Image"],       T["Acquires image from scanner"]),
           (S(B, "imageframe"),  T["Image &frame"],      T["Displays or not frames around images"]),
           ("-",),               # Separator
-          (S(B, "imagelocate"), T["Locate image file"], "Locates the image file of an image"),
-          (S(B, "imagedirectory"), T["Locate image directory"], "Locates the directory for missing image files"),
+          (S(B, "imageunload"), T["Unload images"],     T["Hides the content of images and conserves memory"]),
+          (S(B, "imageload"),   T["Load images"],       T["Reshows the content of the image allocating memory"]),
+          (S(B, "imagelocate"), T["Locate image file"], T["Locates the image file of an image"]),
+          (S(B, "imagedirectory"), T["Locate image directory"], T["Locates the directory for missing image files"]),
+          (S(B, "imageembed"),  T["Embed images"],      T["Saves the images into ThanCad's native file (.thcx)"]),
           ("-",),               # Separator
-          (S(B, "imageclip"),   T["&Clip image"],       "Clips an image to a smaller rectangle"),
-          (S(B, "imagerender"), T["Image &Render"],     "Manages the mode or rendering images"),
+          (S(B, "imageclip"),   T["&Clip image"],       T["Clips an image to a smaller rectangle"]),
+          (S(B, "imagerender"), T["Image &Render"],     T["Manages the mode or rendering images"]),
           ("endmenu",),
         ]
 
@@ -197,6 +209,7 @@ def thanStandardMenus(B):
           (S(B, "centroid"),  T["&Find centroid"], "Finds the centroid of a set of lines"),
           (S(B, "hull"),      T["&Find convex hull"],   "Finds the convex hulls of a set of lines"),
           (S(B, "simplify"),  T["&Simplify line"], "Approximates the lines with fewer points"),
+          (S(B, "interpolate"),T["&Interpolate line"], "Adds points to a line with sparse nodes"),
           ("-",),
           (S(B, "script"),  T["&Run script"], "Executes ThanCad commands from file"),
           ("endmenu",),
@@ -209,6 +222,7 @@ def thanStandardMenus(B):
           (S(B, "polygon"),   T["&Polygon"],   "Draws a closed line in the shape of a polygon filled with colour"),
           (S(B, "circle"),    T["&Circle"],    "Draws a circle"),
           (S(B, "arc"),       T["&Arc"],       "Draws a circular arc"),
+          (S(B, "ellipse"),   T["&Ellipse"],   "Draws an ellipse"),
           (S(B, "point"),     T["&Point"],     "Draws a point"),
           (S(B, "dtext"),     T["&Text"],      "Draws text"),
           (S(B, "spline"),    T["Spl&ine"],    "Draws a cubic spline curve"),
@@ -236,14 +250,14 @@ def thanStandardMenus(B):
         m1.extend(
         [ (S(B, "EngTrace"),  T["&Trace"],       "Traces a curve in a bitmap raster image"),
           ("-",),
-          (S(B, "demload"),   T["Load DE&Ms"],    T["Loads DEMs (USGS format) stored in tif files"]),
-          (S(B, "dem"),       T["Manage DE&Ms"],  T["Manages DEMs (USGS format) stored in tif files"]),
-          (S(B, "demdirectory"), T["Locate DEM directory"], "Locates the directory for missing image files of DEMs"),
-          (S(B, "dtmmake"),   T["Create &DTM"],   T["Creates a DTM from 3D lines"]),
-          (S(B, "dtmz"),      T["DTM &Z"],        T["Computes and shows the z coordinate at an arbitrary point"]),
+          (S(B, "demload"),   T["Load DE&Ms"],       T["Loads DEMs (USGS format) stored in .tif files"]),
+          (S(B, "dem"),       T["Manage DE&Ms"],     T["Manages DEMs (USGS format) stored in .tif files"]),
+          (S(B, "demdirectory"), T["Locate DEM directory"], T["Locates the directory for missing files of DEMs"]),
+          (S(B, "dtmmake"),   T["Create &DTM"],      T["Creates a DTM from 3D lines"]),
+          (S(B, "dtmz"),      T["DTM/DEM &Z"],       T["Computes and shows the z coordinate at an arbitrary point"]),
           (S(B, "dtmpoints"), T["Add Z to &Points"], T["Supplies z coordinates to existing points"]),
           (S(B, "dtmline"),   T["Add Z to &Lines"],  T["Supplies z coordinates to existing polylines"]),
-          (S(B, "triangulation"), T["Triangulation"], T["Creates and manages triangulation from (2D) points and lines."]),
+          (S(B, "triangulation"), T["Triangulation"],T["Creates and manages triangulation from (2D) points and lines."]),
           ("-",),
         ])
         if thanFrape.civil:
@@ -251,11 +265,22 @@ def thanStandardMenus(B):
         m1.extend(\
         [ (S(B, "engquickprofile"), T["&Quick Profile"], T["Creates quickly the profile of a (3D) line"]),
           (S(B, "EngInterchange"),  T["&Interchange"],   T["Creates an interchange between 2 highways"]),
-          ("endmenu",),
         ])
+        if thanFrape.urban:
+            m1.extend(\
+            [ ("-",),
+              (S(B, "urbanbioazimuth"), Tarch["Bio a&zimuth"], Tarch["Computes the azimuth of a road network to test bioclimatic design of city plan"]),
+              (S(B, "urbanslope"),      Turban["&Locate roads of slope"], Turban["Locates roads (lines) whose slope is less than arbitrary threshold"]),
+            ])
+        if thanFrape.architect:
+            m1.extend(\
+            [ ("-",),
+              (S(B, "archstairs"), Tarch["&Stairs"], Tarch["Computes and draws the plan view of a simple staircase"]),
+            ])
+        m1.append(("endmenu",))
 
         if thanFrape.photo:
-          m["Photogrammetry"] = \
+          m["Photogrammetry"] = m1 =\
           [ ("menu", Tphot["&Photogrammetry"], ""),        # Menu Title
           ("menu", Tphot["INTERIOR ORIENTATION (&mm)"], Tphot["Interior orientation submenu"], "blue"),
           (S(B, "photimage"),     T["Insert Raster &Image"],     "Inserts an image in a predefined layer in mm"),
@@ -281,8 +306,23 @@ def thanStandardMenus(B):
           (S(B, "photf7"),    Tphot["Toggle coordinate system (F7)"],         ""),
           ("-",),
           (S(B, "photmodel"),    Tphot["&Model definition"],     Tphot["Defines the images which make a photogrammetric model"]),
-          ("endmenu",),
           ]
+          if thanFrape.stereo:
+            m1.extend(\
+            [ ("-",),
+              (S(B, "stereotoggle"),  Tphot["&Stereo toggle"],  Tphot["Sets stereo (blue/red) mode on and off"]),
+              (S(B, "stereoaverage"), Tphot["&Stereo average"], Tphot["Zooms the z coordinates so that they are easily visible"]),
+              (S(B, "stereogridtoggle"),  Tphot["&Stereo grid"],  Tphot["Sets a grid at the reference elevation on and off to aid stereo viewing"]),
+            ])
+          m1.append(("endmenu",))
+        elif thanFrape.stereo:
+          m["Photogrammetry"] = m1 =\
+            [ ("menu", Tphot["&Photogrammetry"], ""),        # Menu Title
+              (S(B, "stereotoggle"),  Tphot["&Stereo toggle"],  Tphot["Sets stereo (blue/red) mode on and off"]),
+              (S(B, "stereoaverage"), Tphot["&Stereo average"], Tphot["Zooms the z coordinates so that they are easily visible"]),
+              (S(B, "stereogridtoggle"),  Tphot["&Stereo grid"],  Tphot["Sets a grid at the reference elevation on and off to aid stereo viewing"]),
+              ("endmenu",),
+            ]
 
         m["Modify"] = \
         [ ("menu", T["&Modify"], ""),             # Menu Title
@@ -296,6 +336,7 @@ def thanStandardMenus(B):
           (S(B, "offset"),     T["&Offset"],       T["Copies object parallel to itself"]),
           (S(B, "break"),      T["&Break"],        T["Breaks an element into 2 pieces"]),
           (S(B, "trim"),       T["&Trim"],         T["Explode 1 or more elements to smaller objects"]),
+          (S(B, "extend"),     T["Extend"],        T["Extends lines and arcs until they cross other elements being the boundary edges"]),
           (S(B, "filet"),      T["&Filet"],        T["Cuts elements with other elements being the cutting edges"]),
           (S(B, "join"),       T["&Join"],         T["Joins 2 or more adjacent lines"]),
           (S(B, "join2d"),     T["Join &2D"],      T["Joins 2 or more adjacent lines"]),
@@ -315,33 +356,36 @@ def thanStandardMenus(B):
 
         m["Research"] = m1 =\
         [ ("menu", T["&Research"], ""),           # Menu Title
-          (S(B, "EduRectangle"), T["Mark &Region"],   "Draws a rectangle with comments"),
-          (S(B, "EduEdit"),      T["&Edit"],          "Edit the comments"),
+          (S(B, "EduRectangle"), Tarch["Mark &Region"],   Tarch["Draws an active rectangle which contains comments"]),
+          (S(B, "EduEdit"),      Tarch["&Edit Region"],   Tarch["Edits the comments of an active rectangle"]),
         ]
         if thanFrape.fflf:
             m1.extend(\
             [ ("-",),
-              (S(B, "EduMatch2"),    Tmatch["&Match 2d"],      "Match 2d polylines"),
-              (S(B, "EduMatch23"),   Tmatch["&Match 3d to 2d"],"Match 3d and 2d polylines"),
-              (S(B, "EduMatch3"),    Tmatch["&Match 3d"],      "Match 3d polylines"),
+              (S(B, "EduMatch2"),     Tmatch["&Match 2d"],         Tmatch["Matches two 2d polylines"]),
+              (S(B, "EduMatch23"),    Tmatch["&Match 3d to 2d"],   Tmatch["Matches one 3d polyline to one 2d polylines"]),
+              (S(B, "EduMatch3"),     Tmatch["&Match 3d"],         Tmatch["Matches two 3d polylines"]),
               ("-",),
-              (S(B, "EduMatchMult2"),Tmatch["&Match multiple 2d"],"Match multiple pairs of 2d polylines"),
-              (S(B, "EduMatchMult23"),Tmatch["&Match multiple 3d to 2d"],"Match multiple pairs of 3d and 2d polylines"),
-              (S(B, "EduAxis"),      Tmatch["&Mid axis"],         "Find middle axis of road given the edges"),
+              (S(B, "EduMatchMult2"), Tmatch["&Match multiple 2d"],Tmatch["Matches two sets of 2d polylines"]),
+              (S(B, "EduMatchMult23"),Tmatch["&Match multiple 3d to 2d"],Tmatch["Matches one set of 3d polylines to one set of 2d polylines"]),
+              (S(B, "EduAxis"),       Tmatch["&Mid axis"],         Tmatch["Computes middle axis of road given the road edges"]),
               ("-",),
-              (S(B, "edutransf"),    Tmatch["&Compute transformation"], Tmatch["Computes a transformation from control points"]),
-              (S(B, "eduproject"),   Tmatch["&Project 3d to 2d"], "Projects multiple 3D points to 2D using a known projection"),
+              (S(B, "edutransf"),     Tmatch["&Compute projection"], Tmatch["Computes a projection transformation using control points"]),
+              (S(B, "eduproject"),    Tmatch["&Project/transform"], Tmatch["Projects/transforms arbitrary ThanCad Elements using a known transform (2D-2D, 3D-2D, 3D-3D"]),
             ])
         m1.extend(\
         [ ("-",),
-          (S(B, "edufloorplan"),  Tarch["&Floor plan"],    "Create automatically a floor plan"),
-          (S(B, "edubiocityplan"),Tarch["&Bio city plan"], "Create biocimatic orented city plan"),
-          (S(B, "edubioazimuth"), Tarch["Bio a&zimuth"],   "Compute the azimuth of a road network to test bioclimatic design of city plan"),
+          (S(B, "edufloorplan"),  Tarch["&Floor plan"],    Tarch["Creates automatically a floor plan"]),
+          (S(B, "edubiocityplan"),Tarch["&Bio city plan"], Tarch["Creates bioclimatic oriented city plan"]),
         ])
+        if thanFrape.thermo:
+            m1.extend(\
+            [ (S(B, "thermohumid"), u"Εισαγωγή μετρήσεων θερμοϋγρομέτρου", u"Διπλωματική εργασία Χάρη Πατούνη, Νίκου Σίμου, Σχολή Πολ. Μηχανικών, ΕΜΠ, 2012"),
+            ])
         if thanFrape.civil:
             m1.extend(\
             [ ("-",),
-              (S(B, "gradeline"), T["&Grade line"], "Compute automatically the grade line of a profile"),
+              (S(B, "gradeline"), Tcivil["&Grade line"], Tcivil["Computes automatically the grade line of a road profile"]),
             ])
         m1.extend(\
         [ ("endmenu",),
@@ -349,15 +393,15 @@ def thanStandardMenus(B):
 
         m["Developer"] = \
         [ ("menu", T["D&eveloper"], ""),          # Menu Title
-          (S(B, "devfont"),  T["Show &font"],         "Developer font debugging"),
-          (S(B, "devcm"),    T["Show &dimensions"],   "Developer window debugging"),
-          (S(B, "devcmd"),   T["&Save CMD text"],     "Save the text of the command window"),
-          (S(B, "devtrans"), T["&Translation report"],"Save translation status to a file"),
-          (S(B, "devhandle"),T["Show &handles"],      "Developer handle debugging"),
+          (S(B, "devfont"),  T["Show &font"],         T["Shows font for debugging"]),
+          (S(B, "devcm"),    T["Show &dimensions"],   T["Shows window dimensions for debugging"]),
+          (S(B, "devcmd"),   T["&Save CMD text"],     T["Saves the text of the command window"]),
+          (S(B, "devtrans"), T["&Translation report"],T["Saves translation status to a file"]),
+          (S(B, "devhandle"),T["Show &handles"],      T["Shows element handles for debugging"]),
           ("-",),
-          (S(B, "fractal"),  T["F&ractal demo"],      "Demonstrates a fractal made of colored lines"),
+          (S(B, "fractal"),  T["F&ractal demo"],      T["Demonstrates a fractal made of colored lines"]),
           ("-",),
-          (S(B, "tests"),    T["Run &tests"],         "Run unit tests ofThanCad"),
+          (S(B, "tests"),    T["Run &tests"],         T["Runs unit tests of ThanCad"]),
           ("endmenu",),
         ]
 

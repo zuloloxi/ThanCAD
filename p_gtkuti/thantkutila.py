@@ -184,8 +184,8 @@ def thanGudGetReadFile(self, ext, tit, initialfile="", initialdir="", multiple=F
             raise                                  #Something else happened; raise error
         break
     if multiple:
-        print "thangudgetreadfile: multiple=", multiple, ":", filnam
-        print "thangudgetreadfile: type(filnam)=", type(filnam)
+#        print "thangudgetreadfile: multiple=", multiple, ":", filnam
+#        print "thangudgetreadfile: type(filnam)=", type(filnam)
         if not filnam: return None
         try: filnam+"x"     #Work around Windows bug: Yeah, Windows "just" works!!
         except: pass
@@ -224,8 +224,16 @@ def thanAbsrelPath(f, cdir=None):
 def thanExtExpand(ext):
     """Extension ext can be one of the following:
 
-    string: string is the extension and it is transformed to: 
+    string with no blanks: the string contains one extension and it is transformed to:
         [ (<NULL explanation>, string),
+          ("All files", "*"),
+        ]
+    string with blanks: the string contains mulrtiple extensions separated by
+        blanks, and it is transformed to:
+        [ (<NULL explanation>, ext1),
+          (<NULL explanation>, ext2),
+          (<NULL explanation>, ext3),
+          ...
           ("All files", "*"),
         ]
     tuple of strings: The first string of the tuple is the explanation and the other
@@ -239,11 +247,33 @@ def thanExtExpand(ext):
     something like "xx.asc" the the open dialog does not consider it as an
     extension. In this case it should begin with *, like: "*xx.asc"
     """
+#   Windoze 7 open file dialog: how does Windows7 show multiple extensions:
+#   1. If ext is a list of tuples and each tuple contains a description text
+#      and an extension, the  Windows7 show the first tuple (and relevant files)
+#      when opening the dialog. The user may choose another tuple.
+#   2. If in some (or all) tuples the description is "":
+#      a. If all tuples which contain nonblank descriptions are first (before
+#         the blank descriptions) in the list of tuples, then all blank tuples
+#         are shown and all the files whose extension is one of the blank tuples.
+#         The user may choose one of the nonblank tuples.
+#      b. If the blank tuples are first (before the non blank tuples) then
+#         the last of the non blank tuples is shown. The user may choose another
+#         nonblank tuple or all blank tuples.
+#    Linux openfile dialog:
+#    1. Linux always shows the first entry either blanmk or nonblank tuple.
+#    2. All the blank tuples are shown as one entry.
     if ext == None:
         exts = [("All files", "*")]
     elif isString(ext):
         if ext.strip() == "":
             exts = [("All files", "*")]
+        elif " " in ext.strip():
+            exts = []
+            for exta in ext.split():
+                if exta[0] not in ".*": exta = "*" + exta
+                exts.append(("", exta))
+            if Pyos.Windows: exts.insert(0, ("All files", "*"))
+            else:            exts.append(("All files", "*"))
         else:
             desc, exta = "", ext
             if exta[0] not in "*.": exta = "*" + exta
@@ -323,7 +353,7 @@ def thanGudAskOkCancel(self, message, title, default="cancel"):
 
 def thanGudAskYesNo(self, message, title, default="yes"):
         "Shows message and returns true if user pressed OK; there is no default answer; returns boolean True or False."
-        return tkMessageBox.askyesno(thanUnicode(title), thanUnidode(message),
+        return tkMessageBox.askyesno(thanUnicode(title), thanUnicode(message),
             default=default, parent=self)
 
 

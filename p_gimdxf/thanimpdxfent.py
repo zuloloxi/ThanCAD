@@ -1,4 +1,5 @@
-from math import pi
+from math import pi, hypot, atan2, fabs
+from p_gmath import PI2, thanNearx
 from thanextrusion import thanDxfExtrusion2World, thanDxfExtrusionVectors
 
 
@@ -25,6 +26,7 @@ class ThanEntities:
                      "POINT"         : self.__getPointp,
                      "CIRCLE"        : self.__getCirclep,
                      "ARC"           : self.__getArcp,
+                     "ELLIPSE"       : self.__getEllipsep,
                      "INSERT"        : self.__getBlockAtt,
                      "THANCAD_IMAGE" : self.__getThanCadImagep,
                      "3DFACE"        : self.__get3dfacep,
@@ -261,7 +263,7 @@ class ThanEntities:
 
     def __getArcp(self):
         "Reads an arc from .dxf file."
-        atts = { }
+        atts = {}
         while 1:
             icod, text = self.thanGetDxf()
             if icod == -1:                # End of file, but try to read current line
@@ -273,18 +275,54 @@ class ThanEntities:
         if self.trAttsFloat(atts, 10, 20, -30, 40, 50, 51) or self.trAtts(atts, int, -62):
             self.thanWarn("Damaged arc: probably corrupted file.")
         else:
-	    self.defLay = atts.get(8, self.defLay)
-	    handle = atts.get(5, "")
-   	    col = atts.get(62, -1)
-	    if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+            self.defLay = atts.get(8, self.defLay)
+            handle = atts.get(5, "")
+            col = atts.get(62, -1)
+            if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
             xx = atts[10]
             yy = atts[20]
-	    zz = atts.get(30, ZDEFAULT)
+            zz = atts.get(30, ZDEFAULT)
             r = atts[40]
-#	    print "arc:", xx, yy, r, atts[50], (atts[51]-atts[50])%360.0
-	    theta1 = (atts[50]%360.0)   #*pi/180 Thanasis2011_02_11Commented out
+#           print "arc:", xx, yy, r, atts[50], (atts[51]-atts[50])%360.0
+            theta1 = (atts[50]%360.0)   #*pi/180 Thanasis2011_02_11Commented out
             theta2 = (atts[51]%360.0)   #*pi/180 Thanasis2011_02_11Commented out
             self.thanDr.dxfArc(xx, yy, zz, self.defLay, handle, col, r, theta1, theta2)
+
+#===========================================================================
+
+    def __getEllipsep(self):
+        "Reads an elliptic arc from .dxf file."
+        atts = {}
+        while 1:
+            icod, text = self.thanGetDxf()
+            if icod == -1:                # End of file, but try to read current line
+                self.thanWarn("Incomplete arc: end of file.")
+                break
+            if icod == 0: self.thanUngetDxf(); break           # other element
+            atts[icod] = text
+
+        if self.trAttsFloat(atts, 10, 20, -30, 11, 21, -31, 40, 41, 42) or self.trAtts(atts, int, -62):
+            self.thanWarn("Damaged elliptic arc: probably corrupted file.")
+        else:
+            self.defLay = atts.get(8, self.defLay)
+            handle = atts.get(5, "")
+            col = atts.get(62, -1)
+            if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+            xx = atts[10]
+            yy = atts[20]
+            zz = atts.get(30, ZDEFAULT)
+            xxa = atts[11]
+            yya = atts[21]
+            a = hypot(yya, xxa)
+            dr = 180.0/pi
+            phi = atan2(yya, xxa)*dr
+            b = a * atts[40]
+            theta1 = atts[41]
+            theta2 = atts[42]
+            full = thanNearx(fabs(theta2-theta1)*a, PI2*a)  #True if it is full ellipse (not an arc)
+            print "elliptic arc:", xx, yy, a, b, theta1, theta2, phi, full
+            self.thanDr.dxfEllipse(xx, yy, zz, self.defLay, handle, col, a, b,
+                theta1*dr, theta2*dr, phi, full)
 
 #===========================================================================
 

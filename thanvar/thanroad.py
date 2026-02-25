@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module computes a road node with circular arc.
 """
@@ -133,23 +133,23 @@ def kyklXy(R, L, pr):
     return p_gvec.Vector2(R*sin(f), (R-R*cos(f))*pr)
 
 
-def tkRoadNode(x1, y1, x2, y2, x3, y3, r2, dc, fill, tags):
+def tkRoadNode(x1, y1, x2, y2, x3, y3, r2, dc, fill, dash, tags):
     "Draws a road curve; 2 line segments and an arc between."
     nod = calcRoadNode(x1, y1, x2, y2, x3, y3, r2)
     dth = (nod.theta2-nod.theta1) % 360.0
     th = 360.0-nod.theta2
 #    print "%6.1f%6.1f -> %6.1f%6.1f" % (nod.theta1, nod.theta2, th, th+dth)
 
-    item1 = dc.create_line(x1, y1, nod.pa.x, nod.pa.y, fill=fill, tags=tags)
+    item1 = dc.create_line(x1, y1, nod.pa.x, nod.pa.y, fill=fill, dash=dash, tags=tags)
     item2 = dc.create_arc(nod.pc.x-r2, nod.pc.y-r2, nod.pc.x+r2, nod.pc.y+r2,
-	    start=th, extent=dth, style=Tkinter.ARC, outline=fill, tags=tags)
-    item3 = dc.create_line(nod.pt.x, nod.pt.y, x3, y3, fill=fill, tags=tags)
+	    start=th, extent=dth, style=Tkinter.ARC, outline=fill, dash=dash, tags=tags)
+    item3 = dc.create_line(nod.pt.x, nod.pt.y, x3, y3, fill=fill, dash=dash, tags=tags)
     item4 = dc.create_line(nod.pa.x, nod.pa.y, x2, y2, nod.pt.x, nod.pt.y,
             fill=fill, tags=tags, stipple="gray25")
     return (item1, item2, item3, item4), (nod.pt.x, nod.pt.y)
 
 
-def tkRoadNodeR(x1, y1, x2, y2, x3, y3, xmouse, ymouse, dc, ct, fill, tags):
+def tkRoadNodeR(x1, y1, x2, y2, x3, y3, xmouse, ymouse, dc, ct, fill, dash, tags):
     "Draws a road curve; 2 line segments and an arc between."
     delta = hypot(x2-xmouse, y2-ymouse)
     nod = calcRoadNodeR(x1, y1, x2, y2, x3, y3, delta)
@@ -158,10 +158,10 @@ def tkRoadNodeR(x1, y1, x2, y2, x3, y3, xmouse, ymouse, dc, ct, fill, tags):
     th = 360.0-nod.theta2
 #    print "%6.1f%6.1f -> %6.1f%6.1f" % (nod.theta1, nod.theta2, th, th+dth)
 
-    item1 = dc.create_line(x1, y1, nod.pa.x, nod.pa.y, fill=fill, tags=tags)
+    item1 = dc.create_line(x1, y1, nod.pa.x, nod.pa.y, fill=fill, dash=dash, tags=tags)
     item2 = dc.create_arc(nod.pc.x-r2, nod.pc.y-r2, nod.pc.x+r2, nod.pc.y+r2,
-	    start=th, extent=dth, style=Tkinter.ARC, outline=fill, tags=tags)
-    item3 = dc.create_line(nod.pt.x, nod.pt.y, x3, y3, fill=fill, tags=tags)
+	    start=th, extent=dth, style=Tkinter.ARC, outline=fill, dash=dash, tags=tags)
+    item3 = dc.create_line(nod.pt.x, nod.pt.y, x3, y3, fill=fill, dash=dash, tags=tags)
     item4 = dc.create_line(nod.pa.x, nod.pa.y, x2, y2, nod.pt.x, nod.pt.y,
             fill=fill, tags=tags, stipple="gray25")
     rr, _ = ct.local2GlobalRel(r2, r2)

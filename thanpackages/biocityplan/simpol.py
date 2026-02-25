@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,63 +23,107 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which creates a bioclimatic city plan.
 """
 import sys
-import p_ggen, p_ganneal, p_gfil, p_gmath, p_gtri
-import planconf
+import p_ggen, p_ganneal, p_gfil, p_gmath, p_gtri, p_gtkuti
+import hippoanneal, roadut
+frw = {}
+pref = ""
+winmain = None
+prg = p_ggen.prg
 
+USEDEM = False          #Use DEM instead of DTM
+devdebug = False        #If True, execute Developer debug code
 
-pref = None    #Prefix of all filenames
-frw  = None    #Opened file objects
 
 
 def pyMain():
     "Main routine."
     openFiles()
-    clines = readDTM()
-    hu = readRym()
-    if hu == None:
-        p_ggen.prg("City plan will be the convex hull of the DTM.")
-        hu = makeHull(clines)
-        wrRym(hu)
-    dtm = makeDTM(clines)
-    pc = planconf.PolConfiguration(hu, dtm)
-    readPar(pc)
-    if frw["cache"] == None:
-        p_ggen.prg("Προεπεξεργασία (μπορεί να χρειαστεί πολλά λεπτά)..")
-        pc.pol.build_cache(dtm)
-        wrCache(pc)
-    else:
-        pc.pol.read_cache(frw["cache"])
+    try:
+      hu = readRym()
+      pc = hippoanneal.HippoAnneal(hu)
+      pc.pol.USEDEM = USEDEM
+      pc.pol.devdebug = devdebug
+      pc.pol.cache.devdebug = devdebug
+      readPar(pc)
+      if frw["cache"] == None:
+          clines = readDTM()
+          dtm = makeDTM(clines)
+          if hu == None:
+              prg("City plan will be the convex hull of the DTM.", "info1")
+              hu = makeHull(clines)
+              wrRym(hu)
+          else:
+              hu = makeHull([hu])
+          pc.pol.hull = hu
+          if pc.pol.USEDEM:
+              prg("Προεπεξεργασία DEM (μπορεί να χρειαστεί πολλά λεπτά)..", "info")
+              pc.pol.build_dem(dtm, prt=prg)
+#              pc.pol.dem.plot()    #Plot the hull and the dem as points
+          else:
+              prg("Προεπεξεργασία (μπορεί να χρειαστεί πολλά λεπτά)..", "info")
+              pc.pol.build_cache(dtm, prt=prg)
+              wrCache(pc)
+      else:
+          prg("Reading road grid cache..", "info")
+          if hu != None:
+              prg("    City plan defined in .rym file is overwritten by the city plan in the .cache file", "can1")
+          pc.pol.readGrid(frw["cache"])
+          if devdebug:
+              clines = readDTM()                                                    ##########
+              dtm = makeDTM(clines)                                                 ##########
+              prg("Προεπεξεργασία DEM (μπορεί να χρειαστεί πολλά λεπτά)..", "info") ##########
+              pc.pol.build_dem(dtm, prt=prg)                                        ##########
+              pc.pol.dem.dtmq = dtm                                                 ##########
 
-    p_ggen.prg("")
-    p_ggen.prg("1. Εκτέλεση του προγράμματος 1 φορά (1=προεπιλογή)")
-    p_ggen.prg("2. Εκτέλεση του προγράμματος πολλές φορές")
-    p_ggen.prg("3. Προβολή ήδη υπολογισμένης λύσης")
-    i = p_ggen.inpLongR("Επιλογή (enter=1): ", 1, 3, 1)
-    if i == 1:
-        runOnce(pc)
-        wrState(pc, pref)
-        show(pc)
-    elif i == 2:
-        n = p_ggen.inpLongR("Πόσες εκτελέσεις (enter=100): ", 1, 1000, 100)
-        for i in xrange(n):
-            runOnce(pc)
-            wrState(pc, pref)
-    else:
-        i = p_ggen.inpLongR("α/α υπολογισμένης λύσης (enter=0): ", 0, 1000, 0)
-        rdState(pc, i)
-        show(pc)
-    p_gfil.closeFiles1()
+      coms = ("1. Εκτέλεση του προγράμματος 1 φορά (1=προεπιλογή)",
+              "2. Εκτέλεση του προγράμματος πολλές φορές",
+              "3. Προβολή ήδη υπολογισμένης λύσης",
+             )
+      if winmain == None:
+          prg("")
+          prg("\n".join(coms))
+          i = p_ggen.inpLongR("Επιλογή (enter=1): ", 1, 3, 1)
+      else:
+          i = p_gtkuti.xinpMchoice(winmain, "", coms, douDef=1)
+          if i == None: sys.exit()
+
+      if i == 1:
+          runOnce(pc, prt=prg)
+          wrState(pc, pref)
+          show(pc)
+      elif i == 2:
+          if winmain == None:
+              n = p_ggen.inpLongR("Πόσες εκτελέσεις (enter=100): ", 1, 1000, 100)
+          else:
+              n = p_gtkuti.xinpLongR(winmain, "Πόσες εκτελέσεις (enter=100): ", 1, 1000, 100)
+              if n == None: sys.exit()
+          for i in xrange(n):
+              runOnce(pc, prt=prg)
+              wrState(pc, pref)
+      else:
+          if winmain == None:
+              i = p_ggen.inpLongR("α/α υπολογισμένης λύσης (enter=0): ", 0, 1000, 0)
+          else:
+              i = p_gtkuti.xinpLongR(winmain, "α/α υπολογισμένης λύσης (enter=0): ", 0, 1000, 0)
+              if i == None: sys.exit()
+          rdState(pc, i)
+          show(pc)
+    except BaseException, e:
+        raise
+        p_gfil.er1s("\n%s:\n%s" % (p_gfil.Tgui["Error while executing program"], e), "can")
+    p_gfil.closeFiles1()                        #Not reentrant
 
 
 def runOnce(pc, prt=p_ggen.prg):
     "Run the simulated annealing method once."
     pc.repairState()
     sa = p_ganneal.SimulatedAnnealing(prt=prt) #animon=True, animnframe=20)
+#    sa.config(tsteps=2)
     sa.anneal(pc)
     e = pc.energyState() / pc.efact
     prt("Final energy=%.3f -> %.3f" % (e, e*pc.efact))
@@ -111,9 +155,9 @@ def show(pc):
     roads = ()
     tit = "Energy=%.1f,  d>8%%=%.1f,  d>10%%=%.1f" % (s.e, s.d8, s.d10)
     lins = pc.pol.contours
-    pc.pol.show(title=tit,   iso=lins, ot=ot, roads=roads)
-    pc.pol.dxfout(title=tit, iso=lins, ot=ot, roads=roads)
-    pc.pol.pilout(title=tit, iso=lins, ot=ot, roads=roads)[0].save("data001.png")
+    pc.pol.show(winmain, title=tit,   iso=lins, ot=ot, roads=roads)
+    pc.pol.dxfout(title=tit, iso=lins, ot=ot, roads=roads, fw=open(pref+".dxf", "w"))
+    pc.pol.pilout(title=tit, iso=lins, ot=ot, roads=roads)[0].save(pref+".png")
 
 
 def readSyk(fr):
@@ -193,10 +237,7 @@ def rdminmax(fd):
 def rdState(pc, i):
     "Read computed solution."
     fn = p_ggen.path("%s.state%03d" % (pref, i))
-    if not fn.exists():
-        sys.stderr.write("Can not open file %s\n" % fn)
-        p_gfil.stopErr1()
-        return
+    if not fn.exists(): p_gfil.er1s("Can not open file %s\n" % fn, "can")
     fr = open(fn, "r")
     pc.rdstate(fr)
     fr.close()
@@ -215,7 +256,7 @@ def wrCache(pc):
     "Writes cache."
     frw.update(p_gfil.opFile1e(1, "cache", "", pref, 'προεπεξεργασίας'))
     fw = frw["cache"]
-    pc.pol.write_cache(fw)
+    pc.pol.writeGrid(fw)
 
 
 def wrState(pc, pref, prter=p_ggen.prg):
@@ -234,7 +275,7 @@ def wrState(pc, pref, prter=p_ggen.prg):
 def test_cache():
     "Reads and writes cache for test."
     hu, dtm = makeDTM("kam5k.syk")
-    pc = cplan.PolConfiguration(hu, dtm)
+    pc = cplan.HippoAnneal(hu, dtm)
     fr = open("kam5k_cache01.txt", "r")
     pc.pol.read_cache(fr)
     fr.close()
@@ -245,15 +286,17 @@ def test_cache():
 
 def openFiles():
       "Opens the needed files."
-      global frw, pref
+      global frw, winmain, prg, pref
       p_gfil.openFile1(0, ' ',   ' ',   1, 'ΠΡΟΓΡΑΜΜΑ υπολογισμού βιοκλιματικού ρυμοτομικού σχεδίου')
       p_gfil.openFile1(1, 'syk',  'old', 1, 'με γραμμές DTM')
       p_gfil.openFile1(1, 'rym',  'opt', 1, 'περιοχής ρυμοτομικού - μορφή .syk')
       p_gfil.openFile1(1, 'par',  'opt', 1, 'παραμέτρων Ο.Τ.')
       p_gfil.openFile1(1, 'cache','opt', 1, 'προεπεξεργασίας')
-      frw = p_gfil.openFile1(999, ' ', ' ', 1, ' ')
+      frw = p_gfil.openFile1(998, ' ', ' ', 1, ' ')
       pref = p_ggen.path(frw["syk"].name)
       pref = pref.parent / pref.namebase
+      winmain, prg1, _ = p_gfil.openfileWinget()
+      if winmain != None: prg = prg1
 
 
 if __name__ == "__main__":

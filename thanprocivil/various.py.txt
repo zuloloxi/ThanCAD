@@ -1,0 +1,4 @@
+
+            if not thanopt.thancon.thanPro:
+                proj[2].thanPrter(T["Please upgrade to ThanCad professional to insert Greek Cadastre images."])
+                return Canc

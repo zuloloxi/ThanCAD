@@ -243,7 +243,7 @@ class ThanDialog(Tkinter.Toplevel):
         if not self.validate():
             self.initial_focus.focus_set() # put focus back
             return False
-        return True    #The rest myst be called by the overriding method
+        return True    #The rest must be called by the overriding method
         self.okhousekeep()
 
 # --------------------------------------------------------------------

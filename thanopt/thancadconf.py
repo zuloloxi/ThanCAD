@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which provides for ThanCad customisation.
 This module keeps a central repository of the options and variables common to all
@@ -47,11 +47,12 @@ thanOsnapModesText = \
 
 #Repository of ThanCad Default values for ThanCad
 
-thanColBack = "0 0 0"            #Background color of drawing window
-thanColRoot = "0 222 255"        #Default colour for root layer
+thanColBack = ThanAttCol("0 0 0")            #Background color of drawing window
+#thanColRoot = ThanAttCol("0 222 255")        #Default colour for root layer
+thanColRoot = ThanAttCol("200 224 31")       #Default colour for root layer
 thanColUser = []                 #User defined colours
-thanColSel  = "12"               #Colour for selection windows (window, crossing window, single elements)
-thanColOsn = "41"                #Colour for the object snap symbols
+thanColSel  = ThanAttCol("12")               #Colour for selection windows (window, crossing window, single elements)
+thanColOsn = ThanAttCol("82")                #Colour for the object snap symbols
 thanBSEL = 8                     #Size of the select1 rectangle and the relevant crossing window
 thanBOSN = 15                    #Size of the osnap symbol in pixels
 
@@ -86,8 +87,8 @@ def thanOptColorsGet(c):
             thc = thanAttCol(thc)
             if thc == None: continue
             if str(thc) not in rc: rc.append(str(thc))
-        while len(rc) < 14: rc.append(None)
-        while len(rc) > 14: del rc[-1]
+        while len(rc) < 17: rc.append(None)
+        while len(rc) > 17: del rc[-1]
 
     global thanColBack, thanColRoot, thanColSel, thanColOsn
     thanColBack = __colget(c, "background", thanColBack)

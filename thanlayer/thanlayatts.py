@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the valid attributes of a layer, their type, and their
 default value.
@@ -29,14 +29,14 @@ It also defines the actions to do to elements, when an attribute is forced
 on them.
 """
 
-import copy
+import copy, collections
 import p_gtkwid
 from p_gmath import thanNear2
 from thanvar import Canc, THANBYPARENT, THANPERSONAL
 from thanlaycon import *
 from thandefs.thanatt import *
+from thandefs import ThanLtype
 from thanopt import thancadconf
-import thantkdia
 from thantrans import T
 
 ############################################################################
@@ -74,8 +74,9 @@ def thanOnclick(evt, win, attname, indexes, selLayers):
 
 def thanMoncolorGet(win, att, selLayers):
     "Lets the user select monitor colour."
+    import thantkdia
     c =__commonVal(att, selLayers)
-    w = thantkdia.ThanColor(win, c, title="Select ThanCad Colour")
+    w = thantkdia.ThanColor(win, c, special=True, title=T["Select ThanCad Colour"])
     r = w.result
     if r == None: r = Canc
     return r, True
@@ -131,8 +132,47 @@ def thanTstyleGet(win, att, selLayers):
     return r, True
 
 
+def thanLinetypeGet(win, att, selLayers):
+    "Lets the user select new textstyle for the selected layers."
+    import thantkdia
+    name = collections.Counter()
+    unit = collections.Counter()
+    scale = collections.Counter()
+    inher = collections.Counter()
+    for lay in selLayers:
+        ia = lay.thanAtts[att]
+        print "attltype.thanval", ia
+        lt = ia.thanVal
+        print "attltype.thanval", lt
+        print lt[0]
+        print lt[1]
+        print lt[2]
+        name[lt[0]] += 1
+        unit[lt[1]] += 1
+        scale[lt[2]] += 1
+        inher[ia.thanInher] += 1
+    s = p_ggen.Struct("Line type settings")
+    s.butPattern = name.most_common(1)[0][0]
+    s.choUnit  = 0 if unit.most_common(1)[0][0]=="mm" else 1
+    s.entScale = scale.most_common(1)[0][0]
+    print "s.butPattern = ", s.butPattern
+    print "s.choUnit    = ", s.choUnit
+    print "s.entScale   = ", s.entScale
+    i = inher.most_common(1)[0][0]
+    if i: s.butPattern = str(THANBYPARENT)
+    win = thantkdia.ThanDialogLtype(master=win, vals=s, cargo=win.thanCargo, translation=None)
+    s = win.result
+    if s == None: return Canc, True
+    if s.butPattern == str(THANBYPARENT): return THANBYPARENT, True
+    if s.butPattern == str(THANPERSONAL): return THANPERSONAL, True
+    class_ = thanLayAtts[att][3]
+    r = class_((s.butPattern, ("mm", "u")[s.choUnit], s.entScale))
+    return r, True
+
+
 def thanDraworderGet (win, att, selLayers):
     "Lets the user select new draworder for the selected layers."
+    import thantkdia
     c =__commonVal(att, selLayers)
     w = thantkdia.ThanDro(win, c, title="Select Draw Order")
     r = w.result
@@ -145,6 +185,7 @@ def thanDraworderGet (win, att, selLayers):
 
 def thanPenthickGet (win, att, selLayers):
     "Lets the user select new pen  thickness (mm of linear objects) for the selected layers."
+    import thantkdia
     c =__commonVal(att, selLayers)
     w = thantkdia.ThanPen(win, c, "Pen", title="Select Pen Thickness")
     r = w.result
@@ -157,6 +198,7 @@ def thanPenthickGet (win, att, selLayers):
 
 def thanLinethickGet (win, att, selLayers):
     "Lets the user select new thickness (user unints of linear objects) for the selected layers."
+    import thantkdia
     c =__commonVal(att, selLayers)
     w = thantkdia.ThanPen(win, c, "Line", title="Select Line Thickness")
     r = w.result
@@ -202,14 +244,14 @@ def thanUpdateElementsold(proj, leaflayers, updatelayers=True):
             if thawed and ia.thanAct != nval:
                 if a == "moncolor":
                     if not colourhasbeenset:
-                        lay.thanTkSet(than, proj[1].thanTstyles)  # Note that .thanval is already set with the new value
+                        lay.thanTkSet(than)  # Note that .thanval is already set with the new value
 #                        than.outline = lay.ThanAttCol(nval).thanTk
                         proj[2].thanGudGetSelLayerx(lay.thanTag)
                         proj[2].thanGudSetSelColorx(than.outline, than.fill)
                         colourhasbeenset = True
                 elif a == "fill":
                     if not colourhasbeenset:
-                        lay.thanTkSet(than, proj[1].thanTstyles)
+                        lay.thanTkSet(than)
                         proj[2].thanGudGetSelLayerx(lay.thanTag)
                         proj[2].thanGudSetSelColorx(than.outline, than.fill)
                         colourhasbeenset = True
@@ -222,14 +264,14 @@ def thanUpdateElementsold(proj, leaflayers, updatelayers=True):
 #                            if thanNear2(elem.cp[0], elem.cp[-1]):
 #                                dc.delete(elem.thanTags[0])
 #                                elem.thanTkDraw(than)
-	        elif a == "draworder":
-	            draworder = True
-	        elif a == "penthick":
-	            pass              # Nothing visible changes
-	        elif a == "linethick":
-	            pass              # FIXME: redraw linear elements with new thickness
+                elif a == "draworder":
+                    draworder = True
+                elif a == "penthick":
+                    pass              # Nothing visible changes
+                elif a == "linethick":
+                    pass              # FIXME: redraw linear elements with new thickness
                 elif a == "hidename" or a == "hidepoint":
-                    lay.thanTkSet(than, proj[1].thanTstyles)
+                    lay.thanTkSet(than)
                     xymm = proj[1].thanAreaIterated
                     for elem in lay.thanQuad:
                         if not isinstance(elem, ThanPointNamed): continue
@@ -273,7 +315,7 @@ def thanUpdateElements(proj, leaflayers, updatelayers=True):
         for a,nval in atts.iteritems():
             ia = lay.thanAtts[a]
             if a == "moncolor" or a == "fill":
-                lay.thanTkSet(than, proj[1].thanTstyles)  # Note that .thanval is already set with the new value
+                lay.thanTkSet(than)  # Note that .thanval is already set with the new value
 #                than.outline = lay.ThanAttCol(nval).thanTk
                 proj[2].thanGudGetSelLayerx(lay.thanTag)
                 proj[2].thanGudSetSelColorx(than.outline, than.fill)
@@ -285,13 +327,17 @@ def thanUpdateElements(proj, leaflayers, updatelayers=True):
             elif a == "linethick":
                 pass              # FIXME: redraw linear elements with new thickness
             elif a == "hidename" or a == "hidepoint":
-                lay.thanTkSet(than, proj[1].thanTstyles)
+                lay.thanTkSet(than)
                 xymm = proj[1].thanAreaIterated
                 for elem in lay.thanQuad:
                     if not isinstance(elem, ThanPointNamed): continue
                     if not elem.thanInarea(xymm): continue   # Display elements only within current area (as all the other elements)
                     dc.delete(elem.thanTags[0])
                     elem.thanTkDraw(than)
+            elif a == "linetype":
+                lay.thanTkSet(than)  # Note that .thanval is already set with the new value
+                proj[2].thanGudGetSelLayerx(lay.thanTag)
+                proj[2].thanGudSetSelDashx(dash=than.dash)
 
             if updatelayers: ia.thanAct = nval
     return draworder
@@ -338,13 +384,12 @@ thanLayAttsOrder = \
 (   ("expand",     (0, None,             "+",    ThanAttNI,
 #(   ("expand",     (0, None,             None,   ThanAtt,
                   "'+' if layer's children should be shown.")),
-    ("layer",      (0, None,             None,   ThanAttNI, "Layer name.")),
+    ("layer",      (0, None,             None,   ThanAttTextbNI, "Layer name.")),
     ("plotcolor",  (0, thanPlotcolorGet, ThanAttCol(thancadconf.thanColRoot), ThanAttCol,        # red
                   "Element color on printer/plotter.")),
     ("moncolor",   (0, thanMoncolorGet,  ThanAttCol(thancadconf.thanColRoot), ThanAttCol,        # red
                   "Element color on screen.")),
-    ("linetype",   (0, thanLinetypeGet,  "continuous",  ThanAtt,
-                  "Linetype of linear elements.")),
+    ("linetype",   (0, thanLinetypeGet, ("continuous", "mm", 1.0), ThanAttLtype, "Linetype of linear elements.")),
     ("ltscale",    (0, thanLinetypeGet,  1.0,    ThanAttScale, "Linetype scale. It may be negative "+\
                   "as a percentage to the screen.")),
     ("fill",       (0, thanFillGet,      False,  ThanAttOnoffInherit,
@@ -355,16 +400,16 @@ thanLayAttsOrder = \
                   "as a percentage of the screen")),
     ("penthick",   (0, thanPenthickGet, 0.25,    ThanAttThick,
                   "Pen thickness (mm) which the elements are plotted with. Independent to scale.")),
-    ("pointstyle", (0, thanPointstyleGet, "dot", ThanAtt, "Point style.")),
+    ("pointstyle", (0, thanPointstyleGet, "dot", ThanAttTextb, "Point style.")),
     ("pointsize",  (0, thanPointstyleGet, -5.0,  ThanAttScale, "Point size. It may be negative "+\
                   "as a percentage of the screen.")),
     ("hidename",   (1, thanFrozenGet, True, ThanAttOnoff, "Hide point name.")),
     ("hideheight", (1, thanFrozenGet, True, ThanAttOnoff, "Hide point height.")),
-    ("hatch",      (0, thanHatchGet,     "solid",ThanAtt,
+    ("hatch",      (0, thanHatchGet,     "solid",ThanAttTextb,
                   "Hatch style of hatchable elements.")),
     ("hatchscale", (0, thanHatchGet,  1.0,       ThanAttScale, "Hatch scale. It may be negative "+\
                   "as a percentage to the screen.")),
-    ("textstyle",  (0, thanTstyleGet, "standard",ThanAtt, "Text style and font of textual elements.")),
+    ("textstyle",  (0, thanTstyleGet, "standard",ThanAttTextb, "Text style and font of textual elements.")),
     ("textscale",  (0, thanTstyleGet, 1.0,       ThanAttScale, "Text scale. It may be negative "+\
                   "as a percentage to the screen.")),
 
@@ -409,18 +454,15 @@ assuming that screen has a diagonal of 15, 17, 19 and so on, inches.
 """
 
 
-
-
-
 thanLayAtts = {}
 thanLayAttsNames = []
 
 for (key, val) in thanLayAttsOrder:
     thanLayAtts[key] = val
     thanLayAttsNames.append(key)
-thanLayAttsNames = ["expand", THANNAME, "moncolor", "frozen", "textstyle", "draworder",
+thanLayAttsNames = ["expand", THANNAME, "moncolor", "frozen", "textstyle", "linetype", "draworder",
                     "fill", "penthick", "linethick", "hidename", "hideheight"]
-thanLayAttsWidths = [1,        30,       20,         3,        20,          6,
+thanLayAttsWidths = [1,        30,       20,         3,        20,          40,         6,
                      5,      6,          6,           3,          3]
 
 

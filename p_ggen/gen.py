@@ -3,13 +3,15 @@ import sys, platform
 
 class RecordedError(Exception): pass
 class ThanLayerError(Exception): pass
+class ThanImportError(Exception):  pass
 
 class Struct(object):
     "Each instance of this class is like a C struct."
 
-    def __init__(self, name="<Unnamed>"):
+    def __init__(self, name="<Unnamed>", **kw):
         "Just save the name."
         self.name = name
+        self.__dict__.update(kw)
 
     def __str__(self):
         "Return the name of the structure."
@@ -73,16 +75,18 @@ class Null:
     def __nonzero__(self): return 0
 
 
+
 Canc = Struct("<Cancel>")
 Pyos = Struct("Platform determination")
 mach = sys.platform.lower()
 Pyos.Windows = mach == "win32" or mach == "win64"       #If we run Windoze
 Pyos.Freebsd = "freebsd" in mach                        #If we run Freebsd
+Pyos.Openbsd = "openbsd" in mach                        #If we run Openbsd
 Pyos.Linux = "linux" in mach                            #If we run Linux
 Pyos.Macos = 'darwin' in mach
 
 mach = platform.machine().lower()
-Pyos.Amd64 = ("x86" in mach or "amd" in mach) and "64" in mach  #If machine is x86-64 compatible (OS may still run in 32bits
+Pyos.Amd64 = ("x86" in mach or "amd" in mach) and "64" in mach  #If machine is x86-64 compatible (OS may still run in 32bits)
 del mach
 
 ############################################################################
@@ -91,6 +95,10 @@ del mach
 #MODULE LEVEL ROUTINES
 
 #============================================================================
+
+def doNothing(*args, **kw):
+    "This function does nothing at all."
+    pass
 
 def floate(a):
     try: return float(a.replace(",", "."))
@@ -222,6 +230,7 @@ def fnum(root):
 def configFile(confname, appdir=".thancad"):
     "Returns the path of confname, placing it into appdir."
     from jorpath import path
+    appdir = thanUnunicode(appdir)       # If it is unicode it is converted to win greek
     if not appdir.startswith("."): appdir = "." + appdir
     if Pyos.Windows:
         try:
@@ -233,6 +242,7 @@ def configFile(confname, appdir=".thancad"):
             f1 = __homerocurrent()
     else:
         f1 = __homerocurrent()
+    f1 = thanUnunicode(f1)       # If it is unicode it is converted to win greek
     f = path(f1) / appdir
     try: f.makedirs1()
     except OSError, why: return None, why
@@ -283,6 +293,14 @@ def dictInvert(a):
     for key,val in a.iteritems():
         b[val] = key
     return b
+
+def rdict(kw, *allowed):
+    "Returns an reduced dictionary which contains only the keys *allowed."
+    kw1 = {}
+    for key in allowed:
+        try: kw1[key] = kw[key]
+        except KeyError: pass
+    return kw1
 
 def isString(t):
         "Check if argument is string-like object."
@@ -359,6 +377,8 @@ def greeklishpath(fn, blank="_", slash="_", dot=None, gtlt="", quote=""):
     if gtlt != None: t = t.replace("<", gtlt).replace(">", gtlt)
     if quote != None: t = t.replace("'", quote).replace('"', quote).replace("`", quote)
     return path(greeklish(t, blank).lower())
+
+def prgnone(fr, tags=()): pass    #Prints nothing
 
 def prg(fr, tags=()):
     "Print converting to DOS greek only if we run windows (tags is for compatibility)."

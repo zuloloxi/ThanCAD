@@ -131,6 +131,7 @@ class _Projection:
         ic = int(dl1)
         if ic == self.icodp: return ic
         if ic <  10 and ic == 0:  return ic           #Projection from 3d to 2d
+        if ic >= 30 and ic == 0:  return ic           #Projection from 3d to 2d
         if ic >= 10 and ic == 10: return ic           #Transformation from 2d to 2d
         raise ValueError, "Projection code in file is wrong"   # Accept polynomial as a first approximation
 
@@ -152,3 +153,10 @@ def read1(fr):
         if len(dl) > 0 and dl[0] != "#": break    # Comment lines
     dl1 = dl.split()[0]                           # Avoid comments at the end of the line
     return dl1
+
+def read1raw(fr):
+    "Reads a non-blank non-comment line; it is the responsibility of the caller to handle exceptions."
+    while True:
+        dl = fr.next().strip()
+        if len(dl) > 0 and dl[0] != "#": break    # Comment lines
+    return dl

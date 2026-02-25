@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,11 +21,12 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the classes for layer attributes.
 """
 
+import copy
 import p_ggen, p_gimdxf
 
 ############################################################################
@@ -77,7 +78,6 @@ class ThanAtt:
 
     def __init__(self, val, inherit=True):
         "Initialise attribute."
-#        self.thanVal = val
         self.thanValSet(val)
         self.thanAct = None        # If it is not explicitely set later, there will be a failure
         self.thanPers = self.thanVal
@@ -97,16 +97,70 @@ class ThanAtt:
         if t == "": t = "+"       #Avoid empty strings as they can not be read by impthcx
         fw.writeAtt(name, "%s %d" % (t, self.thanInher))
 
-    def thanImpThc(self, fr, name):
+    def thanImpThc(self, fr, ver, name):
         "Read the personal value and the inherit switch from thc format."
         dl = fr.readAtt(name)                 #May raise ValueError, StopIteration
         val, inher = dl[0], bool(int(dl[1]))  #May raise ValueError, IndexError
         self.__init__(val, inher)
 
 
+class ThanAttLtype(ThanAtt):
+    "Linetype attribute; a tuple of the linetype pattern (dashes), unit and scale."
+
+    def thanValSet(self, val):
+        "Save the value as a tuple of a string, units and non negative double."
+        namlt, unit, scale = val    #May raise IndexError
+        namlt = namlt.strip()
+        if namlt == "": raise ValueError, "Blank line type name"
+        if unit not in ("mm", "u"): raise ValueError, "Invalid line type unit: %s" % (unit,)
+        scale = float(scale)       #May raise ValueError
+        if scale < 0.0: raise ValueError, "Invalid line type scale: %s" % (scale,)
+        self.thanVal = namlt, unit, scale
+
+    def __str__(self):
+        "Transform value to string."
+        return "%s,%s,%.3f" % (self.thanVal[0], self.thanVal[1], self.thanVal[2])
+
+    def thanExpThc(self, fw, name):
+        "Save the personal value and the inherit switch in .thc format."
+        f = "%s  " + fw.formFloat + "  %d"
+        fw.writeAttb(name, self.thanPers[0], f % (self.thanPers[1], self.thanPers[2], self.thanInher))
+
+    def thanImpThc(self, fr, ver, name):
+        "Read the personal value and the inherit switch from thc format."
+        namlt, dl = fr.readAttb(name, s2=True)
+        unit, scale, inher = dl.split()                 #May raise IndexError
+        inher = bool(int(inher))                        #May raise ValueError
+        self.__init__((namlt, unit, scale), inher)
+
+
 class ThanAttNI(ThanAtt):                     #Inherit is by default False
     def __init__(self, val, inherit=False):
         ThanAtt.__init__(self, val, inherit)
+
+
+class ThanAttTextb(ThanAtt):
+    "A class where the value is text which main contain spaces inside."
+
+    def thanExpThc (self, fw, name):
+        "Save the personal value and the inherit switch in .thc format."
+        t = ("%s" % self.thanPers).strip()
+        fw.writeAttb(name, t, "%d" % (self.thanInher,))
+
+
+    def thanImpThc(self, fr, ver, name):
+        "Read the personal value and the inherit switch from thc format."
+        if ver < (0,2,0):
+            ThanAtt.thanImpThc(self, fr, ver, name)
+            return
+        val, dl = fr.readAttb(name, s2=True)
+        inher = bool(int(dl))
+        self.__init__(val, inher)
+
+
+class ThanAttTextbNI(ThanAttTextb):                     #Inherit is by default False
+    def __init__(self, val, inherit=False):
+        ThanAttTextb.__init__(self, val, inherit)
 
 
 class ThanAttOnoffInherit(ThanAtt):
@@ -148,7 +202,7 @@ class ThanAttOnoffInherit(ThanAtt):
         fw.writeAtt(name, "%d %d" % (self.thanPers, self.thanInher))
 
 
-    def thanImpThc(self, fr, name):
+    def thanImpThc(self, fr, ver, name):
         "Read the arc from thc format."
         dl = fr.readAtt(name)             #May raise ValueError, StopIteration
         val, inher = int(dl[0]), int(dl[1]) #May raise ValueError, IndexError
@@ -280,7 +334,7 @@ class ThanAttCol(ThanAtt):
 
 
     def than2Gray(self):
-        "Transform the colour to gray scale accroding to ITU-R 601-2 transform; return an integer."
+        "Transform the colour to gray scale according to ITU-R 601-2 transform; return an integer."
         return p_gimdxf.thanRgb2Gray(self.thanVal)
 
 
@@ -289,7 +343,7 @@ class ThanAttCol(ThanAtt):
         fw.writeAtt(name, "%d %d %d %d" % (self.thanPers[0], self.thanPers[1],
                                            self.thanPers[2], self.thanInher))
 
-    def thanImpThc(self, fr, name):
+    def thanImpThc(self, fr, ver, name):
         "Read the arc from thc format."
         dl = fr.readAtt(name)                 #May raise ValueError, StopIteration
         r, g, b, inher = map(int, dl)         #May raise ValueError, IndexError
@@ -302,3 +356,19 @@ def thanAttCol(col):
     "Factory function for ThanCol class which does not stop in case of mistake."
     try: return ThanAttCol(col)
     except ValueError: return None
+
+
+def thanAttCol2Tuple(bg, mode):
+    "Convert colour attribute to RGB, gray or black and white colour; output is an RGB tuple."
+    if mode == "RGB":
+        bg = bg.thanVal
+    elif mode == "L":
+        bg = bg.than2Gray()
+        bg = bg, bg, bg
+    elif mode == "1":
+        bg = bg.than2Gray()
+        if bg < 255: bg = 0                     # Everything is black except pure white
+        bg = bg, bg, bg
+    else:
+        assert 0, "unknown mode '%s'" % (mode,)
+    return bg

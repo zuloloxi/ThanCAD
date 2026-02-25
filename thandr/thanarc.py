@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,12 +21,12 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the circular arc element.
 """
 
-from math import sqrt, atan2, tan, pi, fabs, cos, sin, hypot
+from math import atan2, tan, pi, fabs, cos, sin, hypot
 from itertools import izip
 import bisect
 import Tkinter
@@ -44,7 +44,7 @@ class ThanArc(ThanElement):
     "A circular arc."
     thanElementName = "ARC"    # Name of the element's class
 
-    def thanSet (self, cc, r, theta1, theta2, spin=1):
+    def thanSet(self, cc, r, theta1, theta2, spin=1):
         "Sets the attributes of the circle."
         self.cc = list(cc)
         self.r  = r
@@ -76,18 +76,12 @@ class ThanArc(ThanElement):
         "Reverse the spin of the arc."
         self.spin = -self.spin
 
+
     def thanIsNormal(self):
         "Returns False if the arc is degenerate (either zero radius or identical thetas)."
-        if thanNearx(self.cc[0], self.cc[0]+self.r): return False # Degenerate arc                                       # There is no degenerate image
-        if thanNearx(self.cc[1], self.cc[1]+self.r): return False # Degenerate arc                                       # There is no degenerate image
+        if thanNearx(self.cc[0], self.cc[0]+self.r): return False # Degenerate arc
+        if thanNearx(self.cc[1], self.cc[1]+self.r): return False # Degenerate arc
         return not thanNearx(self.theta1, self.theta2)       # Degenerate arc
-
-
-#    def thanClone(self):
-#        "Makes a geometric clone of itself."
-#        el = ThanArc()
-#        el.thanSet(self.cc, self.r, self.theta1, self.theta2)
-#        return el
 
 
     def thanRotate(self):
@@ -132,15 +126,15 @@ class ThanArc(ThanElement):
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
         "Return a point of type otype nearest to point xcu, ycu."
-	if "ena" not in otypes: return None            # Object snap is disabled
-	ps = []
-	if "end" in otypes:
-	    for thet in self.theta1, self.theta2: self.thanOsnapAdd(ccu, ps, thet, "end")
-	if "mid" in otypes:
-	    thet = ((self.theta2 - self.theta1)*0.5) % PI2
-	    thet += self.theta1
-	    self.thanOsnapAdd(ccu, ps, thet, "mid")
-	if "nea" in otypes:
+        if "ena" not in otypes: return None            # Object snap is disabled
+        ps = []
+        if "end" in otypes:
+            for thet in self.theta1, self.theta2: self.thanOsnapAdd(ccu, ps, thet, "end")
+        if "mid" in otypes:
+            thet = ((self.theta2 - self.theta1)*0.5) % PI2
+            thet += self.theta1
+            self.thanOsnapAdd(ccu, ps, thet, "mid")
+        if "nea" in otypes:
             cn, rn, thet = self.thanPntNearest2(ccu)
 	    if thet != None and rn > self.r:  # If we are getting near from the outside then "nea"
 	        self.thanOsnapAdd(ccu, ps, thet, "nea")
@@ -155,7 +149,7 @@ class ThanArc(ThanElement):
         if cori != None and "per" in otypes:
             for cn in self.thanPerpPoints(cori):
                 ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "per", cn))
-	if cori != None and "tan" in otypes:
+        if cori != None and "tan" in otypes:
 	    dx = (self.cc[0] - cori[0])*0.5
 	    dy = (self.cc[1] - yori[1])*0.5
 	    r = hypot(dx, dy)
@@ -163,12 +157,12 @@ class ThanArc(ThanElement):
             for cp in thanintersect.thanCirCir(self.cc, self.r, c, r):
                 thet = atan2(cp[1]-self.cc[1], cp[0]-self.cc[0]) % PI2
                 if not self.thanThetain(th)[0]: continue
-	        self.thanOsnapAdd(ccu, ps, thet, "tan")
-	if eother != None and "int" in otypes:
-	    ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+                self.thanOsnapAdd(ccu, ps, thet, "tan")
+        if eother != None and "int" in otypes:
+            ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
 
-	if len(ps) > 0: return min(ps)
-	return None
+        if len(ps) > 0: return min(ps)
+        return None
 
     def thanOsnapAdd(self, ccu, ps, thet, snaptyp):
         "Add a new point to osnap points."
@@ -185,16 +179,30 @@ class ThanArc(ThanElement):
 
     def thanPntNearest2(self, ccu):
         "Finds the nearest point of this arc to a point and its angle."
-	a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
-	aa = hypot(a[0], a[1])
-	if thanNearx(aa, 0.0): thet = 0.0
-	else:                  thet = atan2(a[1], a[0]) % PI2
+        a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
+        aa = hypot(a[0], a[1])
+        if thanNearx(aa, 0.0): thet = 0.0
+        else:                  thet = atan2(a[1], a[0]) % PI2
         in_, _ = self.thanThetain(thet)
-	if not in_: return None, None, None
-	c = list(self.cc)
-	c[0] += self.r*cos(thet)
-	c[1] += self.r*sin(thet)
-	return c, aa, thet
+        if not in_: return None, None, None
+        c = list(self.cc)
+        c[0] += self.r*cos(thet)
+        c[1] += self.r*sin(thet)
+        return c, aa, thet
+
+
+    def thanAngularDist(self, iend, ccu):
+        "Find the angular distance of point ccu from a endpoint of the arc."
+        a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
+        aa = hypot(a[0], a[1])
+        if thanNearx(aa, 0.0): return 1.0e30
+        thet = atan2(a[1], a[0]) % PI2
+        if self.thanThetain(thet)[0]:
+            if iend == 0: return (thet-self.theta1) % PI2     #From first point
+            else:         return (self.theta2-thet) % PI2     #From last point
+        else:
+            if iend == 0: return (self.theta1-thet) % PI2     #From first point
+            else:         return (thet-self.theta2) % PI2     #From last point
 
 
     def thanPerpPoints(self, ccu):
@@ -308,10 +316,11 @@ class ThanArc(ThanElement):
         _, thet2 = self.thanThetain(thet2)
         if thet2 < thet1: thet2, thet1 = thet1, thet2    # Ensure thet1 < thet2
 
-        e1 = ThanArc()
+        e1 = self.thanClone()          #e1 gets the identity of self
         e1.thanSet(self.cc, self.r, self.theta1, thet1)
         if not e1.thanIsNormal(): e1 = None
-        e2 = ThanArc()
+        e2 = self.thanClone()          #e2 gets the idientity of self ..
+        if e1 != None: e2.thanUntag()  #.. but it loses it if e1 is not None
         e2.thanSet(self.cc, self.r, thet2, self.theta2)
         if not e2.thanIsNormal(): e2 = None
         return e1, e2
@@ -347,14 +356,16 @@ class ThanArc(ThanElement):
         temp = than.dc.create_oval(g2l(cc[0]-r, cc[1]-r), g2l(cc[0]+r, cc[1]+r),
             outline="blue", tags=("e0",), outlinestipple="gray50")
 
-        theta1 = proj[2].thanGudGetPolar(cc, r, T["First point angle: "])
+        theta1 = proj[2].thanGudGetPolar(cc, r, T["First point direction angle: "])
         than.dc.delete("e0")
         if theta1 == Canc: return Canc            # Arc cancelled
         than.dc.create_line(g2l(cc[0], cc[1]), g2l(cc[0]+r*cos(theta1), cc[1]+r*sin(theta1)), fill="blue", tags=("e0",))
 
-        theta2 = proj[2].thanGudGetArc(cc, r, theta1, T["Last point angle: "])
+        theta2 = proj[2].thanGudGetArc(cc, r, theta1, T["Last point direction angle: "])
         than.dc.delete("e0")
         if theta2 == Canc: return Canc            # Arc cancelled
+        if proj[1].thanUnits.angldire == -1:
+            theta1, theta2 = theta2, theta1
         self.thanSet(cc, r, theta1, theta2)
         return True                               # Arc OK
 
@@ -367,7 +378,7 @@ class ThanArc(ThanElement):
         theta2 = self.theta2 * 180.0/pi
         dth = (theta2-theta1) % 360.0
         temp = than.dc.create_arc(xc-r, yc-r, xc+r, yc+r, start=theta1, extent=dth,
-            style=Tkinter.ARC, outline=than.outline, fill=than.fill, tags=self.thanTags)
+            style=Tkinter.ARC, outline=than.outline, fill=than.fill, dash=than.dash, tags=self.thanTags)
 
 
     def thanExpDxf(self, fDxf):
@@ -385,7 +396,7 @@ class ThanArc(ThanElement):
         fw.writeln("%d" % (self.spin,))
 
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver):
         "Read the arc from thc format."
         cc = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         r = float(fr.next())             #May raise ValueError, StopIteration
@@ -405,13 +416,59 @@ class ThanArc(ThanElement):
             than.dc.arc((x1-i, y1-i, x2+i, y2+i), t1, t2, fill=than.outline)
 
 
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property."""
+        cc = list(self.cc)
+        cc[:3] = fun(cc[:3])
+
+        cr = list(self.cc)
+        cr[0] += self.r
+        cr = fun(cr[:3])
+        r = hypot(cr[1]-cc[1], cr[0]-cc[0])
+
+        ths = [self.theta1, self.theta2]
+        for i,th in enumerate(ths):
+            cr = list(self.cc)
+            cr[0] += r * cos(th)
+            cr[1] += r * sin(th)
+            cr = fun(cr[:3])
+            ths[i] = atan2(cr[1]-cc[1], cr[0]-cc[0])   #Note that python ensures than atan2(0,0) = 0!!!
+
+        self.thanSet(cc, r, ths[0], ths[1], self.spin)
+
+
+    def thanExtend(self, cp, iend=1, method=0):
+        """Return a new arc extending self so that endpoint iend corresponds to cp.
+
+        If method is 0 or 1 then the new arc is the combined arc: self plus the
+        net extension.
+        If method is 2 then the new arc is only the net extension: it does not
+        include it does not include self."""
+        th = atan2(cp[1]-self.cc[1], cp[0]-self.cc[0]) % PI2
+        if self.thanThetain(th)[0]: return []     #Intersection is within self; no extension is possible
+        if method == 2:
+            arc = ThanArc()          #The new arc has handle and tag invalidated; it will take new handle and tag by thanElementTag
+            if iend == 0: theta1, theta2 = th, self.theta1     #Only the net extension
+            else:         theta1, theta2 = self.theta2, th     #Only the net extension
+        else:
+            arc = self.thanClone()   #The new arc takes the handle (identity) of self (it also takes the tag)
+            if iend == 0: theta1, theta2 = th, self.theta2     #Combined arc (incudes self)
+            else:         theta1, theta2 = self.theta1, th     #Combined arc (incudes self)
+        arc.thanSet(self.cc, self.r, theta1, theta2, spin=self.thanSpin())
+        return [arc]
+
+
     def thanList(self, than):
         "Shows information about the arc element."
         than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
         than.write("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
         t = ("%s%s" % (T["Center: "], than.strcoo(self.cc)),
-             "%s%s    %s%s\n" % (T["Radius: "], than.strdis(self.r), T["Spin: "], self.spin),
+             "%s%s    %s%s" % (T["Radius: "], than.strdis(self.r), T["Spin: "], self.spin),
              T["Spans: %s    to: %s\n"]% (than.strdir(self.theta1), than.strdir(self.theta2)),
             )
         than.write("\n".join(t))

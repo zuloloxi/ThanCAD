@@ -2,7 +2,7 @@ from bmp import ThanBmp
 
 
 def getDpi2(im=None, fn=None):
-    """Gets the horizontal and vertical dpi of PIL image im, who is saved in file fn.
+    """Gets the horizontal and vertical dpi of PIL image im, which is saved in file fn.
 
     If dpi is found in im.info -> OK.
     If dpi is not found in im and fn=None -> return None.
@@ -21,4 +21,4 @@ def getDpi(im=None, fn=None):
     h, v = getDpi2(im, fn)
     if int(h) != int(v):
         raise ValueError, "Image horizontal and vertical resolutions are not the same; use getDpi2()"
-    return h    
+    return h

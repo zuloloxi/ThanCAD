@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module provides the mechanism for element selection."
@@ -32,14 +32,14 @@ from thantrans import T
 
 #Example:
 #    thanSelectOr(proj, standalone=False, filter=lambda e:isinstance(e, ThanLine),
-#        optioname="settings", optiontext="s=settings")
+#        optionname="settings", optiontext="s=settings")
 #The option must not begin with the same letter as a standard option (w/c/l/p)
 
-def thanSelectOr(proj, standalone=True, filter=None, optionname="", optiontext=""):
+def thanSelectOr(proj, standalone=True, filter=None, optionname="", optiontext="", enter=0):
     "Select objects or general select command."
     proj[2].thanGudSetSelSave()                              # Save old selection
     selmodified = False
-    stat = T["Select an element (w=window/c=crossing/l=layers/f=layer of/p=previous/%s: "] % optiontext
+    stat = T["Select an element (w=window/c=crossing/l=layers/f=layer of/p=previous/%s): "] % optiontext
     opts = "", "window", "crossing", "layers", "f", "previous", optionname
     proj[2].thanSel1coor = None
     proj[2].thanCanvas.thanChs.thanPush(-2)                  # Save previous croshair; set rectangle croshair
@@ -50,23 +50,29 @@ def thanSelectOr(proj, standalone=True, filter=None, optionname="", optiontext="
         proj[2].thanSelectLayButton = True                   # User can press the layer button
         com = proj[2].thanGudGetPoint(stat, options=opts)
         proj[2].thanSelectLayButton = False                  # The layer button is inactive now
-        if com == Canc or com == "": break                   # Selection was cancelled or ended
+        if com == Canc: break                                # Selection was cancelled
         if first and com == optionname[:1]: break
-        if com == "p":                                       # Previous selection
+        if com == "":                                        # Selection was ended..
+            if not first or enter == 0: break                # ..enter has no special meaning -> end
+            c1 = proj[1].viewPort[:2]                        # ..enter means select (crossing) all in current view
+            c2 = proj[1].viewPort[2:]
+            res = proj[2].thanGudGetSelCros(c1[0], c1[1], c2[0], c2[1])
+            proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
+        elif com == "p":                                     # Previous selection
             res = proj[2].thanGudGetSelOld()
             proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
         elif com == "w" or com == "c":                       # Select window/crossing
             proj[2].thanCanvas.thanChs.thanSet(0)            # Set big croshair
-	    c1 = proj[2].thanGudGetPoint(T["First window corner: "])
-	    if c1 == Canc: continue
+            c1 = proj[2].thanGudGetPoint(T["First window corner: "])
+            if c1 == Canc: continue
             res = __corner2(proj, c1, com)
-	    proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
+            proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
         elif com == "l":                                     # Select layer(s)
             proj[2].thanCanvas.thanChs.thanSet(0)            # Set big croshair
-	    res = proj[2].thanGudGetLayerleafs(T["Select layer(s)"])
-	    if res == Canc: continue
+            res = proj[2].thanGudGetLayerleafs(T["Select layer(s)"])
+            if res == Canc: continue
             res = proj[2].thanGudGetSelLayers(res)
-	    proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
+            proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
         elif com == "f":                                     # Select layer(s)
             while True:
                 res = proj[2].thanGudGetPoint(T["Select an element that belongs to desired layer: "])
@@ -83,26 +89,27 @@ def thanSelectOr(proj, standalone=True, filter=None, optionname="", optiontext="
         else:                                                # Select 1
             c1 = com
             res = proj[2].thanGudGetSel1(c1[0], c1[1])       # Try to select 1 element..
-	    if res[0] == 0:                                  # Selection of 1 element is succesful
+            if res[0] == 0:                                  # Selection of 1 element is succesful
                 proj[2].thanCanvas.thanChs.thanSet(0)        # Set big croshair
-	        res = __corner2(proj, c1, "cw")              # Selection of 1 element failed; try window/crossing
-	        if res == Canc: continue
-	        proj[2].thanSel1coor = None                  # This is the first point in the 'break' command
-	    else:
-	        proj[2].thanSel1coor = c1                    # This is the first point in the 'break' command
+                res = __corner2(proj, c1, "cw")              # Selection of 1 element failed; try window/crossing
+                if res == Canc: continue
+                proj[2].thanSel1coor = None                  # This is the first point in the 'break' command
+            else:
+                proj[2].thanSel1coor = c1                    # This is the first point in the 'break' command
 
-	proj[2].thanGudSetSelColor()
-	selmodified = True
-	if com == "p" and res[0] == 0:
-	    proj[2].thanCom.thanAppend("%s\n" % T["Invalid or empty previous selection."], "can")
-	else:
-	    st = "%d %s (%d %s).\n" % (res[0], T["elements added"], res[1], T["duplicate"])
-	    proj[2].thanCom.thanAppend(st, "info")
-	proj[2].thanUpdateLayerButton(selected=True)
+        proj[2].thanGudSetSelColor()
+        selmodified = True
+        if com == "p" and res[0] == 0:
+            proj[2].thanCom.thanAppend("%s\n" % T["Invalid or empty previous selection."], "can")
+        else:
+            st = "%d %s (%d %s).\n" % (res[0], T["elements added"], res[1], T["duplicate"])
+            proj[2].thanCom.thanAppend(st, "info")
+        proj[2].thanUpdateLayerButton(selected=True)
+        if first and com == "": assert enter != 0; break    #A special meaning was given to enter; it was processed; end now
         if first:
             first = False
-            stat = T["Select an element (w=window/c=crossing/l=layers/p=previous): "]
-            opts = "", "window", "crossing", "layers", "previous"
+            stat = T["Select an element (w=window/c=crossing/l=layers/f=layer of/p=previous): "]
+            opts = "", "window", "crossing", "layers", "f", "previous"
 
     proj[2].thanCanvas.thanChs.thanPop()                     # Restore previous croshair
     proj[2].thanGudSetSelcurClear()                          # Clears current selection (which is already inside selall)
@@ -187,18 +194,21 @@ def thanSelectGen(proj, standalone=True, filter=None):
         if com == Canc: return thanModCanc(proj)
         proj[1].thanDoundo.thanAdd("select", thanModSelectRedo, (proj[2].thanSelall,),
                                              thanModSelectUndo, (proj[2].thanSelold,))
-	thanModEnd(proj)
+        thanModEnd(proj)
     return com
+
 
 def thanModSelectRedo(proj, elems):
     "Re-selects the previously un-selected elements."
     proj[2].thanGudSetSelClear()
     proj[2].thanGudSetSelElem(elems)
 
+
 def thanModSelectUndo(proj, selold):
     "Un-selects the oreviously selected elements."
     proj[2].thanGudSetSelClear()
     proj[2].thanGudSetSelElem(selold)
+
 
 def __corner2(proj, c1, com):
     "Get the other corner of a window/crossing."

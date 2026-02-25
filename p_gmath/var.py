@@ -111,6 +111,17 @@ def linintc(x1, y1, x2, y2, x):
       return y1*0.5 + y2*0.5          # Case of x1=x2=x
 
 
+
+def thanErNear2(a, b):
+    "Returns the error (difference) between two 2dimensional points taking numerical error into account."
+    xa, ya = a[:2]
+    xb, yb = b[:2]
+    d = fabs(xb-xa) + fabs(yb-ya)
+    v = (fabs(xa)+fabs(xb)+fabs(ya)+fabs(yb))*0.5
+    if v < thanThresholdx: return d*0.5   #Absolute error
+    return d/v                            #Relative error
+
+
 def thanNear2(a, b):
     "Checks if two 2dimensional points coincide taking numerical error into account."
     xa, ya = a[:2]
@@ -146,6 +157,29 @@ def iszero(x, xmax=1000.0, fact=1.0e-6):
     return fabs(x) < fact*xmax
 
 
+def ICPconverged(er, erp, erpp, threshold, icp, prter):
+    "Test if the ICP method converged and print warnings."
+    if fabs(erp-er) < threshold and fabs(erpp-erp) < threshold:
+        return True  #Perhaps er > erp and/or erp>erpp but both of them are too small -> convergence
+    elif erp < erpp and fabs(erp-er) < threshold:
+        return True  #Perhaps er > erp but it is too small -> convergence
+    elif er > erp and erp > erpp:
+        prter(Tmatch["WARNING: ICP STOPPED DUE TO INSTABILITY AFTER %d STEPS!"] % icp)
+        return True
+    return False
+
+
+def converged3(er, erp, erpp, threshold=thanThresholdx):
+    "Test if an iterative procedure has converged checking 3 errors."
+    if fabs(erp-er) < threshold and fabs(erpp-erp) < threshold:
+        return 1  #Perhaps er > erp and/or erp>erpp but both of them are too small -> convergence
+    elif erp < erpp and fabs(erp-er) < threshold:
+        return 1  #Perhaps er > erp but it is too small -> convergence
+    elif er > erp and erp > erpp:
+        return -1          #Stopped due to instability
+    return 0
+
+
 from p_gnum import zeros, Float
 
 def dfridr(func,x,h):
@@ -168,7 +202,17 @@ def dfridr(func,x,h):
                   err=errt
                   dfridr1=a[j,i]
           if fabs(a[i,i]-a[i-1,i-1]) >= SAFE*err: return dfridr1, err
+
       return dfridr1, err
+
+
+def partialder(f, j, *param):
+    "Compute the partial derivative of function b with respct to variable j of the function."
+    par = list(param)
+    def ff(a):
+        par[j] = a
+        return f(*par)
+    return dfridr(ff, param[j], 0.1)
 
 
 def testder():
@@ -180,4 +224,27 @@ def testder():
           print df, dfn, er
 
 
-if __name__ == "__main__": test()
+def testpartialder():
+      from math import exp, cos, sin
+      def g(x, y): return exp(x)*sin(x+y)
+      while True:
+          x, y = map(float, raw_input("x, y: ").split())
+          dx, err = partialder(g, 0, x, y)
+          dy, err = partialder(g, 1, x, y)
+          print "x, y=", x, y
+          print "dg/dx analytic:", exp(x)*sin(x+y)+exp(x)*cos(x+y), "numerical:", dx
+          print "dg/dy analytic:", exp(x)*cos(x+y), "numerical:", dy
+
+
+from p_gnum import transpose, matrixmultiply, solve_linear_equations, LinAlgError
+
+def lsmsolve(A, B):
+    "Solev the Least square method problem defined by matrixes A and B."
+    AT = transpose(A)
+    AA = matrixmultiply(AT, A)
+    BB = matrixmultiply(AT, B)
+    try: BB = solve_linear_equations(AA, BB)
+    except LinAlgError, why: return None, why
+    return BB, ""
+
+if __name__ == "__main__": testpartialder()

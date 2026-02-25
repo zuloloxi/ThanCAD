@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines circle states, i.e. as the user moves the mouse, a circle or
 an arc are drawn, continuously.
@@ -79,13 +79,14 @@ class ThanStateCircle(ThanStateGeneric):
 class ThanStateArc(ThanStateGeneric):
     "An object which interprets mouse movements to arcs."
 
-    def __init__(self, proj, x1, y1, r1, t1):
+    def __init__(self, proj, x1, y1, r1, t1, clockwise=False):
         "Initialize object."
         self.thanProj = proj
         self.__x1 = x1
         self.__y1 = y1
         self.__r1 = r1
         self.__t1 = t1
+        self.__clockwise = clockwise
         dc = self.thanProj[2].thanCanvas
         dc.thanOrtho.enable(x1, y1)               # Ortho is disabled in thanCleanup in stateless mixin
         self.__dragged = (dc.create_line(10000, 10000, 10001, 10001),)  # Dummy element to avoid complexity in onMotion()
@@ -99,10 +100,13 @@ class ThanStateArc(ThanStateGeneric):
         xb, yb = dc.thanOrtho.orthoxy(x, y)
         theta1 = self.__t1 / pi * 180
         theta2 = atan2(-(yb-self.__y1), xb-self.__x1) / pi * 180
+        dth = (theta2-theta1)%360.0
+        if self.__clockwise: dth = -(360-dth)
         draggedp = self.__dragged
         self.__dragged = (dc.create_arc(self.__x1-self.__r1, self.__y1+self.__r1,
                                         self.__x1+self.__r1, self.__y1-self.__r1,
-                                        start=theta1, extent=(theta2-theta1)%360.0, style=Tkinter.ARC,
+#                                        start=theta1, extent=(theta2-theta1)%360.0, style=Tkinter.ARC,
+                                        start=theta1, extent=dth, style=Tkinter.ARC,
                                         outline = "blue"),
                           dc.create_line(self.__x1, self.__y1, x, y, fill="blue"),
                          )

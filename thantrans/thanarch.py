@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -45,7 +45,8 @@ en2gr = \
                                                     u"Εφαρμογές περιβαλλοντικού σχεδιασμού στον δομημένο χώρο",
 "A.A. Stamos"                                     : u"Θ. Στάμος",
 
-"&Floor plan"                                     : u"Διαρρύθμιση κάτοψης",
+"Mark &Region"                                    : u"Σημείωση περιοχής",
+"&Edit Region"                                    : u"Επεξεργασία περιοχής",
 "Automated Floor Plan Design Algorithms"          : u"Αλγόριθμοι Αυτόματης Διαρρύθμισης Κάτοψης",
 "Automated Floor Plan Design"                     : u"Αυτόματη Διαρρύθμιση Κάτοψης",
 "Thanasis Stamos, Research/Teaching Personnel"    : u"Θανάσης Στάμος, Ερευνητικό/Διδακτικό Προσωπικό",
@@ -94,11 +95,41 @@ en2gr = \
 "Multiple executions of the algorithm"            : u"Πολλαπλές εκτελέσεις του αλγόριθμου",
 "Import from file..."                             : u"Εισαγωγή απο αρχείο...",
 
-"Bio a&zimuth"                                    : "Βιοκλιματικός προσανατολισμός",
+"Bio a&zimuth"                                    : u"Βιοκλιματικός προσανατολισμός",
 "This command computes statistics of the azimuth of roads (lines) for bioclimatic evaluation of city plans.":
-                                                    "Η εντολή αυτή υπολογίζει στατιστικά στοιχεία για τη γωνία διεύθυνσης οδών (lines) για βιοκλιματική αποτίμηση ρυμοτομικού.",
-"Number of azimuth categories (enter=4): "        : "Πλήθος κλάσεων που θα χωριστούν οι γωνίες διεύθυνσης (enter=4): ",
-"Select roads to process:"                        : "Επιλογή οδών προς επεξεργασία:",
+                                                    u"Η εντολή αυτή υπολογίζει στατιστικά στοιχεία για τη γωνία "\
+                                                    u"διεύθυνσης οδών (lines) για βιοκλιματική αποτίμηση ρυμοτομικού.",
+"Number of azimuth categories (enter=4): "        : u"Πλήθος κλάσεων που θα χωριστούν οι γωνίες διεύθυνσης (enter=4): ",
+"Select roads to process:"                        : u"Επιλογή οδών προς επεξεργασία:",
+"Draws an active rectangle which contains comments":u"Σχεδιάζει ενεργό ορθογώνιο που περιέχει σχόλια",
+"Edits the comments of an active rectangle"       : u"Επεξεργασία σχολίων ενός ενεργού ορθογωνίου",
+"&Floor plan"                                     : u"Διαρρύθμιση κάτοψης",
+"Creates automatically a floor plan"              : u"Αυτόματη δημιουργία διαρρύθμισης κάτοψης",
+"Creates bioclimatic oriented city plan"          : u"Δημιουργία βιοκλιματικοστρεφούς ρυμοτομικού",
+"Computes the azimuth of a road network to test bioclimatic design of city plan":
+                                                    u"Υπολογισμός της γωνίας διεύθυνσης ενός δικτύου οδών για "\
+                                                    u"να ελεγχθεί ο βιοκλιματικός σχεδιασμός ρυμοτομικού",
+"&Stairs"                                         : u"Σκάλα",
+"Computes and draws the plan view of a simple staircase": u"Υπολογισμός και σχεδίαση κάτοψης απλής σκάλας",
+"Step tread"                                      : u"Πάτημα",
+"Step rise"                                       : u"Ύψος (ριχτι)",
+"Stairs width"                                    : u"Πλάτος σκάλας",
+"Stairs total rise"                               : u"Συνολικό ύψος σκάλας",
+"Print scale"                                     : u"Κλίμακα εκτύπωσης",
+"Staircase position - lowest axis point (s=change Settings): ": u"Θέση σκάλας - κατώτατο σημείο άξονα (s=αλλαγή ρυθμίσεων): ",
+"Stair case settings"                             : u"Ρυθμίσεις σκάλας",
+"Compute"                                         : u"Υπολογισμός",
+"STAIRS SPECIFICATIONS:"                          : u"ΡΥΘΜΙΣΕΙΣ ΣΚΑΛΑΣ:",
+"STAIRS COMPUTED GEOMETRY:"                       : u"ΥΠΟΛΟΓΙΣΜΟΣ ΓΕΩΜΕΤΡΙΑΣ ΣΚΑΛΑΣ:",
+"Actual step rise"                                : u"Πραγματικό ύψος (ρίχτι)",
+"Stairs run"                                      : u"Οριζόντιο μήκος σκάλας",
+"Number of treads"                                : u"Πλήθος πατημάτων",
+"Number of rises"                                 : u"Πλήθος υψών",
+"PRINT SCALE:"                                    : u"ΚΛΙΜΑΚΑ ΕΚΤΥΠΩΣΗΣ:",
+"Print scale 1/"                                  : u"Κλίμακα εκτύπωσης 1/",
+"Staircase rotation angle (enter=0): "            : u"Γωνία περιστροφής σκάλας (enter=0): ",
+"T=%.2f"                                          : "π=%.2f",      #No unincode here
+"R=%.3f"                                          : "υ=%.3f",      #No unincode here
 }
 Tarch = Translation(en2gr)
 #Tarch.thanLangSet("en", thancadconf.thanTranslateTo)

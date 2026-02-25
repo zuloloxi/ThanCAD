@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -135,7 +135,15 @@ en2gr = \
                                                     u"οποιοιδήποτε προηγούμενοι υπολογισμοί πιθανότατα "\
                                                     u"δεν θα ισχύουν και πρέπει να ξαναγίνουν.\n\n"\
                                                     u"Εντάξει να φορτωθεί νέο αρχείο φωτομηχανής;",
-
+"&Model definition"                               : u"Ορισμός μοντέλων",
+"Defines the images which make a photogrammetric model": "Ορισμός εικόνων που απαρτίζουν φωτογραμμετρικό μοντέλο",
+"&Stereo toggle"                                  : u"Ενεργοποίηση/απενεργοποίηση στερεοσκοπικής",
+"Sets stereo (blue/red) mode on and off"          : u"Ενεργοποίηση και απενεργοποίηση στερεοσκοπικής όρασης (κόκκινο/κυανό)",
+"&Stereo average"                                 : u"Μέσος όρος στερεοσκοπικής",
+"Zooms the z coordinates so that they are easily visible": u"Εστιάζει τις συντεταγμένες z έτσι ώστε να είναι πιο εύκολα ορατές",
+"&Stereo grid"                                    : u"Κάναβος στερεοσκοπικής",
+"Sets a grid at the reference elevation on and off to aid stereo viewing":
+                                                    u"Ενεργοποίηση/απενεργοποίηση κάναβου στο υψόμετρο αναφοράς για διευκόλυνση στερεσοκπικής όρασης",
 }
 Tphot = Translation(en2gr)
 #Tarch.thanLangSet("en", thancadconf.thanTranslateTo)

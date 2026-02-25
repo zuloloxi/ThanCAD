@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the object snap functionality.
 """
@@ -30,7 +30,7 @@ from thanvar import thanLogTk
 from thanopt import thancadconf
 from thandefs.thanatt import ThanAttCol
 
-_AVOIDTAG = frozenset(("e0", "edrag"))
+_AVOIDTAG = frozenset(("e0", "edrag", "enull"))
 
 
 class ThanOsnap:
@@ -50,6 +50,14 @@ class ThanOsnap:
         self.selems = proj[2].thanSelems # Elements which may be snapped to.
         self.selem = None                # Snapable element which is near cursor.
         self.cc1 = None
+
+
+    def thanClear(self):
+        "Clear icons, if any."
+        dc = self.thanProj[2].thanCanvas
+        for item in self.items:
+            dc.delete(item)
+        self.items = ()
 
 
     def thanFind(self):
@@ -75,7 +83,7 @@ class ThanOsnap:
                 tags = dc.gettags(item)
                                                 # Tkinter may automatically add the tag 'current' in any element
                                                 # so the next test (which should succeed) does not succeed.
-                                                # Thus we have to check for "e0" AND "edrag"
+                                                # Thus we have to check for "e0", "edrag" and "enull"
                 if len(tags) < 2: continue      # We avoid current (rubber line)
                 if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
                 e = tagel[tags[0]]

@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -22,7 +22,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This package emulates the dxf library in ThanCad.
 """
@@ -39,7 +39,7 @@ class ThanDxfLin:
 
     def __init__(self):
         "Some Initialisation for polyvertex."
-	self.__firstVertex = 1
+        self.__firstVertex = 1
 
     def thanDxfPlotLine(self, xp, yp):
         "Plots many line segments."
@@ -60,7 +60,7 @@ class ThanDxfLin:
 	for i in xrange(len(xgram)):
             xg[i], yg[i] = self.thanDxfTop(xgram[i], ygram[i])
 	zg = [ZDEFAULT] * n
-        self._imp.dxfPolyline(xg, yg, zg, self.thanLayer, None, self.thanColor)
+        self.thanDr.dxfPolyline(xg, yg, zg, self.thanLayer, None, self.thanColor)
 
     def thanDxfPlotPolyline3 (self, xgram, ygram, zgram):
         "Plots a 3d polyline."
@@ -68,7 +68,7 @@ class ThanDxfLin:
 	xg = [None]*n; yg = [None]*n; zg = [None]*n
 	for i in xrange(n):
             xg[i], yg[i], zg[i] = self.thanDxfTop3(xgram[i], ygram[i], zgram[i])
-        self._imp.dxfPolyline(xg, yg, zg, self.thanLayer, None, self.thanColor)
+        self.thanDr.dxfPolyline(xg, yg, zg, self.thanLayer, None, self.thanColor)
 
     def thanDxfPlotPolyVertex (self, xx, yy, ic, bulge=None):
         "Plots a 2d polyline, vertex by vertex."
@@ -117,15 +117,14 @@ class ThanDxfLin:
 #-------Check if end
         ic = abs(icom)
         if ic == 1000 or ic == 999:
-            self._imp.thanAfterImport()
-	    del self._imp
-	    return
+            self.thanDr.thanAfterImport()
+            return
 #-------Plot line
         if ic == 1: ic = self.thanIpen
         self.thanIpen = ic
         (px, py) = self.thanDxfTop(xx, yy)
         if ic == 2:
-            self._imp.dxfLine([self.thanPXnow, px], [self.thanPYnow, py], [ZDEFAULT, ZDEFAULT],
+            self.thanDr.dxfLine([self.thanPXnow, px], [self.thanPYnow, py], [ZDEFAULT, ZDEFAULT],
 	                      self.thanLayer, None, self.thanColor)
         self.thanPXnow = px
         self.thanPYnow = py
@@ -142,7 +141,7 @@ class ThanDxfLin:
         self.thanIpen = ic
         (px, py, pz) = self.thanDxfTop3(xx, yy, zz)
         if ic == 2:
-            self._imp.dxfLine([self.thanPXnow, px], [self.thanPYnow, py], [self.thanPZnow, pz], self.thanLayer, None, self.thanColor)
+            self.thanDr.dxfLine([self.thanPXnow, px], [self.thanPYnow, py], [self.thanPZnow, pz], self.thanLayer, None, self.thanColor)
         self.thanPXnow = px
         self.thanPYnow = py
         self.thanPZnow = pz

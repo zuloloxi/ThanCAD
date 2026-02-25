@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the raster image element, based on Python Image Library.
 """
@@ -33,10 +33,10 @@ from itertools import izip
 from p_gmath import PI2, thanNearx
 from p_ggen import iterby2, path, thanUnicode, thanUnunicode
 from p_gfil import Datlin
-import p_gtkuti, p_gbmp
+import p_gtkuti, p_gbmp, p_gtri
 import thanintall
 from thanvar import Canc, thanfiles
-from thandefs import ThanImageMissing
+from thandefs import ThanImageMissing, imageOpen
 from thantrans import T
 from thanelem import ThanElement
 from thanline import thanPntNearest, thanPntNearest2, thanPerpPoints, thanSegNearest
@@ -50,7 +50,7 @@ class ThanImage(ThanElement):
 
 #===========================================================================
 
-    def thanSet (self, filnam, image, c1, c2, theta, transpose=0, clip=None):
+    def thanSet (self, filnam, image, c1, c2, theta, transpose=0, clip=None, loaded=True, embedded=False):
         "Sets the attributes of the image."
         assert c2[0]>=c1[0] and c2[1]>=c1[1], "Image can not have negative dimensions!"
         self.setBoundBox([c1[0], c1[1], c2[0], c2[1]])
@@ -69,14 +69,16 @@ class ThanImage(ThanElement):
 
         self.theta = theta % PI2             # radians assumed
         self.transpose = 0                   # 0, 1, 2, 3: means 0, 90, 180, 270 rotation anti-clockwise
-        self.filnam = filnam
+        self.filnam = path(filnam).expand()
         self.imagez = None
         self.view = [1e100, 1e100, -1e100, -1e100]
         self.clipped = False
         self.thanTranspose(transpose)
         self.thanClip(clip)
         self.visited = None                  # Placeholder of a tracker object used in semi-automatic trace
-#       self.thanTags = ()                                # thanTags is initialised in ThanElement
+        self.loaded = bool(loaded)           #If it is False, then the raster is not displayed
+        self.embedded = bool(embedded)       #If it is True, then the raster is saved into .thcx
+#       self.thanTags = ()                   # thanTags is initialised in ThanElement
 
 
     def thanClip(self, clip):
@@ -136,16 +138,20 @@ class ThanImage(ThanElement):
     def __setstate__(self, odict):
         self.__dict__.update(odict)
         if issubclass(path, unicode):
-            self.filnam = path(thanUnicode(os.sep).join(self.filnam))    # Filnam is already in unicode
+            self.filnam = path(thanUnicode(os.sep).join(self.filnam)).expand() # Filnam is already in unicode
         else:
-            self.filnam = path(os.sep.join(map(thanUnunicode, self.filnam))) #..p_ggen should have been notified about the local language encoding
-        try:
-            self.image = Image.open(self.filnam)
-            dxp, dyp = self.image.size
-            if dxp < 2 or dyp < 2: raise IOError
-        except IOError:
-            dxp, dyp = self.size
-            self.image = ThanImageMissing((dxp, dyp))
+            self.filnam = path(os.sep.join(map(thanUnunicode, self.filnam))).expand()  #..p_ggen should have been notified about the local language encoding
+
+        self.image, _ = imageOpen(self.filnam, self.size)
+#        try:
+#            self.image = Image.open(self.filnam)
+#            dxp, dyp = self.image.size
+#            if dxp < 2 or dyp < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
+#            im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
+#        except (ValueError, IOError):
+#            dxp, dyp = self.size
+#            self.image = ThanImageMissing((dxp, dyp))
+
 #       If it is not the same as the saved image, the new image will be fitted in the same area
         self.imageori = self.image
         transpose = self.transpose
@@ -171,14 +177,6 @@ class ThanImage(ThanElement):
         self.image = None
         el = ThanElement.thanClone(self)
         self.image = el.image = im
-#        el = ThanImage()
-##       el.thanSet(self.filnam, self.image.copy(), self.c1, self.c2, self.theta)
-#        if self.clipped:
-#            el.thanSet(self.filnam, self.image, self.c1ori, self.c2ori, self.theta, self.transpose, (self.c1, self.c2))
-#        else:
-#            el.thanSet(self.filnam, self.image, self.c1ori, self.c2ori, self.theta, self.transpose, None)
-#        el.thanTags = self.thanTags
-#        el.handle = self.handle
         return el
 
 
@@ -340,51 +338,31 @@ class ThanImage(ThanElement):
 #===========================================================================
 
     def thanTkGet(self, proj, imori=None, imfilnamori=None, insertmode="u"):
-        """Gets the attributes of the line interactively from a window.
+        """Gets the attributes of the image interactively from a window.
 
         insertmode="u": user data units,
                    "p": pixels
                    "m": milimeters
                    "c": Greek cadastre
+                   "g": GeoTiff (currently only certain parts are supported)
         """
         tit = T["Image file open failed"]
-        fildir = thanfiles.getFiledir()
-        while True:
-            if imori == None:
-                fi = p_gtkuti.thanGudGetReadFile(proj[2], "*", "Choose image file",
-                     initialdir=fildir)
-                if fi == None: return Canc            # Image canceled
-                try:
-                    fr = file(fi, "rb")
-                except IOError, why:
-                    p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
-                    continue
-                fr.close()
-                try:
-                    im = Image.open(fi)
-                    dxp, dyp = im.size
-                    if dxp < 2 or dyp < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
-                    im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
-                    if insertmode == "c":
-                        x1, y1, scale = self.__imageKthmxy(fi)
-                        if x1 == None: raise ValueError, scale    #scale has the error message
-                except (IOError, ValueError), why:
-                    p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
-                    continue
-            else:
-                assert insertmode != "c", "Cadastre images should have no given imori!!"
-                im = imori
-                fi = imfilnamori
+        insertmode = insertmode[:1]
+        if imori == None:
+            fi, im = self.__getImage(proj, insertmode, tit)
+            if fi == Canc: return Canc
+            dxp, dyp = im.size
+        else:
+            assert insertmode not in "cg", "Cadastre and geotiff images should have no given imori!!"
+            im = imori
+            fi = imfilnamori
             dxp, dyp = im.size
             if dxp < 2 or dyp < 2:
                 why = T["Image is probably corrupted: size is less than 2 pixels"]
                 p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
-                if imori != None: return Canc
-                continue
-            break
+                return Canc
 
-        insertmode = insertmode[:1]
-        if insertmode not in "pmc":
+        if insertmode not in "pmcg":
             insertmode = proj[2].thanGudGetPoint(T["Lower-left image point (pixel/mm/cadastre/<enter>): "], options=("pixel","mm","cadastre"))
             if insertmode == Canc: return Canc   # Image cancelled (no destroy required)
         if insertmode == "p":                    # Image is for pixel counting
@@ -411,12 +389,51 @@ class ThanImage(ThanElement):
             c2 = list(c1)
             c2[0] += 80.0 * scale / 100.0         # Map's standardised width  is 80cm
             c2[1] += 60.0 * scale / 100.0         # Map's standardised height is 60cm
+        elif insertmode == "g":                  # GeoTiff
+            x1, y2, scalex, scaley, nxcols, nyrows, GDAL_NODATA = p_gtri.prop(im)   #Note that we already have checked the validity
+            c1 = list(proj[1].thanVar["elevation"])
+            c1[:2] = x1, y2-dyp*scaley   # This is the lower-left corner of the lower-left pixel
+            c2 = list(c1)
+            c2[:2] = x1+dxp*scalex, y2
         else:
             c1 = insertmode
             c2 = proj[2].thanGudGetRectratio(c1, T["Image width in user data units: "], float(dyp)/dxp)
             if c2 == Canc: return Canc           # Image canceled (no destroy is required)
-        self.thanSet(fi, im, c1, c2, theta=0.0, transpose=0, clip=None)
+        self.thanSet(fi, im, c1, c2, theta=0.0, transpose=0, clip=None, loaded=True)
         return True                              # Image OK
+
+
+    def __getImage(self, proj, insertmode, tit):
+        "Prompt the user to define the image file, and check image."
+        fildir = thanfiles.getFiledir()
+        while True:
+            fi = p_gtkuti.thanGudGetReadFile(proj[2], "*", T["Choose image file"],
+                     initialdir=fildir)
+            if fi == None: return Canc, Canc            # Image canceled
+            try:
+                fr = file(fi, "rb")
+            except IOError, why:
+                p_gtkuti.thanGudModalMessage(proj[2], why, tit)     # (Gu)i (d)ependent
+                continue
+            fr.close()
+
+            im, terr = imageOpen(fi)    #This also checks if dxp>=2 and dyp>=2
+            if terr != "":
+                p_gtkuti.thanGudModalMessage(proj[2], terr, tit)     # (Gu)i (d)ependent
+            elif insertmode == "c":
+                x1, y1, scale = self.__imageKthmxy(fi)
+                if x1 != None: break
+                p_gtkuti.thanGudModalMessage(proj[2], scale, tit)   #scale has the error message
+            elif insertmode == "g":      # Geotiff
+                try:                  _ = p_gtri.prop(im)
+                except ValueError, e: p_gtkuti.thanGudModalMessage(proj[2], e, tit)   #Not a geotiff/not supported
+                else:                 break
+            else:
+                break
+        return fi, im
+
+
+
 
 
     def __dpiGet(self, proj, im, fi):
@@ -462,47 +479,51 @@ class ThanImage(ThanElement):
         return x*100.0, y*100.0, scale
 
 
+#    def __getxyfromname(self, fpath):
+#        "Try to get the lower left point coordinates encoded in the name of the image file."
+#        x, y, scale = self.__imageKthmxy(fpath)
+#        if x != None: return x, y, scale
+#        name = fpath.namebase
+#        for sep in "_- ":
+#            a = name.split(sep)
+#            if len(a) < 2: continue
+#            try:
+#                x, y = map(float, a[-2:])
+#            except ValueError:
+#                continue
+#            return x, y, 5000
+#        return None, None, T["Could not determine x, y in the filename %s\n"\
+#           "It does also not abide to naming conventions of Greek cadastre map images."] % (name,)
+
+
     def thanTkLocate(self, proj):
         "Specifies the location of the image file (usually when it was not found)."
         tit = T["Image file open failed"]
-        fn = path(self.filnam)
+        fn = self.filnam
         fildir = fn.parent
         while True:
             fi = p_gtkuti.thanGudGetReadFile(proj[2], "*", T["Locate image file"],
                      initialdir=fildir, initialfile=fn.basename())
             if fi == None: return Canc            # location canceled
             fi = path(fi)
-            try:
-                im = Image.open(fi)
-            except (IOError, ValueError), why:
-                p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
+            im, terr = imageOpen(fi)
+            if terr != "":
+                p_gtkuti.thanGudModalMessage(proj[2], terr, tit)   # (Gu)i (d)ependent
                 continue
+#            try:
+#                im = Image.open(fi)
+#                if im.size[0] < 2 or im.size[1] < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
+#                im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
+#            except (IOError, ValueError), why:
+#                p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
+#                continue
             else:
                 break
         if self.clipped:
             self.thanSet(fi, im, self.c1ori, self.c2ori, theta=0.0,
-                transpose=self.transpose, clip=(self.c1, self.c2))
+                transpose=self.transpose, clip=(self.c1, self.c2), loaded=self.loaded)
         else:
-            self.thanSet(fi, im, self.c1, self.c2, theta=0.0, transpose=self.transpose, clip=None)
-        return True                              # Image OK
-
-
-    def thanTkGetlog(self, proj):
-        "Imports a raster image whose position is stored in log format (bmp image)."
-        tit = T["Image file open failed"]
-        fildir = thanfiles.getFiledir()
-        while True:
-            fi = p_gtkuti.thanGudGetReadFile(proj[2], ".log", T["Choose image log file"],
-                     initialdir=fildir)
-            if fi == None: return Canc            # Image canceled
-            try:
-                self.thanLogGet(proj, fi)
-            except (IOError, ValueError), why:
-                p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
-                continue
-            else:
-                break
-        self.thanSet(fi, im, c1, c2, theta=0.0, transpose=0, clip=None)
+            self.thanSet(fi, im, self.c1, self.c2, theta=0.0, transpose=self.transpose, clip=None, loaded=self.loaded)
         return True                              # Image OK
 
 
@@ -532,18 +553,140 @@ UPPER LEFT:       488104.638    4238704.227
         fi = fi.parent / fi.namebase + ".bmp"
         if not fi.exists():
             fi = fi.parent / fi.namebase + ".BMP"   #Support windows; yeah, windows "just" works
-        fr = open(fi, "rb")    #Try to open bmp and raise IOError if not
-        fr.close()             #Close bmp
-        im = Image.open(fi)
-        self.thanSet(fi, im, c1, c2, theta=0.0)
+        im, terr = imageOpen(fi)
+        if terr != "": raise ValueError, terr
+        self.thanSet(fi, im, c1, c2, theta=0.0, loaded=True)
+
+
+    def thanTfwGet(self, proj, fi):
+        """Reads the position of the image from a .tfw file; raises IOError and ValueError.
+
+Dimitra 2012_04_03
+The relationship between EGSA87 X, Y coordinates and the pixel coordinates
+of the othophotos is the affine transformation:
+X = ax X + bx Y + cx
+Y = ay X + by Y + cy
+The coefficents are written in ascii form in the 6 lines of
+the *.tfw files:
+Line   Coefficient
+1      ax
+2      ay
+3      bx
+4      by
+5      cx
+6      cy
+
+In all cases seen in orthophotos of LIDAR, the coefficents ay and bx are
+zero, rendering the equation in simpler form:
+X = ax X + cx
+Y = by Y + cy
+
+Looking at the coefficients found in *.tfw files, we conclude that the first
+pixel is pixel 0 and not pixel 1. That's why they have put +0.50 in
+cx and cy coefficients:
+
+1.0000000000
+0.0
+0.0
+-1.0000000000
+551884.5000000000
+4176435.5000000000
+
+Using the formulas and the number pixel in the x and y direction, we
+compute the corber points.
+        """
+        try:
+            fr = open(fi)
+            ax = float(fr.next())
+            ay = float(fr.next())
+            bx = float(fr.next())
+            by = float(fr.next())
+            cx = float(fr.next())
+            cy = float(fr.next())
+            fr.close()
+        except StopIteration: raise IOError, "Incomplete .tfw file"
+        fi = path(fi)
+        fi = fi.parent / fi.namebase + ".tif"
+        if not fi.exists():
+            fi = fi.parent / fi.namebase + ".TIF"   #Support windows; yeah, windows "just" works
+
+        im, terr = imageOpen(fi)
+        if terr != "": raise ValueError, terr
+        b, h = im.size
+        xp1, yp1 = 0, h
+        xp2, yp2 = b, 0
+        x1 = ax*xp1 + bx*yp1 + cx
+        y1 = ay*xp1 + by*yp1 + cy
+        x2 = ax*xp2 + bx*yp2 + cx
+        y2 = ay*xp2 + by*yp2 + cy
+        c1 = list(proj[1].thanVar["elevation"])
+        c2 = list(c1)
+        c1[:2] = x1, y1
+        c2[:2] = x2, y2
+        self.thanSet(fi, im, c1, c2, theta=0.0, loaded=True)
+
+
+    def thanGeotifGet(self, proj, fi):
+        "Reads a geotiff image; only certain parts are implemented; may raise ValueError."
+        im, terr = imageOpen(fi)
+        if terr != "": raise ValueError, terr
+        dxp, dyp = im.size
+        x1, y2, scalex, scaley, nxcols, nyrows, GDAL_NODATA = p_gtri.prop(im)   #Note that we already have checked the validity
+        c1 = list(proj[1].thanVar["elevation"])
+        c1[:2] = x1, y2-dyp*scaley   # This is the lower-left corner of the lower-left pixel
+        c2 = list(c1)
+        c2[:2] = x1+dxp*scalex, y2
+        self.thanSet(fi, im, c1, c2, theta=0.0, loaded=True)
+
+
+    def thanUnload(self, than):
+        "Remove the raster of the image from the canvas."
+        if self.embedded: return 1, T["Embedded image %s can not be unloaded."] % (self.filnam,)
+        self.loaded = False
+        if isinstance(self.image, ThanImageMissing): return 1, T["Image %s already unloaded!"] % (self.filnam,)
+        than.dc.delete(self.thanTags[0])
+        im = ThanImageMissing(self.size)
+        if self.clipped:
+            self.thanSet(self.filnam, im, self.c1ori, self.c2ori, theta=0.0, transpose=self.transpose, clip=(self.c1, self.c2), loaded=self.loaded)
+        else:
+            self.thanSet(self.filnam, im, self.c1, self.c2, theta=0.0, transpose=self.transpose, clip=None, loaded=self.loaded)
+        self.thanTkDraw(than)
+        return 0, ""
+
+
+    def thanLoad(self, than):
+        "Redraw the raster on the canvas."
+        self.loaded = True
+        if not isinstance(self.image, ThanImageMissing): return 1, T["Image %s already loaded!"] % (self.filnam,)
+        im, terr = imageOpen(self.filnam)
+        if terr != "": return 2, "Invalid image or file %s:\n%s" % (self.filnam, terr)
+#        try:
+#            im = Image.open(self.filnam)
+#            if im.size[0] < 2 or im.size[1] < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
+#            im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
+#        except (IOError, ValueError), why:
+#            return 2, "Invalid image or file %s:\n%s" % (self.filnam, why)
+        than.dc.delete(self.thanTags[0])
+        if self.clipped:
+            self.thanSet(self.filnam, im, self.c1ori, self.c2ori, theta=0.0, transpose=self.transpose, clip=(self.c1, self.c2), loaded=self.loaded)
+        else:
+            self.thanSet(self.filnam, im, self.c1, self.c2, theta=0.0, transpose=self.transpose, clip=None, loaded=self.loaded)
+        self.thanTkDraw(than)
+        return 0, ""
 
 
     def thanTkDraw1(self, than):
         "Draws the image to a window."
+        xymm = than.viewPort
+        if self.c2[0] < xymm[0] or self.c1[0] > xymm[2] or self.c2[1] < xymm[1] or self.c1[1] > xymm[3]:
+            #assert False, "Image is outside visible screen!"
+            self.imagez = None
+            than.thanImages.add(self)
+            return
         xa, yb = than.ct.global2Locali(self.c1[0], self.c1[1])    # xa, ya is the upper left point of the image
-        xb, ya = than.ct.global2Locali(self.c2[0], self.c2[1])    # xb, yb is the lower  right point of the image
+        xb, ya = than.ct.global2Locali(self.c2[0], self.c2[1])    # xb, yb is the lower right point of the image
         if isinstance(self.image, ThanImageMissing):
-            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, tags=self.thanTags)     # Frame around image
+            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, dash=than.dash, tags=self.thanTags)     # Frame around image
             than.thanImages.add(self)
             from thantext import ThanText
             t = ThanText()
@@ -557,17 +700,10 @@ UPPER LEFT:       488104.638    4238704.227
             t.thanTkDraw(than)
             return
 
-        than.thanInfoPush(T["Regenerating image.."])
+        than.thanInfoPush(T["Regenerating %s.."] % (self.filnam,))
         wx = xb - xa + 1; wy = yb - ya + 1
         assert wx>=0 and wy>=0, "Something wrong with coordinates systems!!!"
         if wx*wy > 4000000:            # If less than 4Mpixels render the entire image
-            xymm = than.viewPort
-#            if self.c2[0] < xymm[0] or self.c1[0] > xymm[2] or self.c2[1] < xymm[1] or self.c1[1] > xymm[3]:
-            if self.c2[0] < xymm[0] or self.c1[0] > xymm[2] or self.c2[1] < xymm[1] or self.c1[1] > xymm[3]:
-                #assert False, "Image is outside visible screen!"
-                than.thanImages.add(self)
-                than.thanInfoPop()
-                return
             self.view[0] = xn1 = max(self.c1[0], xymm[0])
             self.view[1] = yn1 = max(self.c1[1], xymm[1])
             self.view[2] = xn2 = min(self.c2[0], xymm[2])
@@ -595,7 +731,7 @@ UPPER LEFT:       488104.638    4238704.227
 #        item2 = than.dc.create_image(xa, yb+1, image=self.imagez, anchor="sw", tags=self.thanTags)  #Thanasis2010_02_27:"sw" has a bug so that we put yb+1
         item2 = than.dc.create_image(xa, ya, image=self.imagez, anchor="nw", tags=self.thanTags)
         if than.imageFrameOn:
-            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, tags=self.thanTags)     # Frame around image
+            item1 = than.dc.create_rectangle(xa, yb, xb, ya, outline=than.outline, dash=than.dash, tags=self.thanTags)     # Frame around image
         than.thanImages.add(self)
         than.thanInfoPop()
 
@@ -623,8 +759,12 @@ UPPER LEFT:       488104.638    4238704.227
 
 
     def thanExpThc1(self, fw):
-        "Save the aligned dimension in thc format." #FIXME: what about clipped (or nonclipped) images
+        "Save the aligned dimension in thcx format." #FIXME: what about clipped (or nonclipped) images
         f = fw.formFloat
+        fw.writeln("%d" % (self.embedded,))
+        if self.embedded:
+            imbytes = p_gbmp.image2Bytes(self.image, format="jpeg")
+            p_gbmp.writeBytesB64(imbytes, fw)
         fw.writeNode(self.c1)
         fw.writeNode(self.c2)
         fw.writeln(f % self.theta)
@@ -633,25 +773,45 @@ UPPER LEFT:       488104.638    4238704.227
         fw.writeln("%d" % self.transpose)
         fw.writeNode(self.c1ori)
         fw.writeNode(self.c2ori)
+        fw.writeln("%d" % (self.loaded,))
 
 
-    def thanImpThc1(self, fr):
+    def thanImpThc1(self, fr, ver, forceunload=False):
         "Read the aligned dimension from thc format."
+        if ver < (0,2,1):
+            embedded = False
+        else:
+            embedded = bool(int(fr.next()))  #May raise ValueError, IndexError, StopIteration
+            if embedded:
+                imbytes = p_gbmp.readBytesB64(fr)
+                image = p_gbmp.bytes2Image(imbytes)
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         c2 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         theta = float(fr.next())         #May raise ValueError, StopIteration
-        filnam = fr.readTextln()         #May raise StopIteration, ValueError
+        filnam = path(fr.readTextln()).expand() #May raise StopIteration, ValueError
         dxp, dyp = map(int, fr.next().split()) #May raise ValueError, IndexError, StopIteration
         transpose = int(fr.next())       #May raise ValueError, StopIteration
         c1ori = fr.readNode()            #May raise ValueError, IndexError, StopIteration
-        c2ori = fr.readNode()            #May raise ValueError, IndexError, StopIteration
-        try: image = Image.open(filnam)
-        except IOError:image = ThanImageMissing((dxp, dyp))
+        c2ori  = fr.readNode()           #May raise ValueError, IndexError, StopIteration
+        if ver <= (0,1,0):
+            loaded = True
+        else:
+            loaded = bool(int(fr.next()))  #May raise ValueError, IndexError, StopIteration
+
+        if embedded:
+            loaded = True                  #Embedded images can not be unloaded
+        else:
+            if forceunload: loaded = False
+            if loaded:
+                image, terr = imageOpen(filnam, (dxp, dyp))
+            else:
+                image = ThanImageMissing((dxp, dyp))
+
         clipped = c1 != c1ori or c2 != c2ori
         if clipped:
-            self.thanSet(filnam, image, c1ori, c2ori, theta, transpose, (c1, c2))
+            self.thanSet(filnam, image, c1ori, c2ori, theta, transpose, (c1, c2), loaded, embedded)
         else:
-            self.thanSet(filnam, image, c1ori, c2ori, theta, transpose, None)
+            self.thanSet(filnam, image, c1ori, c2ori, theta, transpose, None, loaded, embedded)
 
 
     def thanExpSyk(self, than, level=0):
@@ -697,13 +857,35 @@ UPPER LEFT:       488104.638    4238704.227
 	    elem.thanSet(cp)
             elem.thanExpPil(than)
 
+
+    def thanTransform(self, fun):
+        """Transform all the coordinates of the element according to 2D transformation function fun.
+
+        The 2D transformation should also receive Z and return it unchanged.
+        If the transformation is 3D, then the resulting Z is treated as an
+        attribute, not as geometric property.
+        Only the insertion point of the Image is changed."""
+        if self.clipped:
+            cp = [list(self.c1ori), list(self.c2ori), list(self.c1), list(self.c2)]
+            for cc in cp: cc[:3] = fun(cc[:3])
+            self.thanSet(self.filnam, self.imageori, cp[0], cp[1], theta=0.0,
+                transpose=self.transpose, clip=(cp[2], cp[3]), loaded=self.loaded)
+        else:
+            cp = [list(self.c1), list(self.c2)]
+            for cc in cp: cc[:3] = fun(cc[:3])
+            self.thanSet(self.filnam, self.image, cp[0], cp[1], theta=0.0,
+                transpose=self.transpose, clip=None, loaded=self.loaded)
+
+
     def thanList(self, than):
         "Shows information about the image element."
-        than.writecom("%s: %s" % (T["Element"], "IMAGE"))
+        than.writecom("%s: %s" % (T["Element"], self.thanElementName))
         than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
         than.write("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
-
-        t = [T["Image filename: %s"] % self.filnam]
+        s = ""
+        if self.embedded: s = T["    (embedded)"]
+        if not self.loaded: s = T["    (unloaded)"]
+        t = [T["Image filename: %s%s"] % (self.filnam, s)]
         if self.clipped:
              t.append(T["Rectangular clip: %s"] % than.strcoo(self.c1))
              t.append(  "                  %s"  % than.strcoo(self.c2))
@@ -712,8 +894,8 @@ UPPER LEFT:       488104.638    4238704.227
         else:
              t.append(T["Bounding box: %s"] % than.strcoo(self.c1))
              t.append(  "              %s"  % than.strcoo(self.c2))
-        t.append(T["Angle (not used): %s\n"] % than.strdir(self.theta))
-        t.append("%s: %d deg" % (T["Integer rotation"], self.transpose*90))
+        t.append(T["Angle (not used): %s"] % than.strdir(self.theta))
+        t.append("%s: %d deg\n" % (T["Integer rotation"], self.transpose*90))
         than.write("\n".join(t))
 
 

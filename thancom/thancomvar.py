@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module processes various commands.
@@ -37,8 +37,9 @@ from p_gmath import dpt, thanNear2
 import thandr, thancomsel, thantkdia, thanlayer, thanvers
 from thanvar import Canc
 from thantrans import T, thanLangSet
+import thanundo
 from thancomfile import thanTxtopen
-from thancommod import thanModCanc, thanModCancSel, thanModEnd, thanModReplaceRedo, thanModReplaceUndo
+from thancommod import thanModCanc, thanModCancSel, thanModEnd
 from thanopt import thancadconf
 
 
@@ -110,23 +111,6 @@ def thanVarFill(proj):
     proj[2].thanGudCommandEnd()
 
 
-def thanVarImageRendering(proj):
-    "Choose the quick/average or slow/best mode of rendering images."
-    from thandr.thanimpil import thanSetRendering, thanGetRendering
-    modep = thanGetRendering()  # Previous rendering mode
-    if modep == 0: proj[2].thanCom.thanAppend(T["Current image rendering mode: Quick\n"], "info1")
-    else:          proj[2].thanCom.thanAppend(T["Current image rendering mode: Best\n"],  "info1")
-
-    res = proj[2].thanGudGetOpts(T["Select rendering mode of images (Quick/Best) <Quick>: "], default="Quick", options=("Quick", "Best"))
-    if res == Canc: return proj[2].thanGudCommandCan() # Render cancelled
-    if res == "q": moden = 0    # Quick rendering of images
-    else:          moden = 1    # Best rendering of images
-    thanSetRendering(moden)     # Set new rendering mode
-
-    if moden != modep: proj[2].thanAutoRegen(regenImages=True)    # If mode changes, regenerate images
-    proj[2].thanGudCommandEnd()
-
-
 def thanVarScript(proj):
     "Run a series of commands."
     _, fr = thanTxtopen(proj, T["Open script file (with ThanCad's commands)"], suf=".scr")
@@ -163,7 +147,7 @@ def __itercom(fr):
 def thanFormLay(proj):
     "Shows interactive window with layer tree in order to manipulates layers."
     from thanlayer.thanlayatts import thanChangedAtts
-    newcl, newroot = thanModLTClone(proj)
+    newcl, newroot = thanundo.thanLtClone(proj)
     print "newroot"
     pre(newroot)
     w = thantkdia.ThanDialogLay(proj[2],
@@ -179,8 +163,8 @@ def thanFormLay(proj):
         oldcl = lt.thanCur     #..and thus we waste no memory here
         newleaflayers, newcl = w.result
         newleaflayers = thanChangedAtts(proj, newleaflayers)
-        thanModLTRestore(proj, newcl, newroot, newleaflayers)
-        proj[1].thanDoundo.thanAdd("ddlmodes", thanModLTRestore, (newcl, newroot, newleaflayers),
+        thanundo.thanLtRestore(proj, newcl, newroot, newleaflayers)
+        proj[1].thanDoundo.thanAdd("ddlmodes", thanundo.thanLtRestore, (newcl, newroot, newleaflayers),
                                                __formLayUndo, (oldcl, oldroot))
         proj[2].thanGudCommandEnd()
     else:
@@ -200,43 +184,31 @@ def __formLayUndo(proj, oldcl, oldroot):
 #        lay = oldroot.thanFind(names)
 #        natts = dict((a, lay.thanAtts[a].thanAct) for a in atts)
 #        oldleaflayers[lay] = natts
-#   thanModLTRestore, (oldcl, oldroot, oldleaflayers))
+#   thanundo.thanLtRestore, (oldcl, oldroot, oldleaflayers))
 
-    thanModLTRestore(proj, oldcl, oldroot)
-    proj[2].thanRegen()                      #This is the easiest and most costly way to undo
-                                             #Since we don't know what attributes were before
+    thanundo.thanLtRestore(proj, oldcl, oldroot, "regen") #This is the easiest and most costly way to undo
+                                                    #Since we don't know what attributes were before
 
-def thanModLTClone(proj):
-    "Clones the necessary attributes of layer tree."
-    lt = proj[1].thanLayerTree
-    temp = lt.thanRoot.thanClone()
-    names = lt.thanCur.thanGetPathname().split("/")
-    cl = temp.thanFind(names)
-    assert cl != None, "Current layer should be found!"
-    return cl, temp
+def thanModDxfUndo(proj, newelems, oldcl, oldroot, oldvars={}):
+    "Undeletes the previously deleted elements, and deletes the previously created new elements."
+    thanundo.thanReplaceUndo(proj, (), newelems, selold=None, oldvars=oldvars)
+    thanundo.thanLtRestore(proj, oldcl, oldroot)
+    proj[2].thanRegen()
 
 
-def thanModLTRestore(proj, cl, root=None, leaflayers=None):
-    "Restores a previously altered layer tree."
-    lt = proj[1].thanLayerTree
-    lt.thanCur = cl
-    if root != None:
-#        lt.thanRoot.thanDestroy()
-        lt.thanRoot = root
-        lt.thanDictRebuild()
-    if leaflayers == None: leaflayers = {}
-    draworder = thanlayer.thanlayatts.thanUpdateElements(proj, leaflayers)
-    lt.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)    # Set Attributes of the current layer
-    proj[1].thanTouch()                                        # Drawing IS modified
-    if draworder: proj[2].thanRedraw()                         # Set relative draworder
-    proj[2].thanUpdateLayerButton()
+def thanModDxfRedo(proj, newelems, newcl, newroot, newvars={}):
+    "Redeletes the deleted elements, and recreates the new elements."
+    thanundo.thanLtRestore(proj, newcl, newroot)
+    thanundo.thanReplaceRedo(proj, (), newelems, selelems=None, newvars=newvars)
+    proj[2].thanRegen()
 
 
 def thanFormTstyle(proj):
     "Manipulates text styles."
     win = thantkdia.ThanTkStyle(proj[2], proj[1].thanTstyles, "standard", lambda x: False, title=T["Edit ThanCad Text styles"])
     if win.result == None: return proj[2].thanGudCommandCan()
-    proj[1].thanTstyles = win.result
+    proj[1].thanTstyles.clear()
+    proj[1].thanTstyles.update(win.result)
     proj[1].thanTouch()
     proj[2].thanGudCommandEnd(T["Changes will be visible after the next regeneration."], "can")
 
@@ -384,8 +356,7 @@ def thanDevTrans(proj):
     import thancomfile, thantrans
     _, fout = thancomfile.thanTxtopen(proj, T["Save translation report"], mode="w")
     if fout == Canc: return proj[2].thanGudCommandCan()
-    for t in "T Tmatch Tphot Tarch Twid".split():
-        Ti = getattr(thantrans, t)
+    for t, Ti in thantrans.thanTransAll.iteritems():
         fout.write("%s:\n" % t)
         Ti.thanReport(fout)
         fout.write("\n\n\n")
@@ -419,3 +390,48 @@ def thanFractal(proj):
 #    fractal(proj,  512,  20.0, cor)   #"cred.jpg"
 #    fractal(proj,  512, -20.0, cor)   #"cblue.jpg"
     proj[2].thanGudCommandEnd()
+
+
+def thanBackroundColor(proj):
+    "Change the background colour of the canvas."
+    from thandefs.thanatt import ThanAttCol
+    colold = thancadconf.thanColBack
+    proj[2].thanPrt("%s: %s" % (T["Current background colour is"], colold))
+    r = proj[2].thanGudGetOpts(T["Select background colour [Black/White/Other] <Black>:"],
+        default="Black", options=("Black", "White", "Other"))
+    if r == Canc: return proj[2].thanGudCommandCan()
+    if r == "w":
+        colnew = ThanAttCol("white")
+    elif r == "b":
+        colnew = ThanAttCol("black")
+    else:
+        w = thantkdia.ThanColor(proj[2], colold, special=False, title=T["Select background colour"])
+        colnew = w.result
+        if colnew == None: return proj[2].thanGudCommandCan()
+    __backgrestore(proj, colnew)
+    proj[1].thanDoundo.thanAdd("background", __backgrestore, (colnew,),
+                                             __backgrestore, (colold,))
+    proj[2].thanGudCommandEnd()
+
+
+def __backgrestore(proj, col):
+    "Restores canvas background colour."
+    #If the new background is black or white:
+            #If the layer's colour is the same as the background, we change its colour. However if layer's colour
+            #is black and the background was previously black, then the layer was drawn as white previously
+            #and so the layer must be drawn again when the new background is white, even if in theory
+            #it has not the same colour as the new background
+    #If the new background is not black nor white:
+            #If the layer's colour
+            #is black and the background was previously black, then the layer was drawn as white previously.
+            #With the new background (nonblank and nonwhite) it must be redrawn to restrore it original colour
+    #Thus all the layers with black or white colour must be drawn again
+    thancadconf.thanColBack = col
+    proj[2].thanCanvas.config(background=col.thanTk)
+    for tlay,lay in proj[1].thanLayerTree.dilay.iteritems():
+        if lay.thanAtts["frozen"].thanVal: continue   #There are no elements of frozen layers on the canvas
+        sc = str(lay.thanAtts["moncolor"])
+        if sc != "black" and sc != "white": continue
+        scoli, fill = lay.thanGetColour()
+        proj[2].thanGudGetSelLayerx(tlay)                     #Select all layer's active elements on the canavas and..
+        proj[2].thanGudSetSelColorx(col=scoli, fillcol=fill)  #..Change their colour

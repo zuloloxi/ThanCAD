@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -21,7 +21,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines the variables and objects of a ThanCad drawing.
 """
@@ -30,7 +30,7 @@ from thanobject import thanObjClass
 from thantrans import T
 
 
-def thanVarsExpThc(fw, thanVar):
+def thanVarsExpThc(fw, thanVar, ver):
     "Export the variable to thc format."
     sec = "VARIABLES"
     fw.writeBeg(sec)
@@ -40,6 +40,7 @@ def thanVarsExpThc(fw, thanVar):
     k = "dimensionality"; fw.writeAtt(k, v[k])              # Number of dimensions a node has
     n = v[k]
     k = "elevation"  ; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Elevation - limited n-dimensional support
+    k = "elevationstep"; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Elevation - limited n-dimensional support
     k = "thickness"  ; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Thickness - limited n-dimensional support
     k = "insbase"    ; fw.writeAtt(k, (f*n) % tuple(v[k]))  # Insertion point of the drawing (as block)
     k = "imageframe" ; fw.writeAtt(k, "%d" % v[k])          # If false, the bounding rectangles of images are not displayed
@@ -49,7 +50,7 @@ def thanVarsExpThc(fw, thanVar):
     fw.writeEnd(sec)
 
 
-def thanVarsImpThc(fr):
+def thanVarsImpThc(fr, ver):
     "Read the arc from thc format."
     thanVar = {}
     sec = "VARIABLES"
@@ -58,7 +59,10 @@ def thanVarsImpThc(fr):
     n = thanVar[k]
     if n < 2: raise ValueError, "%s must be at least 2" % (k, n)
     c = [0.0]*n
-    for k in "elevation", "thickness", "insbase":
+    for k in "elevation", "elevationstep", "thickness", "insbase":
+        if k == "elevationstep" and ver <= (0,1,0):
+            thanVar[k] = [1.0]*n
+            continue
         thanVar[k] = map(float, fr.readAtt(k))  #May raise StopIteration, ValueError
         nt = len(thanVar[k])
         if nt < 2: raise ValueError, "%s must have at least %d dimensions" % (k, n)
@@ -77,6 +81,7 @@ def thanVarsDef(thanVar=None):
     if thanVar == None: thanVar = {}
     n = thanVar.setdefault("dimensionality",  3)    # Number of dimensions a node has
     thanVar.setdefault("elevation",   [0.0]*n)      # Elevation - limited n-dimensional support
+    thanVar.setdefault("elevationstep",[1.0]*n)     # Elevation step - limited n-dimensional support
     thanVar.setdefault("thickness",   [0.0]*n)      # Thickness - limited n-dimensional support
     thanVar.setdefault("insbase",     [0.0]*n)      # Insertion point of the drawing (as block)
     thanVar.setdefault("imageframe", True)          # If false, the bounding rectangles of images are not displayed

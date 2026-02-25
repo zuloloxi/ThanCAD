@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -38,14 +38,35 @@ from p_ggen import Translation
 en2gr = \
 { "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
 "&Match 2d"                                       : u"Συνταύτιση 2Δ",
-"&Match 3d to 2d"                                 : u"Συνταύτιση 3Δ σε 2Δ",
+"&Match 3d to 2d"                                 : u"Συνταύτιση 3Δ προς 2Δ",
 "&Match 3d"                                       : u"Συνταύτιση 3Δ",
 "&Match multiple 2d"                              : u"Πολλαπλή Συνταύτιση 2Δ",
 "&Mid axis"                                       : u"Μέσος άξονας",
-"&Project 3d to 2d"                               : u"Προβολή 3Δ σε 2Δ",
-"&Compute transformation"                         : u"Υπολογισμός μετασχηματισμού",
+"&Project/transform"                              : u"Εκτέλεση προβολής/μετασχηματισμού",
+"Projects/transforms arbitrary ThanCad Elements using a known transform (2D-2D, 3D-2D, 3D-3D":
+                                                    u"Προβάλλει/μετασχηματίζει αυθαίρετα στοιχεία του ThanCad "\
+                                                    u"χρησιμοποιώντας γνωστό μετασχηματισμό (2Δ-2Δ, 3Δ-2Δ, 3Δ-3Δ)",
+"&Compute projection"                             : u"Υπολογισμός προβολής",
 "Computes a transformation from control points"   : u"Υπολογίζει μετασχηματισμό από φωτοσταθερά",
 
+"Matches two 2d polylines"                        : u"Συνταύτιση δύο γραμμών 2Δ",
+"Matches one 3d polyline to one 2d polylines"     : u"Συνταύτιση μίας γραμμής 3Δ προς μία γραμμή 2Δ",
+"Matches two 3d polylines"                        : u"Συνταύτιση δύο γραμμών 3Δ",
+"Matches two sets of 2d polylines"                : u"Συνταύτιση δύο σσυνόλων από γραμμές 2Δ",
+"&Match multiple 3d to 2d"                        : u"Πολλαπλή Συνταύτιση 3Δ προς 2Δ",
+"Matches one set of 3d polylines to one set of 2d polylines"
+                                                  : u"Συνταύτιση ενός συνόλου γραμμών 3Δ προς ένα σύνολο γραμμών 2Δ",
+"Computes middle axis of road given the road edges":u"Υπολογισμός μέσου άξονα οδού από τις οριογραμμές του",
+"Select the 2 edges of a road:\n"                 : u"Επιλογή των 2 οριογραμμών της οδού",
+"Computes a projection transformation using control points":
+                                                    u"Υπολογισμός μετασχηματισμού προβολής με φωτοσταθερά",
+"Global Matching of FFLF networks of different Dimensionality":
+                                                    u"Ολική Συνταύτιση δικτύων FFLF διαφορετικής Διάστασης",
+"Select the\nreference (3D) lines"                : u"Επιλογή γραμμών\nαναφοράς (3Δ)",
+"Select the\nprojected (2D) lines"                : u"Επιλογή γραμμών\nπροβολής (2Δ)",
+"Select the reference (3D) lines\n"               : u"Επιλογή γραμμών αναφοράς (3Δ)\n",
+"Select the projected (2D) lines\n"               : u"Επιλογή γραμμών προβολής (2Δ)\n",
+"2D polynomial approximation"                     : u"Πολυωνυμική προσέγγιση 2Δ",
 "Global Matching of 2D Curves"                    : u"Ολική Συνταύτιση Διδιάστατων Γραμμών",
 "Global Matching of 3D Curves"                    : u"Ολική Συνταύτιση Τρισδιάστατων Γραμμών",
 "Select the\nreference line"                      : u"Επιλογή\nγραμμής αναφοράς",
@@ -92,12 +113,13 @@ en2gr = \
 "Convergence threshold (m)"                       : u"Όριο σύγκλισης (m)",
 "Max number of steps"                             : u"Μέγιστος αριθμός βημάτων",
 "PROJECTION TYPE:"                                : u"ΕΙΔΟΣ ΠΡΟΒΟΛΗΣ:",
+"Central Projection (collinearity)"               : u"Κεντρική Προβολή (συγγραμμικότητα)",
 "Polynomial Projection of first order"            : u"Πολυωνυμική Προβολή 1ου βαθμού",
 "Direct Linear Transform"                         : u"Ευθύς Γραμμικός Μετασχηματισμός",
-"Rational Polynomial Projection of first order"   : u"Κλασματική Πολυωνυμική Προβολή 1ου βαθμού",
+"Rational Polynomial Projection of first order"   : u"Ρητή Πολυωνυμική Προβολή 1ου βαθμού",
 "Polynomial Projection of second order"           : u"Πολυωνυμική Προβολή 2ου βαθμού",
-"Rational Polynomial Projection of second order"  : u"Κλασματική Πολυωνυμική Προβολή 2ου βαθμού",
-"Rational Polynomial Projection of 2/1 order"     : u"Κλασματική Πολυωνυμική Προβολή 2ου/1ου βαθμού",
+"Rational Polynomial Projection of second order"  : u"Ρητή Πολυωνυμική Προβολή 2ου βαθμού",
+"Rational Polynomial Projection of 2/1 order"     : u"Ρητή Πολυωνυμική Προβολή 2ου/1ου βαθμού",
 "Projection type"                                 : u"Είδος προβολής",
 "SELECT LINES:"                                   : u"ΕΠΙΛΟΓΗ ΓΡΑΜΜΩΝ:",
 "Select the\nsecondary (3D) line"                 : u"Επιλογή δευτερεύουσας\n γραμμής (3Δ)",
@@ -125,11 +147,11 @@ en2gr = \
 "Compute projection/transformation"               : u"Υπολογισμός προβολής/μετασχηματισμού",
 "Compute error using checkpoints"                 : u"Υπολογισμός σφάλματος με χρήση σημείων ελέγχου",
 "Computation type"                                : u"Ορισμός υπολογισμού",
-"TRANSFORMATION TYPE:"                            : u"ΕΙΔΟΣ ΜΕΤΑΣΧΗΜΑΤΙΣΜΟΥ:",
-"Projections"                                     : u"Προβολές",
-"2D Transformations"                              : u"Μετασxηματισμοί 2Δ",
+"Transformation type"                             : u"Είδος μετασχηματισμού",
+"3D-2D"                                           : u"3Δ-2Δ",
+"2D-2D"                                           : u"2Δ-2Δ",
 "Polynomial of first order"                       : u"Πολυώνυμο 1ου βαθμού",
-"Rational Polynomial of first order"              : u"Κλασματικό πολυώνυμο 1ου βαθμού",
+"Rational Polynomial of first order"              : u"Ρητό πολυώνυμο 1ου βαθμού",
 "Polynomial of second order"                      : u"Πολυώνυμο 2ου βαθμού",
 "TRANSFORMATION DEFINITION:"                      : u"ΟΡΙΣΜΟΣ ΜΕΤΑΣΧΗΜΑΤΙΣΜΟΥ:",
 "SELECTION OF CONTROL POINTS:"                    : u"ΕΠΙΛΟΓΗ ΦΩΤΟΣΤΑΘΕΡΩΝ:",

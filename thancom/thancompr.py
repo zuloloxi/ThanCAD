@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 # 
-# Copyright (c) 2001-2012 Thanasis Stamos,  March 1, 2012
+# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
 # 
@@ -23,7 +23,7 @@
 ##############################################################################
 
 """\
-ThanCad 0.1.2 "Decade": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
 
 Package which processes commands entered by the user.
 This module processes print and scan commands.
@@ -90,6 +90,13 @@ def thanPrPlot(proj):
 
     if res.choPr == thanplotcups.TOFILE:
         fn = res.filPlot
+        try:
+            fw = open(fn, "w")
+        except IOError:
+            fn = proj[0].parent / proj[0].namebase + ".ps"
+            proj[1].thanPlotDef.filPlot = fn
+        else:
+            fw.close
     else:
         fw = tempfile.NamedTemporaryFile("w", suffix=".ps")
         fn = fw.name
@@ -107,7 +114,7 @@ def thanPrPlot(proj):
     return proj[2].thanGudCommandEnd("Plot file %s was sent to %s (job %d)." % (fn, res.choPr, job), "info")
 
 
-def thanVarImageScan(proj):
+def thanImageScan(proj):
     "Scan an image and insert it to ThanCad."
     from thandr.thanimpil import ThanImage
     can, dpis = thantkdia.getScanDpi()

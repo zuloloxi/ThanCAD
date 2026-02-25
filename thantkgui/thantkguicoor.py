@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines a mixin that copes with Tkinter's 2 coordinate systems -
 plus the world (user) coordinate system of ThanCad. All the zoom, pan,
@@ -35,8 +35,8 @@ coordinates or if it is measured in canvas coordinates.
 The functions defined here should not interact with the user, i.e. accept input
 or print information to the user.
 """
-
-from Tkinter import *
+from math import sqrt
+from Tkinter import SCROLL, UNITS, ALL
 from p_gmath import thanNearx, thanNear2, ThanRectCoorTransf, thanRoundCenter
 from thanvar import Canc, thanLogTk
 from thanopt import thancadconf
@@ -63,7 +63,7 @@ class ThanTkGuiCoor:
 #============================================================================
 
     def __init__ (self):
-        "Set viewport coordinates and compute coordinate tranformation."
+        "Set viewport coordinates and compute coordinate transformation."
         (self.__pixPort, q) = self.__getWinExtent()
         v = self.thanProj[1].viewPort
         v[:] = self.__roundCenter(v)
@@ -95,18 +95,18 @@ class ThanTkGuiCoor:
         """Gets the size of current window.
 
         Caution: it returns the _CANVAS_ coordinates of the left down-corner
-	and the right-up corner, as we see it on the monitor.
-	Thus it can be used only by the gui-independent modules.
-	The Tkgui-dependent modules should use other functions.
-	IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
-	dc = self.thanCanvas
-	dc.update_idletasks()            # _idletasks breaks WinDoze (98?) support. Skotistika
+        and the right-up corner, as we see it on the monitor.
+        Thus it can be used only by the gui-independent modules.
+        The Tkgui-dependent modules should use other functions.
+        IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
+        """
+        dc = self.thanCanvas
+        dc.update_idletasks()            # _idletasks breaks WinDoze (98?) support. Skotistika
         w = dc.winfo_width()             # Pixels
         h = dc.winfo_height()            # Pixels
-	if w < 2 or h < 2: w, h  = self.__robustDim()[-2:]
+        if w < 2 or h < 2: w, h  = self.__robustDim()[-2:]
         return ([0, h-1, w-1, 0],                                                 # Pixels
-	        [dc.canvasx(0), dc.canvasy(h-1), dc.canvasx(w-1), dc.canvasy(0)]) # Canvas units
+                [dc.canvasx(0), dc.canvasy(h-1), dc.canvasx(w-1), dc.canvasy(0)]) # Canvas units
 
 
     def __resetWinCoor(self):
@@ -131,88 +131,86 @@ class ThanTkGuiCoor:
     def __robustDim(self):
         """Returns the dimensions of the window and screen in pixels and in mm.
 
-	If Tkinter answers wrong values, it is assumed that the monitor is
-	19 inches, the ratio of height/width is assumed 0.75 and the resolution
-	1024 x 768.
+        If Tkinter answers wrong values, it is assumed that the monitor is
+        19 inches, the ratio of height/width is assumed 0.75 and the resolution
+        1024 x 768.
         """
-	MON = 19.0; RATIO = 0.75; RESOL = (1024, 768)
+        MON = 19.0; RATIO = 0.75; RESOL = (1024, 768)
 
-	dc = self.thanCanvas
+        dc = self.thanCanvas
         dc.update_idletasks()                  # _idletasks breaks WinDoze (98?) support. Skotistika
         w = dc.winfo_width()                   # Pixels
         h = dc.winfo_height()                  # Pixels
-	width  = self.winfo_screenwidth()      # Pixels
-	height = self.winfo_screenheight()     # Pixels
-	widthmm  = float(self.winfo_screenmmwidth())   # mm
-	heightmm = float(self.winfo_screenmmheight())  # mm
+        width  = self.winfo_screenwidth()      # Pixels
+        height = self.winfo_screenheight()     # Pixels
+        widthmm  = float(self.winfo_screenmmwidth())   # mm
+        heightmm = float(self.winfo_screenmmheight())  # mm
 
-	if widthmm < 2.0:
-	    thanLogTk.warning("TkCoor:robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
-	    if heightmm < 2.0:
-	        widthmm = MON*25.4 / sqrt(1+RATIO**2)
-	        heightmm = widthmm * RATIO
-	    else:
-	        witdhmm = heightmm / RATIO
-	elif heightmm < 2.0:
-	    thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
-	    heightmm = widthmm * RATIO
+        if widthmm < 2.0:
+            thanLogTk.warning("TkCoor:robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+            if heightmm < 2.0:
+                widthmm = MON*25.4 / sqrt(1+RATIO**2)
+                heightmm = widthmm * RATIO
+            else:
+                widthmm = heightmm / RATIO
+        elif heightmm < 2.0:
+            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+            heightmm = widthmm * RATIO
 
-	if width < 2:
-	    thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
-	    if height < 2:
-	        width, height = RESOL
-	    else:
-	        witdh = int(height / RATIO)
-	elif height < 2:
-	    thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
-	    height = int(width * RATIO)
+        if width < 2:
+            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
+            if height < 2:
+                width, height = RESOL
+            else:
+                width = int(height / RATIO)
+        elif height < 2:
+            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
+            height = int(width * RATIO)
 
-	if w < 2 or h < 2:
-	    thanLogTk.warning("robustDim: Tkinter reported illegal window dimensions: %dpix x %dpix", w, h)
-	    w, h = width, height
-	return width, height, widthmm, heightmm, w, h
+        if w < 2 or h < 2:
+            thanLogTk.warning("robustDim: Tkinter reported illegal window dimensions: %dpix x %dpix", w, h)
+            w, h = width, height
+        return width, height, widthmm, heightmm, w, h
 
 
     def thanGudGetWinDim(self):
         """Returns the width and height of the window and screen.
 
-	This is just a function to aid the developer and it should be deleted
-	when debugging is done.
+        This is just a function to aid the developer and it should be deleted
+        when debugging is done.
         """
-	MON = 19.0; RATIO = 0.75
-
-	dc = self.thanCanvas
-        dc.update_idletasks()     		       # _idletasks breaks WinDoze (98?) support. Skotistika
+        dc = self.thanCanvas
+        dc.update_idletasks()                          # _idletasks breaks WinDoze (98?) support. Skotistika
         w = dc.winfo_width()                           # Pixels
         h = dc.winfo_height()                          # Pixels
-	width  = self.winfo_screenwidth()              # Pixels
-	height = self.winfo_screenheight()             # Pixels
-	widthmm  = float(self.winfo_screenmmwidth())   # mm
-	heightmm = float(self.winfo_screenmmheight())  # mm
-	return w, h, width, height, widthmm, heightmm
+        width  = self.winfo_screenwidth()              # Pixels
+        height = self.winfo_screenheight()             # Pixels
+        widthmm  = float(self.winfo_screenmmwidth())   # mm
+        heightmm = float(self.winfo_screenmmheight())  # mm
+        return w, h, width, height, widthmm, heightmm
 
 
     def thanGudGetBbox(self):
         """Finds the bounding box of all the entities in a Tkinter Canvas; unfortunately it does not work."
 
-	IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
+        IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
+        """
         self.thanCanvas.update_idletasks()           # _idletasks breaks WinDoze (98?) support. Skotistika
         w = self.thanCanvas.bbox(ALL)
-	if w == None: return w
-	xlu, ylu, b, h = w
+        if w is None: return w
+        xlu, ylu, b, h = w
         return self.thanCt.local2Global(xlu, ylu+h) + self.thanCt.local2Global(xlu+b, ylu)
 
 
     def __roundCenter(self, w):
         """Rounds an abstract window w, so that it fits exactly to the actual (GuiDependent) window."
 
-	IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
+        IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
+        """
         return thanRoundCenter(w, self.__pixPort, per=6)   #After testinf delete following code
         xa, ya, xb, yb = self.__pixPort
-	wpi = abs(xb - xa)
-	hpi = abs(yb - ya)
+        wpi = abs(xb - xa)
+        hpi = abs(yb - ya)
 
         wun = w[2] - w[0]
         hun = w[3] - w[1]
@@ -220,12 +218,12 @@ class ThanTkGuiCoor:
         per = 6                                      # margin in pixels
         if wpi < 10*per or hpi < 10*per: per = 0     # no margin for very small windows
         if thanNearx(wun, 0.0):
-	    assert not thanNearx(hun, 0.0), "Zero world coordinates window dimensions"
+            assert not thanNearx(hun, 0.0), "Zero world coordinates window dimensions"
             sx = sy = float(hpi - per) / hun
-	elif thanNearx(hun, 0.0):
-	    sx = float(wpi - per) / wun
+        elif thanNearx(hun, 0.0):
+            sx = float(wpi - per) / wun
         else:
-	    sx = float(wpi - per) / wun
+            sx = float(wpi - per) / wun
             sy = float(hpi - per) / hun
             if sy < sx: sx = sy
         dx = (wpi / sx - wun) * 0.5
@@ -335,10 +333,10 @@ class ThanTkGuiCoor:
         """
         v = self.thanProj[1].viewPort
         q = self.thanProj[1].thanAreaIterated
-        return q[0] != None and v[0] < q[0] or\
-               q[1] != None and v[1] < q[1] or\
-               q[2] != None and v[2] > q[2] or\
-               q[3] != None and v[3] > q[3]
+        return q[0] is not None and v[0] < q[0] or\
+               q[1] is not None and v[1] < q[1] or\
+               q[2] is not None and v[2] > q[2] or\
+               q[3] is not None and v[3] > q[3]
 
 
     def __isImageRegenNeeded(self, im):
@@ -356,11 +354,11 @@ class ThanTkGuiCoor:
         """
         v = self.thanProj[1].viewPort
         q = im.view
-        if im.imagez == None: return True    #The image object will not render the image if it is outside viewport
-        return (q[0] != None and v[0] < q[0] or    #if q[0] is none then it means q[0]=0 (nothing more to render in this direction)
-                q[1] != None and v[1] < q[1] or
-                q[2] != None and v[2] > q[2] or
-                q[3] != None and v[3] > q[3])
+        if im.imagez is None: return True    #The image object will not render the image if it is outside viewport
+        return (q[0] is not None and v[0] < q[0] or    #if q[0] is none then it means q[0]=0 (nothing more to render in this direction)
+                q[1] is not None and v[1] < q[1] or
+                q[2] is not None and v[2] > q[2] or
+                q[3] is not None and v[3] > q[3])
 
 #===========================================================================
 
@@ -370,8 +368,9 @@ class ThanTkGuiCoor:
         IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
         """
         ct = self.thanCt
-        dx, dy = ct.global2LocalRel(dx, dy)
-        dx, dy = int(dx), int(dy)
+#        dx, dy = ct.global2LocalRel(dx, dy)
+#        dx, dy = int(dx), int(dy)
+        dx, dy = ct.global2LocalReli(dx, dy)
         dxn, dyn = ct.local2GlobalRel(dx, dy)
         self.__worPort[0] += dxn
         self.__worPort[2] += dxn
@@ -409,26 +408,26 @@ class ThanTkGuiCoor:
         if dy > 0:
             if w[3]+dy > dr.yMaxAct:
                 dy = dr.yMaxAct - w[3]
-	        if dy <= 0.0: dy = 0.0
+                if dy <= 0.0: dy = 0.0
         elif dy < 0:
             if w[1]+dy < dr.yMinAct:
                 dy = dr.yMinAct - w[1]
-	        if dy >= 0.0: dy = 0.0
+                if dy >= 0.0: dy = 0.0
         if dx > 0:
             if w[2]+dx > dr.xMaxAct:
                 dx = dr.xMaxAct - w[2]
-	        if dx <= 0.0: dx = 0.0
+                if dx <= 0.0: dx = 0.0
         elif dx < 0:
             if w[0]+dx < dr.xMinAct:
                 dx = dr.xMinAct - w[0]
-	        if dx >= 0.0: dx = 0.0
+                if dx >= 0.0: dx = 0.0
 
 #-------Modify the viewport coordinates and redraw
 
         if dx != 0.0 or dy != 0.0:
-	    v[:], (dx, dy) = self.thanGudPan(dx, dy)      # thanGudPan may change dx, dy slightly (to make integer pixel)
+            v[:], (dx, dy) = self.thanGudPan(dx, dy)      # thanGudPan may change dx, dy slightly (to make integer pixel)
             self.thanAutoRegen(regenImages=False)
-	return dx, dy       # Logical coordinates (that is, pixel coordinates plus constant x, constant y)
+        return dx, dy       # Logical coordinates (that is, pixel coordinates plus constant x, constant y)
 
 
     def thanPan2Points(self, cp, tol=0.1):
@@ -517,7 +516,7 @@ class ThanTkGuiCoor:
         res, cargo = self.thanWaitFor(stat, THAN_STATE_PANDYNAMIC)
         if res == Canc: return res
 
-#-------The viewport is already paned, so we only change coordinates of vieport
+#-------The viewport is already panned, so we only change coordinates of viewport
 
         dx, dy = res[:2]
         self.__worPort[0] += dx
@@ -558,38 +557,38 @@ class ThanTkGuiCoor:
     def __onSize(self, event):
         """Well, here is what happens when window changed size.
 
-	When the the window changes size, all drawn elements remain fixed in
-	relation to the upper left-corner of the window. Thus the scale of
-	the coordinate transfromation does not change.
-	If the window shrinks, some elements near the lower-right become
-	invisible.
-	If the window is elnarged, some elements near the lower-right, which
-	were invisible before, become visible.
-	Thus the viewport (in world, logical, pixel coordinate) are modified
-	to take this into account. Also, the transformation between the coordinate
-	systems does not change - but we recalculate it anyway.
-	IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
+        When the the window changes size, all drawn elements remain fixed in
+        relation to the upper left-corner of the window. Thus the scale of
+        the coordinate transfromation does not change.
+        If the window shrinks, some elements near the lower-right become
+        invisible.
+        If the window is elnarged, some elements near the lower-right, which
+        were invisible before, become visible.
+        Thus the viewport (in world, logical, pixel coordinate) are modified
+        to take this into account. Also, the transformation between the coordinate
+        systems does not change - but we recalculate it anyway.
+        IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
+        """
         if self.__onsizepreempt:
-#	    self.thanSchedule(self.__onSize, event)
-	    print "onSize() called preemptively: call NOT scheduled: returning immediately."
-	    return
+#            self.thanSchedule(self.__onSize, event)
+            print "onSize() called preemptively: call NOT scheduled: returning immediately."
+            return
         self.__onsizepreempt = 1
 
-	(pixPort, logPort) = self.__getWinExtent()
-	if pixPort != self.__pixPort:
-	    w, h = logPort[2] - logPort[0], logPort[3] - logPort[1]
-	    thancadconf.thanCanvasdim[:] = w+1, -h+1
-	    w, h = self.thanCt.local2GlobalRel(w, h)
-	    self.__worPort[2] = self.__worPort[0] + w
-	    self.__worPort[1] = self.__worPort[3] - h
-	    self.thanGudCalcScale()
+        (pixPort, logPort) = self.__getWinExtent()
+        if pixPort != self.__pixPort:
+            w, h = logPort[2] - logPort[0], logPort[3] - logPort[1]
+            thancadconf.thanCanvasdim[:] = w+1, -h+1
+            w, h = self.thanCt.local2GlobalRel(w, h)
+            self.__worPort[2] = self.__worPort[0] + w
+            self.__worPort[1] = self.__worPort[3] - h
+            self.thanGudCalcScale()
 
-	    self.thanProj[1].viewPort[:] = self.__worPort
+            self.thanProj[1].viewPort[:] = self.__worPort
             self.thanAutoRegen()
-	    self.thanCanvas.thanGudCoorChanged()
-	else:
-	    print "tkguicoor.onSize() called, but window has not changed dimensions!"
+            self.thanCanvas.thanGudCoorChanged()
+        else:
+            print "tkguicoor.onSize() called, but window has not changed dimensions!"
 
         self.__onsizepreempt = 0
 
@@ -600,7 +599,6 @@ class ThanTkGuiCoor:
         IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
         """
         (self.__pixPort, logPort) = self.__getWinExtent()
-        print "thanGudCalcScale(): __pixPort, logPort, worPort:", self.__pixPort, logPort, self.__worPort
         self.thanCt.set(self.__worPort, logPort)
 
 #===========================================================================
@@ -630,6 +628,7 @@ class ThanTkGuiCoor:
         print "thanGudZoomWin(): after:  worPortn=", worPortn
 
         if thanNear2(self.__worPort[:2], self.__worPort[2:]):   #Current viewport is invalid
+            print "Current viewport is invalid:", self.__worPort
             self.__worPort[:] = worPortn
             self.thanRegen()
             self.__zoomwin_preempt = 0
@@ -643,18 +642,20 @@ class ThanTkGuiCoor:
         print "thanGudZoomWin(): xcn, ycn=", xcn, ycn
         print "thanGudZoomWin(): worPort before pan=", self.__worPort
         dx, dy = xcn-xc, ycn-yc
-        if thanNear2((xc-dx*0.5, yc-dx*0.5), (xc+dx*0.5, yc+dx*0.5)):  #Because of adding small to big numbers
-            self.thanRegen()
-            self.__zoomwin_preempt = 0
-            return tuple(self.__worPort)
-        self.thanGudPan(xcn-xc, ycn-yc)
+        dxp, dyp = self.thanCt.global2LocalReli(dx, dy)
+        if dxp != 0 and dyp != 0:
+            if thanNear2((xc-dx*0.5, yc-dy*0.5), (xc+dx*0.5, yc+dy*0.5)):  #Because of adding small to big numbers
+                self.thanRegen()
+                self.__zoomwin_preempt = 0
+                return tuple(self.__worPort)
+            self.thanGudPan(dx, dy)
         print "thanGudZoomWin(): worPort after  pan=", self.__worPort
 
-	dxn = worPortn[2] - worPortn[0]
-	dyn = worPortn[3] - worPortn[1]
-	if abs(dxn) > abs(dyn):    # For numerical stability; otherwise not needed
-	    fact = (self.__worPort[2] - self.__worPort[0]) / dxn
-	else:
+        dxn = worPortn[2] - worPortn[0]
+        dyn = worPortn[3] - worPortn[1]
+        if abs(dxn) > abs(dyn):    # For numerical stability; otherwise not needed
+            fact = (self.__worPort[2] - self.__worPort[0]) / dxn
+        else:
             fact = (self.__worPort[3] - self.__worPort[1]) / dyn
         self.thanGudZoom(xcn, ycn, fact)   #If zero factor do not zoom at all
         self.__zoomwin_preempt = 0

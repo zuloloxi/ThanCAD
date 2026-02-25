@@ -1,11 +1,7 @@
 #!/usr/bin/python
 import datetime
-from Tkinter import *
 from p_ggen import thanUnicode
-from thanwidstrans import T
 
-##############################################################################
-##############################################################################
 
 class ThanValidator:
     "Common validation code."
@@ -66,7 +62,7 @@ class ThanValBlank(ThanValidator):
 #            print "                      ", "stringlike"
         except:
 #            print "                      ", "not stringlike"
-            if v != None: return v
+            if v is not None: return v
         else:
             if len(v1) > 0: return v
         self.thanSetErr(1, "Non blank string or object was expected.")
@@ -78,7 +74,7 @@ class ThanValPIL(ThanValidator):
 
     def thanValidate(self, v):
         "Validate that the raster can be accessed and it is not degenerate."
-        import Image
+        from PIL import Image
         try:
             im = Image.open(v)
             b,h = im.size
@@ -106,7 +102,7 @@ class ThanValEmail(ThanValidator):
         if len(v) > 50: ok = False
         if " " in v: ok = False
         import re
-        if ok and re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", v) != None: return v
+        if ok and re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", v) is not None: return v
         self.thanSetErr(2, "Invalid e-mail.")
         return None
 
@@ -187,7 +183,7 @@ class ThanValDatepython(ThanValidator):
     def thanGet(self, v):
         "Try to return a correct value without validation."
         v = self.thanValidate(v)
-        if v == None: return datetime.date(1900, 1, 1)
+        if v is None: return datetime.date(1900, 1, 1)
         return v
 
 
@@ -198,8 +194,6 @@ def isleap(iyear):
     if iyear % 4   == 0: return True
     return False
 
-##############################################################################
-##############################################################################
 
 class ThanValFloat(ThanValidator):
     "Get and validate a float number."
@@ -215,7 +209,7 @@ class ThanValFloat(ThanValidator):
         self.thanBounds = vmin, vmax
         if self.thanBounds != (None, None):
             try: self.thanBounds = [self.num(self.thanBounds[i]) for i in (0,1)]
-            except ValueError, IndexError: raise ValueError, self.tnumbounds
+            except (ValueError, IndexError): raise ValueError, self.tnumbounds
 
 
     def thanValidate(self, v):
@@ -252,7 +246,7 @@ class ThanValFloatFortran(ThanValFloat):
         "Check if exponent is with D instead of E."
         v1 = ThanValFloat.thanValidate(self, v)
         print "fortran:", v1
-        if v1 != None: return v1
+        if v1 is not None: return v1
         try: v+""; v.replace
         except: return None     # Not stringlike enough
         print "TRYING FORTRAN:'", v
@@ -278,9 +272,6 @@ class ThanValFloatBlank(ThanValFloat):
         return ThanValFloat.thanValidate(self, v)
 
 
-##############################################################################
-##############################################################################
-
 class ThanValInt(ThanValFloat):
     "Get and validate an integer number."
     def num(self, a):
@@ -290,10 +281,8 @@ class ThanValInt(ThanValFloat):
     tnumbet = "An integer was expected between"
 
 
-##############################################################################
-##############################################################################
-
 if __name__ == "__main__" and 1:
+    from Tkinter import Tk, Button
     def validates():
         print "a=", b.thanValidate(a.thanGet()),
         print b.thanGetErr(), b.thanGetIerr()

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the ThanCad Line type, and some builtin line types.
 """
@@ -56,15 +56,11 @@ class ThanLtype:
 
     def thanTkSet(self, than, unit="mm", scale=1.0):
         "Convert the dashes to Tk gui pixels."
-        print "Thancad :", self.thanName, ":", self.thanDashes
         self.thanPixelSet(than, unit, scale)
-        print "Tkinter :", self.thanName, ":", than.dash
         ds = than.dash
         maxpix = 255
         for i,d1 in enumerate(ds):
             if d1 > maxpix: ds[i] = maxpix
-#           print "ThanLtype: thanTkset() 5: ds=", ds
-        print "Tkinter :", self.thanName, ":", than.dash
 
 
     def thanPilSet(self, than, unit="mm", scale=1.0):
@@ -110,7 +106,7 @@ class ThanLtype:
 
 
     def thanExpThc(self, fw):
-        "Saves the object name to a .thc file."
+        "Saves the object name to a .thcx file."
         fw.writeBeg(self.thanName)
         fw.pushInd()
         self.thanExpThc1(fw)
@@ -119,7 +115,7 @@ class ThanLtype:
 
 
     def thanImpThc(self, fr, ver):
-        "Reads the object name and returns its version from a .thc file."
+        "Reads the object name and returns its version from a .thcx file."
         name = fr.next().strip()[1:-1]
         fr.unread()
         fr.readBeg(name)
@@ -129,7 +125,7 @@ class ThanLtype:
 
 
     def thanExpThc1(self, fw):
-        "Saves the linetype definition to a .thc file."
+        "Saves the linetype definition to a .thcx file."
         fw.writeln(self.thanDesc)
         n = len(self.thanDashes)
         fw.writeln("%d" % (n,))
@@ -137,7 +133,7 @@ class ThanLtype:
 
 
     def thanImpThc1(self, fr, ver):
-        "Reads the linetype definition from a .thc file."
+        "Reads the linetype definition from a .thcx file."
         desc = fr.next().rstrip()
         n = int(fr.next())
         dashes = fr.readSnode("DASH", n)

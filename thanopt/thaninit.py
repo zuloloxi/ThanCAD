@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which provides for ThanCad and/or ThanCad drawings customisation.
 This module provides for ThanCad initialisation.
 """
 
 import sys                 #Module sys is guaranteed by Python
+import thanmenus2
 
 def thanInitTest():
     "Check if necessary modules are installed in Python distribution."
     thanModules = "Tkinter tkColorChooser tkFont tkMessageBox tkSimpleDialog "\
-                  "Image ImageTk numpy|Numeric sys bz2 math types copy weakref "\
+                  "numpy|Numeric sys bz2 math types copy weakref "\
                   "codecs itertools ConfigParser re base64 random copy cPickle "\
                   "collections subprocess ".split()
+                    #Image ImageTk
     if sys.platform == "win32": thanModules.append("win32com")
 
     thanModOptional = "webbrowser cups pexpect sane pyx"
@@ -97,10 +99,55 @@ def thanInitPregui():
     thancadconf.thanOptsGet()
     import thandefs
     import thantrans
+    thantrans.thanLangSetall()         #Set default language as is thancadconf (or in thancadconf.thanOptsGet())
     import thanlayer
     import thandr
     thantrans.thanLangMore()        #Add more translations
+    thantrans.thanLangSetall()         #Set default language to all (and the new) translations
     import thancom
+    thanmenus2.thanCreateMenus()    #Create the menus with the established translations
+    #thanLoadPackages()
+
+
+
+def thanLoadPackages():
+    "Load ThanCad packages (plugins)."
+    import thanpackages2, thancom
+    thanPackagesLoaded = []
+    for pn in thanpackages2.__all__:
+        p = getattr(thanpackages2, pn)
+        try:
+            p.thanRegisterCommands
+            p.thanRegisterMenus
+            p.thanRegisterTrans
+        except AttributeError, why:
+            print "Error while loading package %s: %s" % (p.__name__, why)
+            continue
+        try:
+            coms, abbrevs = p.thanRegisterCommands()
+            seq, m = p.thanRegisterMenus()
+            trans = p.thanRegisterTrans()
+        except BaseException, why:
+            print "Error while loading package %s: %s" % (p.__name__, why)
+            continue
+        try:
+            thancom.thanAddCommands(coms, abbrevs)
+            thanmenus2.thanAddMenus(seq, m)
+        except BaseException, why:
+            print "Error while loading package %s: %s" % (p.__name__, why)
+            continue
+        thanPackagesLoaded.append(p)
+    for p in thanPackagesLoaded:
+        try:
+            p.thanRegisterAfter
+        except AttributeError:
+            print "Error while loading package %s: %s" % (p.__name__, why)
+            continue
+        try:
+            p.thanRegisterAfter()
+        except BaseException, why:
+            print "Error while loading package %s: %s" % (p.__name__, why)
+            continue
 
 
 def thanInitPostgui():
@@ -109,7 +156,7 @@ def thanInitPostgui():
 
 
 def thanInitEndgui():
-    "Final values just afte the gui shutdown."
+    "Final values just after the gui shutdown."
     import thancadconf
     thancadconf.thanOptsSave()
 

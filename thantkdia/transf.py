@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module contains a mixin for the various 3d-2d and 2d-2d transformations
 available to ThanCad.
@@ -58,7 +58,7 @@ class TransfMixin:
 
     def thanProjectTolib(self, v=None):
         "Get the projection code from the radProject widget or the values v and transform it to library projection code."
-        if v == None: i = self.radProject.thanGet()
+        if v is None: i = self.radProject.thanGet()
         else:         i = v.radProject
         return self.projectcode[i][1]
 
@@ -213,7 +213,7 @@ class ThanValProjlay(p_gtkwid.ThanValidator):
     def __init__(self, projlays):
         """Just save the projlays dictionary.
 
-        projlays is a dict from string (filename + "/" + layer pathname) to 
+        projlays is a dict from string (filename + "/" + layer pathname) to
         a tuple (proj object, layer object)."""
         p_gtkwid.ThanValidator.__init__(self)
         self.projlays = projlays
@@ -221,7 +221,7 @@ class ThanValProjlay(p_gtkwid.ThanValidator):
     def thanValidate(self, v):
         "Verify that string v (filname+'/'+layer pathname) exists and has points."
         proj, lay = self.projlays.get(v, (None, None))
-        if proj == None:
+        if proj is None:
             self.thanSetErr(1, "Project/layer %s was not found." % v)
             return None
         cps, dups = findPoints(lay)
@@ -259,7 +259,7 @@ class ThanValWrapper(p_gtkwid.ThanValidator):
 def findProjlays():
     """Find all the layers of all the projects.
 
-    projlays is a dict from string (filename + "/" + layer pathname) to 
+    projlays is a dict from string (filename + "/" + layer pathname) to
     a tuple (proj object, layer object)."""
     projlays = {}
     for proj in thanfiles.getOpened()[1:]:

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,24 +21,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes file related commands.
 """
 
 import cPickle, bz2, copy
-from tkMessageBox import ERROR
-from p_ggen import path, Struct, doNothing, ThanImportError
-import p_gtkuti
-import thandr, thanimp, thanexp, thantkgui, thantkdia, thansupport
-from thanvers import tcver
+from p_ggen import path, doNothing, ThanImportError
+import p_gtkwid
+import thandwg, thanimp, thanexp, thantkdia, thanvers
 import thanopt, thanlayer
-from thantrans import T, Tmatch
+from thantrans import T
 from thanvar import Canc, thanfiles
-import thancommod, thancomview, thanrwf, thanundo
+import thancomview, thanrwf
 
-mm = p_gtkuti.thanGudModalMessage
+mm = p_gtkwid.thanGudModalMessage
 
 
 def thanFileNew(proj):
@@ -50,8 +48,9 @@ def thanFileNew(proj):
 
 def thanFileNewDo(proj, mes=None):
     "Creates a new drawing and its drawing window - does the job."
+    import thantkgui
     fpath = thanfiles.tempname()
-    dr = thandr.ThanDrawing()
+    dr = thandwg.ThanDrawing()
     win = thantkgui.ThanTkGuiWinDraw()
     projnew = win.setDrawing(fpath, dr)
     thanfiles.fillMenu(projnew)
@@ -79,7 +78,6 @@ if thanopt.thancon.thanFrape.civil:
     _ser.append(".mhk")
 _exts = [(_importClass[suf][0], suf) for suf in _ser]
 del _ser
-_exts.insert(0, ("ThanCad", ".thc"))
 _exts.insert(0, ("ThanCad xml", ".thcx"))
 _exts.append(("All Files", "*"))
 
@@ -97,7 +95,7 @@ def thanFileOpen(proj, suf1=None, forceunload=False):
         elem.imagez (elem is a ThanImage): because it is Tk object
 """
     exts = _exts                      #Make a shallow copy
-    if suf1 != None:
+    if suf1 is not None:
         for i,ext1 in enumerate(_exts):
             if suf1 == ext1[1]:
                 exts = _exts[:]       #Make a deep local copy
@@ -106,9 +104,9 @@ def thanFileOpen(proj, suf1=None, forceunload=False):
                 break
     fildir = thanfiles.getFiledir()
     while True:
-        fns = p_gtkuti.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to open"],
                  initialdir=fildir, multiple=True)
-        if fns == None: return proj[2].thanGudCommandCan()     # Open cancelled
+        if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
         nopened = thanFileOpenPaths(proj, fns, forceunload)
         if nopened > 0: return proj[2].thanGudCommandEnd()
 
@@ -125,26 +123,12 @@ def thanFileOpenPaths(proj, fns, forceunload=False):
             if fn.ext in _importClass:
                 dr, zoomext = impFile(proj, fn, _importClass[fn.ext][1])
                 success = "%s: %s" % (fn.name, T["file has been successfully imported."])
-            elif fn.ext == ".thcx":
+            else:
                 dr = openThcx(proj, fn, forceunload)
                 success = T["Existing drawing has been opened."]
                 zoomext = False
-            else:
-                try:
-                    dr = None
-                    fr = bz2.BZ2File(fn, "r", 0, 1)
-                    s = fr.read()         # Uncompress (in case of error it raises IOError)
-                    fr.close()
-                    dr = cPickle.loads(s) # Unpickle (in case of error it raises PickleError, and maybe ValueError from numpy))
-                    success = T["Existing drawing has been opened."]
-                    zoomext = False
-                except (IOError, cPickle.PickleError, ImportError, AttributeError, ValueError), why:    # ImportError happens if BZ2file can not import its base class
-                    try: dr.thanDestroy()
-                    except: pass
-                    why = str(why) + "\n\n" + T["(This might be an old, no longer supported, drawing file)"]
-                    mm(proj[2], why, T["Open failed"], ERROR)   # (Gu)i (d)ependent
-            if dr != None:
-                dr.thanRepair()       # Try to rectify old .thc files
+            if dr is not None:
+                dr.thanRepair()       # Try to rectify older versions of .thcx files
                 nopened += 1
                 replace = proj[1]     #in case proj is ThanCad and not another drawing
                 replace = replace and (not proj[1].thanIsModified())
@@ -157,7 +141,7 @@ def thanFileOpenPaths(proj, fns, forceunload=False):
 
 def openThcx(proj, fn, forceunload):
     "Opens a thancad xml like file."
-    dr = thandr.ThanDrawing()
+    dr = thandwg.ThanDrawing()
     try:
         try:
             fr = bz2.BZ2File(fn, "r", 0, 1)
@@ -167,7 +151,7 @@ def openThcx(proj, fn, forceunload):
                 frf.thanDestroy()
                 fr = open(fn)
                 frf = thanrwf.ThanRfile(fr, projtemp)
-            dr.thanImpThc(frf, forceunload)
+            dr.thanImpThc(frf, forceunload, prt=proj[2].thanPrt)
         except StopIteration, why:
             raise IOError, "Incomplete file: end of file encountered"
     except (IOError, ValueError, IndexError, ImportError), e:    # ImportError happens if BZ2file can not import its base class
@@ -179,7 +163,7 @@ def openThcx(proj, fn, forceunload):
         else:
             why = frf.er(e)
             frf.thanDestroy()
-        mm(proj[2], why, T["Open failed"], ERROR)   # (Gu)i (d)ependent
+        mm(proj[2], why, T["Open failed"], p_gtkwid.ERROR)   # (Gu)i (d)ependent
         return None
     frf.thanDestroy()
     return dr
@@ -191,11 +175,11 @@ def impFile(proj, fn, ImportClass, defaultLayer="0"):
     try:
         finp = fn.open()
     except IOError, e:
-        mm(proj[2], e, "%s: %s" % (fn.name, fail), ERROR)   # (Gu)i (d)ependent
+        mm(proj[2], e, "%s: %s" % (fn.name, fail), p_gtkwid.ERROR)   # (Gu)i (d)ependent
         proj[2].thanGudCommandEnd(fail, "can")
         return None, None
 #---create a new drawing
-    dr = thandr.ThanDrawing()
+    dr = thandwg.ThanDrawing()
 #---import
     ts = thanimp.ThanCadDrSave(dr, proj[2].thanPrt)
     imp = ImportClass(finp, ts, defaultLayer)
@@ -208,7 +192,7 @@ def impFile(proj, fn, ImportClass, defaultLayer="0"):
         print "impFile: type of exception:", type(e)
         print dir(e)
         print str(e.message)
-        mm(proj[2], str(e.message), "%s: %s" % (fn.name, fail), ERROR)            # (Gu)i (d)ependent
+        mm(proj[2], str(e.message), "%s: %s" % (fn.name, fail), p_gtkwid.ERROR)            # (Gu)i (d)ependent
         proj[2].thanGudCommandEnd(fail, "can")
         return None, None
     finp.close()
@@ -223,14 +207,15 @@ def impFile(proj, fn, ImportClass, defaultLayer="0"):
 
 def __openHouse(proj, fn, dr, mes, zoomext):
     "House keeping for file open."
+    import thantkgui
     fn = fn.abspath()
     thanfiles.setFiledir(fn.parent)
 #---create a new drawing window
     win = thantkgui.ThanTkGuiWinDraw()
     projnew = win.setDrawing(fn, dr)
-    projnew = win.thanProj
+    #projnew = win.thanProj
     try:
-        if zoomext: thancomview.thanZoomExt(projnew)
+        if zoomext: thancomview.thanZoomExt1(projnew)
         projnew[2].thanRegen()
     except:
         projnew[2].destroy()
@@ -258,7 +243,7 @@ def __openHouseReplace(proj, fn, dr, mes, zoomext):
     win = proj[2]
     projnew = win.setDrawing(fn, dr)     #This is exactly the same project as proj
     try:
-        if zoomext: thancomview.thanZoomExt(projnew)
+        if zoomext: thancomview.thanZoomExt1(projnew)
         projnew[2].thanRegen()
     except:
         projnew[2].destroy()
@@ -285,14 +270,14 @@ def thanFileMerge(proj, copyelems=False, forceunload=False):
     exts = _exts                      #Make a shallow copy
     fildir = thanfiles.getFiledir()
     while True:
-        fns = p_gtkuti.thanGudGetReadFile(proj[2], exts, T["Choose files to insert"],
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], exts, T["Choose files to insert"],
                  initialdir=fildir, multiple=True)
-        if fns == None: return proj[2].thanGudCommandCan()     # Open cancelled
+        if fns is None: return proj[2].thanGudCommandCan()     # Open cancelled
         projothers = thanFileMergePaths(proj, fns, forceunload)
         if len(projothers) > 0: break
 
     projothers, newcl, newroot = thanMergeHier(proj, projothers, copyelems)
-    if len(projothers) < 1: return thanGudCommandCan(T["No files were inserted"])
+    if len(projothers) < 1: return proj[2].thanGudCommandCan(T["No files were inserted"])
     oldcl, oldroot, newelemsdrawn, newelemsnot = thanMergeDo(proj, projothers, newcl, newroot, copyelems)
     newcl.thanTkSet(proj[2].than)
     proj[2].thanUpdateLayerButton()
@@ -313,11 +298,9 @@ def thanFileMergePaths(proj, fns, forceunload=False):
             fn = path(fn)
             if fn.ext in _importClass:
                 dr, _ = impFile(proj, fn, _importClass[fn.ext][1], defaultLayer=clname)
-            elif fn.ext == ".thcx":
-                dr = openThcx(proj, fn, forceunload)
             else:
-                assert 0, 'old thc files are not supported for mergeing'
-            if dr != None:
+                dr = openThcx(proj, fn, forceunload)
+            if dr is not None:
                 projothers.append([fn, dr, None])
     return projothers
 
@@ -332,7 +315,7 @@ def thanMergeHier(proj, projothers, copyelems=False):
         bakcl, bakroot = thanundo.thanLtClone2(newcl, newroot)
         ltother = dr.thanLayerTree
         other2lay, newcl, terr = newroot.thanMergeHier(newcl, ltother.thanRoot)
-        if other2lay == None:
+        if other2lay is None:
             terr = "Error while importing %s: %s" % (fn, terr)
             proj[2].thanPrt(terr, "can1")
             newcl, newroot = bakcl, bakroot
@@ -362,9 +345,9 @@ def thanMergeDo(proj, projothers, newcl, newroot, copyelems=False):
             if not frozen: lay.thanTkSet(than)
             for e in layother.thanQuad:
                 if copyelems: e = e.thanClone()
-                if e.handle != None and e.handle > 0:
+                if e.handle is not None and e.handle > 0:
                     e1 = self.thanTagel.get(e.handle)
-                    if e1 != None: e.thanUntag()   #It is not safe to keep the old handle
+                    if e1 is not None: e.thanUntag()   #It is not safe to keep the old handle
                 self.thanElementAdd(e, lay)
                 if frozen:
                     newelemsnot.append(e)
@@ -399,7 +382,7 @@ _docSave = """
       and ThanCad asks the user for a new file name with .thcx extension.
    b. If the file extension is .thcx but the prefix is a temporary file,
       it means that the drawing was created as new, and ThanCad prompts the
-      user for a filename with the .thcx extrension. No backup file is created.
+      user for a filename with the .thcx extension. No backup file is created.
    c. If the file extension is not .thcx the user is prompted to save
       the drawing with the .thcx extension. No backup is created
 4. When the users presses saveas:
@@ -428,7 +411,7 @@ def thanFileSave(proj):
         if fnbak.exists(): fnbak.remove()
         fn.rename(fnbak)
     except Exception, why:
-        mm(proj[2], why, T["Failed to create backup file %s"] % (fnbak.basename(),), ERROR)   # (Gu)i (d)ependent
+        mm(proj[2], why, T["Failed to create backup file %s"] % (fnbak.basename(),), p_gtkwid.ERROR)   # (Gu)i (d)ependent
         return thanFileSaveas(proj)
     nopened = thanFileSavePath(proj, fn)
     if nopened == 0: return thanFileSaveas(proj)  #Could not save file; let the use try with another name
@@ -438,9 +421,9 @@ _exportClass = { ".dxf": ("Drawing Interchange 12 ascii", "thanExpDxf"),
                  ".syk": ("2D Lines with Elevation",      "thanExpSyk"),
                  ".brk": ("3D Lines",                     "thanExpBrk"),
                  ".syn": ("Topographic Points",           "thanExpSyn"),
+                 ".kml": ("Google Placemarks",            "thanExpKml"),
                }
-_sexts = [(_exportClass[suf][0], suf) for suf in ".dxf .syk .brk .syn".split()]
-_sexts.insert(0, ("ThanCad", ".thc"))
+_sexts = [(_exportClass[suf][0], suf) for suf in ".dxf .syk .brk .syn .kml".split()]
 _sexts.insert(0, ("ThanCad xml", ".thcx"))
 _sexts.append(("All Files", "*"))
 
@@ -457,7 +440,7 @@ def thanFileSaveas(proj, suf1=None):
         elem.imagez (elem is a ThanImage): because it is Tk object
 """
     exts = _sexts                      #Make a shallow copy
-    if suf1 != None:
+    if suf1 is not None:
         for i,ext1 in enumerate(_exts):
             if suf1 == ext1[1]:
                 exts = _sexts[:]       #Make a deep local copy
@@ -466,16 +449,16 @@ def thanFileSaveas(proj, suf1=None):
                 break
     fildir = thanfiles.getFiledir()
     while True:
-        fn = p_gtkuti.thanGudGetSaveFile(proj[2], exts, T["Save/export drawing to a file"],
+        fn = p_gtkwid.thanGudGetSaveFile(proj[2], exts, T["Save/export drawing to a file"],
             initialfile=proj[0].namebase, initialdir=fildir)
-        if fn == None: return proj[2].thanGudCommandCan()     # Open cancelled
+        if fn is None: return proj[2].thanGudCommandCan()     # Open cancelled
         print "thanFileSaveas: fn=", fn
         nopened = thanFileSavePath(proj, fn)
         if nopened > 0: return                             # OK
 
 
 def thanFileSavePath(proj, fn):
-    """Opens a files with known paths.
+    """Opens a file with known path.
 
     This is needed to implement saving by direct command such as dxfout.
     """
@@ -484,19 +467,19 @@ def thanFileSavePath(proj, fn):
         try:
             fout = fn.open("w")
         except IOError, why:
-            p_gtkuti.thanGudModalMessage(proj[2], T["Open failed"], why)   # (Gu)i (d)ependent
+            mm(proj[2], why, T["Open failed"])   # (Gu)i (d)ependent
             return 0
 #-------export
         method = getattr(proj[1], _exportClass[fn.ext][1])
-        icod = method(fout)
+        ok, ter = method(fout)
         fout.close()                          #Ok to close closed files.
-        if icod == -1:
+        if not ok:
             fail = "%s: %s" % (fn.name, T["export failed."])
-            mm(proj[2], text, fail, ERROR)    # (Gu)i (d)ependent
+            mm(proj[2], ter, fail, p_gtkwid.ERROR)    # (Gu)i (d)ependent
             proj[2].thanGudCommandEnd(fail)
             return 0
         success = "%s: %s" % (fn.name, T["file has been successfully exported."])
-    elif fn.ext == ".thcx":
+    else:
         try:
             fw = bz2.BZ2File(fn, "w", 0, 1)
             fwf = thanrwf.ThanWfile(fw, proj)
@@ -505,17 +488,7 @@ def thanFileSavePath(proj, fn):
             fw.close()
             success = T["Drawing saved in %s."] % fn
         except (IOError, cPickle.PickleError, ImportError, ValueError), why:  # ImportError happens if BZ2file can not import its base class
-            mm(proj[2], why, T["Save failed"], ERROR)   # (Gu)i (d)ependent
-            return 0
-    else:
-        try:
-            fw = bz2.BZ2File(fn, "w", 0, 1)
-            s = cPickle.dumps(proj[1])
-            fw.write(s)
-            fw.close()
-            success = T["Drawing saved in %s."] % fn
-        except (IOError, cPickle.PickleError, ImportError, ValueError), why:  # ImportError happens if BZ2file can not import its base class
-            mm(proj[2], why, T["Save failed"], ERROR)   # (Gu)i (d)ependent
+            mm(proj[2], why, T["Save failed"], p_gtkwid.ERROR)   # (Gu)i (d)ependent
             return 0
     __saveHouse(proj, fn)
     proj[2].thanGudCommandEnd(success, "info")
@@ -535,7 +508,7 @@ def thanRenameHouse(proj, fn):
     fnold = proj[0]
     thanfiles.delOpened(proj)    #It should be already there
     proj[0] = fn
-    proj[2].thanTitle = tcver.name + " - " + proj[0].name
+    proj[2].thanTitle = thanvers.tcver.name + " - " + proj[0].name
     proj[2].title(proj[2].thanTitle)
     if fn.ext == ".thcx": proj[1].thanResetModified()
     fn = fn.abspath()
@@ -555,7 +528,7 @@ def thanFileClose(proj):
 def thanFileCloseDo(proj):
     "Closes a drawing (deletes dr, win and alters modified, recent list) but warns if it is modified."
     if proj[1].thanIsModified():
-        a = p_gtkuti.thanGudAskOkCancel(proj[2], T["Drawing modified, OK to close?"], proj[0], default="cancel")
+        a = p_gtkwid.thanGudAskOkCancel(proj[2], T["Drawing modified, OK to close?"], proj[0], default="cancel")
         if not a: return Canc    # Close cancelled
     thanfiles.delOpened(proj)
     proj[1].thanDestroy()
@@ -579,15 +552,15 @@ def thanFileExit(proj):
 
 def thanTxtopen(proj, mes, suf=".txt", mode="r", initialfile=None, initialdir=None):
     "Opens a text file for reading or writting something."
-    if initialdir == None: initialdir = thanfiles.getFiledir()
-    if initialfile == None: initialfile = proj[0].namebase
+    if initialdir is None: initialdir = thanfiles.getFiledir()
+    if initialfile is None: initialfile = proj[0].namebase
     if "w" in mode:
-        fildxf, frw = p_gtkuti.thanGudOpenSaveFile(proj[2], suf, mes, mode,
+        fildxf, frw = p_gtkwid.thanGudOpenSaveFile(proj[2], suf, mes, mode,
             initialfile, initialdir)
     else:
-        fildxf, frw = p_gtkuti.thanGudOpenReadFile(proj[2], suf, mes, mode,
+        fildxf, frw = p_gtkwid.thanGudOpenReadFile(proj[2], suf, mes, mode,
             initialfile, initialdir)
-    if frw == None: return Canc, Canc     # File open cancelled
+    if frw is None: return Canc, Canc     # File open cancelled
     return path(fildxf), frw
 
 
@@ -595,12 +568,12 @@ def thanTxtsave(proj, mes, suf=".txt"):
     "Opens a text file for saving something."
     fildir = thanfiles.getFiledir()
     while True:
-        fildxf = p_gtkuti.thanGudGetSaveFile(proj[2], suf, mes,
+        fildxf = p_gtkwid.thanGudGetSaveFile(proj[2], suf, mes,
             proj[0].namebase, initialdir=fildir)
-        if fildxf == None: proj[2].thanGudCommandCan(); return Canc      # Export cancelled
+        if fildxf is None: proj[2].thanGudCommandCan(); return Canc      # Export cancelled
         fildxf = path(fildxf)
         try:                 fout = fildxf.open("w")
-        except IOError, why: mm(proj[2], why, T["Open failed"], ERROR)   # (Gu)i (d)ependent
+        except IOError, why: mm(proj[2], why, T["Open failed"], p_gtkwid.ERROR)   # (Gu)i (d)ependent
         else:                break
     return fout
 
@@ -617,23 +590,23 @@ def thanPlotPdf(proj):
     fildir = thanfiles.getFiledir()
     than = None
     while True:
-        fildxf = p_gtkuti.thanGudGetSaveFile(proj[2], ".pdf", T["Plot to pdf file"],
+        fildxf = p_gtkwid.thanGudGetSaveFile(proj[2], ".pdf", T["Plot to pdf file"],
             initialfile=proj[0].namebase, initialdir=fildir)
-        if fildxf == None: del than; proj[2].thanGudCommandCan(); return   # Export cancelled
-	fildxf = path(fildxf)
-	try:
-	    fout = fildxf.open("w")
-	    fout.close()
+        if fildxf is None: del than; proj[2].thanGudCommandCan(); return   # Export cancelled
+        fildxf = path(fildxf)
+        try:
+            fout = fildxf.open("w")
+            fout.close()
         except IOError, why:
-	    mm(proj[2], why, T["Open failed"], ERROR)        # (Gu)i (d)ependent
-	    continue
-	if than == None: than = proj[1].thanPlotPdf(1.0)
-	try:
-	    than.dc.writePDFfile(fildxf)
-	except IOError, why:
-	    mm(proj[2], why, T["Write failed"], ERROR)       # (Gu)i (d)ependent
-	    continue
-	break
+            mm(proj[2], why, T["Open failed"], p_gtkwid.ERROR)        # (Gu)i (d)ependent
+            continue
+        if than is None: than = proj[1].thanPlotPdf(1.0)
+        try:
+            than.dc.writePDFfile(fildxf)
+        except IOError, why:
+            mm(proj[2], why, T["Write failed"], p_gtkwid.ERROR)       # (Gu)i (d)ependent
+            continue
+        break
     del than
     proj[2].thanGudCommandEnd(T["Pdf file has been created."], "info")
 
@@ -642,7 +615,7 @@ def thanPlotPilold(proj):
     "Exports to PIL image."
     fpath = proj[0].parent / proj[0].namebase + ".bmp"
     win = thantkdia.ThanTkExppil(proj[2], fpath, title=T["Export to Image: specifications"])
-    if win.result == None: proj[2].thanGudCommandCan(); return                      # Export cancelled
+    if win.result is None: proj[2].thanGudCommandCan(); return                      # Export cancelled
     fpath, mode, width, height, drwin = win.result
     try:
         proj[1].thanExpPil(fpath, mode, width, height, drwin)
@@ -655,7 +628,7 @@ def thanPlotPil(proj):
     "Exports to PIL image."
     win = thantkdia.ThanTkExppil(proj[2], vals=None, cargo=proj, title=T["Export to Image: specifications"])
     v = win.result
-    if v == None: return proj[2].thanGudCommandCan()  # Export cancelled
+    if v is None: return proj[2].thanGudCommandCan()  # Export cancelled
     try:
 #        proj[1].thanExpPil(fpath, mode, width, height, drwin)
         proj[1].thanExpPil(v.filIm, v.choMode, v.entWidth, v.entHeight, v.choPlotCode, v.choBackGr)

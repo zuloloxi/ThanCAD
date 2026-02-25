@@ -1,4 +1,4 @@
-from types import *
+from types import IntType
 from math import pi, cos, sin, modf
 from Tkinter import ARC, PIESLICE
 from p_ggen import frangec
@@ -16,11 +16,11 @@ class ThanSymbol:
 
     def __init__(self, lines=(), arcs=(), polygons=(), circles=()):
         "Initialise symbol."
-	
+
         self.lines    = lines
-	self.arcs     = arcs
-	self.polygons = polygons
-	self.circles  = circles
+        self.arcs     = arcs
+        self.polygons = polygons
+        self.circles  = circles
 
 #=============================================================================
 
@@ -30,18 +30,18 @@ class ThanSymbol:
         for xc, yc, rc in self.circles:
             xc, yc = (x+xc*r, y-yc*r)
             rc *= r
-            dc.create_arc(xc-rc, yc+rc, xc+rc, yc-rc, start=0.0, extent=359.99999, 
+            dc.create_arc(xc-rc, yc+rc, xc+rc, yc-rc, start=0.0, extent=359.99999,
                 style=PIESLICE, outline=color, fill=fill)
         for pol in self.polygons:
             pol1 = [ (x+x1*r,y-y1*r) for (x1,y1) in pol ]
-	    dc.create_polygon(pol1, outline=color, fill=fill)
+            dc.create_polygon(pol1, outline=color, fill=fill)
         for lin in self.lines:
             lin1 = [ (x+x1*r,y-y1*r) for (x1,y1) in lin ]
             dc.create_line(lin1, fill=color)
         for xc, yc, rc, th1, dth in self.arcs:
             xc, yc = (x+xc*r, y-yc*r)
             rc *= r
-            dc.create_arc(xc-rc, yc+rc, x+rc, yc-rc, start=th1, extent=dth, 
+            dc.create_arc(xc-rc, yc+rc, x+rc, yc-rc, start=th1, extent=dth,
                 style=ARC, outline=color)
 
 
@@ -53,65 +53,65 @@ class ThanSymbol:
 #=============================================================================
 
 def __pcircle(dc, x, y, r, color, fill):
-	    r *= 0.5
-            dc.create_arc(x-r, y+r, x+r, y-r, start=90.0, extent=359.99999, 
+            r *= 0.5
+            dc.create_arc(x-r, y+r, x+r, y-r, start=90.0, extent=359.99999,
                 style=PIESLICE, outline=color, fill=fill)
 
 #=============================================================================
 
 def __pelips(dc, x, y, r, color, fill):
-	    r *= 0.5
-            dc.create_arc(x-r*0.5, y+r, x+r*0.5, y-r, start=0.0, extent=359.99999, 
+            r *= 0.5
+            dc.create_arc(x-r*0.5, y+r, x+r*0.5, y-r, start=0.0, extent=359.99999,
                 style=ARC, outline=color, fill=fill)
 
 #=============================================================================
 
 def __pcross(dc, x, y, r, color, fill):
-	    r *= 0.5
-	    dc.create_line(x-r, y, x+r, y, fill=color)
-	    dc.create_line(x, y-r, x, y+r, fill=color)
+            r *= 0.5
+            dc.create_line(x-r, y, x+r, y, fill=color)
+            dc.create_line(x, y-r, x, y+r, fill=color)
 
 #=============================================================================
 
 def __pchi(dc, x, y, r, color, fill):
-	    r *= 0.5
-	    dc.create_line(x-r, y-r, x+r, y+r, fill=color)
-	    dc.create_line(x-r, y+r, x+r, y-r, fill=color)
+            r *= 0.5
+            dc.create_line(x-r, y-r, x+r, y+r, fill=color)
+            dc.create_line(x-r, y+r, x+r, y-r, fill=color)
 
 #=============================================================================
 
 def __pstar(dc, x, y, r, color, fill):
-	    r *= 0.5
-	    r1 = r * 0.5
-	    r2 = r * 0.866025
-	    dc.create_line(x-r, y, x+r, y, fill=color)
-	    dc.create_line(x-r1, y-r2, x+r1, y+r2, fill=color)
-	    dc.create_line(x+r1, y-r2, x-r1, y+r2, fill=color)
+            r *= 0.5
+            r1 = r * 0.5
+            r2 = r * 0.866025
+            dc.create_line(x-r, y, x+r, y, fill=color)
+            dc.create_line(x-r1, y-r2, x+r1, y+r2, fill=color)
+            dc.create_line(x+r1, y-r2, x-r1, y+r2, fill=color)
 
 #=============================================================================
 
 def __psquare(dc, x, y, r, color, fill):
-	    r *= 0.5
+            r *= 0.5
             dc.create_rectangle(x-r, y-r, x+r, y+r, outline=color, fill=fill)
 
 #=============================================================================
 
 def __ptriangle(dc, x, y, r, color, fill):
-	    r *= 0.5
-	    r1 = r * 0.5
-	    r2 = r * 0.866025
-	    dc.create_polygon((x-r2, y-r1), (x+r2, y-r1), (x, y+r),
+            r *= 0.5
+            r1 = r * 0.5
+            r2 = r * 0.866025
+            dc.create_polygon((x-r2, y-r1), (x+r2, y-r1), (x, y+r),
                 outline=color, fill=fill)
 
 #=============================================================================
 
 def __ptristar(dc, x, y, r, color, fill):
-	    r *= 0.5
-	    r1 = r * 0.5
-	    r2 = r * 0.866025
-	    dc.create_line(x, y, x-r2, y-r1, fill=color)
-	    dc.create_line(x, y, x+r2, y-r1, fill=color)
-	    dc.create_line(x, y, x, y+r, fill=color)
+            r *= 0.5
+            r1 = r * 0.5
+            r2 = r * 0.866025
+            dc.create_line(x, y, x-r2, y-r1, fill=color)
+            dc.create_line(x, y, x+r2, y-r1, fill=color)
+            dc.create_line(x, y, x, y+r, fill=color)
 
 #=============================================================================
 
@@ -175,14 +175,14 @@ def __makeGkiPolygons():
 
 def __makeChristarPolygons():
     "Makes closed polygons that define a christmas star symbol."
-	
+
     x = y = th = 0.0
     ps = [ ]
-    for i in xrange(10): 
+    for i in xrange(10):
         r1 = 0.5
-	if i%2 == 1: r1 *= 0.5
-	ps.append((x + r1*cos(th), y + r1*sin(th)))
-	th += pi*0.2
+        if i%2 == 1: r1 *= 0.5
+        ps.append((x + r1*cos(th), y + r1*sin(th)))
+        th += pi*0.2
 
 #          lines, arcs, polygons, circles
     return (),    (),   [ps],     ()
@@ -195,7 +195,7 @@ def __makeAnalogClock(tim=2.55):
     hh = hour = 1-12
     mm = minute = 0-59
     """
-    
+
     n = 24; dth = pi*2/n
     th = 0.0; r = 0.5; p = []
     for i in xrange(n+1): p.append((r*cos(th),r*sin(th))); th = th + dth
@@ -205,22 +205,22 @@ def __makeAnalogClock(tim=2.55):
 
 #    lines = [None]*12
 #    th = 0.0; dth = pi/6
-#    for i in xrange(12): 
+#    for i in xrange(12):
 #        r1 = r*0.90
-#	if i%3 == 0: r1 = r*0.70
-#	lines[i] = (r1*cos(th), r1*sin(th)), (r*cos(th), r*sin(th))
-#	th += dth
+#        if i%3 == 0: r1 = r*0.70
+#        lines[i] = (r1*cos(th), r1*sin(th)), (r*cos(th), r*sin(th))
+#        th += dth
 
 
     lines = ()
     th = 0.0; dth = pi/6
-    for i in xrange(12): 
+    for i in xrange(12):
         r1 = r*0.90; dt = dth/15
-	if i%3 == 0: r1 = r*0.70; dt = dth/10
-	p = (r1*cos(th), r1*sin(th)), (r*cos(th-dt), r*sin(th-dt)),\
-	(r*cos(th+dt), r*sin(th+dt)), (r1*cos(th), r1*sin(th))
-	pols.append(p)
-	th += dth
+        if i%3 == 0: r1 = r*0.70; dt = dth/10
+        p = (r1*cos(th), r1*sin(th)), (r*cos(th-dt), r*sin(th-dt)),\
+        (r*cos(th+dt), r*sin(th+dt)), (r1*cos(th), r1*sin(th))
+        pols.append(p)
+        th += dth
 
     deikbi = (0,0.07), (0.8, 0.10), (1,0),   (0.8, -0.10), (0,-0.07), (0,0.07)
     deiksm = (0,0.07), (0.6, 0.10), (0.8,0), (0.6, -0.10), (0,-0.07), (0,0.07)
@@ -239,7 +239,7 @@ def __makeAnalogClock(tim=2.55):
 
 def __makeSnowmanElements():
     "Makes lines, arcs, circles that define a snowman symbol."
-    
+
     lines = \
     (   (    (-0.0189626789414, 0.199965180047),
              ( 0.0,             0.265563500509),
@@ -298,23 +298,23 @@ def __makeSnowmanElements():
         (-0.0571838436366, 0.288090469316,   0.0225269688075),
         ( 0.0554510004007, 0.288090469316,   0.0225269688075),
     )
-    
+
 #          lines, arcs, polygons, circles
     return lines, arcs, (),       circles
-   
+
 #=============================================================================
 
 def __addFontAsSymbols(tfont, points):
         "Import ThanCad's font as symbols."
-	
+
         for key in tfont:
-	    lines = tfont[key]
-	    if type(lines) == IntType: lines = tfont[lines]
-	    lines1 = [ ]
-	    for lin in lines:
-	        lin1 = [ ((x-2.5)/7.0, (y-3.5)/7.0) for (x, y) in lin ]
-		lines1.append(lin1)
-	    points[chr(key)] = ThanSymbol(lines=lines1).thanTkDraw
+            lines = tfont[key]
+            if type(lines) == IntType: lines = tfont[lines]
+            lines1 = [ ]
+            for lin in lines:
+                lin1 = [ ((x-2.5)/7.0, (y-3.5)/7.0) for (x, y) in lin ]
+                lines1.append(lin1)
+            points[chr(key)] = ThanSymbol(lines=lines1).thanTkDraw
 
 
 ##############################################################################
@@ -342,7 +342,7 @@ thanPoints = { "circle"    : __pcircle,
                "star"      : __pstar,
                "square"    : __psquare,
                "triangle"  : __ptriangle,
-	       "tristar"   : __ptristar,
+               "tristar"   : __ptristar,
                "gki"       : __gki.thanTkDraw,
                "christar"  : __christar.thanTkDraw,
                "snowman"   : __snowman.thanTkDraw,
@@ -350,7 +350,7 @@ thanPoints = { "circle"    : __pcircle,
                "anclock50"   : __anClock50.thanTkDraw,
                "anclock55"   : __anClock55.thanTkDraw,
                "anclock00"   : __anClock00.thanTkDraw,
-	     }
+             }
 __addFontAsSymbols(thanFontPrime1, thanPoints)
 
 

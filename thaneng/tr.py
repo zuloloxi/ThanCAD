@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module implements semiautomatic tracing of curves of a raster image.
 Specifically, it is intended to help the digitising of contour lines
 of topographic maps.
 """
 
-import Image, sys
-from math import atan2, pi, fabs, hypot
-from thandefs import ThanMultiSet
+from math import hypot
+import p_gimage
 
 FORKMAX=5; FORKSTEPS=20; STEPS=10000; MAXWIDTH=100
 
@@ -69,7 +68,7 @@ class _RasterTracker:
     def trace(self, i, j, fork=0, curve=None):
         "Trace a curve semiautomatically beginning in i, j."
         assert self[j, i], "trace() must begin at point which is not empty."
-        if curve == None: curve = []
+        if curve is None: curve = []
         j1, j2 = self.thickx(i, j)
         jc = int((j1+j2)/2)
         print "New trace: fork=%d: begin at i=%d, j=%d" % (fork, i, j)
@@ -198,34 +197,34 @@ class _RasterTracker:
     def thickx_complex(self, i, j):
         """Finds the thickness of a line at point i,j in the x direction.
 
-	If it finds a gap of more than MGAPMAX pixels long it stops. Else it
-	continues. If the gap is <= MGAPMIN it is filled. Else it is checked
-	that the whole thickness is > 2*gap. If it is not
-	"""
-	gaptolmax1 = self.GAPTOLMAX
-	while gaptolmax1 >= self.GAPTOLMIN:
-	    gapmax = 0
-	    jg1 = j                          # First blank pixel
+        If it finds a gap of more than MGAPMAX pixels long it stops. Else it
+        continues. If the gap is <= MGAPMIN it is filled. Else it is checked
+        that the whole thickness is > 2*gap. If it is not
+        """
+        gaptolmax1 = self.GAPTOLMAX
+        while gaptolmax1 >= self.GAPTOLMIN:
+            gapmax = 0
+            jg1 = j                          # First blank pixel
             for j1 in xrange(j, -1, -1):
                 if self[j1, i]:
-		    jg1 = j1
-		else:
-		    gap = abs(jg1-j1)
-	            if gap > gaptolmax1: j1 = jg1; break
-		    if gap > gapmax: gapmax = gap
+                    jg1 = j1
+                else:
+                    gap = abs(jg1-j1)
+                    if gap > gaptolmax1: j1 = jg1; break
+                    if gap > gapmax: gapmax = gap
 
-	    jg2 = j
+            jg2 = j
             for j2 in xrange(j, self.width):
                 if self[j2, i]:
-		    jg2 = j2
-		else:
-		    gap = abs(jg2-j2)
-	            if gap > gaptolmax1: j2 = jg2; break
-		    if gap > gapmax: gapmax = gap
+                    jg2 = j2
+                else:
+                    gap = abs(jg2-j2)
+                    if gap > gaptolmax1: j2 = jg2; break
+                    if gap > gapmax: gapmax = gap
 
-	    if abs(jg2-jg1) > 3*gapmax: break
-	    if abs(jg2-jg1) == 0: break
-	    gaptolmax1 /= 2
+            if abs(jg2-jg1) > 3*gapmax: break
+            if abs(jg2-jg1) == 0: break
+            gaptolmax1 /= 2
         print "thickx: j1,j2=", j1, j2
         return j1, j2
 
@@ -243,7 +242,7 @@ class _RasterTracker:
         return i1, i2, j1, j2
 
     def thickness(self, curve):
-        "Finds the average thickenss of a line."
+        "Finds the average thickness of a line."
         t = 0.0
         for i, j in curve:
             i1, i2, j1, j2 = self.thick(i, j)
@@ -257,21 +256,21 @@ class _RasterTracker:
         k = 0
         for i, j in curve:
             self[j, i] = str(k)
-	    k = (k+1) % 10
+            k = (k+1) % 10
 
     def plotcurvea(self, curve):
         "Plot the curve to the image."
         k = ord("A")
         for i, j in curve:
             self[j, i] = chr(k)
-	    k += 1
-	    if k > ord("Z"): k = ord("A")
+            k += 1
+            if k > ord("Z"): k = ord("A")
 
 
 class ThanAscRasterTracker(_RasterTracker):
     def __init__(self, fr):
         "Reads an ascii raster."
-	_RasterTracker.__init__(self)
+        _RasterTracker.__init__(self)
         self.dlines = list(fr)
         self.height = len(self.dlines)
         self.width = max([len(dl) for dl in self.dlines])
@@ -289,7 +288,7 @@ class ThanAscRasterTracker(_RasterTracker):
 
     def save(self, fw):
         "Saves the image to an ascii file."
-	for dl in self.dlines: fw.write("".join(dl) + "\n")
+        for dl in self.dlines: fw.write("".join(dl) + "\n")
 
 
 class ThanPilRasterTracker(_RasterTracker):
@@ -304,13 +303,13 @@ class ThanPilRasterTracker(_RasterTracker):
     def __getitem__(self, ji):
         return self.im.getpixel(ji) < 127
 
-    def __setitem__(self, ij, val):
+    def __setitem__(self, ji, val):
         if val == " ": self.im.putpixel(ji, 255)
         else:          self.im.set(ji, 0)
 
     def save(self, fw):
         "Saves the image to a new file."
-        im.save(fw)
+        self.im.save(fw)
 
     def makeAsc(self, fw):
         "Saves the image as an ascii file."
@@ -325,11 +324,47 @@ class ThanPilRasterTracker(_RasterTracker):
         pass
 
 
+class ThanMultiSet:
+    "Multilevel set."
+
+    def __init__(self):
+        "Create level 0 set."
+        self.__sets = [set()]
+        self.thanLevel = 0
+
+    def add(self, val):
+        "Add point to the highest level set."
+        self.__sets[-1].add(val)
+
+    def in_(self, val):
+        "Check if val is in one of the sets."
+        for set1 in self.__sets:
+            if val in set1: return True
+        return False
+
+
+    def pushLevel(self):
+        "Create a new level of sets."
+        self.thanLevel += 1
+        self.__sets.append(set())
+
+
+    def popLevel(self):
+        "Delete the highest level of sets."
+        assert len(self.__sets) > 0, "There is no level to delete!"
+        self.__sets.pop()
+
+    def clear(self):
+        "Empties the multiset."
+        del self.__sets[1:]
+        self.__sets[0].clear()
+
+
 def test():
-    "Various standalopne tests."
+    "Various standalone tests."
     global curves
     curves = []
-    fot1 = ThanPilRasterTracker(Image.open("seg1.bmp"))
+    fot1 = ThanPilRasterTracker(p_gimage.open("seg1.bmp"))
 #    fot1 = ThanAscRasterTracker(file("seg1.asc"))
 #    print "thickness=", fot1.thickness(curve)
 #    curves.append(curve)
@@ -346,7 +381,7 @@ def test():
             fw.write("%-10d%15.3f%15.3f\n" % (i, float(x), float(fot1.height-y)))
         fw.write("T\n")
 
-#    fot1 = ThanPilRasterTracker(Image.open("3573_8.bmp"))
+#    fot1 = ThanPilRasterTracker(p_gimage.open("3573_8.bmp"))
 #    print "m,n=", fot1.m, fot1.n
 #    curvefork = fot1.forks(curve, visited)
 #    fot1.plotcurvea(curvefork)

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module contains the definitions of some raster images
 """
@@ -48,7 +48,7 @@ def get(name, **kw):
     """
     global __icons, __tk
     if __tk != Tkinter._default_root:
-        if __icons != None: print "Module", __name__, ": Reinitialise images"
+        if __icons is not None: print "Module", __name__, ": Reinitialise images"
         __icons = {}
         __tk = Tkinter._default_root
 
@@ -159,7 +159,7 @@ def floppy(): return '\
     2Iq07fbbhQQCADs='
 
 
-def line1(): return '\
+def line2(): return '\
     R0lGODlhIAAgAIQcAP8Av/8Kwv8Rw/8Zxf8axv8myf8oyf9Az/9F0P9I0f9V1P9Y1fxm1/xq2Pxr\
     2P+H4f+P4/+X5f+f5/+k6P+o6f+u6/Ly8v/r+vf39//y/P/z/P/1/f///////////////yH+FUNy\
     ZWF0ZWQgd2l0aCBUaGUgR0lNUAAsAAAAACAAIAAABcggJ45kaY6apKqVaGFwLM801hRJnhAUh53A\

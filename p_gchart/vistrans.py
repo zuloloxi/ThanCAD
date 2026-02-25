@@ -5,7 +5,7 @@ from p_ggen import Translation
 ##############################################################################
 ##############################################################################
 
-#English to greek translation table
+#English to Greek translation table
 en2gr = \
 { "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
   "Error in data"       :"Λάθος στα δεδομένα",

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines rectangle states, i.e. as the user moves the mouse, a rectangle
 is drawn from a given point to mouse cursor, continuously.
 """
 from math import fabs
-import Tkinter
-from thantkconst import *
-from thanvar import thanLogTk
+from thantkconst import THAN_STATE_NONE
 from thantkguigeneric import ThanStateGeneric
 
 
@@ -42,7 +40,7 @@ class ThanStateRectangle(ThanStateGeneric):
         self.__x1 = x1
         self.__y1 = y1
         self.__t1 = t1               # __t1 is the command
-        print "rectangle: command: t1=", t1
+#        print "rectangle: command: t1=", t1
         dc = self.thanProj[2].thanCanvas
 #        dc.thanOrtho.enable(x1, y1)               # Ortho is crazy here!
         self.__dragged = dc.create_line(10000, 10000, 10001, 10001)  # Dummy element to avoid complexity in onMotion()
@@ -54,12 +52,12 @@ class ThanStateRectangle(ThanStateGeneric):
         out = "blue"; fil = "darkblue"
         if self.__t1 == "c": out = "cyan"; fil = "darkcyan"
         elif self.__t1 == "cw" and x < self.__x1: out = "cyan"; fil = "darkcyan"
-        elif self.__t1 == None: out = "blue"; fil = None
+        elif self.__t1 is None: out = "blue"; fil = None
         dc = self.thanProj[2].thanCanvas
 #        x, y = dc.thanOrtho.orthoxy(x, y)     # ortho is crazy here
         i1 = self.__dragged
         self.__dragged = dc.create_rectangle(self.__x1, self.__y1, x, y, outline=out, fill=fil, stipple="gray25")
-#       if self.__t1 != None: dc.lower(self.__dragged)
+#       if self.__t1 is not None: dc.lower(self.__dragged)
         dc.delete(i1)
         dc.thanTempItems.remove(i1)
         dc.thanTempItems.add(self.__dragged)
@@ -138,6 +136,6 @@ class ThanStateRectratio(ThanStateGeneric):
 
 
     def thanZoomXyr(self, x, y, fact):
-        "Change internal coordinates according to zoom; this fuction should be in the state objects."
+        "Change internal coordinates according to zoom; this function should be in the state objects."
         self.__x1 = x + (self.__x1-x)*fact
         self.__y1 = y + (self.__y1-y)*fact

@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This package emulates the dxf library in ThanCad.
 """
@@ -55,61 +55,61 @@ class ThanDxfLin:
 
     def thanDxfPlotPolyline (self, xgram, ygram):
         "Plots a 2d polyline."
-	n = len(xgram)
-	xg = [None]*n; yg = [None]*n
-	for i in xrange(len(xgram)):
+        n = len(xgram)
+        xg = [None]*n; yg = [None]*n
+        for i in xrange(len(xgram)):
             xg[i], yg[i] = self.thanDxfTop(xgram[i], ygram[i])
-	zg = [ZDEFAULT] * n
+        zg = [ZDEFAULT] * n
         self.thanDr.dxfPolyline(xg, yg, zg, self.thanLayer, None, self.thanColor)
 
     def thanDxfPlotPolyline3 (self, xgram, ygram, zgram):
         "Plots a 3d polyline."
-	n = len(xgram)
-	xg = [None]*n; yg = [None]*n; zg = [None]*n
-	for i in xrange(n):
+        n = len(xgram)
+        xg = [None]*n; yg = [None]*n; zg = [None]*n
+        for i in xrange(n):
             xg[i], yg[i], zg[i] = self.thanDxfTop3(xgram[i], ygram[i], zgram[i])
         self.thanDr.dxfPolyline(xg, yg, zg, self.thanLayer, None, self.thanColor)
 
     def thanDxfPlotPolyVertex (self, xx, yy, ic, bulge=None):
         "Plots a 2d polyline, vertex by vertex."
         if self.__firstVertex:
-	    self.__xvert = [xx]
-	    self.__yvert = [yy]
+            self.__xvert = [xx]
+            self.__yvert = [yy]
             self.__firstVertex = False
         elif ic >= 999:
-	    self.thanDxfPlotPolyline (self.__xvert, self.__yvert)
-	    del self.__xvert, self.__yvert
+            self.thanDxfPlotPolyline (self.__xvert, self.__yvert)
+            del self.__xvert, self.__yvert
             self.__firstVertex = True
         else:
-	    self.__xvert.append(xx)
-	    self.__yvert.append(yy)
+            self.__xvert.append(xx)
+            self.__yvert.append(yy)
 
     def thanDxfPlotPolyVertex3 (self, xx, yy, zz, ic):
         "Plots a 3d polyline, vertex by vertex."
         if self.__firstVertex:
-	    self.__xvert = [xx]
-	    self.__yvert = [yy]
-	    self.__zvert = [zz]
+            self.__xvert = [xx]
+            self.__yvert = [yy]
+            self.__zvert = [zz]
             self.__firstVertex = False
         elif ic >= 999:
-	    self.thanDxfPlotPolyline3(self.__xvert, self.__yvert, self.__zvert)
+            self.thanDxfPlotPolyline3(self.__xvert, self.__yvert, self.__zvert)
             self.__firstVertex = 1
-	    del self.__xvert, self.__yvert, self.__zvert
+            del self.__xvert, self.__yvert, self.__zvert
             self.__firstVertex = 1
         else:
-	    self.__xvert.append(xx)
-	    self.__yvert.append(yy)
-	    self.__zvert.append(zz)
+            self.__xvert.append(xx)
+            self.__yvert.append(yy)
+            self.__zvert.append(zz)
 
     def thanDxfPlotLinebox (self, xx, yy, bb, hh):
         "Plots a 2d rectangle."
         xx1 = xx + bb
         yy1 = yy + hh
-        self.thanDxfPolyVertex (xx,  xy,  2)
-	self.thanDxfPolyVertex (xx1, xy,  2)
-        self.thanDxfPolyVertex (xx1, xy1, 2)
-        self.thanDxfPolyVertex (xx,  xy1, 2)
-        self.thanDxfPolyVertex (xx,  xy,  2)
+        self.thanDxfPolyVertex (xx,  yy,  2)
+        self.thanDxfPolyVertex (xx1, yy,  2)
+        self.thanDxfPolyVertex (xx1, yy1, 2)
+        self.thanDxfPolyVertex (xx,  yy1, 2)
+        self.thanDxfPolyVertex (xx,  yy,  2)
         self.thanDxfPolyVertex (0.0, 0.0, 999)
 
     def thanDxfPlot(self, xx, yy, icom):
@@ -125,7 +125,7 @@ class ThanDxfLin:
         (px, py) = self.thanDxfTop(xx, yy)
         if ic == 2:
             self.thanDr.dxfLine([self.thanPXnow, px], [self.thanPYnow, py], [ZDEFAULT, ZDEFAULT],
-	                      self.thanLayer, None, self.thanColor)
+                self.thanLayer, None, self.thanColor)
         self.thanPXnow = px
         self.thanPYnow = py
 #-------Check if negative

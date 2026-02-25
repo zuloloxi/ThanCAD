@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 The package creates automatically architectural things such as stairs.
 The subpackage contains the commands which handle architecture related
@@ -53,7 +53,7 @@ def thanArchStairs(proj):
           if ca == Canc: return proj[2].thanGudCommandCan()
           if ca == "s":
               win = ThanStairsSettings(proj[2], vals=v, cargo=proj, translation=None)
-              if win.result != None:
+              if win.result is not None:
                   v = win.result
                   thanCompute(v)
               continue
@@ -121,7 +121,7 @@ def __stairsdraw(proj, v, ca, f, fdeg):
           xa = bskal*0.5 + hs
           ya = y + hs*0.5
           xt, yt = tra((xa, ya))
-          dxf.thanDxfPlotNumber (xt, yt, hs, float(i), fdeg, -1)
+          dxf.thanDxfPlotNumber (xt, yt, hs, float(i+1), fdeg, -1)
 
       __sxFora (dxf, bskal, bpat, v.entScale, nyps, tra)
       __stairsbox(dxf, v, fdeg, tra)

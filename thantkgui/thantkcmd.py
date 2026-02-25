@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,24 +21,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 It implements ThanCad command line window.
 """
 
 import Tkinter, tkFont
-import p_gtkwid, p_gtkuti, p_ggen
-import thancom
+import p_gtkwid, p_ggen
+import thancom, thantk
 from thanvers import tcver
+from thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT,
+    THAN_STATE_POINT1, THAN_STATE_LINE, THAN_STATE_TEXT,
+    THAN_STATE_LINE2, THAN_STATE_RECTANGLE, THAN_STATE_MOVE, THAN_STATE_ROADP,
+    THAN_STATE_SPLINEP, THAN_STATE_POLAR, THAN_STATE_CIRCLE, THAN_STATE_ARC,
+    THAN_STATE_ELLIPSEB, THAN_STATE_RECTRATIO, THAN_STATE_SNAPELEM, THAN_STATE_ZOOMDYNAMIC,
+    THAN_STATE_PANDYNAMIC)
 from thanopt import thancadconf
-from thantkguilowget.thantkconst import *
-from thanopt import thancadconf
-from thanvar import Canc, thanLogTk, thanfiles
+from thanvar import Canc, thanLogTk, thanfiles, DEFMES
 from thantrans import T
-
-DEFMES = T["Command: "]
-DEFCAN = T["Cancelled."]
-thanFonts = []
 
 # self.__crel: These are the coordinates of the previous points defined by the user.
 #              IT is used to aid the relative coordinates system. But what happens
@@ -83,7 +83,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             self.bindte("<MouseWheel>",       self._mouseWheelp)      #This ugly hack is for Windows
             self.bindte("<Shift-MouseWheel>", self._shiftmouseWheelp) #Yeah, Windows "just" works
 
-        createTags(self)
+        thantk.createTags((self,))
         self.thanCadVer()
 
 
@@ -98,7 +98,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         return "break"
 
     def setProj(self):
-        "A new drawing is inserted to the current project; do some preprosessing."
+        "A new drawing is inserted to the current project; do some preprocessing."
         if thancadconf.thanTranslateTo != "en" and \
             thanfiles.isTempname1(self.__proj[0].basename()):    #This is the first drawing
             self.thanAppend("(Please type ", "info1")
@@ -160,9 +160,9 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def __onPagedown(self, event):
         "Pagedown pressed; if idle, pan drawing 1 page up."
-	if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
-	self.thanEnter("panpagedown", "com")
-	return "break"                                  # Pageup does not go to the command window
+        if self.thanState != THAN_STATE_NONE: return    # Page-up goes to the command window
+        self.thanEnter("panpagedown", "com")
+        return "break"                                  # Pageup does not go to the command window
 
     def __onPageleft(self, event):
         "Page left pressed; if idle, pan drawing 1 page up."
@@ -191,7 +191,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def __onGrayplus(self, event):
         "Gray plus pressed; brighten raster images."
-        from thancom.thancomdraw import thanTkImageBrighten
+        from thancom.thancomim import thanTkImageBrighten
         self.thanAppend("\n%s\n" % T["<Brighten images>"], "info")
         thanTkImageBrighten(self.__proj, verbose=False)
         self.__reprompt()
@@ -199,7 +199,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def __onGrayminus(self, event):
         "Gray minus pressed; darken raster images."
-        from thancom.thancomdraw import thanTkImageDarken
+        from thancom.thancomim import thanTkImageDarken
         self.thanAppend("\n%s\n" % T["<Darken images>"], "info")
         thanTkImageDarken(self.__proj, verbose=False)
         self.__reprompt()
@@ -222,8 +222,8 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
             self.__enlarged = None
         else:
             title = "%s: Content of command window" % self.__proj[0]
-            self.__enlarged = ThanTkCmdbig(self.__proj, self.thanGetFtext(), title, font=thanFonts[0])
-#            self.__enlarged = ThanTkCmdbig(self.__proj, self.thanGet(), title, font=thanFonts[0])
+            self.__enlarged = ThanTkCmdbig(self.__proj, self.thanGetFtext(), title, font=thantk.thanFonts[0])
+#            self.__enlarged = ThanTkCmdbig(self.__proj, self.thanGet(), title, font=thantk.thanFonts[0])
             self.__enlarged.thanTkSetFocus()
 
 
@@ -277,13 +277,13 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         if self.thanState != THAN_STATE_NONE:
             self.thanCleanup()
             return
-	dc = self.__proj[2].thanCanvas
-	if dc.thanState != THAN_STATE_NONE:
+        dc = self.__proj[2].thanCanvas
+        if dc.thanState != THAN_STATE_NONE:
             dc.thanCleanup()
-	    self.thanCleanup(T["\nThanTkGuiGet was cleared for debugging reasons."], "can")
-	    self.thanPrompt()
-	    return
-	if dc.thanFloatMenu != None and dc.thanFloatMenu.winfo_ismapped():
+            self.thanCleanup(T["\nThanTkGuiGet was cleared for debugging reasons."], "can")
+            self.thanPrompt()
+            return
+        if dc.thanFloatMenu is not None and dc.thanFloatMenu.winfo_ismapped():
             dc.thanCleanup()          # Delete floating (rightclick) menu
             return
         sched = self.__proj[2].thanScheduler
@@ -307,23 +307,23 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
     def __onCharRet(self, evt):
         "Gets the command entered by the user"
         self.thanWaitingInput = False
-#	now = [int(c) for c in self.index(Tkinter.INSERT).split(".")]
-#	end = [int(c) for c in self.index(Tkinter.END).split(".")]
+#       now = [int(c) for c in self.index(Tkinter.INSERT).split(".")]
+#       end = [int(c) for c in self.index(Tkinter.END).split(".")]
         now = self.thanIndex(Tkinter.INSERT)
         end = self.thanIndex(Tkinter.END)
         if end[0]-now[0] > 1:
-	    l = str(now[0])
-	    t = self.thanGetPart(l+".0", l+".end")
-	    self.thanInsert(Tkinter.END, "\n"+t)
-	    self.set_insert(Tkinter.END+"-1c")
-	else:
-	    t = self.thanGetPart(Tkinter.END+"-1l", Tkinter.END)
+            l = str(now[0])
+            t = self.thanGetPart(l+".0", l+".end")
+            self.thanInsert(Tkinter.END, "\n"+t)
+            self.set_insert(Tkinter.END+"-1c")
+        else:
+            t = self.thanGetPart(Tkinter.END+"-1l", Tkinter.END)
         t = t.strip()
-	n = -1; n1 = t.find(":")
-	while n1 >= 0:
-	    n = n1; n1 = t.find(":", n+1)
-	if n >= 0: t = t[n+1:].strip()
-	self.after(100, self.__processEntry, t)
+        n = -1; n1 = t.find(":")
+        while n1 >= 0:
+            n = n1; n1 = t.find(":", n+1)
+        if n >= 0: t = t[n+1:].strip()
+        self.after(100, self.__processEntry, t)
 
     def thanEnter(self, com, tags=()):
         "Simulate keyboard and return immediately."
@@ -338,63 +338,62 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def __processEntry(self, t):
         "Deals with the text the user entered."
-	s = self.thanState
-	if self.thanState == THAN_STATE_NONE:
-	    self.__beginCommand(t)
-	elif t[:1] == "'":
+        s = self.thanState
+        if self.thanState == THAN_STATE_NONE:
+            self.__beginCommand(t)
+        elif t[:1] == "'":
             c, fun = thancom.thanComFun(t[1:])
-	    if fun != None:
-	        self.thanLastResult = "'"+c
-	        self.thanState = THAN_STATE_NONE
-	    else:
-	        self.thanAppend(T["Invalid nested command. Try again.\n"], "can")
-		self.__reprompt()
-	elif s in self.PNTSTATES:
-	    try:
-	        nd   = self.__proj[1].thanVar["dimensionality"]
-	        elev = self.__proj[1].thanVar["elevation"]
-	        if t[0] == "@":
-		    if len(t) == 1:
-		        cc = [0.0] * nd
-	            else:
-		        cc = [float(c1) for c1 in t[1:].split(",")]
-			if len(cc) > nd: raise ValueError, "Too many dimensions"
-			if len(cc) < 2:  raise ValueError, "Too few dimensions"
-		        cc.extend(elev[len(cc):])
-		    for i in xrange(nd): cc[i] += self.__crel[i]
-		else:
-		    cc = [float(c1) for c1 in t.split(",")]
-		    if len(cc) > nd: raise ValueError, "Too many dimensions"
-		    if len(cc) < 2:  raise ValueError, "Too few dimensions"
-		    cc.extend(elev[len(cc):])
-   	    except (IndexError,ValueError):
-	        self.thanLastResult = t
-	        print "cmd: last result string: '%s'" % t
-	    else:
-	        self.__crel = tuple(cc)
+            if fun is not None:
+                self.thanLastResult = "'"+c
+                self.thanState = THAN_STATE_NONE
+            else:
+                self.thanAppend(T["Invalid nested command. Try again.\n"], "can")
+                self.__reprompt()
+        elif s in self.PNTSTATES:
+            try:
+                nd   = self.__proj[1].thanVar["dimensionality"]
+                elev = self.__proj[1].thanVar["elevation"]
+                if t[0] == "@":
+                    if len(t) == 1:
+                        cc = [0.0] * nd
+                    else:
+                        cc = [float(c1) for c1 in t[1:].split(",")]
+                        if len(cc) > nd: raise ValueError, "Too many dimensions"
+                        if len(cc) < 2:  raise ValueError, "Too few dimensions"
+                        cc.extend(elev[len(cc):])
+                    for i in xrange(nd): cc[i] += self.__crel[i]
+                else:
+                    cc = [float(c1) for c1 in t.split(",")]
+                    if len(cc) > nd: raise ValueError, "Too many dimensions"
+                    if len(cc) < 2:  raise ValueError, "Too few dimensions"
+                    cc.extend(elev[len(cc):])
+            except (IndexError,ValueError):
+                self.thanLastResult = t
+            else:
+                self.__crel = tuple(cc)
                 self.thanLastResult = cc
-	        print "cmd: last result point: ", cc
-	    self.thanState = THAN_STATE_NONE
-	elif s == THAN_STATE_RECTRATIO:
-	    try: r = float(t)
-	    except (IndexError,ValueError):
-	        self.thanAppend(T["Invalid real number. Try again.\n"], "can")
-		self.__reprompt()
+                print "cmd: last result point: ", cc
+            self.thanState = THAN_STATE_NONE
+        elif s == THAN_STATE_RECTRATIO:
+            try: r = float(t)
+            except (IndexError,ValueError):
+                self.thanAppend(T["Invalid real number. Try again.\n"], "can")
+                self.__reprompt()
                 self.thanWaitingInput = True
-		return
-	    cc = list(self.__cc1)
-	    cc[0] += r
-	    cc[1] += r*self.__t1
+                return
+            cc = list(self.__cc1)
+            cc[0] += r
+            cc[1] += r*self.__t1
             self.thanLastResult = cc
-	    self.thanState = THAN_STATE_NONE
-	elif s == THAN_STATE_TEXT or s == THAN_STATE_SNAPELEM:
+            self.thanState = THAN_STATE_NONE
+        elif s == THAN_STATE_TEXT or s == THAN_STATE_SNAPELEM:
             self.thanLastResult = t
-	    self.thanState = THAN_STATE_NONE
-	elif s == THAN_STATE_ZOOMDYNAMIC or s == THAN_STATE_PANDYNAMIC:
-	    pass       # no keyboard entry by definition
+            self.thanState = THAN_STATE_NONE
+        elif s == THAN_STATE_ZOOMDYNAMIC or s == THAN_STATE_PANDYNAMIC:
+            pass       # no keyboard entry by definition
 
         else:
-             assert False, "Unknown state: "+str(s)
+            assert False, "Unknown state: "+str(s)
         self.thanWaitingInput = True
 
 
@@ -424,9 +423,9 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def __beginCommand(self, t):
         "The user entered a command; launch it."
-	w = self.__proj[2]
-	assert w.thanScheduler.thanSchedIdle(), "No command should be running!!!"
-	n = len(t); t = t.lower()
+        w = self.__proj[2]
+        assert w.thanScheduler.thanSchedIdle(), "No command should be running!!!"
+        t = t.lower()
         if t == "":
             if self.thanPrevCom == "":
                 self.thanPrompt()
@@ -435,22 +434,20 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
                 self.thanEnter(self.thanPrevCom, "com")
             return
         c, fun = thancom.thanComFun(t)
-	if fun != None:
-	    if t != c: self.thanAppend("%s\n" % c, "com")
+        if fun is not None:
+            if t != c: self.thanAppend("%s\n" % c, "com")
             w.thanScheduler.thanSchedule(fun, self.__proj)   # A command will run immediately; thanWaitingInput remains False
             self.thanPrevCom = c
-	else:
-	    self.thanAppend(T["Unrecognized command\n"], "can")
-	    self.thanPrompt()
+        else:
+            self.thanAppend(T["Unrecognized command\n"], "can")
+            self.thanPrompt()
             self.thanWaitingInput = True
 
 
     def thanBeginCommandNest(self, t):
         "The user entered a nested command; launch it."
-        w = self.__proj[2]
-        n = len(t); t = t.lower()
         c, fun = thancom.thanComFun(t)
-        if fun != None:
+        if fun is not None:
             if t != c: self.thanAppend("%s\n" % c, "com")
             fun(self.__proj)
         else:
@@ -477,19 +474,18 @@ class ThanTkCmdbig(Tkinter.Toplevel):
         self.__proj = proj
         self.thanFont1 = font
         if font is None:
-            from thanopt import thancadconf
-            self.thanFont1=tkFont.Font(family=thancadconf.thanFontFaminymono, size=thancadconf.thanFontSizemono)
+            self.thanFont1=tkFont.Font(family=thancadconf.thanFontfamilymono, size=thancadconf.thanFontsizemono)
 
         self.thanHelp = p_gtkwid.ThanScrolledText(self, hbar=hbar, vbar=vbar, font=self.thanFont1,
             background=background, foreground=foreground, width=width, height=height, readonly=True)
-        createTags(self.thanHelp)
+        thantk.createTags((self.thanHelp,))
         self.thanHelp.thanInsertFtext(ftext)
         self.thanHelp.grid(row=0, column=0, sticky="wesn")
         self.thanHelp.set_insert(Tkinter.END+"-1c")
         self.thanHelp.bindte("<F2>", self.__onF2)
 
         self.protocol("WM_DELETE_WINDOW", self.__onF2) # In case user closes window with window manager
-        p_gtkuti.thanGudPosition(self, master=proj[2])
+        p_gtkwid.thanGudPosition(self, master=proj[2])
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
@@ -514,26 +510,3 @@ class ThanTkCmdbig(Tkinter.Toplevel):
         "Say that it is deleted for debugging reasons."
         from p_ggen import prg
         prg("ThanTkCmdbig %s is deleted." % self)
-
-
-def createTags(wid):
-    "Create standard tags and donts in the text widget."
-    if not thanFonts:
-        font1 = tkFont.Font(family=thancadconf.thanFontfamilymono,
-                            size=thancadconf.thanFontsizemono)      # Negative size means size in pixels
-        font2 = font1.copy()
-        font2.config(weight=tkFont.BOLD)
-        font3 = font2.copy()
-        font3.config(size=thancadconf.thanFontsizemono+2)           # Negative size means size in pixels
-        thanFonts[:] = font1, font2, font3
-    else:
-        font1, font2, font3 = thanFonts
-    wid.config(font=font1)
-    wid.tag_config("mes",   foreground="blue",      font=font2)
-    wid.tag_config("com",   foreground="darkcyan",  font=font2)
-    wid.tag_config("can",   foreground="darkred",   font=font2)
-    wid.tag_config("can1",  foreground="darkred",   font=font1)
-    wid.tag_config("info",  foreground="darkgreen", font=font2)
-    wid.tag_config("info1", foreground="darkgreen", font=font1)
-    col = "#%2xd%2xd%2xd" % (66, 182, 33)
-    wid.tag_config("thancad", foreground="white", background=col, font=thanFonts[2])

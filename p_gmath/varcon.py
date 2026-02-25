@@ -1,6 +1,5 @@
 from math import pi, sqrt
-
-#Various Constants
+"Various Constants."
 
 PI2  = 2 * pi
 PI05 = pi * 0.5

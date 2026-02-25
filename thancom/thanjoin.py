@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes the line join command.
@@ -56,36 +56,36 @@ def thanJoinSel(proj, elems, nearx):
         cend = e.cp[-1]
         for e1 in lines:
             if nearx(cbeg, e1.cp[0]):
-                 e = __joinhouse(e, e1, lines)
-                 cp1 = list(reversed(e1.cp)); cp1.pop()
-                 cp1.extend(e.cp)
-                 e.cp[:] = cp1
-                 lines.add(e)
-                 break
+                e = __joinhouse(e, e1, lines)
+                cp1 = list(reversed(e1.cp)); cp1.pop()
+                cp1.extend(e.cp)
+                e.cp[:] = cp1
+                lines.add(e)
+                break
             elif nearx(cbeg, e1.cp[-1]):
-                 e = __joinhouse(e, e1, lines)
-                 cp1 = e1.cp[:-1]
-                 cp1.extend(e.cp)
-                 e.cp[:] = cp1
-                 lines.add(e)
-                 break
+                e = __joinhouse(e, e1, lines)
+                cp1 = e1.cp[:-1]
+                cp1.extend(e.cp)
+                e.cp[:] = cp1
+                lines.add(e)
+                break
             elif nearx(cend, e1.cp[0]):
-                 e = __joinhouse(e, e1, lines)
-                 e.cp.extend(e1.cp[1:])
-                 lines.add(e)
-                 break
+                e = __joinhouse(e, e1, lines)
+                e.cp.extend(e1.cp[1:])
+                lines.add(e)
+                break
             elif nearx(cend, e1.cp[-1]):
-                 e = __joinhouse(e, e1, lines)
-                 cp1 = list(reversed(e1.cp)); cp1.pop(0)
-                 e.cp.extend(cp1)
-                 lines.add(e)
-                 break
+                e = __joinhouse(e, e1, lines)
+                cp1 = list(reversed(e1.cp)); cp1.pop(0)
+                e.cp.extend(cp1)
+                lines.add(e)
+                break
         else:
             if e._joined: newelems.add(e)
             else:         samelems.add(e)
             del e._joined
     if len(newelems) > 0: proj[1].thanTouch()
-    for e in newelems:  #We assume that all elements are ThanLine.We recrate the lines to:..
+    for e in newelems:  #We assume that all elements are ThanLine.We recreate the lines to:..
         e.thanSet(e.cp) #.. a. Delete zero lengthed segments, b. Recompute boundbox (which is wrong)
     delelems = (elems-othelems)-samelems
     return delelems, newelems, samelems, othelems

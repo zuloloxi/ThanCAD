@@ -15,8 +15,9 @@ The axial force at distance x from the first (left) joint of the member is:
 Where only the concentrated loads that are before x are summed.
 """
 
-import matdat, matk, matdxf
-from mat import genEval, xrangec
+from p_ggen import xfrangec
+import matk, matdat
+from mat import genEval
 
 
 class Axialmac:
@@ -55,7 +56,6 @@ class Axialmac:
     def diags(self, blen=None, bstep=None, tit="Q, M DIAGRAMS", **kw):
         "Shows the Q, M diagrams on the screen."
         N = self.allN(blen, bstep)
-#        matdxf.diag(Q, M, tit)
 #        matk.diag(Q, M, tit, **kw)
 
 
@@ -91,7 +91,7 @@ def test(L=5.0, Fx=50.0, v=2.0):
     )
     for load in loads: load[0] = load[0][:4]
     mac = Axialmac(loads)
-    for x in [-0.01, 0.01]+list(xrangec(0.5, 1.5*L, 0.5))+[1.5*L+0.01]:
+    for x in [-0.01, 0.01]+list(xfrangec(0.5, 1.5*L, 0.5))+[1.5*L+0.01]:
         print "x=%8.3f : N=%8.3f" % (x, mac.evalN(x))
     return mac
 

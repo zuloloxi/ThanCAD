@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 With this dialog we defined units and how they are printed.
 """
@@ -45,7 +45,7 @@ class ThanDialogUnits(p_gtkwid.ThanComDialog):
         v.entDistdigs = 3                   # Number of digits to display for distance values
         v.radAnglunit = vs._ang2num["deg"]  # Unit of angular measurements
         v.entAngldigs = 4                   # Number of digits to display for angular values
-        v.radAngldire = vs._dir2num[+1]     # Anti-clockswise angles are positive
+        v.radAngldire = vs._dir2num[+1]     # Anti-clockwise angles are positive
         v.radAnglzero = vs._ori2num[3]      # Zero is at 0.0 radians angle from the x-axis in the anticlockwise direction
         return v
 

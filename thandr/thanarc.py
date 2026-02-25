@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the circular arc element.
 """
@@ -32,10 +32,10 @@ import bisect
 import Tkinter
 from p_ggen import prg, thanUnicode
 from p_gmath import PI2, thanintersect, thanNearx
-import thanintall
 from thanvar import Canc
-from thanelem import ThanElement
 from thantrans import T
+import thanintall
+from thanelem import ThanElement
 
 ############################################################################
 ############################################################################
@@ -136,29 +136,29 @@ class ThanArc(ThanElement):
             self.thanOsnapAdd(ccu, ps, thet, "mid")
         if "nea" in otypes:
             cn, rn, thet = self.thanPntNearest2(ccu)
-	    if thet != None and rn > self.r:  # If we are getting near from the outside then "nea"
-	        self.thanOsnapAdd(ccu, ps, thet, "nea")
-	if "qua" in otypes:
-	    for thet in 0, 0.5*pi, pi, 1.5*pi:    # If both "nea" and "cen" are active, "qua" does not have a chance
-	        if not self.thanThetain(thet)[0]: continue
-	        self.thanOsnapAdd(ccu, ps, thet, "qua")
+            if thet is not None and rn > self.r:  # If we are getting near from the outside then "nea"
+                self.thanOsnapAdd(ccu, ps, thet, "nea")
+        if "qua" in otypes:
+            for thet in 0, 0.5*pi, pi, 1.5*pi:    # If both "nea" and "cen" are active, "qua" does not have a chance
+                if not self.thanThetain(thet)[0]: continue
+                self.thanOsnapAdd(ccu, ps, thet, "qua")
         if "cen" in otypes:
             cn, rn, thet = self.thanPntNearest2(ccu)
-	    if thet != None and rn < self.r:  # If we are getting near from the inside then "cen"
-	        ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "cen", self.cc))
-        if cori != None and "per" in otypes:
+            if thet is not None and rn < self.r:  # If we are getting near from the inside then "cen"
+                ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "cen", self.cc))
+        if cori is not None and "per" in otypes:
             for cn in self.thanPerpPoints(cori):
                 ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "per", cn))
-        if cori != None and "tan" in otypes:
-	    dx = (self.cc[0] - cori[0])*0.5
-	    dy = (self.cc[1] - yori[1])*0.5
-	    r = hypot(dx, dy)
-	    c = cori[0]+dx, cori[1]+dy
+        if cori is not None and "tan" in otypes:
+            dx = (self.cc[0] - cori[0])*0.5
+            dy = (self.cc[1] - cori[1])*0.5
+            r = hypot(dx, dy)
+            c = cori[0]+dx, cori[1]+dy
             for cp in thanintersect.thanCirCir(self.cc, self.r, c, r):
                 thet = atan2(cp[1]-self.cc[1], cp[0]-self.cc[0]) % PI2
-                if not self.thanThetain(th)[0]: continue
+                if not self.thanThetain(thet)[0]: continue
                 self.thanOsnapAdd(ccu, ps, thet, "tan")
-        if eother != None and "int" in otypes:
+        if eother is not None and "int" in otypes:
             ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
 
         if len(ps) > 0: return min(ps)
@@ -297,16 +297,16 @@ class ThanArc(ThanElement):
         if not self.thanThetain(t): return None, None   # No arc at the position the user has selected
         i = bisect.bisect_right(cp, cpnear)
         if i == 0:
-            return self.thanBreak(cp[-1][1], cp[0][1])  # User selected the segment before the first intesection (ct)
+            return self.thanBreak(cp[-1][1], cp[0][1])  # User selected the segment before the first intersection (ct)
         elif i == len(cp):
-            return self.thanBreak(cp[-1][1], cp[0][1])  # User selected the segment after the last intesection (ct)
+            return self.thanBreak(cp[-1][1], cp[0][1])  # User selected the segment after the last intersection (ct)
         else:
-            return self.thanBreak(cp[i-1][1], cp[i][1]) # User selected the segment between i-1 and i intesections (ct)
+            return self.thanBreak(cp[i-1][1], cp[i][1]) # User selected the segment between i-1 and i intersections (ct)
 
 
     def thanBreak(self, c1=None, c2=None):
         "Breaks an arc to 2 arcs."
-        if c1 == None: return True                       # Break IS implemented
+        if c1 is None: return True                       # Break IS implemented
         cp1, r1, thet1 = self.thanPntNearest2(c1)
         assert cp1 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
         cp2, r2, thet2 = self.thanPntNearest2(c2)
@@ -319,8 +319,8 @@ class ThanArc(ThanElement):
         e1 = self.thanClone()          #e1 gets the identity of self
         e1.thanSet(self.cc, self.r, self.theta1, thet1)
         if not e1.thanIsNormal(): e1 = None
-        e2 = self.thanClone()          #e2 gets the idientity of self ..
-        if e1 != None: e2.thanUntag()  #.. but it loses it if e1 is not None
+        e2 = self.thanClone()          #e2 gets the identity of self ..
+        if e1 is not None: e2.thanUntag()  #.. but it loses it if e1 is not None
         e2.thanSet(self.cc, self.r, thet2, self.theta2)
         if not e2.thanIsNormal(): e2 = None
         return e1, e2
@@ -456,8 +456,8 @@ class ThanArc(ThanElement):
             else:         theta1, theta2 = self.theta2, th     #Only the net extension
         else:
             arc = self.thanClone()   #The new arc takes the handle (identity) of self (it also takes the tag)
-            if iend == 0: theta1, theta2 = th, self.theta2     #Combined arc (incudes self)
-            else:         theta1, theta2 = self.theta1, th     #Combined arc (incudes self)
+            if iend == 0: theta1, theta2 = th, self.theta2     #Combined arc (includes self)
+            else:         theta1, theta2 = self.theta1, th     #Combined arc (includes self)
         arc.thanSet(self.cc, self.r, theta1, theta2, spin=self.thanSpin())
         return [arc]
 

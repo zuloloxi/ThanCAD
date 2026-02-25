@@ -1,8 +1,9 @@
+"Ellipse related module."
 from math import pi, cos, sin, atan2, sqrt, fabs
 from p_gnum import (array, matrixmultiply, transpose, inv, Float, eig, zeros,
                     LinAlgError, solve_linear_equations)
 from p_ggen import xfrangec
-from var import thanNearx
+from var import thanNearx, lsmsolve
 from varcon import thanThresholdx, PI2, PI05
 
 
@@ -21,17 +22,17 @@ def ellipse5Fit(x, y):
     S3 = matrixmultiply(transpose(D2), D2)                # linear part of the scatter matrix
     T = - matrixmultiply(inv(S3), transpose(S2))          # for getting a2 from a1
     M = S1 + matrixmultiply(S2, T)                        # reduced scatter matrix
-   #M = [M(3, :) ./ 2; - M(2, :); M(1, :) ./ 2]; % premultiply by inv(C1)
+    #M = [M(3, :) ./ 2; - M(2, :); M(1, :) ./ 2]; % premultiply by inv(C1)
     temp = zeros((3,3), Float)
     temp[0, :] =  M[2, :] / 2.0
     temp[1, :] = -M[1, :]
     temp[2, :] =  M[0, :] / 2.0
     M = temp
-   # [evec, eval] = eig(M);         % solve eigensystem
+    # [evec, eval] = eig(M);         % solve eigensystem
     eval_, evec = eig(M)                                  # solve eigensystem
-   # cond = 4 * evec(1, :) .* evec(3, :) - evec(2, :) .^ 2; % evaluate a'Ca
+    # cond = 4 * evec(1, :) .* evec(3, :) - evec(2, :) .^ 2; % evaluate a'Ca
     cond = 4.0*evec[0, :]*evec[2, :] - evec[1, :]**2      # evaluate a'Ca
-   # a1 = evec(:, find(cond > 0));  % eigenvector for min. pos. eigenvalue
+    # a1 = evec(:, find(cond > 0));  % eigenvector for min. pos. eigenvalue
 ##    print cond
     temp = [(cond1.real, i) for i,cond1 in enumerate(cond) if cond1.imag == 0 and cond1.real > 0.0]
     if len(temp) == 0:
@@ -43,7 +44,7 @@ def ellipse5Fit(x, y):
     i = min(temp)[1]
     a1 = evec[:, i]
 ##    print i, a1
-   # a = [a1; T * a1];              % ellipse coefficients
+    # a = [a1; T * a1];              % ellipse coefficients
     a = [None]+list(a1)+list(matrixmultiply(T, a1))              # ellipse coefficients
     v = ellipse2Standard5(a)
     if v == None: return None, "Failed to convert to standard form: probably degenerate ellipse."
@@ -72,11 +73,11 @@ def ellipse4Fit(x, y):
     M = array([ [M[1,0]*0.5, M[1,1]*0.5],                 # premultiply by inv(C1)
                 [M[0,0]*0.5, M[0,1]*0.5],
                 ])
-   # [evec, eval] = eig(M);         % solve eigensystem
+    # [evec, eval] = eig(M);         % solve eigensystem
     eval_, evec = eig(M)                                  # solve eigensystem
-   # cond = 4 * evec(1, :) * evec(2, :)                   # evaluate a'Ca
+    # cond = 4 * evec(1, :) * evec(2, :)                   # evaluate a'Ca
     cond = 4 * evec[0, :] * evec[1, :]                    # evaluate a'Ca
-   # a1 = evec(:, find(cond > 0));  % eigenvector for min. pos. eigenvalue
+    # a1 = evec(:, find(cond > 0));  % eigenvector for min. pos. eigenvalue
 ##    print cond
     temp = [(cond1.real, i) for i,cond1 in enumerate(cond) if cond1.imag == 0 and cond1.real > 0.0]
     if len(temp) == 0:
@@ -88,7 +89,7 @@ def ellipse4Fit(x, y):
     i = min(temp)[1]
     a1 = evec[:, i]
 ##    print i, a1
-   # a = [a1; T * a1];              % ellipse coefficients
+    # a = [a1; T * a1];              % ellipse coefficients
     a = [None, a1[0], 0.0, a1[1]]+list(matrixmultiply(T, a1))              # ellipse coefficients
     v = ellipse2Standard4(a)
     if v == None: return None, "Failed to convert to standard form: probably degenerate ellipse."
@@ -111,7 +112,8 @@ def ellipse5Lsm(x, y):
     for i in xrange(n):
         A[i, :] = x[i]*y[i], y[i]**2, x[i], y[i], 1.0
         B[i] = -x[i]**2
-    a = lsmLinDo(A, B)
+    #a = lsmLinDo(A, B)
+    a, ter = lsmsolve(A, B)
     if a == None: return None, "LSM failed: probably degenerate ellipse."
     a, b, c, d, e, f = 1.0, a[0], a[1], a[2], a[3], a[4]
     if b**2-4.0*a*c >= 0.0: return None, "The points do not define an ellipse."
@@ -136,26 +138,14 @@ def ellipse4Lsm(x, y):
     for i in xrange(n):
         A[i, :] = y[i]**2, x[i], y[i], 1.0
         B[i] = -x[i]**2
-    a = lsmLinDo(A, B)
+#    a = lsmLinDo(A, B)
+    a, ter = lsmsolve(A, B)
     if a == None: return a, "LSM failed: probably degenerate ellipse."
     a, b, c, d, e, f = 1.0, 0.0, a[0], a[1], a[2], a[3]
     if b**2-4.0*a*c >= 0.0: return None, "The points do not define an ellipse."
     v = ellipse2Standard4((None, a, b, c, d, e, f))
     if v == None: return None, "Failed to convert to standard form: probably degenerate ellipse."
     return v[1:6], ""
-
-
-def lsmLinDo(A, B):
-    "Do the linear least square method."
-    AT = transpose(A)
-    A = matrixmultiply(AT, A)
-    B = matrixmultiply(AT, B)
-    try:
-        a = solve_linear_equations(A, B)
-    except LinAlgError, why:
-        return None
-    else:
-        return a
 
 
 def ellipse2Standard5(a):
@@ -297,10 +287,10 @@ def ellipse2Lineold(cx, cy, a, b, theta, dt=0.0):
 
 
 def ellipse2Line(cx, cy, a, b, phia=0.0, phib=PI2, theta=0.0, dt=0.0):
-    """Represent an elliptic arc between agngles phia and phib, with straight line segments; dt refers to length units.
+    """Represent an elliptic arc between angles phia and phib, with straight line segments; dt refers to length units.
 
     standard form: ((x-cx)/a)^2 + ((y-cy)/b)^2 = 1
-    Note: phib should be bigger than phia or noting will be returnd.
+    Note: phib should be bigger than phia or nothing will be returnd.
     The anti-clockwise anges are positive. To plot an eeliptic arc form 1.5pi to 0.5pi
     set phia=1.5pi and phib=0.5pi+2pi=2.5pi.
     """
@@ -335,16 +325,28 @@ def ellipse2Line(cx, cy, a, b, phia=0.0, phib=PI2, theta=0.0, dt=0.0):
     return cs, phis
 
 
+def circle3Lsm(x, y):
+    """Fit the points to F(x, y) = x2 + y2 -2ax -2by +a2 +b2 -r2 = 0
+
+    The points may not define a circle. In this case
+    it returns None.
+    """
+    #F(x y) = x2 + y2 -2ax -2by +a2 +b2 -r2 = 0 =>
+    #x2 + y2 = 2ax + 2by - a2 -b2 +r2  = 2ax +2by + c 
+    n = len(x)
+    nunk = 3
+    A = zeros((n, nunk), Float)
+    B = zeros((n, ), Float)
+    for i in xrange(n):
+        A[i, :] = 2*x[i], 2*y[i], 1.0
+        B[i] = x[i]**2+y[i]**2
+    sol, ter = lsmsolve(A, B)
+    if sol == None: return None, ter
+    a, b, c = sol
+    r2 = c + a**2 + b**2
+    if r2 < 0.0: return None, "Not a circle"
+    return a, b, sqrt(r2)
+
+
 if __name__ == "__main__":
-    a = 1.0
-    b = 2.0
-    print ellipseLength(a, b)
-    print ellipseLengthApprox(a, b)
-    for x, y in ellipse2Line(0.0, 0.0, a, b, 0.0, 0.0):
-        print "%15.3f%15.3f" % (x, y)
-    print "------------------------------"
-    print ellipseLength(2.0, 10.0)
-    print ellipseLengthApprox(2.0, 10.0)
-    print "-------------circle----------------"
-    print ellipseLength(10.0, 10.0)
-    print ellipseLengthApprox(10.0, 10.0)
+    print __doc__

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module computes the intersection of any pair of elements. It also computes
 the extension of lines and arc to intersect any other element.
@@ -30,7 +30,7 @@ from math import fabs, atan2, hypot
 from p_gmath import PI2, thanNearx, thanNear2, converged3, thanErNear2
 from p_ggen import iterby2
 from p_gmath import thanintersect
-from thanutil import thanPntNearest, thanPntNearest2, thanSegNearest
+from thanutil import thanPntNearest2
 
 
 class __Inv:
@@ -70,7 +70,7 @@ def thanArcCircle(arc, circle, ccu):
 
 def thanArcLine(arc, line, ccu):
     "Finds intersection of self with line segment c1-c2."
-    if ccu == None: coors = iterby2(line.cp)
+    if ccu is None: coors = iterby2(line.cp)
     else:           coors = (line.thanSegNearest(ccu), )
     ps = []
     for c1, c2 in coors:
@@ -87,7 +87,7 @@ def thanCircleCircle(circle1, circle2, ccu):
 
 def thanCircleLine(circle, line, ccu):
     "Finds intersection of self with line segment c1-c2."
-    if ccu == None: coors = iterby2(line.cp)
+    if ccu is None: coors = iterby2(line.cp)
     else:           coors = (line.thanSegNearest(ccu), )
     ps = []
     for c1, c2 in coors:
@@ -97,17 +97,17 @@ def thanCircleLine(circle, line, ccu):
 
 def thanLineLine(line1, line2, ccu):
     "Finds intersection of multi segment line1 with multi segment line2."
-    if ccu == None:
+    if ccu is None:
         ps = []
         for c1, c2 in iterby2(line1.cp):
             for c3, c4 in iterby2(line2.cp):
                 cp = thanintersect.thanSegSeg(c1, c2, c3, c4)
-                if cp != None: ps.append(cp)
+                if cp is not None: ps.append(cp)
         return ps
     c1, c2 = line1.thanSegNearest(ccu)
     c3, c4 = line2.thanSegNearest(ccu)
     cp = thanintersect.thanSegSeg(c1, c2, c3, c4)
-    if cp == None: return []
+    if cp is None: return []
     return [cp]
 
 
@@ -136,7 +136,7 @@ def thanCurveCa(curve, circle, ccu, caLinet):
         print "thancurveCircle() itry=", itry
         if itry == 0:
             ct, iseg1, _ = thanPntNearest2(cp1, ccu)
-            if ct == None: return []
+            if ct is None: return []
             i1, i2 = bracketNearest(cp1, iseg1)
         else:
             i1 = 0
@@ -144,7 +144,7 @@ def thanCurveCa(curve, circle, ccu, caLinet):
         print "thancurveline() i1-2=", i1, i2
 
         ct, iseg1 = caLinet(circle, cp1, i1, i2, ccu)
-        if ct == None: return []
+        if ct is None: return []
         print "thancurveCircle() ctp, ct=", ctp, ct
         er = thanErNear2(ctp, ct)
         print "errors=", erpp, erp, er
@@ -190,9 +190,9 @@ def thanCurveLine(curve, line, ccu):
         print "thancurveLine() itry=", itry
         if itry == 0:
             ct, iseg1, _ = thanPntNearest2(cp1, ccu)
-            if ct == None: return []
+            if ct is None: return []
             ct, iseg2, _ = thanPntNearest2(cp2, ccu)
-            if ct == None: return []
+            if ct is None: return []
             i1, i2 = bracketNearest(cp1, iseg1)
             i3, i4 = bracketNearest(cp2, iseg2)
         else:
@@ -201,7 +201,7 @@ def thanCurveLine(curve, line, ccu):
         print "thancurveline() i1-4=", i1, i2, i3, i4
 
         ct, iseg1, iseg2 = thanLineLinet(cp1, i1, i2, cp2, i3, i4, ccu)
-        if ct == None: return []
+        if ct is None: return []
         print "thancurveline() ctp, ct=", ctp, ct
         er = thanErNear2(ctp, ct)
         print "errors=", erpp, erp, er
@@ -250,9 +250,9 @@ def thanCurveCurve(curve, eother, ccu):
         print "thancurvecurve() itry=", itry
         if itry == 0:
             ct, iseg1, _ = thanPntNearest2(cp1, ccu)
-            if ct == None: return []
+            if ct is None: return []
             ct, iseg2, _ = thanPntNearest2(cp2, ccu)
-            if ct == None: return []
+            if ct is None: return []
             i1, i2 = bracketNearest(cp1, iseg1)
             i3, i4 = bracketNearest(cp2, iseg2)
         else:
@@ -262,7 +262,7 @@ def thanCurveCurve(curve, eother, ccu):
         print "thancurvecurve() i1-4=", i1, i2, i3, i4
 
         ct, iseg1, iseg2 = thanLineLinet(cp1, i1, i2, cp2, i3, i4, ccu)
-        if ct == None: return []
+        if ct is None: return []
         print "thancurvecurve() ctp, ct=", ctp, ct
         er = thanErNear2(ctp, ct)
         print "errors=", erpp, erp, er
@@ -304,7 +304,7 @@ def thanLineLinet(cp1, i1, i2, cp2, i3, i4, ccu):
     for iseg1 in xrange(i1, i2-1):
         for iseg2 in xrange(i3, i4-1):
             cp = thanintersect.thanSegSeg(cp1[iseg1], cp1[iseg1+1], cp2[iseg2], cp2[iseg2+1])
-            if cp == None: continue
+            if cp is None: continue
             d1 = hypot(ccu[1]-cp[1], ccu[0]-cp[0])
             if d1 > d: continue
             iseg1t = iseg1
@@ -359,9 +359,7 @@ def thanInit():
     "Initialises this module; no circular imports this way."
     from thanline  import ThanLine, ThanCurve
     from thancirc  import ThanCircle
-    from thanpoint import ThanPoint
     from thanarc   import ThanArc
-    from thantext  import ThanText
     from thanimpil import ThanImage
     from thanclasses import thanElemClass
     global thanIntPair, thanExtPair
@@ -412,7 +410,7 @@ def thanInit():
     for clas in thanElemClass.itervalues():    #Fill dictionary of ThanCurve subclasses
         if clas not in eq: continue    #It is not a subclass of ThanCurve: nothing to do
         d = thanIntPair[clas]
-        deq = thanIntPair[eq[clas]]
+        #deq = thanIntPair[eq[clas]]
         for clas1, func1 in thanIntPair[eq[clas]].iteritems(): #Copy dictionary of equivalent class
             if clas1 not in d: d[clas1] = func1
     for clas in thanElemClass.itervalues(): #Add ThanCurve subclasses to all dictionaries
@@ -421,7 +419,7 @@ def thanInit():
             if clas1 in d: continue
             if clas1 not in eq: continue    #It is not a subclass of ThanCurve: nothing to do
             func1 = d.get(eq[clas1])        #Get the function for the equivalent class of clas1
-            if func1 != None: d[clas1] = func1
+            if func1 is not None: d[clas1] = func1
 
 
     thanExtPair = \
@@ -475,9 +473,9 @@ def extArc2Arc(arc1, arc2, ccu):
     iend = __arcend(arc1, ccu)
     for cp in thanintersect.thanCirCir(arc1.cc, arc1.r, arc2.cc, arc2.r):
         th = atan2(cp[1]-arc1.cc[1], cp[0]-arc1.cc[0]) % PI2
-        if arc1.thanThetain(th)[0]: continue     #Intersection is within the first arc (which must be extened)
+        if arc1.thanThetain(th)[0]: continue     #Intersection is within the first arc (which must be extended)
         th = atan2(cp[1]-arc2.cc[1], cp[0]-arc2.cc[0]) % PI2
-        if not arc2.thanThetain(th)[0]: continue #Interscetion in not within the second arc (which is the boundary)
+        if not arc2.thanThetain(th)[0]: continue #Intersection in not within the second arc (which is the boundary)
         d = arc1.thanAngularDist(iend, cp)
         ps.append((d, cp))
     return iend, ps
@@ -486,9 +484,9 @@ def extArc2Arc(arc1, arc2, ccu):
 def __arcend(arc1, ccu):
     "Find the nearest arc endpoint to the point the user clicked."
     if arc1.thanAngularDist(0, ccu) < arc1.thanAngularDist(1, ccu):
-        iend = 0      #Nearest end point to the point that the user cliked is first endpoint
+        iend = 0      #Nearest end point to the point that the user clicked is first endpoint
     else:
-        iend = 1      #Nearest end point to the point that the user cliked is last endpoint
+        iend = 1      #Nearest end point to the point that the user clicked is last endpoint
     return iend
 
 
@@ -511,7 +509,7 @@ def extArc2Line(arc1, line, ccu):
     for c1, c2 in iterby2(line.cp):
         for cp in thanintersect.thanSegCir(c1, c2, arc1.cc, arc1.r):
             th = atan2(cp[1]-arc1.cc[1], cp[0]-arc1.cc[0]) % PI2
-            if arc1.thanThetain(th)[0]: continue     #Intersection is within the first arc (which must be extened)
+            if arc1.thanThetain(th)[0]: continue     #Intersection is within the first arc (which must be extended)
             d = arc1.thanAngularDist(iend, cp)
             ps.append((d, cp))
     return iend, ps
@@ -523,9 +521,9 @@ def extLine2Arc(line1, arc, ccu):
     if len(line1.cp) < 2: return ps
     iend, c1, c2 = __linend(line1, ccu)
     for cp, u in thanintersect.thanSegCirGen(c1, c2, arc.cc, arc.r, abisline=True):
-        if u <= 1.0 or thanNearx(u, 1.0): continue      #Intersection is within the line (which must be extened)
+        if u <= 1.0 or thanNearx(u, 1.0): continue      #Intersection is within the line (which must be extended)
         th = atan2(cp[1]-arc.cc[1], cp[0]-arc.cc[0]) % PI2
-        if not arc.thanThetain(th)[0]: continue #Interscetion in not within the second arc (which is the boundary)
+        if not arc.thanThetain(th)[0]: continue #Intersection in not within the second arc (which is the boundary)
         d = hypot(cp[0]-line1.cp[iend][0], cp[1]-line1.cp[iend][1])
         ps.append((d, cp))
     return iend, ps
@@ -549,7 +547,7 @@ def extLine2Circle(line1, arc, ccu):
     if len(line1.cp) < 2: return ps
     iend, c1, c2 = __linend(line1, ccu)
     for cp, u in thanintersect.thanSegCirGen(c1, c2, arc.cc, arc.r, abisline=True):
-        if u <= 1.0 or thanNearx(u, 1.0): continue      #Intersection is within the line (which must be extened)
+        if u <= 1.0 or thanNearx(u, 1.0): continue      #Intersection is within the line (which must be extended)
         d = hypot(cp[0]-line1.cp[iend][0], cp[1]-line1.cp[iend][1])
         ps.append((d, cp))
     return iend, ps
@@ -562,9 +560,9 @@ def extLine2Line(line1, line2, ccu):
     iend, c1, c2 = __linend(line1, ccu)
     for c3, c4 in iterby2(line2.cp):
         res = thanintersect.thanSegSegGen(c1, c2, c3, c4, abisline=True, c12isline=False)
-        if res == None: continue
+        if res is None: continue
         cp, (u,_) = res
-        if u <= 1.0 or thanNearx(u, 1.0): continue      #Intersection is within the line (which must be extened)
+        if u <= 1.0 or thanNearx(u, 1.0): continue      #Intersection is within the line (which must be extended)
         d = hypot(cp[0]-line1.cp[iend][0], cp[1]-line1.cp[iend][1])
         ps.append((d, cp))
     return iend, ps

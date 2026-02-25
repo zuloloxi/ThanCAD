@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which provides constants and ThanCad customisation. It also does some tests
 to see if ThanCad can run in the python environmenst of the host OS.
@@ -30,7 +30,7 @@ and external libraries p_g* modules.
 """
 
 from thaninit import thanInitPregui, thanInitPostgui, thanInitEndgui
-import thancadconf, thancon
-import pilpy2exe    #This explixitely import PIL plugins to aid py2exe..
-                    #..which makes an executable for windoze..
-                    #..Yeha, windoze "just" works!
+import thancadconf, thancon, thanmenus2
+#from p_gimage import pilpy2exe  #This explicitly import PIL plugins to aid py2exe..
+                                #..which makes an executable for windoze..
+                                #..Yeha, windoze "just" works!

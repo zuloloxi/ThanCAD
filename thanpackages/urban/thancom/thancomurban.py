@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 The package provides tools and automation for urban analysis/design.
 The subpackage contains the commands which handle urban related procedures.
@@ -135,7 +135,7 @@ def thanUrbanBioazim(proj):
     proj[1].thanDoundo.thanAdd("edubiodir", thanundo.thanReplaceRedo, ((), (), roads),
                                             thanundo.thanReplaceUndo, ((), (), selold))
     fw = __openbio(proj, proj[2].thanPrter)
-    if fw != None:
+    if fw is not None:
         prt = lambda s, tags=(), fw=fw: fw.write("%s\n" % (s,))
     prt("Γωνία (deg)\t  Πλήθος οδών\t  Συνολικό μήκος", "info")
     for i in xrange(ncat):
@@ -143,18 +143,18 @@ def thanUrbanBioazim(proj):
         prt(s.replace(".", ","), "info1")
     prt("Εύρος μετρήσεων για κάθε γωνία ± %.1f deg" % (dth*0.5,))
     fn = None
-    if fw != None:
+    if fw is not None:
         fn = p_ggen.path(fw.name)
         fw.close()
     __biocolor(proj, dth, ncat, roadc, fn)
-    if fn != None: thanShowFile(proj, fn, "Statistics of the azimuth of roads")
+    if fn is not None: thanShowFile(proj, fn, "Statistics of the azimuth of roads")
     thanModEnd(proj)
 
 
 def __biocolor(proj, dth, ncat, roadc, fn):
     "Create a new drawing with the roads coloured according to azimuth."
     from thaneng.thanprofile import defDxf
-    from thancom.thancomview import thanZoomExt
+    from thancom.thancomview import thanZoomExt1
     from thancom.thancomfile import thanFileSavePath
     layers = []
     colors = []
@@ -177,8 +177,8 @@ def __biocolor(proj, dth, ncat, roadc, fn):
 #    projnew[2].geometry("%dx%d" % (640, 480))
     projnew[2].update()
     projnew[2].thanRegen()
-    thanZoomExt(projnew)
-    if fn != None:
+    thanZoomExt1(projnew)
+    if fn is not None:
         fn = fn.parent / fn.namebase + ".thcx"
         thanFileSavePath(projnew, fn)
 

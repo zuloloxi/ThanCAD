@@ -11,13 +11,13 @@ PLINEWHOKNOWS = 128
 
 class ThanDxfLin:
     "Mixin to export lines to .dxf file."
-	
+
 #===========================================================================
 
     def __init__(self):
         "Some Initialisation for polyvertex."
-	self.__firstVertex = 1
-	
+        self.__firstVertex = 1
+
 #===========================================================================
 
     def thanDxfPlotLine(self, xp, yp):
@@ -48,12 +48,12 @@ class ThanDxfLin:
         self.thanDxfWrEntry(66, 1)
         self.thanDxfWrXy(px, py)
         self.thanDxfWrEntry(70, PLINEWHOKNOWS)
-	
-	w = self.thanPlineWidth
-	if w != (0.0, 0.0):
+
+        w = self.thanPlineWidth
+        if w != (0.0, 0.0):
             self.thanDxfWrEntry(40, w[0])
             self.thanDxfWrEntry(41, w[1])
-	
+
         for i in xrange(ig):
             (px, py) = self.thanDxfTop(xgram[i], ygram[i])
             self.thanDxfWrEntry(0, 'VERTEX')
@@ -78,7 +78,7 @@ class ThanDxfLin:
         self.thanDxfWrEntry(70, PLINE3)
 
         w = self.thanPlineWidth
-	if w != (0.0, 0.0):
+        if w != (0.0, 0.0):
             self.thanDxfWrEntry(40, w[0])
             self.thanDxfWrEntry(41, w[1])
 
@@ -95,7 +95,7 @@ class ThanDxfLin:
 
     def thanDxfPlotPolyVertex (self, xx, yy, ic, bulge=None):
         "Plots a 2d polyline, vertex by vertex."
-	
+
 #-------polyline beginning-----------------------------------------
 
         if self.__firstVertex:
@@ -107,17 +107,17 @@ class ThanDxfLin:
             self.thanDxfWrXy(px, py)
             self.thanDxfWrEntry(70, PLINEWHOKNOWS)
 
-	    w = self.thanPlineWidth
-	    if w != (0.0, 0.0):
+            w = self.thanPlineWidth
+            if w != (0.0, 0.0):
                 self.thanDxfWrEntry(40, w[0])
                 self.thanDxfWrEntry(41, w[1])
-	    if bulge != None:
+            if bulge != None:
                 self.thanDxfWrEntry(42, bulge)
 
             self.thanDxfWrEntry(0, 'VERTEX')
             self.thanDxfWrLinatts()
             self.thanDxfWrXy(px, py)
-	
+
             self.__firstVertex = 0
 
 #-------polyline end----------------------------------------
@@ -136,17 +136,17 @@ class ThanDxfLin:
             self.thanDxfWrXy(px, py)
 
             w = self.thanPlineWidth
-	    if w != (0.0, 0.0):
+            if w != (0.0, 0.0):
                 self.thanDxfWrEntry(40, w[0])
                 self.thanDxfWrEntry(41, w[1])
-	    if bulge != None:
+            if bulge != None:
                 self.thanDxfWrEntry(42, bulge)
 
 #==========================================================================
 
     def thanDxfPlotPolyVertex3 (self, xx, yy, zz, ic):
         "Plots a 3d polyline, vertex by vertex."
-	
+
 #-------polyline beginning-----------------------------------------
 
         if self.__firstVertex:
@@ -158,8 +158,8 @@ class ThanDxfLin:
             self.thanDxfWrXyz(px, py, pz)
             self.thanDxfWrEntry(70, PLINE3)
 
-	    w = self.thanPlineWidth
-	    if w != (0.0, 0.0):
+            w = self.thanPlineWidth
+            if w != (0.0, 0.0):
                 self.thanDxfWrEntry(40, w[0])
                 self.thanDxfWrEntry(41, w[1])
 
@@ -187,7 +187,7 @@ class ThanDxfLin:
             self.thanDxfWrEntry(70, PLINEVERTEX3)
 
             w = self.thanPlineWidth
-	    if w != (0.0, 0.0):
+            if w != (0.0, 0.0):
                 self.thanDxfWrEntry(40, w[0])
                 self.thanDxfWrEntry(41, w[1])
 
@@ -201,18 +201,18 @@ class ThanDxfLin:
         xx1 = xx + bb
         yy1 = yy + hh
 
-        self.thanDxfPolyVertex (xx,  xy,  2)
-	self.thanDxfPolyVertex (xx1, xy,  2)
-        self.thanDxfPolyVertex (xx1, xy1, 2)
-        self.thanDxfPolyVertex (xx,  xy1, 2)
-        self.thanDxfPolyVertex (xx,  xy,  2)
+        self.thanDxfPolyVertex (xx,  yy,  2)
+        self.thanDxfPolyVertex (xx1, yy,  2)
+        self.thanDxfPolyVertex (xx1, yy1, 2)
+        self.thanDxfPolyVertex (xx,  yy1, 2)
+        self.thanDxfPolyVertex (xx,  yy,  2)
         self.thanDxfPolyVertex (0.0, 0.0, 999)
 
 #===========================================================================
 
     def thanDxfPlot(self, xx, yy, icom):
         "Plots a line from previous point to this and some housekeeping."
-	
+
 #-------Check if end
 
         ic = abs(icom)
@@ -232,7 +232,7 @@ class ThanDxfLin:
             self.thanDxfWrLinatts()
             self.thanDxfWrXy(self.thanPXnow, self.thanPYnow)
             self.thanDxfWrXy1(px, py)
-	
+
         self.thanPXnow = px
         self.thanPYnow = py
 
@@ -242,42 +242,42 @@ class ThanDxfLin:
 
 #===========================================================================
 
-    thanDxfPlot10 = thanDxfPlot    # For comp[atibility; see the folowwing function
+    thanDxfPlot10 = thanDxfPlot    # For compatibility; see the following function
 
-    def thanDxfPlot10a(uDxf, x, y, ipen):
-      """Plots or moves the pen with 10cm steps.
+    def thanDxfPlot10a(self, x, y, ipen):
+        """Plots or moves the pen with 10cm steps.
       
-      This code is for fast old pen plotters (e.g. CIL). If the distanmce to
-      move or plot is big (e.g. 1m and more) the plotter is moving the drum
-      very fast. This either ruptures the paper or causes the pen not write.
-      Here we move the pen with 10cm steps, so that the drum does not have the
-      time to accelerate to high speed.
-      It also addresses a problem with 2bytes integers (whose biggest value
-      is 32767) which were used by the old CIL plotter. A call to locref
-      initialises the origin and keeps the numbers x and y small inside the CIL
-      plotter.
-      Note that when ipen=2 and the pen is already down, the plotter stil tries
-      to move it down, which weras off the pen. Hence the hack with ipen1=1.
-      The value 1 in ipen, does not change the verical position of the pen (up
-      or down).
-      This code was written in Fortran IV around 1982, in the 550 Prime
-      computer.
-      """ 
-      ipen1=ipen
-      x2, y2 = uDxf.thanDxfPlotWhere()
-      dis=hypot(x-x2, y-y2)
-      if dis>10.0:  # go to 2
-          k=int(dis/10.0)
-          dx=(x-x2)*10.0/dis
-          dy=(y-y2)*10.0/dis
-          for i in xrange(k):
-              x2 += dx
-              y2 += dy
-              uDxf.thanDxfPlot(x2, y2, ipen1)
-              uDxf.thanDxfLocref(x2, y2, 1.0, 1.0)
-              ipen1=1
-      uDxf.thanDxfPlot(x,y,ipen1)
-      uDxf.thanDxfLocref (x,y,1.0,1.0)
+        This code is for fast old pen plotters (e.g. CIL). If the distance to
+        move or plot is big (e.g. 1m and more) the plotter is moving the drum
+        very fast. This either ruptures the paper or causes the pen not write.
+        Here we move the pen with 10cm steps, so that the drum does not have the
+        time to accelerate to high speed.
+        It also addresses a problem with 2bytes integers (whose biggest value
+        is 32767) which were used by the old CIL plotter. A call to locref
+        initialises the origin and keeps the numbers x and y small inside the CIL
+        plotter.
+        Note that when ipen=2 and the pen is already down, the plotter still tries
+        to move it down, which wears off the pen. Hence the hack with ipen1=1.
+        The value 1 in ipen, does not change the vertical position of the pen (up
+        or down).
+        This code was written in Fortran IV around 1982, in the 550 Prime
+        computer.
+        """ 
+        ipen1=ipen
+        x2, y2 = self.thanDxfPlotWhere()
+        dis=hypot(x-x2, y-y2)
+        if dis>10.0:  # go to 2
+            k=int(dis/10.0)
+            dx=(x-x2)*10.0/dis
+            dy=(y-y2)*10.0/dis
+            for i in xrange(k):
+                x2 += dx
+                y2 += dy
+                self.thanDxfPlot(x2, y2, ipen1)
+                self.thanDxfLocref(x2, y2, 1.0, 1.0)
+                ipen1=1
+        self.thanDxfPlot(x,y,ipen1)
+        self.thanDxfLocref (x,y,1.0,1.0)
 
 #===========================================================================
 
@@ -295,7 +295,7 @@ class ThanDxfLin:
             self.thanDxfWrLinatts()
             self.thanDxfWrXyz(self.thanPXnow, self.thanPYnow, self.thanPZnow)
             self.thanDxfWrXyz1(px, py, pz)
-	
+
         self.thanPXnow = px
         self.thanPYnow = py
         self.thanPZnow = pz

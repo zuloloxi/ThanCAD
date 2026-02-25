@@ -1,6 +1,7 @@
 import time
-from xml.etree.ElementTree import ElementTree, parse, fromstring
-from xml.parsers.expat import ExpatError
+from xml.etree.ElementTree import ElementTree
+#from xml.etree.ElementTree import ElementTree, parse, fromstring
+#from xml.parsers.expat import ExpatError
 
 
 class SarTime:
@@ -14,7 +15,7 @@ class SarTime:
         Since the seconds are about 1 billion (10 digits) and the data specifies
         6 decimal digits, the standard double can not represent the time with
         the necessary precision.
-        Thus we hold the seconds which correspond to year,month,day,hour and minutes,
+        Thus we hold the seconds which correspond to to year,month,day,hour and minutes, 
         in the (integer) isec variable.
         The seconds of the data are held in the (double) rsec variable.
         In order to do computations, we subtract a SarTime from a minimum values.
@@ -42,12 +43,12 @@ class SarTime:
 
 
     def __repr__(self):
-        "Return a rpresentation of self which can be used to rebuild the object."
+        "Return a representation of self which can be used to rebuild the object."
         return self.timeutc
 
 
 def pathElementTree(element=None, file=None):
-    """Creates a PathElementTree opbject from an ElementTree or a filename or a File object."
+    """Creates a PathElementTree object from an ElementTree or a filename or a File object."
 
         July 8, 2012
         For some reason, when there is something like:
@@ -58,11 +59,9 @@ def pathElementTree(element=None, file=None):
             <Element '{http://www.opengis.net/kml/2.2}Document' at 0xe4cd90>
             <Element '{http://www.opengis.net/kml/2.2}name' at 0xe4cdd0>
         For this reason, if the root element of the ElementTree() has a prefix
-        surrouned by {}, we store the prefix and prepend it automatically
+        surrounded by {}, we store the prefix and prepend it automatically
         when we search for other elements (if the element does not already have it).
     """
-
-
     if element != None:
         tree = element
     elif file != None:
@@ -118,7 +117,7 @@ class _PathElementTree:
 
 
     def findr(self, child_path):
-        "Find child in parent and raise exeption if not found."
+        "Find child in parent and raise exception if not found."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
         if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
@@ -126,7 +125,7 @@ class _PathElementTree:
 
 
     def floatr(self, child_path):
-        "Find child in parent, convert to float and raise exeption if not found or error."
+        "Find child in parent, convert to float and raise exception if not found or error."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
         if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
@@ -135,7 +134,7 @@ class _PathElementTree:
 
 
     def intr(self, child_path):
-        "Find child in parent, convert to integer and raise exeption if not found or error."
+        "Find child in parent, convert to integer and raise exception if not found or error."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
         if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
@@ -152,7 +151,7 @@ class _PathElementTree:
 
 
     def timeutcr(self, child_path):
-        "Find child in parent, convert to integer and raise exeption if not found or error."
+        "Find child in parent, convert to integer and raise exception if not found or error."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
         if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
@@ -160,6 +159,17 @@ class _PathElementTree:
         except ValueError: raise ValueError, "'%s': can not convert time to seconds: %s" % (p, child_elem.text)
 
 
-    def get(self, key):
+    def get(self, *args, **kw):
         "Each element may have attributes accessed with dict like methods."
-        return self.elem.get(key)
+        return self.elem.get(*args, **kw)
+
+
+    def tag(self):
+        "Return the name of the current element."
+        if hasattr(self.elem, "tag"):
+            tag = self.elem.tag
+            i1 = tag.find("{")
+            i2 = tag.find("}")
+            if i1 >=0 and i2 >= 0: tag = tag[:i1]+tag[i2+1:]    #dn has prefix
+            return tag
+        return ""

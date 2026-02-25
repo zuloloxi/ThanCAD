@@ -28,23 +28,23 @@ def fff():
 
 
 def ffff (dl):
-      dl1 = []
-      for i,c in enumerate(dl):
-          j = ord(c)
-          j = j + k[i % 8]
-          dl1.append(chr(j))
-      dl1 = "".join(dl1)
-      return base64.encodestring(dl1)[:-1]
+    dl1 = []
+    for i,c in enumerate(dl):
+        j = ord(c)
+        j = j + k[i % 8]
+        dl1.append(chr(j))
+    dl1 = "".join(dl1)
+    return base64.encodestring(dl1)[:-1]
 
 
 def gggg(dl):
-      dl = base64.decodestring(dl)[:-1]
-      dl1 = []
-      for i,c in enumerate(dl):
-          j = ord(c)
-          j = j - k[i % 8]
-          dl1.append(chr(j))
-      return "".join(dl1)
+    dl = base64.decodestring(dl)[:-1]
+    dl1 = []
+    for i,c in enumerate(dl):
+        j = ord(c)
+        j = j - k[i % 8]
+        dl1.append(chr(j))
+    return "".join(dl1)
 
 #c============================================================================
 #

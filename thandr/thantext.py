@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the text element.
 """
@@ -33,6 +33,7 @@ from p_gmath import PI2
 from thanelem import ThanElement
 from thanvar import Canc
 from thantrans import T
+from thanline import ThanLine
 try: import pyx
 except ImportError: pass
 
@@ -106,7 +107,7 @@ class ThanText(ThanElement):
 
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
-        "Return a point of type otype nearest to xcu, ycu."
+        "Return a point of type in otypes nearest to xcu, ycu."
         if "ena" not in otypes: return None            # Object snap is disabled
         if "end" in otypes:
             return fabs(self.cc[0]-ccu[0])+fabs(self.cc[1]-ccu[1]), "end", self.cc
@@ -119,13 +120,12 @@ class ThanText(ThanElement):
         thanExplode(), which is inherited by ThanElement, does not explode text
         to lines; it does nothing (in the future, it will explode a multiline
         text to single line texts). This is in order to
-        avoid user confusion, who are acqainted with other leading Cad.
+        avoid user confusion, who are acquainted with other leading Cad.
         """
-        if than == None: return True               # Break IS implemented
+        if than is None: return True               # Break IS implemented
         return self.__explode(than)
     def __explode(self, than):
         "Transform the line to a set of smaller 2-point lines; do the job as a generator."
-        from thanline import ThanLine
         lines = than.font.than2lines(self.cc[0], self.cc[1], self.h1, self.text, self.theta, mirrory=True)
         for lin in lines:
             cp = []
@@ -239,7 +239,6 @@ class ThanText(ThanElement):
 
     def thanExpPil(self, than):
         "Exports rotated text (in ThanCad line font) into a PIL raster image; works around PIL chaotic width bug."
-        from thanline import ThanLine
         xa, ya = self.cc[0], self.cc[1]
         h = self.h1
         lines = than.font.than2lines(xa, ya, h, self.text, self.theta, mirrory=True)
@@ -256,22 +255,22 @@ class ThanText(ThanElement):
         if h < 0.05: return                                  # Size too small to be seen; draw rectangle instead
         lines = than.thanFont.than2lines(xa, ya, h, self.text, self.theta, mirrory=True)
 
-	lineto = pyx.path.lineto
-	moveto = pyx.path.moveto
-	closepath = pyx.path.closepath
-	for cp in lines:
-	    if len(cp) < 2: continue
-	    if len(cp) == 2:
-	        ca = cp[0][0], cp[0][1]
-	        cb = cp[1][0], cp[1][1]
-	        p = pyx.path.line(ca[0], ca[1], cb[0], cb[1])
-	    else:
+        lineto = pyx.path.lineto
+        moveto = pyx.path.moveto
+        closepath = pyx.path.closepath
+        for cp in lines:
+            if len(cp) < 2: continue
+            if len(cp) == 2:
+                ca = cp[0][0], cp[0][1]
+                cb = cp[1][0], cp[1][1]
+                p = pyx.path.line(ca[0], ca[1], cb[0], cb[1])
+            else:
                 xy1 = [lineto(c1[0], c1[1]) for c1 in islice(cp, 1, None)]
-	        xy1.insert(0, moveto(cp[0][0], cp[0][1]))
-	        if cp[0] == cp[-1]: xy1[-1] = closepath()
-	        p = pyx.path.path(*xy1)
+                xy1.insert(0, moveto(cp[0][0], cp[0][1]))
+                if cp[0] == cp[-1]: xy1[-1] = closepath()
+                p = pyx.path.path(*xy1)
             print p
-	    than.dc.stroke(p)
+            than.dc.stroke(p)
 
 
     def thanTransform(self, fun):

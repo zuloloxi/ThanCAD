@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for drawing elements on a Tkinter
 drawing window.
@@ -92,7 +92,7 @@ class ThanTkGuiHighDraw:
         "Moves the dragged canvas items."
         if dx == 0.0 and dy == 0.0: return
         dxp, dyp = self.thanCt.global2LocalRel(dx, dy)
-        dc = self.thanCanvas.move("edrag", dxp, dyp)
+        self.thanCanvas.move("edrag", dxp, dyp)
 
 
     def thanGudSetSelColor(self, col=thanatt.ThanAttCol(thancadconf.thanColSel).thanTk):
@@ -215,48 +215,48 @@ class ThanTkGuiHighDraw:
     def thanGudSetSelRotateBoth_old(self, xc, yc, phi):
         """Rotates both the selected canvas items _and_ ThanCad's elements.
 
-	I keep this routine so that I can remeber the hack with tagel, and tagseen.
-	"""
-	import time
-	from thandr.thanelem import ThanElement
-	phi %= PI2
-	if phi == 0.0: return
-	ThanElement.thanRotateSet(xc, yc, phi)
-	xcp, ycp = self.thanCt.global2Local(xc, yc)
-	ThanElement.thanRotateSetp(xcp, ycp, -phi)   # The opposite y-axis changes the sign of the angle
+        I keep this routine so that I can remember the hack with tagel, and tagseen.
+        """
+        import time
+        from thandr.thanelem import ThanElement
+        phi %= PI2
+        if phi == 0.0: return
+        ThanElement.thanRotateSet(xc, yc, phi)
+        xcp, ycp = self.thanCt.global2Local(xc, yc)
+        ThanElement.thanRotateSetp(xcp, ycp, -phi)   # The opposite y-axis changes the sign of the angle
 
-	dc = self.thanCanvas
-	tagel = self.thanProj[1].thanTagel
-	tagseen = {}
+        dc = self.thanCanvas
+        tagel = self.thanProj[1].thanTagel
+        tagseen = {}
 
         t1 = time.time()
         for item in dc.find_withtag("selall"):
-#	    titem = dc.itemcget(item, "tags").split()[0]
-	    titem = dc.gettags(item)[0]
-	    if titem not in tagseen:
-	        tagseen[titem] = True
-	        e = tagel[titem]
-	        e.thanRotate()
-	    t = dc.type(item)
-	    c = dc.coords(item)
-	    if t == "arc":
-	        dx = (c[2]-c[0])/2; dy = (c[3]-c[1])/2
-	        c = [c[0]+dx, c[1]+dy]
+#           titem = dc.itemcget(item, "tags").split()[0]
+            titem = dc.gettags(item)[0]
+            if titem not in tagseen:
+                tagseen[titem] = True
+                e = tagel[titem]
+                e.thanRotate()
+            t = dc.type(item)
+            c = dc.coords(item)
+            if t == "arc":
+                dx = (c[2]-c[0])/2; dy = (c[3]-c[1])/2
+                c = [c[0]+dx, c[1]+dy]
                 ThanElement.thanRotateXypn2(c)
-		c = c[0]-dx, c[1]-dy, c[0]+dx, c[1]+dy
-		th = float(dc.itemcget(item, "start"))
-		dc.itemconfigure(item, start=(th+phi)%360)
-	    elif t == "oval":
-	        dx = (c[2]-c[0])/2; dy = (c[3]-c[1])/2
-	        c = [c[0]+dx, c[1]+dy]
+                c = c[0]-dx, c[1]-dy, c[0]+dx, c[1]+dy
+                th = float(dc.itemcget(item, "start"))
+                dc.itemconfigure(item, start=(th+phi)%360)
+            elif t == "oval":
+                dx = (c[2]-c[0])/2; dy = (c[3]-c[1])/2
+                c = [c[0]+dx, c[1]+dy]
                 ThanElement.thanRotateXypn2(c)
-		c = c[0]-dx, c[1]-dy, c[0]+dx, c[1]+dy
+                c = c[0]-dx, c[1]-dy, c[0]+dx, c[1]+dy
             else:
                 ThanElement.thanRotateXypn2(c)
-	    dc.coords(item, *c)
-	t2 = time.time()
+            dc.coords(item, *c)
+        t2 = time.time()
         print "Rotated in", t2-t1, "secs"
-	self.thanProj[1].thanTouch()
+        self.thanProj[1].thanTouch()
 
 
     def thanGudSetSelRotate(self, xc, yc, phi):
@@ -411,30 +411,29 @@ class ThanTkGuiHighDraw:
     def thanGudSetSelScaleBothOld(self, xc, yc, fact):
         """Scales both the selected canvas items _and_ ThanCad's elements.
 
-	I keep this routine so that I can remeber the hack with tagel, and tagseen.
-	"""
-	import time
-	from thandr.thanelem import ThanElement
-	if fact == 1.0: return
-	xcp, ycp = self.thanCt.global2Local(xc, yc)
-	dc = self.thanCanvas
-	tagel = self.thanProj[1].thanTagel
-	tagseen = {}
+        I keep this routine so that I can remember the hack with tagel, and tagseen.
+        """
+        import time
+        if fact == 1.0: return
+        xcp, ycp = self.thanCt.global2Local(xc, yc)
+        dc = self.thanCanvas
+        tagel = self.thanProj[1].thanTagel
+        tagseen = {}
         t1 = time.time()
         for item in dc.find_withtag("selall"):
-#	    titem = dc.itemcget(item, "tags").split()[0]
-	    titem = dc.gettags(item)[0]
-	    if titem in tagseen: continue
-	    tagseen[titem] = True
-	    e = tagel[titem]
-	    e.thanScale(xc, yc, fact)
-	t2 = time.time()
+#            titem = dc.itemcget(item, "tags").split()[0]
+            titem = dc.gettags(item)[0]
+            if titem in tagseen: continue
+            tagseen[titem] = True
+            e = tagel[titem]
+            e.thanScale(xc, yc, fact)
+        t2 = time.time()
         print "Net Element Scaled in", t2-t1, "secs"
-	t1 = t2
-	dc.scale("sel", xcp, ycp, fact, fact)
-	t2 = time.time()
+        t1 = t2
+        dc.scale("sel", xcp, ycp, fact, fact)
+        t2 = time.time()
         print "Net Canvas  Scaled in", t2-t1, "secs"
-	self.thanProj[1].thanTouch()
+        self.thanProj[1].thanTouch()
 
 
     def thanGudSetSelMove(self, dx, dy):
@@ -497,26 +496,26 @@ class ThanTkGuiHighDraw:
     def thanGudGetSelLayerxs(self, tlay):
         """Selects as "x" all active elements of a layer which also have tag 'selall'.
 
-	It does not interfere with normal selection mechanism."""
-#	print "initially:"; self.prtags()
-	dc = self.thanCanvas
+        It does not interfere with normal selection mechanism."""
+#       print "initially:"; self.prtags()
+        dc = self.thanCanvas
         dc.dtag("all", "selx")
-#	print "Tag 'selx' removed:"; self.prtags()
+#        print "Tag 'selx' removed:"; self.prtags()
 
-	dc.addtag_withtag("sel1", "selall")    # "selall" items have tag "sel1"
-#	print "Tag 'sel1' added:"; self.prtags()
+        dc.addtag_withtag("sel1", "selall")    # "selall" items have tag "sel1"
+#       print "Tag 'sel1' added:"; self.prtags()
 
-	dc.dtag(tlay, "sel1")                  # "selall" items have tag "sel1" except from the items of layer tag tlay
-#	print "Tag 'sel1' partialy removed:"; self.prtags()
+        dc.dtag(tlay, "sel1")                  # "selall" items have tag "sel1" except from the items of layer tag tlay
+#       print "Tag 'sel1' partialy removed:"; self.prtags()
 
-	dc.addtag_withtag("selx", "selall")    # "selall" items have tag "selx"
-#	print "Tag 'selx' added:"; self.prtags()
+        dc.addtag_withtag("selx", "selall")    # "selall" items have tag "selx"
+#       print "Tag 'selx' added:"; self.prtags()
 
-	dc.dtag("sel1", "selx")                # "selall" items have tag "selx" if they belong to layer tag tlay
-#	print "Tag 'selx' partialy removed:"; self.prtags()
+        dc.dtag("sel1", "selx")                # "selall" items have tag "selx" if they belong to layer tag tlay
+#       print "Tag 'selx' partialy removed:"; self.prtags()
 
-	dc.dtag("selall", "sel1")
-#	print "Tag 'sel1' removed:"; self.prtags()
+        dc.dtag("selall", "sel1")
+#       print "Tag 'sel1' removed:"; self.prtags()
 
 
     def thanGudSetSelColorx(self, col=thanatt.ThanAttCol(thancadconf.thanColSel).thanTk, fillcol=""):
@@ -524,7 +523,6 @@ class ThanTkGuiHighDraw:
 
         It does not interfere with normal selection mechanism."""
         dc = self.thanCanvas
-        tagel = self.thanProj[1].thanTagel
         dc.dtag("all", "linx")
         dc.dtag("all", "nlix")
         dc.addtag_withtag("linx", "selx")
@@ -547,7 +545,6 @@ class ThanTkGuiHighDraw:
 
         It does not interfere with normal selection mechanism."""
         dc = self.thanCanvas
-        tagel = self.thanProj[1].thanTagel
         dc.dtag("all", "linx")
         dc.dtag("all", "nlix")
         dc.addtag_withtag("linx", "selx")

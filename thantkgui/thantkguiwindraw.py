@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,18 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines a Tkinter window to display a ThanCad drawing.
 """
 
 import weakref, Tkinter
-import p_ggen, p_gtkuti, p_gtkwid
-import thantk, thanvar, thancom, thaneng, thanmenus, thanfonts
+import p_ggen, p_gtkwid
+import thantk, thanvar, thanmenus, thanfonts
 from thanvers import tcver
 from thanopt import thancadconf
 from thanopt.thancon import thanFrape
-from thandefs.thanatt import ThanAttCol
 from thantrans import T
 import thantkguicoor, thantkguihighget, thantkguihighdraw, thantkguilowget
 import thantkcmd, thantkstatus
@@ -136,7 +135,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         self.than.thanLtypes  = dr.thanLtypes                 # Just a reference
         self.than.thanImages = self.thanImages = set()        # For image zoom reasons
 
-        width, height, widthmm, heightmm = p_gtkuti.thanRobustDim()
+        width, height, widthmm, heightmm = p_gtkwid.thanRobustDim()
         self.than.pixpermm = (float(width)/widthmm + float(height)/heightmm) * 0.5   #Average of the two axes
         self.than.dash = []               #Dash pattern for lines (default is continuous)
 
@@ -153,9 +152,9 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
     def __position(self):
         "Position main window at top left; Later, add code to remember the last ThanCad's position, size etc."
         p = thanfiles.ThanCad[2].thanTkPos
-        while p[-1][2]() == None: del p[-1]
+        while p[-1][2]() is None: del p[-1]
         for i, (xx, yy, win) in enumerate(p):
-            if win() == None:
+            if win() is None:
                 p[i] = xx, yy, weakref.ref(self)
                 break
         else:
@@ -217,29 +216,29 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
 
     def thanTkSet(self, elem=None):
         "Sets the attributes of the layer that contains elem, or the current layer."
-	dr = self.thanProj[1]
-	if elem == None: lay = dr.thanLayerTree.thanCur
-	else:            lay = dr.thanLayerTree.dilay[elem.thanTags[1]]
-	lay.thanTkSet(self.than)
+        dr = self.thanProj[1]
+        if elem is None: lay = dr.thanLayerTree.thanCur
+        else:            lay = dr.thanLayerTree.dilay[elem.thanTags[1]]
+        lay.thanTkSet(self.than)
 
 
     def thanUpdateLayerButton(self, selected=False):
         "Show the name and colour of current layer, or currently selected elements."
-	if selected and len(self.thanSelall) > 0:
-	    lays = set(elem.thanTags[1] for elem in self.thanSelall)
-	    assert len(lays) > 0, "How come that no layers were found, when there is at least one element????"
-	    if len(lays) > 1:
+        if selected and len(self.thanSelall) > 0:
+            lays = set(elem.thanTags[1] for elem in self.thanSelall)
+            assert len(lays) > 0, "How come that no layers were found, when there is at least one element????"
+            if len(lays) > 1:
                 self.thanCurLayShow.config(fg="red", bg="black", text=T["<varies>"])
-		return
-	    dilay = self.thanProj[1].thanLayerTree.dilay
-	    cl = dilay[lays.pop()]
-	else:
-	    cl = self.thanProj[1].thanLayerTree.thanCur
+                return
+            dilay = self.thanProj[1].thanLayerTree.dilay
+            cl = dilay[lays.pop()]
+        else:
+            cl = self.thanProj[1].thanLayerTree.thanCur
         colatt = cl.thanAtts["moncolor"]
         if colatt.than2Gray() < 127: col = "white"
         else:                        col = "black"
         self.thanCurLayShow.config(fg=col, bg=colatt.thanTk)
-	self.thanCurLayShow.thanSet(cl.thanGetPathname())
+        self.thanCurLayShow.thanSet(cl.thanGetPathname())
 
 
     def __changeCurLay(self, evt=None):
@@ -285,6 +284,6 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
 
 if __name__ == "__main__":
     print __doc__
-    gui = Tk()
-    mainWindow = ThanTkGuiWinMain(gui)
+    gui = Tkinter.Tk()
+    mainWindow = ThanTkGuiWinDraw(gui)
     gui.mainloop()

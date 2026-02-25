@@ -13,13 +13,13 @@ def get(name):
     If the same image is asked again, a reference to the created image
     is returned and thus we save memory.
     If Tkinter library is initialised, then destroyed and then reinitialised,
-    the images are ivalidated and produce error if you try to display
+    the images are invalidated and produce error if you try to display
     them. Thus get() checks for Tk reinitialisation and deletes the
     cached images.
     """
     global __icons, __tk
     if __tk != Tkinter._default_root:
-        if __icons != None: print "Module", __name__, ": Reinitialise images"
+        if __icons is not None: print "Module", __name__, ": Reinitialise images"
         __icons = {}
         __tk = Tkinter._default_root
 

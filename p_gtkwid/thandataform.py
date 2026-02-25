@@ -1,9 +1,9 @@
 #!/usr/bin/python
-from Tkinter import *
+from Tkinter import Tk, Toplevel, Frame, Button, Label, Entry, SUNKEN, RAISED
 
-from p_gtkuti import thanGudModalMessage, thanGudAskOkCancel
-from thanval import *
-from thanwids import *
+from thantkutila import thanGudModalMessage, thanGudAskOkCancel
+from thanval import ThanValidator, ThanValFloat, ThanValInt
+from thanwids import ThanEntry, ThanCheck, ThanChoice
 from thanwidstrans import T
 
 
@@ -16,8 +16,8 @@ class ThanData:
     def __init__(self, vals, fraWid, cargo=None):
         self.thanCargo = cargo
         self.thanWidgetsCreate(fraWid)
-	self.thanSet(vals)
-	self.thanValsOri = self.thanGet()
+        self.thanSet(vals)
+        self.thanValsOri = self.thanGet()
 
     def thanSet(self, vs):
         for (tit,wid,vld),v in zip(self.thanWids,vs): wid.thanSet(v)
@@ -25,9 +25,9 @@ class ThanData:
     def thanValidate(self):
         vs = []
         for tit,wid,vld in self.thanWids:
-	    vs.append(vld.thanValidate(wid.thanGet()))
-            if vs[-1] == None:
-	        tit = '"%s":\n%s' % (tit, vld.thanGetErr())
+            vs.append(vld.thanValidate(wid.thanGet()))
+            if vs[-1] is None:
+                tit = '"%s":\n%s' % (tit, vld.thanGetErr())
                 thanGudModalMessage(self, tit, T["Error in data"])
                 wid.focus_set()
                 return None
@@ -60,17 +60,17 @@ class ThanDataForm(Toplevel, ThanData):
 
     def __init__(self, vals, callerapply, master, cargo=None, **kw):
         self.thanCallerApply = callerapply
-        
+
         Toplevel.__init__(self, master, **kw)
-	self.protocol("WM_DELETE_WINDOW", self.thanCancel)
+        self.protocol("WM_DELETE_WINDOW", self.thanCancel)
         fraWid = Frame(self, relief=SUNKEN, borderwidth=1)
         fraWid.grid(row=0, sticky="wesn")
-	ThanData.__init__(self, vals, fraWid, cargo)
+        ThanData.__init__(self, vals, fraWid, cargo)
         fraBut = Frame(self)
         fraBut.grid(row=1, sticky="we")
         self.thanButtonsCreate(fraBut)
-	for i in 0,: self.columnconfigure(i, weight=1)
-	for i in 0,: self.rowconfigure(i, weight=1)
+        for i in 0,: self.columnconfigure(i, weight=1)
+        for i in 0,: self.rowconfigure(i, weight=1)
 
     def thanButtonsCreate(self, fra):
         "Creates OK, APPLY, CANCEL buttons."
@@ -81,18 +81,18 @@ class ThanDataForm(Toplevel, ThanData):
         but.grid(row=0, column=1)
         but = Button(fra, text=T["Cancel"], bg="pink", activebackground="red", width=8, relief=RAISED, command=self.thanCancel)
         but.grid(row=0, column=2)
-	for i in 0,1,2: fra.columnconfigure(i, weight=1)
+        for i in 0,1,2: fra.columnconfigure(i, weight=1)
 
     def thanOk(self, evt=None):
         if self.thanApply() == "break": return
         self.destroy()
-        
+
     def thanApply(self, evt=None):
         v = self.thanValidate()
-        if v == None: return "break"
+        if v is None: return "break"
         self.thanCallerApply(tuple(v))
         self.thanValsOri = v
-        
+
     def thanCancel(self, evt=None):
         if self.thanGet() != self.thanValsOri:
             if not thanGudAskOkCancel(self,
@@ -104,7 +104,7 @@ class ThanDataForm(Toplevel, ThanData):
 ##############################################################################
 ##############################################################################
 
-			
+
 class ThanDataGen(ThanDataForm):
     "A form which accepts data."
 
@@ -127,7 +127,7 @@ class ThanDataGen(ThanDataForm):
           (T["MAIN GRADE LINE"],      ThanEntry(fra), ThanValInt(1, 50)),
           (T["NUMBER OF LINES"],      ThanEntry(fra), ThanValInt(1, 50))
         )
-          
+
         i = -1
         for text,wid,v in wids:
             i += 1
@@ -139,7 +139,7 @@ class ThanDataGen(ThanDataForm):
 
         self.thanWids = wids
         for i in 1,: fra.columnconfigure(i, weight=1)
-            
+
 
 ##############################################################################
 ##############################################################################
@@ -150,13 +150,13 @@ if __name__ == "__main__" and 1:
     root = Tk()
     import tkFont
     if sys.platform == "win32":
-	fo = tkFont.Font(family="Arial", size=12)
+        fo = tkFont.Font(family="Arial", size=12)
         root.option_add("*font", fo)
     else:
-	fo = tkFont.Font(family="Thorndale AMT", size=12)
-#	fo = tkFont.Font(family="Vera", size=12)
-	fo = tkFont.Font(family="4x6", size=12)
-	print fo
+        fo = tkFont.Font(family="Thorndale AMT", size=12)
+#        fo = tkFont.Font(family="Vera", size=12)
+        fo = tkFont.Font(family="4x6", size=12)
+        print fo
         root.option_add("*font", fo)
     v = (1000.0, 100.0, 1, 1, 0, 1, 0, 0, 30.0, 1.5, 1, 2, 2)
     d = ThanDataGen(v, f, root, class_="ThanHigh")

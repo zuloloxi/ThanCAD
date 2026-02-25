@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module initialises the python logging mechanism for ThanCad.
 """
@@ -35,7 +35,7 @@ def __setup():
     root = logging.getLogger("")              # Root logger object
     formatter = logging.Formatter(            # How the messages will be formatted
         fmt='%(name)-12s: %(levelname)-8s %(message)s',
-	datefmt='%Y-%m-%d %H:%M')
+        datefmt='%Y-%m-%d %H:%M')
 
     console = logging.StreamHandler()         # Output to console
     console.setFormatter(formatter)           # How the messages will be formatted for console output
@@ -44,10 +44,10 @@ def __setup():
 
     fn = "thancad.log"
     filnam, terr = p_ggen.configFile(fn, "thancad")
-    if filnam == None:
-	terr = "%s\nCan not open logging file '%s' in directory '%s'" % (terr, fn, ".thancad")
+    if filnam is None:
+        terr = "%s\nCan not open logging file '%s' in directory '%s'" % (terr, fn, ".thancad")
         root.warning(terr)
-	return
+        return
     fil = logging.FileHandler(filnam, "a")    # Output to file
     fil.setFormatter(formatter)               # How the messages will be formatted for file output
     fil.setLevel(logging.INFO)                # What levels and above to log

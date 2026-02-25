@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to scan and insert an image
 to ThanCad.
 """
-from Tkinter import *
-import ImageTk
-from Image import ROTATE_90, ROTATE_180, ROTATE_270
-from p_gtkuti import ThanDialog, thanGudModalMessage, thanGudAskOkCancel, thanGudGetSaveFile
-from p_gtkwid import ThanButton
+from Tkinter import Tk, Frame, Canvas
+import p_gimage
+from p_gtkwid import (ThanDialog, thanGudModalMessage, thanGudAskOkCancel,
+    thanGudGetSaveFile, ThanButton)
 from thantrans import T
 
 
@@ -38,7 +37,7 @@ class ThanScan(ThanDialog):
     "An object to provide basic scan capabilities."
 
     def __init__(self, master, can, dpis, cargo=None, *args, **kw):
-        "Extract initial rectification parameters."
+        "Extract initial parameters."
         self.can = can
         self.dpis = dpis
         self.thanProj = cargo
@@ -53,7 +52,7 @@ class ThanScan(ThanDialog):
 
     def dpiset(self, d=None):
         "Set the scan dpi."
-        if d != None: self.can.resolution = d
+        if d is not None: self.can.resolution = d
         self.butScan.config(text=T["Scan"]+"[%ddpi]" % self.can.resolution)
         self.butScan.update()
 
@@ -75,16 +74,16 @@ class ThanScan(ThanDialog):
 
     def redrawim(self):
         "Shrinks the image to fit into the window."
-        if self.im == None: return
+        if self.im is None: return
         self.dc.update()
         bdc = self.dc.winfo_width() - 20      #Leave 20 pixels for margins
         hdc = self.dc.winfo_height() - 20     #Leave 20 pixels for margins
         if bdc < 10 or hdc < 10:
-            thanGudModalMessage(self, er, T["Window too small to display image"])
+            thanGudModalMessage(self, "Error", T["Window too small to display image"])
             return
         b, h = self.im.size
         if b < 1 or h < 1:
-            thanGudModalMessage(self, er, T["Ilegal Image"])
+            thanGudModalMessage(self, "Error", T["Illegal Image"])
             return
         im1 = self.im
         rb = float(b) / bdc
@@ -99,7 +98,7 @@ class ThanScan(ThanDialog):
                 b = (b*hdc)/h
                 h = hdc
                 im1 = self.im.resize((b, h))
-        self.imtk = ImageTk.PhotoImage(im1)
+        self.imtk = p_gimage.PhotoImage(im1)
         self.dc.delete(self.tem2)
         self.tem2 = self.dc.create_image(10, 10, image=self.imtk, anchor="nw")    #, tags=self.thanTags)
         self.imsaved = False
@@ -107,7 +106,7 @@ class ThanScan(ThanDialog):
 
     def rotateim(self, com):
         "Rotates the scanned image 90, 180, or 270 deg."
-        if self.im == None:
+        if self.im is None:
             thanGudModalMessage(self, T["No image has been scanned!"], T["Error in data"])
             return
         self.im = self.im.transpose(com)
@@ -116,7 +115,7 @@ class ThanScan(ThanDialog):
 
     def saveim(self):
         "Save image to a file."
-        if self.im == None:
+        if self.im is None:
             thanGudModalMessage(self, T["No image has been scanned!"], T["Error in data"])
             return
         while 1:
@@ -155,13 +154,13 @@ class ThanScan(ThanDialog):
         self.dpiset()
 
         but = ThanButton(fra, text=T["Rotate left 90deg"], bg="lightblue", activebackground="SkyBlue",
-            command=lambda com=ROTATE_90:  self.rotateim(com))
+            command=lambda com=p_gimage.ROTATE_90:  self.rotateim(com))
         but.grid(row=1, column=1, sticky="we")
         but = ThanButton(fra, text=T["Rotate 180deg"], bg="lightblue", activebackground="SkyBlue",
-            command=lambda com=ROTATE_180: self.rotateim(com))
+            command=lambda com=p_gimage.ROTATE_180: self.rotateim(com))
         but.grid(row=2, column=1, sticky="we")
         but = ThanButton(fra, text=T["Rotate right 90deg"], bg="lightblue", activebackground="SkyBlue",
-            command=lambda com=ROTATE_270: self.rotateim(com))
+            command=lambda com=p_gimage.ROTATE_270: self.rotateim(com))
         but.grid(row=3, column=1, sticky="we")
         but = ThanButton(fra, text=T["Redraw Image"], bg="lightblue", activebackground="SkyBlue",
             command=self.redrawim)
@@ -177,7 +176,7 @@ class ThanScan(ThanDialog):
 
     def validate(self):
         "Check that everything is ok."
-        if self.im == None:
+        if self.im is None:
             thanGudModalMessage(self, T["No image has been scanned!"], T["Error in data"])
 #            self.initial_focus = wid
             return False
@@ -190,7 +189,7 @@ class ThanScan(ThanDialog):
 
     def cancel(self, *args):
         "Ask before cancel."
-        if self.im != None and not self.imsaved:
+        if self.im is not None and not self.imsaved:
             a = thanGudAskOkCancel(self, T["Scanned Image has not been saved, OK to discard?"], T["Warning"])
             if not a: return        # Cancel was stopped
         ThanDialog.cancel(self, *args)
@@ -234,32 +233,30 @@ if False:
         def __init__(self):
             self.resolution = self.dpis[0]
         def scan(self):
-            import Image, p_ggen, sys
+            import p_ggen, sys
             fn = p_ggen.path(sys.path[0]) / "thantkdia" / "mars-frost.jpg"
-            return Image.open(fn)
+            return p_gimage.open(fn)
         def close(self):
             pass
 
     def getScanDpi():
-        "Return fake scaneer."
+        "Return fake scanner."
         can = FakeScanner()
         return can, can.dpis
 
 
 if __name__ == "__main__":
-    import Tkinter, Image
     from p_ggen import Struct
     class TT:
         def __getitem__(self, key): return key
     T = TT()
     can, dpis = getScanDpi()
     print can, dpis
-    if can == None:
+    if can is None:
         dpis=[100, 200, 300]
         can = Struct()
         can.resolution = dpis[0]
         can.close = lambda : None
-        can.scan = lambda : Image.open("mars-frost.jpg")
-    import Tkinter
+        can.scan = lambda : p_gimage.open("mars-frost.jpg")
     root = Tk()
     d = ThanScan(root, can, dpis, cargo=None)

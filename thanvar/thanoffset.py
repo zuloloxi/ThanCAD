@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,11 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module computes the offset of a line.
 """
-from itertools import izip, islice
+import copy
+from itertools import islice
 from p_gvec import Vector2
 from p_gmath import thanSegSeg
 
@@ -53,28 +54,27 @@ def thanOffsetLine(ca, dis):
     vf[-1].cargo = ca[-1][2:]
 
     if True:                               # Set False for debugging
-      i = 0
-      while i < len(vf)-2:
-        cca = vf[i].x, vf[i].y
-	ccb = vf[i+1].x, vf[i+1].y
-	for j in xrange(i+2, len(vf)-1):
-	    cc1 = vf[j].x, vf[j].y
-	    cc2 = vf[j+1].x, vf[j+1].y
-	    ct = thanSegSeg(cca, ccb, cc1, cc2)
-	    if ct == None: continue
-	    if i==0 and j+1==len(vf)-1:
-	        vv = Vector2(ct[0], ct[1])
-		vv.cargo = vf[0].cargo
-		vf[0] = vv
-		import copy
-		vf[-1] = copy.copy(vv)
-	    else:
-	        vv = Vector2(ct[0], ct[1])
-		vv.cargo = vf[j].cargo
-		vf[i+1:j+1] = [vv]
-		i -= 1
-	    break
-	i += 1
+        i = 0
+        while i < len(vf)-2:
+            cca = vf[i].x, vf[i].y
+            ccb = vf[i+1].x, vf[i+1].y
+            for j in xrange(i+2, len(vf)-1):
+                cc1 = vf[j].x, vf[j].y
+                cc2 = vf[j+1].x, vf[j+1].y
+                ct = thanSegSeg(cca, ccb, cc1, cc2)
+                if ct is None: continue
+                if i==0 and j+1==len(vf)-1:
+                    vv = Vector2(ct[0], ct[1])
+                    vv.cargo = vf[0].cargo
+                    vf[0] = vv
+                    vf[-1] = copy.copy(vv)
+                else:
+                    vv = Vector2(ct[0], ct[1])
+                    vv.cargo = vf[j].cargo
+                    vf[i+1:j+1] = [vv]
+                    i -= 1
+                break
+            i += 1
 
     return [[v.x, v.y]+list(v.cargo) for v in vf]
 
@@ -84,17 +84,17 @@ def minicadDriver(c):
     cs = []
     for item in c.find_all():
         typ = c.type(item)
-	if typ == "line":
-	    cs1 = c.coords(item)
+        if typ == "line":
+            cs1 = c.coords(item)
             cs1 = zip(islice(cs1, 0, None, 2), islice(cs1, 1, None, 2))
-	    if cs:
-	        if   cs[-1] == cs1[0]: cs.append(cs1[1])
-	        elif cs[-1] == cs1[1]: cs.append(cs1[0])
-	    else:
-	        cs = cs1
+            if cs:
+                if   cs[-1] == cs1[0]: cs.append(cs1[1])
+                elif cs[-1] == cs1[1]: cs.append(cs1[0])
+            else:
+                cs = cs1
     if not cs:
         print "no line found"
         return
     dis = 50.0
-    cs1 = offsetLine(cs, dis)
+    cs1 = thanOffsetLine(cs, dis)
     c.create_line(cs1, fill="green")

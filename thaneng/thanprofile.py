@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module draws common profiles of 3d lines.
 """
@@ -29,12 +29,14 @@ This module draws common profiles of 3d lines.
 from math import hypot
 from itertools import izip
 import p_ggen
+from thanimp import ThanCadDrSave
+from thansupport import ThanDxfEmu
 
 
 def thanCommonProfile(proj, cps, layers=None, colors=None):
     "Creates (common) profile for one (or many similar) 3D line(s) into a new drawing."
     from thancom.thancomview import thanZoomExt
-    if layers == None: layers = [str(i) for i in xrange(1, len(cps)+1)]
+    if layers is None: layers = [str(i) for i in xrange(1, len(cps)+1)]
     dfact = 0.1
     d = [0.0*dfact]
     for ca, cb in p_ggen.iterby2(cps[0]):
@@ -69,10 +71,8 @@ def thanCommonProfile(proj, cps, layers=None, colors=None):
 
 def defDxf(proj, layers, colors):
     "Initial definition."
-    from thanimp import ThanCadDrSave
-    from thansupport import ThanDxfEmu
     from thancom.thancomfile import thanFileNewDo
-    if colors == None: colors = range(1, len(layers)+1)
+    if colors is None: colors = range(1, len(layers)+1)
 
     projnew = thanFileNewDo(proj)
 

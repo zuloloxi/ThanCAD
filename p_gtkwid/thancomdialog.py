@@ -2,24 +2,25 @@
 This module defines the common parts of dialogs in ThanCad.
 """
 
-from types import *
+from types import FloatType, IntType
 import Tkinter, ConfigParser
-import p_gtkuti, p_ggen
+import p_ggen
+import thantksimpledialog, thantkutila
 import thanwidstrans
 
 uni = p_ggen.thanUnicode
 
 
-class ThanComDialog(p_gtkuti.ThanDialog):
+class ThanComDialog(thantksimpledialog.ThanDialog):
     "Some common methods for all ThanCad's dialogs."
 
     def __init__(self, master, vals=None, cargo=None, translation=None, *args, **kw):
         "Extract initial rectification parameters."
         self.thanValsInit = vals           # This is structure not a scalar
         self.thanProj = cargo
-        if translation == None: self.T = thanwidstrans.T
+        if translation is None: self.T = thanwidstrans.T
         else:                   self.T = translation
-        p_gtkuti.ThanDialog.__init__(self, master, *args, **kw)
+        thantksimpledialog.ThanDialog.__init__(self, master, *args, **kw)
 
 
     def thanValsDef(self):
@@ -55,12 +56,12 @@ class ThanComDialog(p_gtkuti.ThanDialog):
     def thanValsReadFile2(self):
         "This does the actual reading from configparser; override."
         return
-        self._tv["radProject"][1] = p_gtwid.ThanValInt(0, 9)
-        self._tv["radProjApprox"][1] = p_gtwid.ThanValInt(0, 3)
-        self.thanValsReadICP(c, tv, v)   # Common ICP parameters
-        self.thanValsReadSec(sec="ICP GENERAL PARAMETERS", keys="entDisInt entDisRange entThres entSteps")
-        self.thanValsReadSec(sec="PROJECTION TYPE", keys="radProject")
-        self.thanValsReadSec(sec="PURE PROJECTION APPROXIMATION", keys="radProjApprox entFilcof entNx entNy entNz")
+        #self._tv["radProject"][1] = p_gtkwid.ThanValInt(0, 9)
+        #self._tv["radProjApprox"][1] = p_gtkwid.ThanValInt(0, 3)
+        #self.thanValsReadICP(c, tv, v)   # Common ICP parameters
+        #self.thanValsReadSec(sec="ICP GENERAL PARAMETERS", keys="entDisInt entDisRange entThres entSteps")
+        #self.thanValsReadSec(sec="PROJECTION TYPE", keys="radProject")
+        #self.thanValsReadSec(sec="PURE PROJECTION APPROXIMATION", keys="radProjApprox entFilcof entNx entNy entNz")
 
 
     def thanValsReadSec(self, sec, keys):
@@ -70,7 +71,7 @@ class ThanComDialog(p_gtkuti.ThanDialog):
             try:
                 test = self._c.get(sec, tit)
                 test = val.thanValidate(test)
-                if test != None: setattr(self._v, key, test)
+                if test is not None: setattr(self._v, key, test)
             except:
                 pass
 
@@ -133,7 +134,7 @@ class ThanComDialog(p_gtkuti.ThanDialog):
         for (key,tit,wid,vld) in self.thanWids:
             setattr(self, key, wid)
 
-        if self.thanValsInit == None:
+        if self.thanValsInit is None:
             self.thanValsInit = self.thanValsDef()
             self.thanValsRead(self.thanValsInit)
         self.thanValsSaved = self.thanValsInit.clone()
@@ -169,16 +170,16 @@ class ThanComDialog(p_gtkuti.ThanDialog):
         with the new values, and True is returned to the caller.
         """
         ret = True
-        if values == None: vs = self.thanValsInit.clone()
+        if values is None: vs = self.thanValsInit.clone()
         else:              vs = values
-        if wids == None: wids = self.thanWids
+        if wids is None: wids = self.thanWids
         for key,tit,wid,vld in wids:
             v1 = vld.thanValidate(wid.thanGet())
-            if v1 == None:
+            if v1 is None:
                 ret = False
                 if strict:
                     tit = u'"%s":\n%s' % (uni(tit), uni(vld.thanGetErr()))
-                    p_gtkuti.thanGudModalMessage(self, tit, self.T["Error in data"], p_gtkuti.ERROR)
+                    thantkutila.thanGudModalMessage(self, tit, self.T["Error in data"], thantkutila.ERROR)
                     self.initial_focus = wid
                     return ret, None
                 else:
@@ -225,24 +226,24 @@ class ThanComDialog(p_gtkuti.ThanDialog):
         if self.result == self.thanValsSaved: return True
 #        print "result=", self.result.__dict__
 #        print "saved=", self.thanValsSaved.__dict__
-        a = p_gtkuti.thanGudAskOkCancel(self, self.T[mes], self.T["WARNING"])
+        a = thantkutila.thanGudAskOkCancel(self, self.T[mes], self.T["WARNING"])
         return bool(a)
 
 
     def cancel(self, event=None):
         "Ask before cancel."
         if not self.ok2change(): return # Cancel was stopped
-        p_gtkuti.ThanDialog.cancel(self)
+        thantksimpledialog.ThanDialog.cancel(self)
 
 
     def cancel_force(self, event=None):
         "Cancel without asking."
-        p_gtkuti.ThanDialog.cancel(self)
+        thantksimpledialog.ThanDialog.cancel(self)
 
 
     def apply2(self, event=None):
         "In case user pressed apply button, validate results and save values of widgets."
-        ret = p_gtkuti.ThanDialog.apply2(self)
+        ret = thantksimpledialog.ThanDialog.apply2(self)
         if not ret: return ret
         self.thanValsSaved = self.result
         return ret
@@ -256,7 +257,7 @@ class ThanComDialog(p_gtkuti.ThanDialog):
 #        del self.thanLabGps, self.thanLabRel
 #        self.__stat.destroy()
 #        del self.__stat
-        p_gtkuti.ThanDialog.destroy(self)
+        thantksimpledialog.ThanDialog.destroy(self)
 
 
     def __del__(self):

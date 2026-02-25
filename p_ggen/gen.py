@@ -123,11 +123,11 @@ def _inpGen(text, fun, other=()):
         text = "".join([gc.get(c, c) for c in text])
     while 1:
         s = raw_input(text)
-	s1 = s.strip()
-	if s1 in other: return s1
+        s1 = s.strip()
+        if s1 in other: return s1
         try: return fun(s)
-	except ValueError: pass
-	print "Illegal value. Try again"
+        except ValueError: pass
+        print "Illegal value. Try again."
 
 def inpFloat(text,  other=()): return  _inpGen(text, lambda t: float(t.replace(",",".")), other)
 def inpComplex(text,other=()): return  _inpGen(text, lambda t: complex(t.replace(",",".")), other)
@@ -241,9 +241,9 @@ def configFile(confname, appdir=".thancad"):
             f1 = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
             appdir = appdir[1:]     #For windows do not include the first dot
         except ImportError: # quick semi-nasty fallback for non-windows/win32com case
-            f1 = __homerocurrent()
+            f1 = __homeorcurrent()
     else:
-        f1 = __homerocurrent()
+        f1 = __homeorcurrent()
     f1 = thanUnunicode(f1)       # If it is unicode it is converted to win greek
     f = path(f1) / appdir
     try: f.makedirs1()
@@ -251,8 +251,8 @@ def configFile(confname, appdir=".thancad"):
     return f / confname, ""
 
 
-def __homerocurrent():
-    "Return home directory or current director if this fails."
+def __homeorcurrent():
+    "Return home directory or current directory if this fails."
     import jorpath
     f1 = "~"
 #    f1 = "$windir"
@@ -263,13 +263,14 @@ def __homerocurrent():
 
 
 _iuniqfileprev = 0
-def uniqfile(pref, suf="", stat="w", n=3):
-    "Opens a unique file by append a unique number to prefix."
+def uniqfile(pref, suf="", stat="w", n=3, inum=-1):
+    "Opens a unique file by appending a unique number to prefix."
     from jorpath import path
     global _iuniqfileprev
     form = "%s%%0%dd%s" % (pref, n, suf)
     nmax = 10**n
 
+    if inum >= 0: _iuniqfileprev = inum
     _iuniqfileprev += 1
     i = _iuniqfileprev % nmax    #Try 1 after previous
     fn = path(form % (i,))
@@ -311,7 +312,7 @@ def isString(t):
         else:   return True
 
 __textchars = ''.join(map(chr, [7,8,9,10,12,13,27] + range(0x20, 0x100)))
-isStringBinary = lambda bytes: bool(bytes.translate(None, __textchars))
+isStringBinary = lambda bytes1: bool(bytes1.translate(None, __textchars))
 
 #===========================================================================
 #GREEK handling routines
@@ -329,7 +330,9 @@ gw2d = dict(zip(gcw, gcd))
 gw2d.update(dict(zip(gsw, gsd)))
 gd2w = dict(zip(gcd, gcw))
 gd2w.update(dict(zip(gsd, gsw)))
+
 gws2c = dict(zip(gsw, gcaw))
+gws2c.update(dict(zip(gcw, gcaw)))   #Thanasis2013_10_13
 gwc2s = dict(zip(gcw, gsw))
 
 grwsh = dict(zip(gcw, ecx))
@@ -340,7 +343,7 @@ grdsh.update(dict(zip(gsd, esx)))
 del gcaw, gcw, gsw, gcd, gsd, ecx, esx
 
 def gr2upper(fr):
-    "Convert to windows greek capital."
+    "Convert to windows greek capital (no carets allowed)."
     gc = gws2c
     return "".join([gc.get(c, c) for c in fr])
 def gr2lower(fr):

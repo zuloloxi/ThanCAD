@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -37,9 +37,14 @@ from p_ggen import Translation
 #English to greek translation table
 en2gr = \
 { "__TRANSLATION__"     : ("en", "iso-8859-1", "gr", "iso-8859-7"),
+
+
+
+
 "&Match 2d"                                       : u"Συνταύτιση 2Δ",
 "&Match 3d to 2d"                                 : u"Συνταύτιση 3Δ προς 2Δ",
 "&Match 3d"                                       : u"Συνταύτιση 3Δ",
+"&Match 3d splines"                               : u"Συνταύτιση κυβικών καμπυλών 3Δ",
 "&Match multiple 2d"                              : u"Πολλαπλή Συνταύτιση 2Δ",
 "&Mid axis"                                       : u"Μέσος άξονας",
 "&Project/transform"                              : u"Εκτέλεση προβολής/μετασχηματισμού",
@@ -52,7 +57,8 @@ en2gr = \
 "Matches two 2d polylines"                        : u"Συνταύτιση δύο γραμμών 2Δ",
 "Matches one 3d polyline to one 2d polylines"     : u"Συνταύτιση μίας γραμμής 3Δ προς μία γραμμή 2Δ",
 "Matches two 3d polylines"                        : u"Συνταύτιση δύο γραμμών 3Δ",
-"Matches two sets of 2d polylines"                : u"Συνταύτιση δύο σσυνόλων από γραμμές 2Δ",
+"Matches two 3d cubic splines"                    : u"Συνταύτιση δύο κυβικών γραμμών 3Δ",
+"Matches two sets of 2d polylines"                : u"Συνταύτιση δύο συνόλων από γραμμές 2Δ",
 "&Match multiple 3d to 2d"                        : u"Πολλαπλή Συνταύτιση 3Δ προς 2Δ",
 "Matches one set of 3d polylines to one set of 2d polylines"
                                                   : u"Συνταύτιση ενός συνόλου γραμμών 3Δ προς ένα σύνολο γραμμών 2Δ",
@@ -69,10 +75,14 @@ en2gr = \
 "2D polynomial approximation"                     : u"Πολυωνυμική προσέγγιση 2Δ",
 "Global Matching of 2D Curves"                    : u"Ολική Συνταύτιση Διδιάστατων Γραμμών",
 "Global Matching of 3D Curves"                    : u"Ολική Συνταύτιση Τρισδιάστατων Γραμμών",
+"Global Matching of 3D cubic Splines"             : u"Ολική Συνταύτιση Τρισδιάστατων Κυβικών Γραμμών",
 "Select the\nreference line"                      : u"Επιλογή\nγραμμής αναφοράς",
 "Select the line to be moved\ntowards the reference line": u"Επιλογή γραμμής που θα μετακινηθεί\nπρος τη γραμμή αναφοράς",
 "Select the reference line:\n"                    : u"Επιλογή γραμμής αναφοράς\n",
 "Select the line to be moved towards the reference line:\n": u"Επιλογή γραμμής που θα μετακινηθεί προς τη γραμμή αναφοράς\n",
+"Select the\nreference spline"                    : u"Επιλογή κυβικής\nγραμμής αναφοράς\n",
+"Select the spline to be moved\ntowards the reference spline": u"Επιλογή κυβικής γραμμής που θα μετακινηθεί\nπρος τη κυβική γραμμή αναφοράς\n",
+"SELECT LINES (the lines bust be cubic splines):" : u"ΕΠΙΛΟΓΗ ΓΡΑΜΜΩΝ (οι γραμμές πρέπει να είναι κυβικές)",
 "PREALIGNMENT:"                                   : u"ΠΡΟ-ΕΥΘΥΓΡΑΜΜΙΣΗ:",
 "Centroid method"                                 : u"Μέθοδος κεντροειδούς",
 "Distance method"                                 : u"Μέθοδος απόστασης",
@@ -85,6 +95,7 @@ en2gr = \
 "Multiple Curve Global Matching"                  : u"Ολική Συνταύτιση Πολλαπλών Γραμμών",
 "Multiple Curve Matching Algorithms"              : u"Αλγόριθμοι Συνταύτισης Πολλαπλών Γραμμών",
 "Dimitra Vassilaki, PhD Candidate"                : u"Δήμητρα Βασιλάκη, Υποψήφια Διδάκτορας",
+"Dr. Eng. Dimitra Vassilaki"                      : u"Δρ. Δήμητρα Βασιλάκη",
 "Select the\nreference lines"                     : u"Επιλογή\nγραμμών αναφοράς",
 "Select the lines to be moved\ntowards the reference lines": u"Επιλογή γραμμών που θα μετακινηθούν\nπρος τις γραμμές αναφοράς",
 "Select the reference lines:\n"                     : u"Επιλογή γραμμών αναφοράς:\n",
@@ -106,8 +117,10 @@ en2gr = \
 "Individual full ICP method for each pair of curves": u"Μέθοδος πλήρους ICP ανεξάρτητη για κάθε ζεύγος γραμμών",
 "Global Matching of Curves of different Dimensionality": u"Ολική Συνταύτιση Γραμμών Διαφορετικών Διαστάσεων",
 "Curve Matching Algorithms"                       : u"Αλγόριθμοι Συνταύτισης Γραμμών",
+"3D Cubic Splines Matching"                       : u"Συνταύτιση κυβικών γραμμών 3Δ",
 "Lab of Photogrammetry, NTUA, "                   : u"Εργαστήριο Φωτογραμμετρίας, ΕΜΠ, ",
 "ICP GENERAL PARAMETERS:"                         : u"ΓΕΝΙΚΕΣ ΠΑΡΑΜΕΤΡΟΙ ICP:",
+"MATCHING PARAMETERS:"                            : u"ΠΑΡΑΜΕΤΡΟΙ ΣΥΝΤΑΥΤΙΣΗΣ:",
 "Interpolation Distance (m)"                      : u"Απόσταση παρεμβολής (m)",
 "Distance Range (m)"                              : u"Μέγιστη απόσταση αναζήτησης",
 "Convergence threshold (m)"                       : u"Όριο σύγκλισης (m)",

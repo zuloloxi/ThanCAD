@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines dragging state, i.e. the generic way that ThanCad responds to
 dragging events like realtime zoom and realtime pan.
 """
 import Tkinter
-from thantkconst import *
+from thantkconst import (THAN_STATE_DRAG2BEGIN, THAN_STATE_DRAGFIRST,
+    THAN_STATE_DRAGGING, THAN_STATE_PANDYNAMIC, THAN_STATE_ZOOMDYNAMIC,
+    THAN_STATE_NONE)
 from thanvar import thanLogTk
 from thantkguigeneric import ThanStateGeneric
 
@@ -115,7 +117,7 @@ class ThanStateDrag(ThanStateGeneric):
         if self.thanStateDrag == THAN_STATE_NONE: return
         if self.thanStateDrag == THAN_STATE_DRAGFIRST: return
         if self.thanStateDrag != THAN_STATE_DRAGGING:
-            thanLogTk.warning("tklowget: onReleaseDrag was trigered before onClick: probably, the click was lost!")
+            thanLogTk.warning("tklowget: onReleaseDrag was triggered before onClick: probably, the click was lost!")
 
 #-------Initial values
 
@@ -132,7 +134,7 @@ class ThanStateDrag(ThanStateGeneric):
             dc.thanState = self.thanStateDrag = THAN_STATE_NONE
 
         elif dc.thanState == THAN_STATE_ZOOMDYNAMIC:
-            if self.__zooma == None:
+            if self.__zooma is None:
                 thanLogTk.warning("tklowget: Release drag event triggered for no reason!")
                 return
             self.__calcZoom()
@@ -168,7 +170,7 @@ class ThanStateDrag(ThanStateGeneric):
 
     def thanOnClick(self, event, x, y, cc):
         "Well, here is what should be done when mouse clicks."
-        dc = self.thanProj[2].thanCanvas
+#        dc = self.thanProj[2].thanCanvas
 #        dc.focus_set()              # This is needed otherwise text controls gets characters?
         if self.thanStateDrag == THAN_STATE_DRAG2BEGIN:
             self.__x2 = x

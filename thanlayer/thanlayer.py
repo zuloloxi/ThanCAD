@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines a hierarchical layer structure (class).
 Each layer has a set of attributes. It is very easy to extend this set.
@@ -35,14 +35,12 @@ thanUpdateElements is inherited by ThanLayAtts.
 """
 
 import weakref, copy
-from Tkinter import *
-import p_ggen, p_gimdxf
-from thanvar import Canc, ThanLayerError, THANBYPARENT, THANPERSONAL
+import p_ggen, p_gcol
+from thanvar import ThanLayerError, THANBYPARENT, THANPERSONAL
 from thandefs import ThanId
-from thandefs.thanatt import ThanAttCol
-from thanlaycon import *
 from thanopt import thancadconf
 
+from thanlaycon import *
 import thanlayatts
 
 
@@ -68,7 +66,7 @@ def col2tuple(bg, mode):
     return bg
 
 
-class ThanLayer:
+class ThanLayer(object):
     "Class that holds the information of a layer object."
 
     def __init__(self):
@@ -79,7 +77,7 @@ class ThanLayer:
     def thanGetColour(self, bg=None, mode="RGB", format="tk"):
         "Return the colour of the layer, taking into account the background colour."
         ats = self.thanAtts
-        if bg == None: bg = thancadconf.thanColBack
+        if bg is None: bg = thancadconf.thanColBack
         bg = col2tuple(bg, mode)
         col = col2tuple(ats["moncolor"], mode)
         if bg == (0,0,0):   #If background is black and layer's color is also black, turn color to white
@@ -87,7 +85,7 @@ class ThanLayer:
         elif bg == (255,255,255): #If background is white and layer's color is also white, turn color to black
             if col == (255,255,255): col = 0,0,0
         if format == "tk":
-            fill = outline = p_gimdxf.thanFormTkcol % col
+            fill = outline = p_gcol.thanFormTkcol % col
         elif format == "pil":
             if mode == "RGB": fill = outline = col
             else:             fill = outline = col[0]    #If gray or b/w PIL needs one integer
@@ -164,19 +162,19 @@ class ThanLayer:
 
     def thanPdfSet(self, than):
         "Sets the drawing attributes for a PIL image according to layer."
-	t = self.thanAtts["textstyle"].thanVal
-	than.thanFont = than.thanTstyles[t].thanFont
+        t = self.thanAtts["textstyle"].thanVal
+        than.thanFont = than.thanTstyles[t].thanFont
         return
-	c = self.thanAtts["moncolor"].thanVal
+        c = self.thanAtts["moncolor"].thanVal
         if   c == (255,255,255): c = 0,0,0            # Invert white and ..
-	elif c == (  0,  0,  0): c = 255,255,255      # ..black
-	if than.mode == "1":
-	    c = int(c[0]*0.299+c[1]*0.587+c[2]*0.114+0.49)   # Convert to gray
-	    if c < 255: c = 0                                # Everything is black except pure white
-	elif than.mode == "L":
-	    c = int(c[0]*0.299+c[1]*0.587+c[2]*0.114+0.49)   # Convert to gray
+        elif c == (  0,  0,  0): c = 255,255,255      # ..black
+        if than.mode == "1":
+            c = int(c[0]*0.299+c[1]*0.587+c[2]*0.114+0.49)   # Convert to gray
+            if c < 255: c = 0                                # Everything is black except pure white
+        elif than.mode == "L":
+            c = int(c[0]*0.299+c[1]*0.587+c[2]*0.114+0.49)   # Convert to gray
         than.fill = than.outline = c
-	if not self.thanAtts["fill"].thanVal: than.fill = ""
+        if not self.thanAtts["fill"].thanVal: than.fill = ""
 
 
     def thanRename(self, name):
@@ -184,7 +182,7 @@ class ThanLayer:
         name = name.strip()
         if name=="" or " " in name or name[0]==".":            # Check name
             raise ThanLayerError, "Illegal layer name: "+name
-        if self.thanParent != None:               # Root layer has no parent and no siblings
+        if self.thanParent is not None:               # Root layer has no parent and no siblings
             for lay in self.thanParent.thanChildren:
                 if str(lay.thanAtts[THANNAME]) == name:        # Check unique name
                     raise ThanLayerError, "Duplicate layer name: " + name
@@ -192,53 +190,53 @@ class ThanLayer:
         self.thanAtts[THANNAME].thanPers = name
 
     def thanUnlink(self):
-	"""Unlinks the hierarchy beginning with self from the children of self's parent."
+        """Unlinks the hierarchy beginning with self from the children of self's parent."
 
-	This is dangerous because the elements of the self will become
-	orphants. This may lead the program to crash. So it must be used
-	only if we know that there are no elements in the hierarchy.
-	Or, the hierarchy must be inserted somewhere else.
-	Note that the hierarchy is only unlinked; it is not deleted.
-	"""
-	par = self.thanParent
-	assert par != None, "Well we can't delete root layer. How on earth was root accessed?!"
+        This is dangerous because the elements of the self will become
+        orphans. This may lead the program to crash. So it must be used
+        only if we know that there are no elements in the hierarchy.
+        Or, the hierarchy must be inserted somewhere else.
+        Note that the hierarchy is only unlinked; it is not deleted.
+        """
+        par = self.thanParent
+        assert par != None, "Well we can't delete root layer. How on earth was root accessed?!"
         i = par.thanChildren.index(self)
-	del par.thanChildren[i]
-	return self
+        del par.thanChildren[i]
+        return self
 
     def thanDestroy(self):
         """Destroys the circular references, so that layer can be recycled.
 
         This is dangerous because the elements of self and of all children
-	of self, will become orphants. This may lead to program crash.
-	So it must be used only if we know that there are no elements in
-	the hierarchy. Or, the hierarchy must be inserted somewhere else.
-	Or that we have an exact cmopy so that the elements will have
-	the copy as a parent."""
-	for chlay in self.thanChildren: chlay.thanDestroy()
-	del self.thanChildren
-	del self.lt, self.thanParent
+        of self, will become orphans. This may lead to program crash.
+        So it must be used only if we know that there are no elements in
+        the hierarchy. Or, the hierarchy must be inserted somewhere else.
+        Or that we have an exact copy so that the elements will have
+        the copy as a parent."""
+        for chlay in self.thanChildren: chlay.thanDestroy()
+        del self.thanChildren
+        del self.lt, self.thanParent
 
     def thanChildAdd(self, lays):
-	"""Adds some lays as children of self.
+        """Adds some lays as children of self.
 
-	lays are complete layer hierarchies and they are assumed to be ok,
-	except from their parent.
-	If a name of lays duplicates one of self's current children, we try
-	to rename it. If all renames are succesful, we add the children."""
+        lays are complete layer hierarchies and they are assumed to be ok,
+        except from their parent.
+        If a name of lays duplicates one of self's current children, we try
+        to rename it. If all renames are succesful, we add the children."""
 
         if len(lays) <= 0: return
         names = [str(lay.thanAtts[THANNAME]) for lay in self.thanChildren]
-	namen = {}
-	for lay in lays:
-	    name1 = name = str(lay.thanAtts[THANNAME])
-	    i = 0
-	    while name1 in names:
+        namen = {}
+        for lay in lays:
+            name1 = name = str(lay.thanAtts[THANNAME])
+            i = 0
+            while name1 in names:
                 name1 = name + str(i)
-	        i += 1
+                i += 1
                 if i > 1000: raise ThanLayerError, "Can not rename duplicate layer: "+name+"; try to rename some layers."
-	    namen[lay] = name1
-	    names.append(name1)
+            namen[lay] = name1
+            names.append(name1)
 
         self.thanMove2child()     # If childless, move all elements to a new child
         for lay in lays:
@@ -260,7 +258,7 @@ class ThanLayer:
 
 
     def __newEmptyLeaf(self, name, atts=None):
-        """Creates a new empty leaf layer, intented to be child of self.
+        """Creates a new empty leaf layer, intended to be child of self.
 
         The newly created has self as parent, but it does not belong
         to self's children yet.
@@ -272,7 +270,7 @@ class ThanLayer:
 
 #-------Check name or try to find a unique name
 
-        if name != None:
+        if name is not None:
             names = [str(lay.thanAtts[THANNAME]) for lay in self.thanChildren]
             name = name.strip()
             if name=="" or " " in name or name[0]==".": raise ThanLayerError, "Illegal layer name: " + name
@@ -290,7 +288,7 @@ class ThanLayer:
         lay.thanQuad = set()                   # This holds the elements of the layer
 
         copyinher = atts != None
-        if atts == None: atts = self.thanAtts
+        if atts is None: atts = self.thanAtts
         lay.thanAtts = {}
         for a, val in thanlayatts.thanLayAtts.iteritems():
             defval = atts[a].thanPers
@@ -303,7 +301,7 @@ class ThanLayer:
 
 
     def thanChildUniqName(self):
-        "Return a uninque child name (not equal to other children)."
+        "Return a unique child name (not equal to other children)."
         names = [str(lay.thanAtts[THANNAME]) for lay in self.thanChildren]
         for i in xrange(1000):                 # Try to create unique name
             name = "newlayer" + str(i)
@@ -315,22 +313,22 @@ class ThanLayer:
     def thanMove2child(self, name=None, force=False):
         """Move elements to a child.
 
-	If self is childless, a child is created which inherits the tag of
-	self and, thus, its elements. Self gets no tag and, thus, it has
-	no elements.
-	If layer has no elements then no child is created.
-	"""
-	if len(self.thanChildren) > 0: return
-	if not force and len(self.thanQuad) == 0: return
+        If self is childless, a child is created which inherits the tag of
+        self and, thus, its elements. Self gets no tag and, thus, it has
+        no elements.
+        If layer has no elements then no child is created.
+        """
+        if len(self.thanChildren) > 0: return
+        if not force and len(self.thanQuad) == 0: return
         if self.__getDepth() > THANMRECURS: raise ThanLayerError, "Layer nested too deep."
-	if name == None: name = str(self.thanAtts[THANNAME])+"child"
-	lay = self.__newEmptyLeaf(name)  # No errors expected
+        if name is None: name = str(self.thanAtts[THANNAME])+"child"
+        lay = self.__newEmptyLeaf(name)  # No errors expected
 
-	lay.thanQuad = self.thanQuad               # inherit self's elements
-	lay.thanTag = self.thanTag                 # inherit self's elements
-	self.thanQuad = self.thanTag = None        # parents do not have elements
-	self.thanChildren = [lay]
-	return lay
+        lay.thanQuad = self.thanQuad               # inherit self's elements
+        lay.thanTag = self.thanTag                 # inherit self's elements
+        self.thanQuad = self.thanTag = None        # parents do not have elements
+        self.thanChildren = [lay]
+        return lay
 
     def __getDepth(self):
         "Finds the nested level of layer."
@@ -339,9 +337,9 @@ class ThanLayer:
 #       So we check for root layer with the condition:    lay.thanParent == None
         par = self
         for i in xrange(THANMRECURS):
-	    if par.thanParent  == None: return i
-	    par = par.thanParent
-	return THANMRECURS + 1
+            if par.thanParent  is None: return i
+            par = par.thanParent
+        return THANMRECURS + 1
 
     def thanClone(self, parent=None):
         """Creates a new layer hierarchy copying self's children.
@@ -350,12 +348,12 @@ class ThanLayer:
         copy elements, it copies only a reference to the structure that holds
         the elements.
         In effect the new layer is created with the same name, parent, tag,
-        atributes, with the same (cloned) children and references to the
+        attributes, with the same (cloned) children and references to the
         same elements.
         """
         lay = ThanLayer()
         lay.lt = self.lt
-        if parent == None: lay.thanParent = self.thanParent
+        if parent is None: lay.thanParent = self.thanParent
         else             : lay.thanParent = parent
 
         lay.thanTag = self.thanTag                 # In order to exploit TK mechanism
@@ -370,12 +368,12 @@ class ThanLayer:
         print "Memory of layer", str(self.thanAtts[THANNAME]), " is recycled"
 
     def thanSetAtts(self, leaflayers, attname, newval):
-        "Sets the attributes of the layer self, propagates the attributes and returns the leaflayers affacted."
+        "Sets the attributes of the layer self, propagates the attributes and returns the leaflayers affected."
         for a,val in (attname, newval),:
             assert a in thanlayatts.thanLayAtts, "Unknown layer attribute: " + a
             ia = self.thanAtts[a]
             if val == THANBYPARENT:
-                if self.thanParent == None: continue       # Root element can't inherit
+                if self.thanParent is None: continue       # Root element can't inherit
                 ia.thanInher = True
                 val = self.thanParent.thanAtts[a].thanVal  # The parent's attribute (which ISN'T THANBYPARENT)
             elif val == THANPERSONAL:
@@ -388,28 +386,28 @@ class ThanLayer:
 
             if val == ia.thanVal: continue                 # Happens to have the correct value
             ia.thanValSet(val)
-	    if len(self.thanChildren) == 0:                # No children - leaf ThanLayer.
+            if len(self.thanChildren) == 0:                # No children - leaf ThanLayer.
                 leaflayers.setdefault(self, {})[a] = val
-	    else:                                          # Only leaf ThanLayer has elements
-	        if thanlayatts.thanLayAtts[a][0] == 0:	         # Propagate this value to the children..
-	            self.thanPropAttByParent(leaflayers, a, val) # Propagate only if by parent
-		else:
-		    self.thanPropAttForce(leaflayers, a, val)    # Propagate unconditionally
+            else:                                          # Only leaf ThanLayer has elements
+                if thanlayatts.thanLayAtts[a][0] == 0:                 # Propagate this value to the children..
+                    self.thanPropAttByParent(leaflayers, a, val) # Propagate only if by parent
+                else:
+                    self.thanPropAttForce(leaflayers, a, val)    # Propagate unconditionally
 
 
     def thanPropAttByParent(self, leaflayers, a, val):
         "Propagates an attribute of type 0 to the layer's children, if by parent."
         lay2see = self.thanChildren[:]   # These layers (and their children) must be inspected
         while len(lay2see) > 0:
-	    lay = lay2see.pop()
-	    ia = lay.thanAtts[a]
-	    if not ia.thanInher: continue                # Child Layer does not inherit
-	    if lay.thanAtts[a].thanVal == val: continue  # Child Layer happens to have the correct value
-	    ia.thanValSet(val)
-	    if len(lay.thanChildren) == 0:
+            lay = lay2see.pop()
+            ia = lay.thanAtts[a]
+            if not ia.thanInher: continue                # Child Layer does not inherit
+            if lay.thanAtts[a].thanVal == val: continue  # Child Layer happens to have the correct value
+            ia.thanValSet(val)
+            if len(lay.thanChildren) == 0:
                 leaflayers.setdefault(lay, {})[a] = val  # only leaf ThanLayer has elements
-	    else:
-	        lay2see.extend(lay.thanChildren)
+            else:
+                lay2see.extend(lay.thanChildren)
 
 
     def thanPropAttForce(self, leaflayers, a, val):
@@ -457,28 +455,28 @@ class ThanLayer:
 #        layers = [ ]
 #        lay2see = self.thanChildren[:]
 #        while len(lay2see) > 0:
-#	    lay = lay2see.pop()
+#            lay = lay2see.pop()
 #            if len(lay.thanChildren) == 0:
-#	        if lay.thanAtts[a] != val: layers.append(lay)      # only leaf ThanLayer has elements
-##	    else:
-#	        lay2see.extend(lay.thanChildren)
+#                if lay.thanAtts[a] != val: layers.append(lay)      # only leaf ThanLayer has elements
+##           else:
+#                lay2see.extend(lay.thanChildren)
 #
 ##-------Group layers with the same value
 #
 #        while len(layers) > 0:
-##	    lay = layers.pop()
-#	    val = lay.thanAtts[a]
-#	    layersSameVal = [lay]
-#	    layersOtherVal = [ ]
-#	    while len(layers) > 0:
-#	        lay = layers.pop()
-#		if lay.thanAtts[a] == val:
-#		    layersSameVal.append(lay)
-#		else:
-#		    layersOtherVal.append(lay)
+##           lay = layers.pop()
+#            val = lay.thanAtts[a]
+#            layersSameVal = [lay]
+#            layersOtherVal = [ ]
+#            while len(layers) > 0:
+#                lay = layers.pop()
+#                if lay.thanAtts[a] == val:
+#                    layersSameVal.append(lay)
+#                else:
+#                    layersOtherVal.append(lay)
 #
-#	    self.thanUpdateElements(layersSameVal, a, val)       # Update all the layers with the same value
-#	    layers = layersOtherVal
+#            self.thanUpdateElements(layersSameVal, a, val)       # Update all the layers with the same value
+#            layers = layersOtherVal
 #
 
 
@@ -530,13 +528,13 @@ class ThanLayer:
 
     def thanGetPathname(self, sep="/"):
         "Compute the full pathname of the layer - without the root name."
-        if self.thanParent == None:        #This is the root layer
+        if self.thanParent is None:        #This is the root layer
             return str(self.thanAtts[THANNAME])
         par = self
         i = 0
         m = THANMRECURS
         name = []
-        while par.thanParent != None:
+        while par.thanParent is not None:
             name.append(str(par.thanAtts[THANNAME]))
             par = par.thanParent
             i += 1
@@ -564,7 +562,7 @@ class ThanLayer:
 
     def thanIsEmpty(self):
         "Returns true if layer has no elements nor children, or no children with elements."
-        if self.thanParent == None: return False     # Root layer is considered non-empty
+        if self.thanParent is None: return False     # Root layer is considered non-empty
         if len(self.thanChildren) == 0:
             return len(self.thanQuad) == 0
         for chlay in self.thanChildren:
@@ -600,7 +598,7 @@ class ThanLayer:
             if len(self.thanChildren) > 0:
                 chlay1 = self.thanMove2child()
                 chlay2 = self.thanChildNew(name=nameother, atts=layother.thanAtts)
-                if than.cl is self: than.cl = chlay1 if chlay1 != None else chlay2
+                if than.cl is self: than.cl = chlay1 if chlay1 is not None else chlay2
             else:
                 chlay2 = self.thanChildNew(name=nameother, atts=layother.thanAtts)
             than.other2lay[layother] = chlay2
@@ -611,14 +609,14 @@ class ThanLayer:
 #===========================================================================
 
     def pr(self, a=None, b=""):
-        if a == None:
+        if a is None:
             print b, str(self.thanAtts[THANNAME])
-	else:
-	    ia = self.thanAtts[a]
+        else:
+            ia = self.thanAtts[a]
             print b, str(self.thanAtts[THANNAME]), ia.thanVal, "=", ia.thanAct, ia.thanPers, ia.thanInher
 
-	for lay in self.thanChildren:
-	    lay.pr(a, b+"    ")
+        for lay in self.thanChildren:
+            lay.pr(a, b+"    ")
 
 
 ############################################################################
@@ -657,7 +655,7 @@ class ThanLayerTree:
 
     def thanDictRebuild(self, lay=None):
         "Rebuilds dictionary of tags to layers."
-        if lay == None:
+        if lay is None:
             self.dilay = weakref.WeakValueDictionary()
             lay = self.thanRoot
         if len(lay.thanChildren) == 0:   # Only leaf layers have elements (and tags)
@@ -748,7 +746,7 @@ class ThanLayerTree:
                     laypar = self.thanRoot
                 else:
                     laypar = self.thanFindic(ppar)
-                    if laypar == None: raise ValueError, "Parent of layer %s was not found" % (pname,)
+                    if laypar is None: raise ValueError, "Parent of layer %s was not found" % (pname,)
                 laypar.thanChildAdd([lay])
                 if lay.thanAtts[THANNAME].thanVal != names[-1]: raise ValueError, "Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal)
                 lay.thanAtts[THANNAME].__init__(names[-1], False)    #MAke sure that the name is not inherited
@@ -762,7 +760,7 @@ class ThanLayerTree:
         fr.readEnd("LAYERTREE")
         self.thanDictRebuild()
         self.thanCur = self.thanFindic(pcur)
-        if self.thanCur == None: raise ValueError, "Current layer %s was not found" % (pcur,)
+        if self.thanCur is None: raise ValueError, "Current layer %s was not found" % (pcur,)
 
 
     def __del__(self):
@@ -800,12 +798,12 @@ def testgui(lay):
 
 #    atts = ("expand", "name", "color", "visibility", "plotcolor", "textstyle")
 #    widths = (1, 40, 15, 2, 15, 15)
-
+    from Tkinter import Tk
     win = Tk()
     win.title("Test ThanLayers")
     li = p_gtkwid.ThantkClist5(win, objs=[lay], atts=thanlayatts.thanLayAttsNames,
         widths=thanlayatts.thanLayAttsWidths, height=15,
-        vscroll=1, hscroll=1, onclick=onclick)
+        vscroll=1, hscroll=1, onclick=lambda evt=None: None)
 #    li = p_gtkwid.ThantkClist1(win, atts=atts, widths=widths, height=15,
 #        vscroll=1, hscroll=1, onclick=onclick)
     li.grid()

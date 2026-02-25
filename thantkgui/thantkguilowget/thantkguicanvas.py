@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,19 +21,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for user lowlevel interaction in
 a drawing window.
 """
 
 import p_ggen
-from math import atan2, pi, fabs, hypot
 import Tkinter
 from thanvar import thanLogTk
 from thantrans import T
-from thantkguicroshair import *
-from thantkconst import *
+from thantkguicroshair import CrosHair, ThanCrosHairs
+from thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT1, THAN_STATE_POINT,
+    THAN_STATE_DRAGFOLLOWS,THAN_STATE_MOVE, THAN_STATE_LINE, THAN_STATE_LINE2,
+    THAN_STATE_POLAR, THAN_STATE_CIRCLE, THAN_STATE_ARC, THAN_STATE_RECTANGLE,
+    THAN_STATE_RECTRATIO, THAN_STATE_ROADP, THAN_STATE_ROADR, THAN_STATE_SPLINEP,
+    THAN_STATE_ELLIPSEB, THAN_STATE_SNAPELEM, thanCursor)
 from thantkguiosnap import ThanOsnap, ThanOrtho
 
 from thantkguistateless import ThanStateLess
@@ -159,12 +162,12 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
 #============================================================================
 
     def _resultCoorRel0(self, dxp, dyp):
-        "Convert relative pixel coordiantes to user data units."
+        "Convert relative pixel coordinates to user data units."
         self.thanLastResult = ([0.0]*self.thanProj[1].thanVar["dimensionality"], None)
         self.thanLastResult[0][:2] = self.thanProj[2].thanCt.local2GlobalRel(dxp, dyp)
 
     def _resultCoor(self, xp, yp):
-        "Convert relative pixel coordiantes to user data units."
+        "Convert relative pixel coordinates to user data units."
         self.thanLastResult = (list(self.thanProj[1].thanVar["elevation"]), None)
         self.thanLastResult[0][:2] = self.thanProj[2].thanCt.local2Global(xp, yp)
 
@@ -238,7 +241,7 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
         self.thanOState.thanOnClickr(event, x, y, cc)
 
         if self.thanState == THAN_STATE_NONE:
-            if self.thanFloatMenu != None and self.thanFloatMenu.winfo_ismapped():
+            if self.thanFloatMenu is not None and self.thanFloatMenu.winfo_ismapped():
                 self.thanFloatMenu.unpost()
             self.thanFloatMenu = self.__createFloatMenu()
             self.thanFloatMenu.post(event.x_root, event.y_root)
@@ -252,18 +255,18 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
         m.add_command(label="Real time zoom",      command=lambda fbeg=fbeg: fbeg("zoomrealtime"))
         m.add_command(label="Real time pan",       command=lambda fbeg=fbeg: fbeg("panrealtime"))
 
-#	m1 = Menu(m, tearoff=False)
-#	m1.add_checkbutton(label="zoom  when window changes", variable=self.zoomWhenConf)
-#	m1.add_checkbutton(label="regen when window changes", variable=self.regenWhenConf)
-#	m1.add_separator()
-#	m1.add_checkbutton(label="regen when zoom", variable=self.regenWhenZoom)
-#	m1.add_checkbutton(label="regen when zoom all", variable=self.regenWhenZoomall)
-#	m1.add_checkbutton(label="center when zoom", variable=self.centerWhenZoom)
-#	m1.add_separator()
-#	m1.add_checkbutton(label="show menu bar", variable=self.showMenubar)
-#	m1.add_checkbutton(label="show tool bar", variable=self.showToolbar)
+#       m1 = Menu(m, tearoff=False)
+#       m1.add_checkbutton(label="zoom  when window changes", variable=self.zoomWhenConf)
+#       m1.add_checkbutton(label="regen when window changes", variable=self.regenWhenConf)
+#       m1.add_separator()
+#       m1.add_checkbutton(label="regen when zoom", variable=self.regenWhenZoom)
+#       m1.add_checkbutton(label="regen when zoom all", variable=self.regenWhenZoomall)
+#       m1.add_checkbutton(label="center when zoom", variable=self.centerWhenZoom)
+#       m1.add_separator()
+#       m1.add_checkbutton(label="show menu bar", variable=self.showMenubar)
+#       m1.add_checkbutton(label="show tool bar", variable=self.showToolbar)
 
-#	m.add_cascade(label="options", menu=m1)
+#       m.add_cascade(label="options", menu=m1)
         return m
 
 #============================================================================
@@ -287,13 +290,13 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
         "Sets the appropriate state and lets gui take on."
         ct = self.thanProj[2].thanCt
         x1, y1 = None, None
-        if cc1 != None: x1, y1 = ct.global2Local(cc1[0], cc1[1])    # Transform to local coordinates
+        if cc1 is not None: x1, y1 = ct.global2Local(cc1[0], cc1[1])    # Transform to local coordinates
         x2, y2 = None, None
-        if cc2 != None: x2, y2 = ct.global2Local(cc2[0], cc2[1])    # Transform to local coordinates
+        if cc2 is not None: x2, y2 = ct.global2Local(cc2[0], cc2[1])    # Transform to local coordinates
         x3, y3 = None, None
-        if cc3 != None: x3, y3 = ct.global2Local(cc3[0], cc3[1])    # Transform to local coordinates
+        if cc3 is not None: x3, y3 = ct.global2Local(cc3[0], cc3[1])    # Transform to local coordinates
         r1, t1 = r1, t1
-        if r1 != None: r1, r  = ct.global2LocalRel(r1, r1)  # Transform to local coordinates
+        if r1 is not None: r1, r  = ct.global2LocalRel(r1, r1)  # Transform to local coordinates
         self.thanOsnap.cc1 = cc1
 
         dc = self

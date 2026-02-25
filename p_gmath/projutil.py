@@ -1,3 +1,4 @@
+"Utilities for projection transformations."
 from proj import (DLTProjection, Rational1Projection, Rational2Projection,
                   Rational15Projection, Polynomial1Projection, Polynomial2Projection,
                   Polynomial1_2DProjection, DLT2Projection, Rational1_2DProjection,
@@ -35,3 +36,7 @@ def readProj(fr):
     p = Projection(ic)()
     p.read(fr, skipicod=True)
     return p
+
+
+if __name__ == "__main__":
+    print __doc__

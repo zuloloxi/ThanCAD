@@ -1,7 +1,3 @@
-from math import fabs, pi, tan, hypot
-import types
-
-
 class SyFactor:
     """Implements a symbolic factor.
 
@@ -142,7 +138,7 @@ class SumFactor:
         "Inplace subtract 2 sumfactors."
         if not isinstance(other, SumFactor): other = SumFactor(other)  #This also accepts common numbers
         facts = [-f for f in other.facts]
-        self.facts.extend(other.facts)      #Other.facts have already been deepcopied
+        self.facts.extend(facts)      #facts have already been deepcopied
         self.compact()
         return self
 

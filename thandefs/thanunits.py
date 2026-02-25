@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module provides for ThanCad drawings units customisation.
 """
@@ -74,7 +74,7 @@ class ThanUnits:
 
     def unit2rad(self, th):
         "Convert angle from user defined units to rad."
-        return (th*self.angldire/self.radcoef + self.anglzero) % PI2
+        return (th*self.angldire/self.radcoef) % PI2
 
     def unit2raddir(self, th):
         "Convert direction angle from user defined units to rad."
@@ -85,6 +85,10 @@ class ThanUnits:
     def strang(self, th):
         if self.angldigs >= 0: return self.formang % self.rad2unit(th)
         else:                  return self.formang % int(self.rad2unit(th))
+
+    def strdir(self, th):
+        if self.angldigs >= 0: return self.formang % self.rad2unitdir(th)
+        else:                  return self.formang % int(self.rad2unitdir(th))
 
     def strdir(self, th):
         if self.angldigs >= 0: return self.formang % self.rad2unitdir(th)
@@ -101,23 +105,23 @@ class ThanUnits:
 
     def thanConfig(self, distunit=None, distdigs=None, anglunit=None, angldigs=None, angldire=None, anglzero=None):
         "Checks and sets various options."
-        if distunit != None:
+        if distunit is not None:
             if distunit not in self.distran: raise ValueError, "Valid distance units: "+", ".join(self.distran.keys())
             self.distunit = distunit
-        if distdigs != None:
+        if distdigs is not None:
             self.distdigs = int(distdigs)
             if self.distdigs < -1 or self.distdigs > 15: raise ValueError, "Invalid distance digits: %d" % self.distdigs
-        if anglunit != None:
+        if anglunit is not None:
             if anglunit not in self.angltran: raise ValueError, "Valid angle units: "+", ".join(self.angltran.keys())
             self.anglunit = anglunit
-        if angldigs != None:
+        if angldigs is not None:
             self.angldigs = int(angldigs)
             if self.angldigs < -1 or self.angldigs > 15: raise ValueError, "Invalid angle digits: %d" % self.angldigs
-        if angldire != None:
+        if angldire is not None:
             angldire = int(angldire)
             if angldire not in (1, -1): raise ValueError, "Angle direction should be 1 or -1."
             self.angldire = angldire
-        if anglzero != None:
+        if anglzero is not None:
             anglzero = int(anglzero)
             if anglzero not in (3,12,9,6): raise ValueError, "Angle zero should be 3, 12, 9 or 6 (o'clock)."
             self.anglzero = ((3-anglzero)*pi/6) % PI2
@@ -145,26 +149,24 @@ class ThanUnits:
 
 def test():
     "Tests the ThanOpt class."
-    import sys; sys.path.append("/x/binwi/libs")
-    from p_ggen import inpFloat, inpText
     op = ThanUnits()
     op.thanConfig(anglzero=12, angldire=-1)
     while True:
-        th = inpFloat("Give angle in radians: ", ("",))
-	if th == "": break
-	for un in op.angltran:
-	    op.thanConfig(anglunit=un)
-	    th1 = op.rad2unit(th)
-	    print "in", un, ":", th1, op.strang(th1)
+        th = p_ggen.inpFloat("Give angle in radians: ", ("",))
+        if th == "": break
+        for un in op.angltran:
+            op.thanConfig(anglunit=un)
+            th1 = op.rad2unit(th)
+            print "in", un, ":", th1, op.strang(th)
 
     while True:
-        th = inpText("Give angle and unit: ", ("",))
-	if th == "": break
-	th, un = th.split()
-	th = float(th)
-	op.thanConfig(anglunit=un)
-	th1 = op.unit2rad(th)
-	print "in rad :", th1, op.strang(th1)
+        th = p_ggen.inpText("Give angle and unit: ", ("",))
+        if th == "": break
+        th, un = th.split()
+        th = float(th)
+        op.thanConfig(anglunit=un)
+        th1 = op.unit2rad(th)
+        print "in rad :", th1, op.strang(th1)
 
     a = 120.498
     print "meters:", op.strdis(120.498)

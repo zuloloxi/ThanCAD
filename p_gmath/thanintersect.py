@@ -1,35 +1,8 @@
 # -*- coding: iso-8859-7 -*-
-
-##############################################################################
-# ThanCad 0.0.8 "DoSomething": 2dimensional CAD with raster support for engineers.
-# 
-# Copyright (c)  February 23, 2008  by Thanasis Stamos
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
-# 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-##############################################################################
-
-"""\
-ThanCad 0.0.8 "DoSomething": 2dimensional CAD with raster support for engineers.
-
-This module computes the intersection of various geometric objects.
-"""
+"This module computes the intersection of various geometric objects."
 
 from math import sqrt, fabs, hypot
-from var import linEq2, thanNearx, fsign
+from var import linEq2, thanNearx, fsign, linint
 from varcon import thanThresholdx
 #from thanvar import thanLogC
 
@@ -188,7 +161,6 @@ c            σε άξονα παράλληλο προς n που περνάει από την αρχή των αξόνων (άξον
 c     pa   : Προβολή του OA στον άξονα n
 c     pb   : Προβολή του OB στον άξονα n
 """
-    from var import linint
     pna = n[0]*A[0] + n[1]*A[1]
     pnb = n[0]*B[0] + n[1]*B[1]
     if fsign(1.0, pna-pn)*fsign(1.0, pnb-pn) > 0.0: return None
@@ -234,7 +206,6 @@ c            σε άξονα παράλληλο προς n που περνάει από την αρχή των αξόνων (άξον
 c     Oa   : Προβολή του OA στον άξονα n
 c     Ob   : Προβολή του OB στον άξονα n
 """
-    from var import linint
     Oa = n[0]*A[0] + n[1]*A[1]
     Ob = n[0]*B[0] + n[1]*B[1]
     if fsign(1.0, Oa-Ot)*fsign(1.0, Ob-Ot) > 0.0: return None
@@ -384,3 +355,7 @@ def thanAnalVec(self, da, db):
 #
 """
       return linEq2 (da[0], db[0], self[0], da[1], db[1], self[1])
+
+
+if __name__ == "__main__":
+    print __doc__

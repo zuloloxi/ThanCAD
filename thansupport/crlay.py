@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,19 +21,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines utility functions to create/edit layers from within
 an embedded program.
 """
 from thanvar import THANBYPARENT, THANPERSONAL, ThanLayerError
+from thanlayer import THANNAME
+from thanlayer.thanlayatts import thanLayAtts, thanUpdateElements
 
 
 def thanLayerCurrent(proj, pname, current=True, **atts):
     "Create a layer pathname relative to current layer."
     lt = proj[1].thanLayerTree
     pname = "%s/%s" % (lt.thanCur.thanGetPathname(), pname)
-    return thanTopLayerCurrent(proj, pname, current, **atts)
+    return thanToplayerCurrent(proj, pname, current, **atts)
 
 
 def thanToplayerCurrent(proj, pname, current=True, **atts):
@@ -56,8 +58,6 @@ def thanToplayerCurrent(proj, pname, current=True, **atts):
     at all, and it will raise the appropriate exception.
 
     """
-    from thanlayer.thanlayatts import thanLayAtts
-    from thanlayer import THANNAME
     lt = proj[1].thanLayerTree
     pname = pname.strip()
     lay = lt.thanRoot
@@ -88,7 +88,6 @@ def thanToplayerCurrent(proj, pname, current=True, **atts):
         proj[1].thanTouch()                     # Drawing IS modified
     else:
         if current and len(lay.thanChildren) > 0: raise ThanLayerError, "Only a leaflayer may be current layer"
-        leaflayers = {}
         __atts(proj, parent, lay, atts, check=True) # At first checks the attributes and raise exceptions if invalid
         __atts(proj, parent, lay, atts, check=False)
 
@@ -100,27 +99,26 @@ def thanToplayerCurrent(proj, pname, current=True, **atts):
     return lay
 
 
-
-
 def __atts(proj, parent, lay, atts, check):
         "Check or set the attributes."
-        from thanlayer.thanlayatts import thanLayAtts, thanUpdateElements
-	if len(atts) == 0: return
-	leaflayers = {}
-	for att, rawval in atts.iteritems():
+        if len(atts) == 0: return
+        leaflayers = {}
+        for att, rawval in atts.iteritems():
             if att not in thanLayAtts: raise ThanLayerError, "Attribute %s is not recognised" % att
-	    class_ = thanLayAtts[att][3]        # Get class of attribute 'moncolor'
-	    if rawval == THANBYPARENT:
-	        val = class_(parent.thanAtts[att].thanVal, inherit=True)
-	    elif rawval == THANPERSONAL:
-	        val = class_(lay.thanAtts[att].thanVal.personal, inherit=False)
-	    else:
-	        val = class_(thanLayAtts[att][2], inherit=False)
- 		val.thanValSet(rawval)          # This will raise ValueError if rawval is invalid
-	    if not check:
-                lay.thanSetAtts(leaflayers, att, class_(val, inherit=False))
+            class_ = thanLayAtts[att][3]        # Get class of attribute 'moncolor'
+            if rawval == THANBYPARENT:
+#                val = class_(parent.thanAtts[att].thanVal, inherit=True)
+                val = rawval
+            elif rawval == THANPERSONAL:
+#                val = class_(lay.thanAtts[att].thanVal.personal, inherit=False)
+                val = rawval
+            else:
+                val = class_(thanLayAtts[att][2], inherit=False)
+                val.thanValSet(rawval)          # This will raise ValueError if rawval is invalid
+            if not check:
+                lay.thanSetAtts(leaflayers, att, val)
 
         if check: return
         draworder = thanUpdateElements(proj, leaflayers)
-	if draworder: proj[2].thanRedraw()      # Set relative draworder
-	proj[1].thanTouch()                     # Drawing IS modified
+        if draworder: proj[2].thanRedraw()      # Set relative draworder
+        proj[1].thanTouch()                     # Drawing IS modified

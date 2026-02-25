@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines an object which reads a .syk, .brk, .syn, .lin  file and it
 creates the appropriate ThanCad's elements to represent it in ThanCad.
 """
 
 import cPickle
+from math import fabs
 from p_gimdxf import ThanImportBase
 import p_gimgeo
 from thantrans import T
@@ -97,7 +98,7 @@ class ThanImportBrk(ThanImportBase):
             zz = []
 #-----------Read coordinates of polyline
             while True:
-                s = self.thanFetDxf()
+                s = self.thanGetDxf()
                 if s == "": break                 # End Of File
                 if s.strip() == "$": break
                 try:
@@ -257,12 +258,12 @@ class ThanImportXyzIntermap(ThanImportBase):
 
 
 class ThanImportKml(ThanImportBase):
-    """A class to import lines in Google Keuhole Markup Language format, .kml filena3mes."""
+    """A class to import lines in Google Keyhole Markup Language format, .kml filenames."""
 
     def thanImport(self):
         "Imports a dxf file."
         pnts, terr = p_gimgeo.readKml(self.fDxf, greece=True)
-        if pnts == None: self.thanEr2s(terr)
+        if pnts is None: self.thanEr2s(terr)
         self._getPoints(pnts)
 
 
@@ -275,12 +276,12 @@ class ThanImportKml(ThanImportBase):
 
 
 class ThanImportKmz(ThanImportKml):
-    """A class to import lines in Google Keuhole Markup Language format, .kml filena3mes."""
+    """A class to import lines in Google Keyhole Markup Language format, .kml filenames."""
 
     def thanImport(self):
         "Imports a dxf file."
         pnts, terr = p_gimgeo.readKmz(self.fDxf.name, greece=True)
-        if pnts == None: self.thanEr2s(terr)
+        if pnts is None: self.thanEr2s(terr)
         self._getPoints(pnts)
 
 

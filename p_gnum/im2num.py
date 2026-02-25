@@ -1,4 +1,4 @@
-import Image
+from PIL import Image
 import numnum
 
 #When the PIL image mode is I;16S it means that the (TIFF) file has the pixels
@@ -30,7 +30,7 @@ def im2num(im):
         elif im.mode == "F":
             r = numnum.fromstring(im.tostring(), numnum.Float32)
         elif im.mode == "I":
-            r = numnum.fromstring(im.tostring(), numnum.Int)
+            r = numnum.fromstring(im.tostring(), numnum.Int32)
         elif im.mode == "I;16S":
             im.mode = "I"
 #            r = numnum.fromstring(im.tostring(), numnum.Int16)
@@ -64,7 +64,7 @@ def num2im(r, castint256=True):
             im = Image.fromstring("L", (h, w), data)
         elif typ in (numnum.Int, numnum.Int8, numnum.Int16, numnum.Int32):
             if castint256:
-                r = r.astype(numnum.UnsginedInt8)
+                r = r.astype(numnum.UnsignedInt8)
                 data = r.tostring()
                 im = Image.fromstring("L", (h, w), data)
             else:

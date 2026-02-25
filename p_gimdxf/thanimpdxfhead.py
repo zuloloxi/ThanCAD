@@ -19,7 +19,7 @@ class ThanHeader:
                     break
             if icod != 9: continue            # Unknown code: ignore it
 
-#-----------Read variable's atributes
+#-----------Read variable's attributes
 
             var = text
             atts = {}

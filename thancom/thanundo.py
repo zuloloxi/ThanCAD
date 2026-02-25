@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module the do/undo mechanism.
@@ -50,7 +50,7 @@ def thanActionRedo(proj, elems, actionfun, *args):
 
 
 def thanActionUndo(proj, elems, selold, actionfun, *args):
-    "Select elements and performs an action function on the selected elements (with arbitrary arguments); then reselects preiviously selected elements."
+    "Select elements and performs an action function on the selected elements (with arbitrary arguments); then reselects previously selected elements."
     "Un-rotates the previously rotated elements."
     proj[2].thanGudSetSelClear()
     proj[2].thanGudSetSelElem(elems)
@@ -66,15 +66,15 @@ def thanReplaceUndo(proj, delelems, newelems, selold=None, oldvars={}, delobjs=(
     because in many commands the new elements take the identity of the old
     elements, and thus the delete command will delete both :)
     """
-    if selold == None: selold = proj[2].thanSelall
+    if selold is None: selold = proj[2].thanSelall
 
     proj[2].thanGudSetSelClear()
     proj[2].thanGudSetSelElem(newelems)
     proj[2].thanGudSetSelDel()
     proj[2].thanImages.difference_update(newelems) # Delete deleted images from thanImages
-    proj[1].thanDelSel(newelems)                   # thanTouch is implicitely called
+    proj[1].thanDelSel(newelems)                   # thanTouch is implicitly called
 
-    proj[1].thanElementRestore(delelems, proj)     # thanTouch is implicitely called, thanImages is updated through ThanImage.thanTkDraw1()
+    proj[1].thanElementRestore(delelems, proj)     # thanTouch is implicitly called, thanImages is updated through ThanImage.thanTkDraw1()
     proj[2].thanGudSetSelElem(selold)
     proj[1].thanVar.update(oldvars)
     thanObjsRestore(proj, newobjs, delobjs)
@@ -87,15 +87,15 @@ def thanReplaceRedo(proj, delelems, newelems, selelems=None, newvars={}, delobjs
     because in many commands the new elements take the identity of the old
     elements, and thus the delete command will delete both :)
     """
-    if selelems == None: selelems = proj[2].thanSelall
+    if selelems is None: selelems = proj[2].thanSelall
 
     proj[2].thanGudSetSelClear()
     proj[2].thanGudSetSelElem(delelems)
     proj[2].thanGudSetSelDel()
     proj[2].thanImages.difference_update(delelems) # Delete deleted images from thanImages
-    proj[1].thanDelSel(delelems)                   # thanTouch is implicitely called
+    proj[1].thanDelSel(delelems)                   # thanTouch is implicitly called
 
-    proj[1].thanElementRestore(newelems, proj)     # thanTouch is implicitely called, thanImages is updated through ThanImage.thanTkDraw1()
+    proj[1].thanElementRestore(newelems, proj)     # thanTouch is implicitly called, thanImages is updated through ThanImage.thanTkDraw1()
     proj[2].thanGudSetSelElem(selelems)
     proj[1].thanVar.update(newvars)
     thanObjsRestore(proj, delobjs, newobjs)
@@ -154,17 +154,17 @@ def thanLtRestore(proj, cl, root=None, leaflayers=None):
     4. The current layer, the entire layer tree is restored and the new layers
        affects element already drawn on the screen (leaflayers="regen").
        It is an alternative to case 3 when we do not know which leaflayers
-       are affacted. A regen is done.
+       are affected. A regen is done.
     """
     import thanlayer
     lt = proj[1].thanLayerTree
     lt.thanCur = cl
-    if root != None:
+    if root is not None:
 #        lt.thanRoot.thanDestroy()
         lt.thanRoot = root
         lt.thanDictRebuild()
     if leaflayers != "regen":
-        if leaflayers == None: leaflayers = {}
+        if leaflayers is None: leaflayers = {}
         draworder = thanlayer.thanlayatts.thanUpdateElements(proj, leaflayers)
         if draworder: proj[2].thanRedraw()                         # Set relative draworder
     else:

@@ -1,5 +1,6 @@
-import sys, collections
+import collections
 from p_ggen import ThanStub
+import p_gtkwid
 import thanlic
 from thanverstrans import T
 
@@ -21,107 +22,104 @@ def commentize(s, encoding=None):   #encoding="iso-8859-7"):
 
 
 class ThanVersion:
-  fields = """name  version  author  author_email  url  description  download_url
-             long_description  date  dates  city  address1  address2  phone
-             copyright  company  company_url
-             company_email  company_address1  company_address2  company_phone
-             license  help  history
-             title  short_info  about  about_source""".split()
-# description should be an one line (short) description of the program
+    fields = """name  version  author  author_email  url  description  download_url
+               long_description  date  dates  city  address1  address2  phone
+               copyright  company  company_url
+               company_email  company_address1  company_address2  company_phone
+               license  help  history
+               title  short_info  about  about_source""".split()
+#   description should be an one line (short) description of the program
 
-  def setup(self, **kw):
-    "Sets information about the program."
-    for att in self.fields:
-        att = att.strip()
-        v = kw.pop(att, NA)
-        setattr(self, att, v)
-    if len(kw) > 0:
-        raise TypeError, "Unexpected keyword item '"+kw.popitem()[0]+"'"
+    def setup(self, **kw):
+        "Sets information about the program."
+        for att in self.fields:
+            att = att.strip()
+            v = kw.pop(att, NA)
+            setattr(self, att, v)
+        if len(kw) > 0:
+            raise TypeError, "Unexpected keyword item '"+kw.popitem()[0]+"'"
 
-    if self.company == NA:
-        authorx = self.author
-        addressx = self.address1
-        emailx = self.author_email
-    else:
-        authorx = self.company
-        addressx = self.company_address1
-        emailx = self.company_email
+        if self.company == NA:
+            authorx = self.author
+            addressx = self.address1
+            emailx = self.author_email
+        else:
+            authorx = self.company
+            addressx = self.company_address1
+            emailx = self.company_email
 
-    if self.title == NA:
-        self.title = self.name
-        if self.version != NA: self.title += " " + self.version
-        if self.description != NA: self.title += ": " + self.description
+        if self.title == NA:
+            self.title = self.name
+            if self.version != NA: self.title += " " + self.version
+            if self.description != NA: self.title += ": " + self.description
 
-    if self.copyright == NA:
-        self.copyright = T["Copyright (C)"] + " "
-        if self.dates != NA: self.copyright += self.dates + " "
-        self.copyright += authorx
-        if self.date != NA: self.copyright += ", "+ self.date
+        if self.copyright == NA:
+            self.copyright = T["Copyright (C)"] + " "
+            if self.dates != NA: self.copyright += self.dates + " "
+            self.copyright += authorx
+            if self.date != NA: self.copyright += ", "+ self.date
 
-    if self.short_info == NA:
-        self.short_info = self.title + "\n\n"+self.copyright + "\n"
-        if addressx != NA: self.short_info += addressx + "\n"
-        self.short_info += T["URL"]+": " + self.url + "\n" + T["e-mail"]+": " +emailx
+        if self.short_info == NA:
+            self.short_info = self.title + "\n\n"+self.copyright + "\n"
+            if addressx != NA: self.short_info += addressx + "\n"
+            self.short_info += T["URL"]+": " + self.url + "\n" + T["e-mail"]+": " +emailx
 
-    temp1 = self.about
-    if self.about == NA:
-        self.about = self.short_info
-        if self.license != NA: self.about += "\n\n" + self.license[1]
-        if self.help == NA: self.help = self.about
-        else:               self.help = self.title + "\n" + self.help
-        temp1 = self.about   #temp1 is self.about without the history: for about_source
-        if self.history != NA: self.about += "\n\nHistory\n" + self.history
+        temp1 = self.about
+        if self.about == NA:
+            self.about = self.short_info
+            if self.license != NA: self.about += "\n\n" + self.license[1]
+            if self.help == NA: self.help = self.about
+            else:               self.help = self.title + "\n" + self.help
+            temp1 = self.about   #temp1 is self.about without the history: for about_source
+            if self.history != NA: self.about += "\n\nHistory\n" + self.history
 
-    if self.about_source == NA:
-        self.about_source = commentize(temp1)
+        if self.about_source == NA:
+            self.about_source = commentize(temp1)
 
-    if self.author != NA:
-        t = "\n\n" + 30*" " + self.author
-        if self.city != NA: t += "\n" + 30*" " + self.city
-        if self.date != NA: t += ", " + self.date
-        self.help += t
+        if self.author != NA:
+            t = "\n\n" + 30*" " + self.author
+            if self.city != NA: t += "\n" + 30*" " + self.city
+            if self.date != NA: t += ", " + self.date
+            self.help += t
 
-    if self.license != NA:
-        self.license[2] = "%s License:\n\n%s" % (self.name, self.license[2])
-
-
-  def tkAbout(self, win, font=None):
-    "Information about the program."
-    import p_gtkuti
-    p_gtkuti.thanGudHelpWin(win, self.about, "About "+self.name, font=font)
+        if self.license != NA:
+            self.license[2] = "%s License:\n\n%s" % (self.name, self.license[2])
 
 
-  def tkHelp(self, win, font=None):
-    "Information about the program."
-    import p_gtkuti
-    p_gtkuti.thanGudHelpWin(win, self.help, "Help for "+self.name, font=font)
+    def tkAbout(self, win, font=None):
+        "Information about the program."
+        p_gtkwid.thanGudHelpWin(win, self.about, "About "+self.name, font=font)
 
 
-  def tkLicense(self, win, font=None):
-    "Information about the license of the program."
-    import p_gtkuti
-    p_gtkuti.thanGudHelpWin(win, self.license[2], self.license[0], font=font)
+    def tkHelp(self, win, font=None):
+        "Information about the program."
+        p_gtkwid.thanGudHelpWin(win, self.help, "Help for "+self.name, font=font)
 
 
-  def helpMenu(self, win, font2=None):
-    "Create a minimal help menu."
-    s = ["Help"]
-    m = {}
-    m["Help"] = \
-        [ ("menu", "&Help", "", None, "help"),            # Menu Title
-          (ThanStub(self.tkHelp,    win, font2), "&Introduction", "Introduction to "+self.name),
-          (ThanStub(self.tkLicense, win, font2), "&License",      self.license[0]),
-          (ThanStub(self.tkAbout,   win, font2), "&About",        "Information about "+self.name),
-          ("endmenu",),
-        ]
-    return s, m
+    def tkLicense(self, win, font=None):
+        "Information about the license of the program."
+        p_gtkwid.thanGudHelpWin(win, self.license[2], self.license[0], font=font)
 
 
-  def toexeDetails(self, iconwin=None):
+    def helpMenu(self, win, font2=None):
+        "Create a minimal help menu."
+        s = ["Help"]
+        m = {}
+        m["Help"] = \
+            [ ("menu", "&Help", "", None, "help"),            # Menu Title
+              (ThanStub(self.tkHelp,    win, font2), "&Introduction", "Introduction to "+self.name),
+              (ThanStub(self.tkLicense, win, font2), "&License",      self.license[0]),
+              (ThanStub(self.tkAbout,   win, font2), "&About",        "Information about "+self.name),
+              ("endmenu",),
+            ]
+        return s, m
+
+
+    def toexeDetails(self, iconwin=None):
         "Return details in the format of toexe program."
         details = collections.defaultdict(str,
             name        = self.name,
-#            version     = self.version,
+  #          version     = self.version,
             version     = self.version.split()[0],    #Hack to get the number but not the text: 0.1.2 "xxx" ->0.1.2
             description = self.description,
             author      = self.author,
@@ -133,7 +131,7 @@ class ThanVersion:
 
 
 if __name__ == "__main__":
- long_description = \
+    long_description = \
 """\
 ThanCmp
 -------
@@ -161,7 +159,7 @@ most reliable, or on file size and creation time which is fast but not as
 reliable.
 """
 
- help = \
+    help = \
 """\
 INTRODUCTION
 ------------
@@ -201,7 +199,7 @@ The program has two different methods to see if two files are identical:
 
     The first method is very fast especially for large files. But there is
 a remote possibility that a perverted user made a copy of a file,
-changed its content but not its size, and then delibately chaned
+changed its content but not its size, and then deliberately changed
 the time of the modified file to match the time of the original file.
 The second method, which is slow, will catch this scenario.
     In conclusion use the first method, unless you expect serious hacking
@@ -266,38 +264,36 @@ LICENSE
 Thancmp is distributed under GPL, the GNU General Public License.
 You can find information about GPL in:  http://www.gnu.org/licenses/gpl.html
 """
- import thanlic
+    ver = ThanVersion()
+    ver.setup(\
+    name              = "ThanCmp",
+    version           = "1.3.0",
+    author            = "Thanasis Stamos",
+    author_email      = "thanasis@astamos.com",
+    url               = "www.astamos.com/software/thancmp",
+    description       = "Gui frontend to standard library dircmp",
+    download_url      = "www.astamos.com",
+    long_description  = long_description,
 
- ver = ThanVersion()
- ver.setup(\
- name              = "ThanCmp",
- version           = "1.3.0",
- author            = "Thanasis Stamos",
- author_email      = "thanasis@astamos.com",
- url               = "www.astamos.com/software/thancmp",
- description       = "Gui frontend to standard library dircmp",
- download_url      = "www.astamos.com",
- long_description  = long_description,
+    date              = "January 10, 2004",
+    dates             = "2004-2013",
+    city              = "Athens",
+    address1          = "Athens, Greece, Europe",
+    company           = "A. STAMOS S.A.",
+    company_url       = "www.astamos.com",
+    company_email     = "mail@astamos.com",
+    company_address1  = "Athens, Greece, Europe",
+    company_phone     = "+210.7454606-7, fax +210.7254608",
+    license           = thanlic.STAMOS_INTERNAL(),
+    help              = help,
+    history           = NA)
 
- date              = "January 10, 2004",
- dates             = "2004-2013",
- city              = "Athens",
- address1          = "Athens, Greece, Europe",
- company           = "A. STAMOS S.A.",
- company_url       = "www.astamos.com",
- company_email     = "mail@astamos.com",
- company_address1  = "Athens, Greece, Europe",
- company_phone     = "+210.7454606-7, fax +210.7254608",
- license           = thanlic.STAMOS_INTERNAL(),
- help              = help,
- history           = NA)
-
- for att in ver.fields:
-     print
-     print "====================================================================================="
-     print
-     print att, "=",
-     v = getattr(ver, att)
-     if "\n" in v: print
-     print v
-     raw_input("Press enter..")
+    for att in ver.fields:
+        print
+        print "====================================================================================="
+        print
+        print att, "=",
+        v = getattr(ver, att)
+        if "\n" in v: print
+        print v
+        raw_input("Press enter..")

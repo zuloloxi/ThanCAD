@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,21 +23,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes various commands.
 """
 
-import sys
-from math import pi, atan2
+from math import pi
 import tkFont
-import p_ggen, p_gtkuti, p_ggeom
-from p_gmath import dpt, thanNear2
+import p_ggen, p_gtkwid
 import thandr, thancomsel, thantkdia, thanlayer
 from thanvers import tcver
 from thanvar import Canc
-from thantrans import T, thanLangSet
+from thantrans import T, thanLangSetall
 import thanundo
 from thancomfile import thanTxtopen
 from thancommod import thanModCanc, thanModCancSel, thanModEnd
@@ -50,7 +48,7 @@ def thanVarLang(proj):
         default="en", fullopt=True, options=("en", "gr"))
     if res == Canc: return proj[2].thanGudCommandCan()
     print "new lang=", res
-    thanLangSet(res)
+    thanLangSetall(res)
     proj[2].thanGudCommandEnd("Please restart ThanCad to complete the translation.", "info")
 
 
@@ -126,7 +124,7 @@ def thanVarScriptDo(proj, fr):
     coms = win.thanScriptComs = __itercom(fr)
     cmd = win.thanCom
     dc = win.thanCanvas
-    win.thanGudCommandEnd()                   # Finish the sript command and reprompt
+    win.thanGudCommandEnd()                   # Finish the script command and reprompt
     while True:
         while not cmd.thanWaitingInput:
             dc.update()
@@ -138,7 +136,7 @@ def thanVarScriptDo(proj, fr):
 
 
 def __itercom(fr):
-    "Iterator which excudes the comments."
+    "Iterator which excludes the comments."
     for dline in fr:
         dline = dline.strip()
         if dline[:1] == "#": continue
@@ -158,7 +156,7 @@ def thanFormLay(proj):
         height=15, vscroll=1, hscroll=1,
         onclick=thanlayer.thanlayatts.thanOnclick,
         title=proj[2].thanTitle+": "+T["Layer Control"])
-    if w.result != None:
+    if w.result is not None:
         lt = proj[1].thanLayerTree
         oldroot = lt.thanRoot  #Please note that oldroot contains just a reference to the set of elements
         oldcl = lt.thanCur     #..and thus we waste no memory here
@@ -207,7 +205,7 @@ def thanModDxfRedo(proj, newelems, newcl, newroot, newvars={}):
 def thanFormTstyle(proj):
     "Manipulates text styles."
     win = thantkdia.ThanTkStyle(proj[2], proj[1].thanTstyles, "standard", lambda x: False, title=T["Edit ThanCad Text styles"])
-    if win.result == None: return proj[2].thanGudCommandCan()
+    if win.result is None: return proj[2].thanGudCommandCan()
     proj[1].thanTstyles.clear()
     proj[1].thanTstyles.update(win.result)
     proj[1].thanTouch()
@@ -222,17 +220,17 @@ def thanUnits(proj):
     vold.entDistdigs = vs.distdigs                 # Number of digits to display for distance values
     vold.radAnglunit = vs._ang2num[vs.anglunit]    # Unit of angular measurements
     vold.entAngldigs = vs.angldigs                 # Number of digits to display for angular values
-    vold.radAngldire = vs._dir2num[vs.angldire]    # Anti-clockswise angles are positive
-    a = (3.0 - vs.anglzero*6.0/pi) % 12.0          # Tranform radians to 3, 12, 9 or 6 o'clock
+    vold.radAngldire = vs._dir2num[vs.angldire]    # Anti-clockwise angles are positive
+    a = (3.0 - vs.anglzero*6.0/pi) % 12.0          # Transform radians to 3, 12, 9 or 6 o'clock
     if int(a+0.1) == 0: a = 12.0
     vold.radAnglzero = vs._ori2num[int(a+0.1)]     # Zero is at 0.0 radians angle from the x-axis in the anticlockwise direction
 
     w = thantkdia.ThanDialogUnits(proj[2], vals=vold, cargo=proj,
         title="%s - %s: %s" % ("ThanCad", proj[0].namebase, T["Unit management"]))
     vnew = w.result
-    if vnew == None: return proj[2].thanGudCommandCan()
+    if vnew is None: return proj[2].thanGudCommandCan()
 
-    __unitsrestore(proj, vnew)                     #thanTouch is implicitely called
+    __unitsrestore(proj, vnew)                     #thanTouch is implicitly called
     proj[1].thanDoundo.thanAdd("units", __unitsrestore, (vnew,),
                                         __unitsrestore, (vold,))
     proj[2].thanGudCommandEnd()
@@ -246,7 +244,7 @@ def __unitsrestore(proj, v):
         distdigs = v.entDistdigs,                 # Number of digits to display for distance values
         anglunit = vs._ang2text[v.radAnglunit],   # Unit of angular measurements
         angldigs = v.entAngldigs,                 # Number of digits to display for angular values
-        angldire = vs._dir2text[v.radAngldire],   # Anti-clockswise angles are positive
+        angldire = vs._dir2text[v.radAngldire],   # Anti-clockwise angles are positive
         anglzero = vs._ori2text[v.radAnglzero])   # Zero is at 0.0 radians angle from the x-axis in the anticlockwise direction
     proj[1].thanTouch()
 
@@ -283,20 +281,20 @@ def thanList(proj):
 def thanHelpAbout(proj):
     "Shows brief information about the program."
     font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
-    p_gtkuti.thanGudHelpWin(proj[2], tcver.about, "%s %s" % (T["About"], tcver.name),
+    p_gtkwid.thanGudHelpWin(proj[2], tcver.about, "%s %s" % (T["About"], tcver.name),
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 
 
 def thanHelpHelp(proj):
     font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
-    p_gtkuti.thanGudHelpWin(proj[2], tcver.help, tcver.name+" "+T["Help"],   # (Gu)i (d)ependent
+    p_gtkwid.thanGudHelpWin(proj[2], tcver.help, tcver.name+" "+T["Help"],   # (Gu)i (d)ependent
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 
 def thanHelpGpl (proj):
     font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
-    p_gtkuti.thanGudHelpWin(proj[2], tcver.license[2], tcver.name+" "+T["GPL"],   # (Gu)i (d)ependent
+    p_gtkwid.thanGudHelpWin(proj[2], tcver.license[2], tcver.name+" "+T["GPL"],   # (Gu)i (d)ependent
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 
@@ -408,7 +406,7 @@ def thanBackroundColor(proj):
     else:
         w = thantkdia.ThanColor(proj[2], colold, special=False, title=T["Select background colour"])
         colnew = w.result
-        if colnew == None: return proj[2].thanGudCommandCan()
+        if colnew is None: return proj[2].thanGudCommandCan()
     __backgrestore(proj, colnew)
     proj[1].thanDoundo.thanAdd("background", __backgrestore, (colnew,),
                                              __backgrestore, (colold,))
@@ -425,7 +423,7 @@ def __backgrestore(proj, col):
     #If the new background is not black nor white:
             #If the layer's colour
             #is black and the background was previously black, then the layer was drawn as white previously.
-            #With the new background (nonblank and nonwhite) it must be redrawn to restrore it original colour
+            #With the new background (nonblank and nonwhite) it must be redrawn to restore it original colour
     #Thus all the layers with black or white colour must be drawn again
     thancadconf.thanColBack = col
     proj[2].thanCanvas.config(background=col.thanTk)
@@ -434,5 +432,5 @@ def __backgrestore(proj, col):
         sc = str(lay.thanAtts["moncolor"])
         if sc != "black" and sc != "white": continue
         scoli, fill = lay.thanGetColour()
-        proj[2].thanGudGetSelLayerx(tlay)                     #Select all layer's active elements on the canavas and..
+        proj[2].thanGudGetSelLayerx(tlay)                     #Select all layer's active elements on the canvas and..
         proj[2].thanGudSetSelColorx(col=scoli, fillcol=fill)  #..Change their colour

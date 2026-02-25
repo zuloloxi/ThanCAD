@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines various functions in order to change the translation
 on the fly.
@@ -43,11 +43,9 @@ Turban = p_ggen.Translation()
 thanTransAll = dict(T=T, Tmatch=Tmatch, Tphot=Tphot, Tarch=Tarch, Tcivil=Tcivil, Twid=Twid)
 
 
-def thanLangSet(lang=None):
+def thanLangSetall(lang=None):
     "Set translation language."
-    import p_ggen
-    from thanopt import thancadconf
-    if lang == None: lang = thancadconf.thanTranslateTo
+    if lang is None: lang = thancadconf.thanTranslateTo
     tenc = T.thanLangSet("en", lang)
     assert tenc != None, "Translation language %s not found" % lang
     p_ggen.thanSetEncoding(tenc)               #Encoding for non-unicode characters
@@ -58,11 +56,20 @@ def thanLangSet(lang=None):
 
 def thanLangMore():
     "Add more translations."
-    import sys
     if thanFrape.urban:
         from thanpackages.urban.thantrans.urbantrans import Turban as x
         Turban.__init__(*x.thanTables)
         thanTransAll["Turban"] = Turban
-    thanLangSet()
+    thanLangSetall()
 
-thanLangSet()
+
+def thanAddTrans(trans):
+    "Adds new translations or updates transaltions."
+    for nam, t in trans.iteritems():
+        if nam in thanTransAll:
+            thanTransAll[nam].updateTables(t.thanTables)
+        else:
+            thanTransAll[nam] = t
+
+
+thanLangSetall()

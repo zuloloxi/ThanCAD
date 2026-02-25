@@ -173,7 +173,7 @@ def wavelen2rgb(Wavelength, MaxIntensity=100):
     return [R, G, B]
 
 
-from Tkinter import *
+from Tkinter import Tk, Canvas
 def rainbow():
     root =Tk()
     dc = Canvas(root)

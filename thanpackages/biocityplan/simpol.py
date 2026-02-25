@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which creates a bioclimatic city plan.
 """
@@ -50,10 +50,10 @@ def pyMain():
       pc.pol.devdebug = devdebug
       pc.pol.cache.devdebug = devdebug
       readPar(pc)
-      if frw["cache"] == None:
+      if frw["cache"] is None:
           clines = readDTM()
           dtm = makeDTM(clines)
-          if hu == None:
+          if hu is None:
               prg("City plan will be the convex hull of the DTM.", "info1")
               hu = makeHull(clines)
               wrRym(hu)
@@ -70,7 +70,7 @@ def pyMain():
               wrCache(pc)
       else:
           prg("Reading road grid cache..", "info")
-          if hu != None:
+          if hu is not None:
               prg("    City plan defined in .rym file is overwritten by the city plan in the .cache file", "can1")
           pc.pol.readGrid(frw["cache"])
           if devdebug:
@@ -84,38 +84,38 @@ def pyMain():
               "2. Εκτέλεση του προγράμματος πολλές φορές",
               "3. Προβολή ήδη υπολογισμένης λύσης",
              )
-      if winmain == None:
+      if winmain is None:
           prg("")
           prg("\n".join(coms))
           i = p_ggen.inpLongR("Επιλογή (enter=1): ", 1, 3, 1)
       else:
           i = p_gtkuti.xinpMchoice(winmain, "", coms, douDef=1)
-          if i == None: sys.exit()
+          if i is None: sys.exit()
 
       if i == 1:
           runOnce(pc, prt=prg)
           wrState(pc, pref)
           show(pc)
       elif i == 2:
-          if winmain == None:
+          if winmain is None:
               n = p_ggen.inpLongR("Πόσες εκτελέσεις (enter=100): ", 1, 1000, 100)
           else:
               n = p_gtkuti.xinpLongR(winmain, "Πόσες εκτελέσεις (enter=100): ", 1, 1000, 100)
-              if n == None: sys.exit()
+              if n is None: sys.exit()
           for i in xrange(n):
               runOnce(pc, prt=prg)
               wrState(pc, pref)
       else:
-          if winmain == None:
+          if winmain is None:
               i = p_ggen.inpLongR("α/α υπολογισμένης λύσης (enter=0): ", 0, 1000, 0)
           else:
               i = p_gtkuti.xinpLongR(winmain, "α/α υπολογισμένης λύσης (enter=0): ", 0, 1000, 0)
-              if i == None: sys.exit()
+              if i is None: sys.exit()
           rdState(pc, i)
           show(pc)
     except BaseException, e:
         raise
-        p_gfil.er1s("\n%s:\n%s" % (p_gfil.Tgui["Error while executing program"], e), "can")
+        p_gfil.er1s("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
     p_gfil.closeFiles1()                        #Not reentrant
 
 
@@ -200,7 +200,7 @@ def readDTM():
 
 def readRym():
     "Reads the area of the city plan."
-    if frw["rym"] == None: return None
+    if frw["rym"] is None: return None
     hull = readSyk(frw["rym"])
     if len(hull) != 1:
         sys.stderr.write("File %s should contain exactly 1 closed line\n" % (frw["rym"].name,))
@@ -296,7 +296,7 @@ def openFiles():
       pref = p_ggen.path(frw["syk"].name)
       pref = pref.parent / pref.namebase
       winmain, prg1, _ = p_gfil.openfileWinget()
-      if winmain != None: prg = prg1
+      if winmain is not None: prg = prg1
 
 
 if __name__ == "__main__":

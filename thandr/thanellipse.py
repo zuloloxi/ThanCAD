@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the ellipse element.
 """
@@ -29,6 +29,7 @@ from math import fabs, cos, sin, atan2, hypot, pi
 from p_ggen import Canc, thanUnicode
 from p_gmath import (dpt, thanNearx, thanNear2, ellipse2Line, ellipse5Lsm, ellipse4Lsm,
                      ellipse5Fit, ellipse4Fit, PI05, PI2)
+from thanvar import thanExtendNodeDims
 from thantrans import T
 from thanline import ThanCurve, ThanLine
 from thanelem import ThanElement
@@ -69,17 +70,12 @@ class ThanEllipse(ThanCurve):
 
     def than2Line(self, dt=0.0, ta=None, tb=None):
         "Represent an ellipse with straight line segments."
-        if dt == None: return True               #than2Line IS implemented
-        if ta == None:
+        if dt is None: return True               #than2Line IS implemented
+        if ta is None:
             ta = self.theta1
             tb = self.theta2
-        cs, tp = ellipse2Line(self.cc[0], self.cc[1], self.a, self.b, ta, tb, self.phi, dt)
-        cc = self.cc
-        cp = []
-        for c1 in cs:
-            c2 = list(cc)
-            c2[:2] = c1[:2]
-            cp.append(c2)
+        cp, tp = ellipse2Line(self.cc[0], self.cc[1], self.a, self.b, ta, tb, self.phi, dt)
+        cp = thanExtendNodeDims(cp, self.cc)
         return cp, tp
 
 
@@ -129,10 +125,10 @@ class ThanEllipse(ThanCurve):
         if a == Canc: return Canc                                   #Ellipse was cancelled
         b = proj[2].thanGudGetEllipseB(cc, a, 0.0, T["Semi-minor axis: "])
         if b == Canc: return Canc                                   #Ellipse was cancelled
-        mes = "%s (enter=%s): " % (T["Rotation angle"], un.strang(0.0))
-        phi = proj[2].thanGudGetAngle(cc, mes, un.rad2unit(0.0))
-        if phi == Canc: return proj[2].thanGudCommandCan()        #Ellipse was cancelled
-        phi = un.unit2rad(phi)
+        mes = "%s (enter=%s): " % (T["Rotation angle (azimuth)"], un.strdir(0.0))
+        phi = proj[2].thanGudGetAzimuth(cc, mes, un.rad2unitdir(0.0))
+        if phi == Canc: return Canc                                 #Ellipse was cancelled
+        phi = un.unit2raddir(phi)
         self.thanSet(cc, a, b, 0.0, PI2, phi, full=True, spin=1)
         return True                              # Spline OK
 
@@ -145,7 +141,7 @@ class ThanEllipse(ThanCurve):
         y = [cc[1] for cc in cs]
         if nmin == 5: v, terr = ellipse5Lsm(x, y)
         else:         v, terr = ellipse4Lsm(x, y)
-        if v != None:
+        if v is not None:
             cc = list(cs[0])
             cc[:2] = v[2], v[3]
             self.thanSet(cc, v[0], v[1], 0.0, PI2, v[4], full=True, spin=1)
@@ -156,7 +152,7 @@ class ThanEllipse(ThanCurve):
         if not ans: return Canc
         if nmin == 5: v, terr = ellipse5Fit(x, y)
         else:         v, terr = ellipse4Fit(x, y)
-        if v != None:
+        if v is not None:
             cc = list(cs[0])
             cc[:2] = v[2], v[3]
             self.thanSet(cc, v[0], v[1], 0.0, PI2, v[4], full=True, spin=1)
@@ -208,7 +204,7 @@ class ThanEllipse(ThanCurve):
 
 
     def __getPointsSel(self, proj, nmin):
-        "Select point elemnents and return thier coordinates."
+        "Select point elements and return their coordinates."
         from thancom import thancomsel
         while True:
             proj[2].thanPrt(T["Select least %d point elements:"]%(nmin,))
@@ -251,7 +247,7 @@ class ThanEllipse(ThanCurve):
         phi = float(fr.next())               #May raise ValueError, StopIteration
         full = bool(int(fr.next()))          #May raise ValueError, StopIteration
         spin = int(fr.next())                #May raise ValueError, StopIteration
-        if spin not in (1, -1): raise ValueError, "spin must br 1, or -1"
+        if spin not in (1, -1): raise ValueError, "spin must be 1, or -1"
         self.thanSet(cc, a, b, theta1, theta2, phi, full, spin)
 
 
@@ -288,8 +284,8 @@ class ThanEllipse(ThanCurve):
         ths = [self.theta1, self.theta2]
         for i,th in enumerate(ths):
             cr = list(self.cc)
-            dx = r * cos(th)
-            dy = r * sin(th)
+            dx = self.a * cos(th)
+            dy = self.b * sin(th)
             cr[0] += dx*cf - dy*sf
             cr[1] += dy*sf + dy*cf
             cr = fun(cr[:3])

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes view commands.
 """
 
-from math import fabs
-from p_ggen import isString
 from p_gmath import thanNear2
 from thanvar import Canc
 from thantrans import T
@@ -56,31 +54,31 @@ def thanZoom(proj):
             if res == "l": return thanZoomSel(proj)
             assert False, "Unknown option: "+res
 
-	res = str(res).strip().lower()
-	if res[-1:] == "x":
-	    try:
-	        f = float(res[:-1])
-	    except (IndexError, ValueError):
-	        proj[2].thanCom.thanAppend(T["Invalid zoom factor\n"], "can")
-	        continue
-	    else:
-	        if f != 0.0: return thanZoomFact(proj, -f)     # relative zoom factor is negative
-	        proj[2].thanCom.thanAppend(T["Invalid zoom factor\n"], "can")
-	        continue
-	try:
-	    f = float(res)
-	except ValueError:
-	    pass
-	else:
-	    if f != 0.0: return thanZoomFact(proj, f)
-	    proj[2].thanCom.thanAppend(T["Invalid zoom factor\n"], "can")
-	    continue
+        res = str(res).strip().lower()
+        if res[-1:] == "x":
+            try:
+                f = float(res[:-1])
+            except (IndexError, ValueError):
+                proj[2].thanCom.thanAppend(T["Invalid zoom factor\n"], "can")
+                continue
+            else:
+                if f != 0.0: return thanZoomFact(proj, -f)     # relative zoom factor is negative
+                proj[2].thanCom.thanAppend(T["Invalid zoom factor\n"], "can")
+                continue
+        try:
+            f = float(res)
+        except ValueError:
+            pass
+        else:
+            if f != 0.0: return thanZoomFact(proj, f)
+            proj[2].thanCom.thanAppend(T["Invalid zoom factor\n"], "can")
+            continue
         proj[2].thanCom.thanAppend(T["Invalid point, factor or option. Try again.\n"], "can")
 
 
 def thanZoomWin(proj, first=None):
     "Zooms in a user defined window."
-    if first == None:
+    if first is None:
         ca = proj[2].thanGudGetPoint(T["First window corner: "])
         if ca == Canc: return proj[2].thanGudCommandCan()  # Zoom cancelled
     else:
@@ -124,12 +122,18 @@ def thanZoomSel(proj):
 
 def thanZoomExt(proj):
     "Zoom to show entire drawing."
+    thanZoomExt1(proj)
+    proj[2].thanGudCommandEnd()
+
+
+def thanZoomExt1(proj):
+    "Zoom to show entire drawing without calling thanGudCommandEnd."
     dr = proj[1]
-    if proj[1].xMinAct == None:
-        proj[2].thanGudCommandEnd(T["No elements found to zoom into"], "can")
+    if proj[1].xMinAct is None:
+        proj[2].thanPrter(T["No elements found to zoom into"])
         return # No active (visible) elements; zoom all has no meaning
     elif thanNear2([dr.xMinAct, dr.yMinAct], [dr.xMaxAct, dr.yMaxAct]):
-        proj[2].thanGudCommandEnd(T["No zoom to single point"], "can")
+        proj[2].thanPrter(T["No zoom to single point"])
         return # No active (visible) elements; zoom all has no meaning
     v = dr.viewPort
     w = dr.xMinAct, dr.yMinAct, dr.xMaxAct, dr.yMaxAct
@@ -140,18 +144,18 @@ def thanZoomExt(proj):
     w1 = dr.xMinAct, dr.yMinAct, dr.xMaxAct, dr.yMaxAct    # ..follows, thus no regenImages
     if w != w1:
         if thanNear2(w1[:2], w1[2:]):  #This means the coordinates are too big: w1 = (1e50, 1e50, 1e50, 1e50)
-            proj[2].thanGudCommandEnd(T["Element coordinates too big to auto zoom: %s\nPlease zoom manually"] % (w1,), "can")
+            proj[2].thanPrter(T["Element coordinates too big to auto zoom: %s\nPlease zoom manually"] % (w1,))
             return
         v[:] = proj[2].thanGudZoomWin(w1)          # The previous regen changed xyMinMaxAct
-    proj[2].thanAutoRegen(regenImages=True)                # This may not lead to a full regen, ..
-    proj[2].thanGudCommandEnd()                            # ..but regenImages is needed.
+    proj[2].thanAutoRegen(regenImages=True)                 # This may not lead to a full regen, ..
+                                                            # ..but regenImages is needed.
 
 #===========================================================================
 
 def thanZoomFact(proj, first=None):
     "Zoom relative or absolute to current window; relative factor is negative."
     f = 1.0
-    if first == None:
+    if first is None:
         f = proj[2].thanGudGetPosFloat(T["Relative zoom factor: "], f)
         if f == Canc: return proj[2].thanGudCommandCan() # Cancelled
         f = -f                                  # relative factor
@@ -203,7 +207,7 @@ def thanPanPage(proj, ix, iy):
     """Pan integer number of pages to the left, right, up or down.
 
     One page is the area of the current viewport minus 10% overlap.
-    Yoy know, thAtCAD is never going to implement this.
+    You know, thAtCAD is never going to implement this.
     Fae xoma thAtCAD (Greeklish in text).
     I hate to write trademark notices :)
     """

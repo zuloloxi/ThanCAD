@@ -1,4 +1,7 @@
-import base64, cStringIO, Image
+import sys, base64, cStringIO
+from PIL import Image
+import p_ggen, p_gfil, p_gtkwid
+from p_gtkwid import Twid as T
 
 
 def image2Bytes(im, format="jpeg"):
@@ -77,3 +80,26 @@ def imageOpen(fi):
     except (IOError, ValueError), e:
         im = None                 #This deletes image if it was half loaded
         return im, str(e)
+
+
+def inpImage(mes, initialfile=""):
+    "Open an image with PIL."
+    while True:
+        fn = p_ggen.inpStrB(mes, initialfile)
+        im, ter = imageOpen(fn)
+        if im is not None: return fn, im
+        ter = "Error while accessing %s:\n%s\nTry again." % (fn, ter)
+        p_ggen.prg(ter, "can1")
+
+
+def xinpImage(win, mes, initialfile="", initialdir=None):
+    "Open an image with PIL."
+    if initialdir is None: _, _, initialdir = p_gfil.openfileWinget()
+    while True:
+        fn = p_gtkwid.thanGudGetReadFile(win, "", mes, initialfile=initialfile, initialdir=initialdir)
+        if fn is None: sys.exit()
+        im, ter = imageOpen(fn)
+        if im is not None: return fn, im
+        ter = "Error while accessing %s:\n%s\nTry again." % (fn, ter)
+        p_gtkwid.thanGudModalMessage(win, ter, "Open failed", icon=p_gtkwid.ERROR)
+

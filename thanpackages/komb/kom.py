@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which creates a highway interchange.
 """
@@ -41,7 +41,7 @@ def main1():
       R1 = 200; R2 = 100
       A, B, v1, v2, v3, v4, v5, L1, L2a, L2b, L3, LC1, LC2, th0, th1, th2, th3, th4, pr, terr = \
       calcARARA(prg, x1, y1, x2, y2, x3, y3, A1, R1, A2, R2, A3, convex=False)
-      if terr != None:
+      if terr is not None:
           prg("Λάθος κατά τη χάραξη του κόμβου:")
           prg(terr)
           sys.exit(1)
@@ -72,7 +72,7 @@ def thanMainTcad(proj, lin1):
       prt = proj[2].thanPrt
       A, B, v1, v2, v3, v4, v5, L1, L2a, L2b, L3, LC1, LC2, th0, th1, th2, th3, th4, pr, terr = \
       calcARARA(prt, x1, y1, x2, y2, x3, y3, A1, R1, A2, R2, A3, convex=False)
-      if terr != None:
+      if terr is not None:
           prt("Λάθος κατά τη χάραξη του κόμβου:", "can")
           prt(terr, "can")
           return

@@ -1,4 +1,4 @@
-from math import fabs, pi, tan, hypot
+from math import fabs, hypot
 import types
 from p_gmath import thanThresholdx  # Threshold for coordinate difference; if less the coordinates are the same
 
@@ -22,19 +22,19 @@ class Polynomial(list):
     def __add__ (self, other):
         "Addition of polynomials or polynomial+number."
         if isinstance(other, Polynomial):
-	    if len(self) > len(other): a, b = self,  other
-	    else:                      a, b = other, self
-	    c = Polynomial(a)
-    	    for i,f in enumerate(b):
-	        c[i] += b[i]
-	    return c
-	try:
-	    other+0.0        # Check if it is number like
-	except:
+            if len(self) > len(other): a, b = self,  other
+            else:                      a, b = other, self
+            c = Polynomial(a)
+            for i,f in enumerate(b):
+                c[i] += b[i]
+            return c
+        try:
+            other+0.0        # Check if it is number like
+        except:
             raise TypeError, "Don't know how to add Polynomial with %s" % type(other)
-	c = Polynomial(self)
-	c[0] += other
-	return c
+        c = Polynomial(self)
+        c[0] += other
+        return c
 
 
     def __radd__ (self, other):
@@ -45,39 +45,39 @@ class Polynomial(list):
     def __sub__ (self, other):
         "Subtraction of polynomials or polynomial-number."
         if isinstance(other, Polynomial):
-	    if len(self) > len(other): pra, a, prb, b =  1.0, self, -1.0, other
-	    else:                      pra, a, prb, b = -1.0, other, 1.0, self
-	    c = Polynomial(a)
-    	    for i,f in enumerate(b):
-	        c[i] = pra*c[i] + prb*b[i]
-	    return c
-	try: 
-	    other+0.0        # Check if it is number like
-	except:
+            if len(self) > len(other): pra, a, prb, b =  1.0, self, -1.0, other
+            else:                      pra, a, prb, b = -1.0, other, 1.0, self
+            c = Polynomial(a)
+            for i,f in enumerate(b):
+                c[i] = pra*c[i] + prb*b[i]
+            return c
+        try:
+            other+0.0        # Check if it is number like
+        except:
             raise TypeError, "Don't know how to subtract %s from Polynomial" % type(other)
-	c = Polynomial(self)
-	c[0] -= other
-	return c
+        c = Polynomial(self)
+        c[0] -= other
+        return c
 
 
     def __rsub__ (self, other):
         "Subtraction number-polynomial."
-	try: 
-	    other+0.0        # Check if it is number like
-	except:
+        try:
+            other+0.0        # Check if it is number like
+        except:
             raise TypeError, "Don't know how to subtract Polynomial from %s" % type(other)
-	c = Polynomial(self)
-	c[0] -= other
-	for i,f in enumerate(c):
-	    c[i] = -f
-	return c
+        c = Polynomial(self)
+        c[0] -= other
+        for i,f in enumerate(c):
+            c[i] = -f
+        return c
 
 
     def __neg__ (self):
         "Returns the negative of polynomial."
-	c = Polynomial(self)
-	for i,f in enumerate(c):
-	    c[i] = -f
+        c = Polynomial(self)
+        for i,f in enumerate(c):
+            c[i] = -f
         return c
 
 
@@ -85,23 +85,24 @@ class Polynomial(list):
         "Returns the positive of polynomial - that is the same:)."
         return Polynomial(self)
 
+
     def __mul__ (self, other):
         "Returns the product of polynomials or polynomial*number."
         if isinstance(other, Polynomial):
-	    n = len(self)+len(other)-1
-	    c = Polynomial([0.0]*n)
-	    for ia,fa in enumerate(self):
-	        for ib,fb in enumerate(other):
-		    c[ia+ib] += fa*fb
-	    return c
-	try: 
-	    other+0.0        # Check if it is number like
-	except:
+            n = len(self)+len(other)-1
+            c = Polynomial([0.0]*n)
+            for ia,fa in enumerate(self):
+                for ib,fb in enumerate(other):
+                    c[ia+ib] += fa*fb
+            return c
+        try:
+            other+0.0        # Check if it is number like
+        except:
             raise TypeError, "Don't know how to multiply Polynomial with %s" % type(other)
-	c = Polynomial(self)
-	for i,f in enumerate(c):
-	    c[i] *= other
-	return c
+        c = Polynomial(self)
+        for i,f in enumerate(c):
+            c[i] *= other
+        return c
 
 
     def __rmul__ (self, other):
@@ -111,14 +112,14 @@ class Polynomial(list):
 
     def __div__ (self, other):
         "Returns division of polynomial / number."
-	try: 
-	    other+0.0        # Check if it is number like
-	except:
+        try:
+            other+0.0        # Check if it is number like
+        except:
             raise TypeError, "Don't know how to divide Polynomial by %s" % type(other)
-	c = Polynomial(self)
-	for i,f in enumerate(c):
-	    c[i] /= other
-	return c
+        c = Polynomial(self)
+        for i,f in enumerate(c):
+            c[i] /= other
+        return c
 
 
     def __call__(self, x):
@@ -193,7 +194,7 @@ class Polynomial(list):
         n = len(self)
         q = Polynomial((0.0,)*(n-1))
         rem = Polynomial(self)
-        div = Polynomial((-root, 1.0))
+        #div = Polynomial((-root, 1.0))
         for i in xrange(n-1, 0, -1):
             q[i-1] = rem[i]
             rem[i] = 0.0
@@ -201,7 +202,7 @@ class Polynomial(list):
 #            assert abs(rem[i]) < thanThresholdx
             del rem[i]
         assert len(rem) == 1, "factorout(): polynomial remainder: rem=%s" % (rem,)
-        assert thanNearx(rem[0], 0.0), "factorout(): Non-zero remainder: rem[0]=%s" % (rem[0],)
+        if abs(rem[0]) < thanThresholdx: raise ValueError, "factorout(): Non-zero remainder: rem[0]=%s" % (rem[0],)   #abs() also converts complex number to real
         return q
 
 

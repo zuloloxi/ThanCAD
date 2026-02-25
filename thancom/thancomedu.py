@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,16 +22,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes commands for educational/research purposes.
 """
-import thandr
+import thandr, thanobj
 from thanvar import Canc
 from thantrans import T, Tarch
+import thantkdia
 from thancommod import thanModEnd
-from thantkdia import ThanElemtext, ThanBcplan
+from thanpackages.biocityplan.thandiabcplan import ThanBcplan
 
 
 def thanEduRect(proj):
@@ -54,9 +55,9 @@ def thanEduRect(proj):
     elem.thanSet([c1, c2, c3, c4, c1])
     elem.thanTags = ("e0", )
     elem.thanTkDraw(proj[2].than)
-    win = ThanElemtext(proj[2], [None, ""], cargo=proj)
+    win = thantkdia.ThanElemtext(proj[2], [None, ""], cargo=proj)
     proj[2].thanTkSetFocus()
-    if win.result == None:
+    if win.result is None:
         proj[2].thanCanvas.delete("e0")
         return proj[2].thanGudCommandCan()
     try: elem.thanCargo
@@ -65,21 +66,22 @@ def thanEduRect(proj):
     proj[2].thanCanvas.delete("e0")
     proj[1].thanElementAdd(elem)
     elem.thanTkDraw(proj[2].than)
-    proj[1].thanEdus[elem] = True
+
+    proj[1].thanEdus.add(elem)
     proj[2].thanGudCommandEnd()
 
 
 def thanEduEdit(proj):
     "Edit the associated text with a ThanCad element."
     proj[2].thanSelems.clear()
-    proj[2].thanSelems.update(proj[1].thanEdus.keys())
+    proj[2].thanSelems.update(proj[1].thanEdus)
     elem = proj[2].thanGudGetSnapElem(T["Choose site to edit: "])
     proj[2].thanSelems.clear()
     if elem == Canc: return proj[2].thanGudCommandCan()
     t = elem.thanCargo["edu"]
-    win = ThanElemtext(proj[2], [None, t], cargo=proj)
+    win = thantkdia.ThanElemtext(proj[2], [None, t], cargo=proj)
     proj[2].thanTkSetFocus()
-    if win.result == None: return proj[2].thanGudCommandCan()
+    if win.result is None: return proj[2].thanGudCommandCan()
     elem.thanCargo["edu"] = win.result[1]
     proj[2].thanGudCommandEnd()
 
@@ -87,26 +89,25 @@ def thanEduEdit(proj):
 
 def thanEduFplan(proj):
     "Compute an automated floorplan."
-    import thantkdia, thandr.thanobject
     t = thantkdia.ThanFplan(proj[2], vals=None, cargo=proj)
     v = t.result
     del t
-    if v == None: return proj[2].thanGudCommandCan()   # Floor plan was cancelled
+    if v is None: return proj[2].thanGudCommandCan()   # Floor plan was cancelled
     fps = proj[1].thanObjects["FLOORPLAN"]
-    if len(fps) == 0: fps.append(thandr.thanobject.ThanFplan())
+    if len(fps) == 0: fps.append(thanobj.ThanFplan())
     fps[0].run(proj, v)
-    thanModEnd(proj)  # 'Reset color' has already been called, but it is called again for only 2..
-                      # ..elements, so it is fast
+    thanModEnd(proj)    # 'Reset color' has already been called, but it is called again for only 2..
+                        # ..elements, so it is fast
 
 def thanEdubiocityplan(proj):
-    "Asks the user to create bicoclimatic city plan."
+    "Asks the user to create bioclimatic city plan."
     bcps = proj[1].thanObjects["BIOCITYPLAN"]
-    if len(bcps) == 0: bcps.append(thandr.thanobject.ThanBiocityplan())
+    if len(bcps) == 0: bcps.append(thanobj.ThanBiocityplan())
     bcp = bcps[0]
     t = ThanBcplan(proj[2], vals=bcp.toDialog(proj), cargo=proj)
     v = t.result
     del t
-    if v == None: return proj[2].thanGudCommandCan()     # City plan was cancelled
+    if v is None: return proj[2].thanGudCommandCan()     # City plan was cancelled
     bcp.fromDialog(proj, v)
     bcps[0] = bcp
     proj[1].thanTouch()                    #Drawing IS modified
@@ -126,9 +127,9 @@ def thanEdubiocityplan(proj):
             proj[2].thanPrter("%s %s: %s" % (Tarch["Warning: Could not save preprocessing results to"], fn, why))
         return proj[2].thanGudCommandEnd()
     else:
-        if bcp.pc.pol.cache.roadenx == None: return proj[2].thanGudCommandCan(Tarch["Please do preprocessing and retry."])
+        if bcp.pc.pol.cache.roadenx is None: return proj[2].thanGudCommandCan(Tarch["Please do preprocessing and retry."])
         for i in xrange(v.entMult):            #Run multiple times
             bcp.run(proj)
-            bcp.tkDraw(proj, bcp.pc.state)     #thanTouch is implicitely called
+            bcp.tkDraw(proj, bcp.pc.state)     #thanTouch is implicitly called
             bcp.wrState(proj)
         return proj[2].thanGudCommandEnd()

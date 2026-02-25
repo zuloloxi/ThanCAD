@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for line extension (modification) commands.
@@ -31,7 +31,7 @@ This module provides for line extension (modification) commands.
 
 from thanvar import Canc, thanFiletCalc
 from thantrans import T
-from selutil import thanSel1line, thanSel2linsegs, thanSelMultlines, thanSelectCrosClear
+from selutil import thanSel2linsegs
 from thancommod import thanModCanc, thanModEnd, thanModCancSel, thanFilterCut
 import thanundo, thancomsel
 
@@ -45,8 +45,8 @@ def thanModFilet(proj):
     dilay = proj[1].thanLayerTree.dilay
     while True:
         proj[2].thanPrt("Current radius=%s" % (strd(rr),))
-        res = thanSel2linsegs(proj, T["Select first two sinle segment line to filet (R=Radius): "],
-                                    T["Select second two sinle segment line to filet: "], options=("radius",))
+        res = thanSel2linsegs(proj, T["Select first single segment line to filet (R=Radius): "],
+                                    T["Select second single segment line to filet: "], options=("radius",))
         if res == Canc: return thanModCanc(proj)               # Filet was cancelled
         if res[0] != "r": break
         mes = T["Radius of circular arc (enter=%s): "] % (strd(rr),)
@@ -67,11 +67,11 @@ def thanModFilet(proj):
 #    b.handle = bb.handle
     delelems = set((aa, bb))
     newelems = set((a, b))
-    if obj != None:
+    if obj is not None:
         from thandr import ThanArc
         arc = ThanArc()
         arc.thanSet(*obj)
-        lay = dilay[elem.thanTags[1]]
+        lay = dilay[aa.thanTags[1]]
         proj[1].thanElementAdd(arc, lay)
         newelems.add(arc)
     thanundo.thanReplaceRedo(proj, delelems, newelems, newelems),
@@ -188,7 +188,7 @@ def __extend2Boundaries(proj, thanExtendMethod):
         delelemsi, newelemsi = dodo[i]
         for e in delelemsi:
             if e in newelems:      #If (e) was a previously new element, then (e) was an intermediate element
-                print e, "is intemediate"
+                print e, "is intermediate"
                 newelems.remove(e) #which is already deleted, and there is no need to recreate it and redelete it
             else:
                 print e, "is to be deleted"
@@ -203,7 +203,7 @@ def __extend2Boundaries(proj, thanExtendMethod):
 
 
 def __filterExt(e):
-    "Filters alaments that can be extended."
+    "Filters elements that can be extended."
     from thandr import ThanLine, ThanArc
     for cls in ThanLine, ThanArc:
         if isinstance(e, cls): return True

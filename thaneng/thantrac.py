@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module implements semiautomatic tracing of curves of a raster image.
 It is the link between ThanCad and the actual implementation.
@@ -29,7 +29,6 @@ It is the link between ThanCad and the actual implementation.
 
 import thandr
 from thantrans import T
-from thandefs import ThanMultiSet
 from thanvar import Canc
 from thansupport import thanPan2Points
 import tr
@@ -37,7 +36,7 @@ import tr
 def thanTrace(proj, jx, iy):
     "Trace a curve from pixel coordinates xp, yp."
     im = proj[2].thanImageCur
-    if im.visited == None: im.visited = ThanMultiSet()
+    if im.visited is None: im.visited = tr.ThanMultiSet()
     tra = tr.ThanPilRasterTracker(im.image, im.visited)
     curvemain = []
     celev = list(proj[1].thanVar["elevation"])
@@ -53,31 +52,38 @@ def thanTrace(proj, jx, iy):
         proj[2].thanSelems.clear()
         proj[2].thanSelems.update(eposs)
         edir = proj[2].thanGudGetSnapElem(T["Choose direction to continue or enter to finish (point/<enter>): "],
-	    options=("point", ""))
+            options=("point", ""))
         dc = proj[2].thanCanvas
-	for e in eposs: dc.delete(e.thanTags[0])  #eposs has no images (to delete from proj[2].thanImages)
+        for e in eposs: dc.delete(e.thanTags[0])  #eposs has no images (to delete from proj[2].thanImages)
         proj[1].thanDelSel(eposs)
-	if edir == Canc: return Canc
-	if edir == "": return ""
-	if edir == "p":
-	    eline = emain[0]
-	    while True:
-	        cw = proj[2].thanGudGetPoint("Next point or enter to finish (trace/<enter>): ",
-	            options=("trace",""))
-	        if cw == "": return ""
-		if cw == "t":
+        if edir == Canc: return Canc
+        if edir == "": return ""
+        if edir == "p":
+            eline = emain[0]
+            cpp = eline.cp[-1]
+            statonce = ""
+            while True:
+                #cw = proj[2].thanGudGetPoint("Next point or enter to finish (trace/<enter>): ", options=("trace",""))
+                cw = proj[2].thanGudGetLine(cpp, "Next point or enter to finish (trace/<enter>): ",
+                    statonce, options=("trace",""))
+                if cw == "": return ""
+                if cw == "t":
                     try:
-		        jx, iy = im.thanGetPixCoor(eline.cp[-1])
-		    except IndexError:
-		        statonce = T["Previous point is not in image.\n"]
-			continue
+                        jx, iy = im.thanGetPixCoor(eline.cp[-1])
+                    except IndexError:
+                        statonce = T["Previous point is not in image.\n"]
+                        continue
                     if not im[jx, iy]:
-		        statonce = T["No curve was found in previous point.\n"]
-			continue
-		    break
-		eline.cp.append(cw)
-	else:
-	    curve = edir.thanCargo
+                        statonce = T["No curve was found in previous point.\n"]
+                        continue
+                    break
+                eline.cp.append(cw)
+                dc.delete(eline.thanTags[0])
+                eline.thanTkDraw(proj[2].than)
+                cpp = cw
+                statonce = ""
+        else:
+            curve = edir.thanCargo
             iy, jx = curve[1]
         for e in emain: dc.delete(e.thanTags[0]) #emain has no images (to delete from proj[2].thanImages)
         proj[1].thanDelSel(emain)
@@ -89,10 +95,10 @@ def __crlines(proj, curves, col=None, ca=None):
     imc = proj[2].thanImageCur
     than = proj[2].than
     col1 = than.outline
-    if col != None: than.outline = col
+    if col is not None: than.outline = col
     elems = []
     for curve in curves:
-        if ca != None: curve.insert(0, ca)
+        if ca is not None: curve.insert(0, ca)
         if len(curve) < 2: continue
         if curve[0] == curve[-1]: continue
         e = thandr.ThanLine()
@@ -100,8 +106,8 @@ def __crlines(proj, curves, col=None, ca=None):
         e.thanSet(cp)
         proj[1].thanElementAdd(e)
         item = e.thanTkDraw(proj[2].than)
-	e.thanCargo = curve
-	elems.append(e)
+        e.thanCargo = curve
+        elems.append(e)
     than.outline = col1
     return elems
 

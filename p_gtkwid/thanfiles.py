@@ -1,5 +1,5 @@
 import sys, os.path, ConfigParser, weakref
-from p_gtkuti import thanExtExpand, thanAbsrelPath
+from thantkutila import thanExtExpand, thanAbsrelPath
 
 #############################################################################
 #############################################################################
@@ -24,7 +24,7 @@ class ThanFiles:
         if c.has_option("files", "recent"):
             for f in c.get("files", "recent").split(","):
                 f = thanAbsrelPath(f.strip('" \n\t\r'))
-                if f != None: self.__recentFiles.append(f)
+                if f is not None: self.__recentFiles.append(f)
 
 
     def thanConfigSave(self):
@@ -58,13 +58,13 @@ class ThanFiles:
         "Removes a file from the opened files list."
 
         for i in xrange(len(self.__openedFiles)):
-	    if str(win) == str(self.__openedFiles[i][0]): break
-	else:
-	    assert None, "Drawing class instance did not exist in common database!"
+            if str(win) == str(self.__openedFiles[i][0]): break
+        else:
+            assert None, "Drawing class instance did not exist in common database!"
         del self.__openedFiles[i]
 
         for i in xrange(len(self.__openedFiles)):
-	    assert str(win) != str(self.__openedFiles[i][0]), "thanfiles: win duplicately declared!"
+            assert str(win) != str(self.__openedFiles[i][0]), "thanfiles: win duplicately declared!"
 
         self.thanOpenedNotify()
 

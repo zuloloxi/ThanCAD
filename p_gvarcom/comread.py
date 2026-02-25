@@ -16,7 +16,7 @@ def reSyn1(fr):
 
 
 def reSyk1(fr):
-    "Reads a isoline from a .syk file."
+    "Reads a contour line from a .syk file."
     lindxf = 0
     it = iter(fr)
     for dline in it:

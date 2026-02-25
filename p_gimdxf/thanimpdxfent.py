@@ -51,11 +51,11 @@ class ThanEntities:
         2011_04_03: Atribute 66 is redundant. It means that the polyline has vertices
         which follow right after the various attributes of the polyline.
         See Paul Bourke's dxf10 compilation: http://paulbourke.net/dataformats/dxf/dxf10.html
-        Also saved in the doumentation folder.
+        Also saved in the documentation folder.
         2011_04_03: It seems that when the (free for now) program draftsight exports dxf12
         it stores the elevation of a whole 2d polyline in the polyline attributes and
         puts z=0 to the VERTEX entities. So, if the elevation of the polyline z != 0
-        AND the vertices all(?) have z==0, then we put the polylines z to all vertices.  
+        AND the vertices all(?) have z==0, then we put the polylines z to all vertices.
         """
 
 #-------try to find layer, closed
@@ -71,12 +71,12 @@ class ThanEntities:
             self.trAttsFloat(atts, -30, -210, -220, -230):
             self.thanWarn("Incomplete polyline: probably corrupted file.")
         self.defLay = atts.get(8, self.defLay)
-	handle = atts.get(5, "")
-	col = atts.get(62, -1)
-	if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
-	flags = atts.get(70, 0)
-	closed = flags & PLINECLOSED
-	zdef = atts.get(30, 0.0)         # z of whole polyline; if noexistent or 0.0 use XDEFAULT for VERTEX
+        handle = atts.get(5, "")
+        col = atts.get(62, -1)
+        if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+        flags = atts.get(70, 0)
+        closed = flags & PLINECLOSED
+        zdef = atts.get(30, 0.0)         # z of whole polyline; if noexistent or 0.0 use XDEFAULT for VERTEX
         if 210 in atts and 220 in atts and 230 in atts:    # Extrusion
             _, _, _, wx, wy, wz = thanDxfExtrusionVectors((atts[210], atts[220], atts[230]))
             extrusion = True
@@ -136,13 +136,13 @@ class ThanEntities:
         if len(xx) < 2:
             self.thanWarn("Polyline with 1 or 0 vertices.")
         else:
-	    if closed and (xx[0] != xx[-1] or yy[0] != yy[-1] or zz[0] != zz[-1]):
-	        xx.append(xx[0])
-		yy.append(yy[0])
-		zz.append(zz[0])
+            if closed and (xx[0] != xx[-1] or yy[0] != yy[-1] or zz[0] != zz[-1]):
+                xx.append(xx[0])
+                yy.append(yy[0])
+                zz.append(zz[0])
             if extrusion: thanDxfExtrusion2World(wx, wy, wz, xx, yy, zz)
-#	    print "line:"
-#	    for i in xrange(len(xx)): print xx[i], yy[i]
+#            print "line:"
+#            for i in xrange(len(xx)): print xx[i], yy[i]
 
             self.thanDr.dxfPolyline(xx, yy, zz, self.defLay, handle, col)
 
@@ -164,17 +164,17 @@ class ThanEntities:
             self.thanWarn("Damaged line: probably corrupted file.")
         else:
             self.defLay = atts.get(8, self.defLay)
-	    handle = atts.get(5, "")
-	    col = atts.get(62, -1)
-	    if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+            handle = atts.get(5, "")
+            col = atts.get(62, -1)
+            if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
             xx = [atts[10], atts[11]]
             yy = [atts[20], atts[21]]
-	    zz = [atts.get(30, ZDEFAULT), atts.get(31, ZDEFAULT)]
+            zz = [atts.get(30, ZDEFAULT), atts.get(31, ZDEFAULT)]
             if 210 in atts and 220 in atts and 230 in atts:
                 _, _, _, wx, wy, wz = thanDxfExtrusionVectors((atts[210], atts[220], atts[230]))
                 thanDxfExtrusion2World(wx, wy, wz, xx, yy, zz)
-#	    print "line:"
-#	    for i in xrange(len(xx)): print xx[i], yy[i]
+#            print "line:"
+#            for i in xrange(len(xx)): print xx[i], yy[i]
             self.thanDr.dxfLine(xx, yy, zz, self.defLay, handle, col)
 
 #===========================================================================
@@ -191,17 +191,17 @@ class ThanEntities:
             atts[icod] = text
 
         if self.trAttsFloat(atts, 10, 20, -30) or self.trAtts(atts, str, -8) or\
-	   self.trAtts(atts, int, -62):
+           self.trAtts(atts, int, -62):
             self.thanWarn("Damaged point: probably corrupted file.")
         else:
-	    self.defLay = atts.get(8, self.defLay)
-	    handle = atts.get(5, "")
-	    col = atts.get(62, -1)
-	    if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+            self.defLay = atts.get(8, self.defLay)
+            handle = atts.get(5, "")
+            col = atts.get(62, -1)
+            if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
             xx = atts[10]
             yy = atts[20]
             zz = atts.get(30, ZDEFAULT)
-    	    self.thanDr.dxfPoint(xx, yy, zz, self.defLay, handle, col)
+            self.thanDr.dxfPoint(xx, yy, zz, self.defLay, handle, col)
 
 #===========================================================================
 
@@ -217,18 +217,18 @@ class ThanEntities:
             atts[icod] = text
 
         if self.trAttsFloat(atts, 10, 20, -30, 40, -50) or self.trAtts(atts, str, 1, -8) or\
-	   self.trAtts(atts, int, -62):
+           self.trAtts(atts, int, -62):
             self.thanWarn("Damaged text: probably corrupted file.")
         else:
-	    self.defLay = atts.get(8, self.defLay)
-	    handle = atts.get(5, "")
- 	    col = atts.get(62, -1)
-	    if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+            self.defLay = atts.get(8, self.defLay)
+            handle = atts.get(5, "")
+            col = atts.get(62, -1)
+            if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
             xx = atts[10]
             yy = atts[20]
-	    zz = atts.get(30, ZDEFAULT)
+            zz = atts.get(30, ZDEFAULT)
             h = atts[40]
-	    theta = atts.get(50, 0.0)
+            theta = atts.get(50, 0.0)
             text = atts[1]
             self.thanDr.dxfText(xx, yy, zz, self.defLay, handle, col, text, h, theta)
 
@@ -248,15 +248,15 @@ class ThanEntities:
         if self.trAttsFloat(atts, 10, 20, -30, 40) or self.trAtts(atts, int, -62):
             self.thanWarn("Damaged circle: probably corrupted file.")
         else:
-	    self.defLay = atts.get(8, self.defLay)
+            self.defLay = atts.get(8, self.defLay)
             handle = atts.get(5, "")
-	    col = atts.get(62, -1)
-	    if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+            col = atts.get(62, -1)
+            if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
             xx = atts[10]
             yy = atts[20]
-	    zz = atts.get(30, ZDEFAULT)
+            zz = atts.get(30, ZDEFAULT)
             r = atts[40]
-#	    print "circle:", xx, yy, r
+#            print "circle:", xx, yy, r
             self.thanDr.dxfCircle(xx, yy, zz, self.defLay, handle, col, r)
 
 #===========================================================================
@@ -338,14 +338,14 @@ class ThanEntities:
 
         if self.trAtts(atts, str, 2, -8) or self.trAtts(atts, int, -62) or self.trAttsFloat(atts, 10, 20, -30):
             self.thanWarn("Incomplete block insertion: probably corrupted file.")
-	blname = atts[2]
+        blname = atts[2]
         self.defLay = atts.get(8, self.defLay)
-	handle = atts.get(5, "")
-	col = atts.get(62, -1)
-	if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
-	xins = atts[10]
-	yins = atts[20]
-	zins = atts.get(30, ZDEFAULT)
+        handle = atts.get(5, "")
+        col = atts.get(62, -1)
+        if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+        xins = atts[10]
+        yins = atts[20]
+        zins = atts.get(30, ZDEFAULT)
 
 #-------read attributes
 
@@ -402,19 +402,19 @@ class ThanEntities:
             atts[icod] = text
 
         if self.trAttsFloat(atts, 10, 20, -30, 40, 41, 42, 50) or self.trAtts(atts, str, 1, -8) or\
-	   self.trAtts(atts, int, -62):
+           self.trAtts(atts, int, -62):
             self.thanWarn("Damaged ThanCad image: probably corrupted file.")
         else:
-	    self.defLay = atts.get(8, self.defLay)
-	    handle = atts.get(5, "")
- 	    col = atts.get(62, -1)
-	    if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+            self.defLay = atts.get(8, self.defLay)
+            handle = atts.get(5, "")
+            col = atts.get(62, -1)
+            if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
             xx = atts[10]
             yy = atts[20]
             zz = atts.get(30, ZDEFAULT)
             size = atts[40], atts[41]
             scale = atts[42]
-	    theta = atts.get(50, 0.0)
+            theta = atts.get(50, 0.0)
             filnam = atts[1]
             self.thanDr.dxfThanImage(xx, yy, zz, self.defLay, handle, col, filnam, size, scale, theta)
 
@@ -432,21 +432,21 @@ class ThanEntities:
             atts[icod] = text
 
         if self.trAttsFloat(atts, 10, 20, 30, 11, 21, 31, 12, 22, 32, -13, -23, -33) or \
-	   self.trAtts(atts, int, -62):
+           self.trAtts(atts, int, -62):
             self.thanWarn("Damaged 3dface: probably corrupted file.")
-	    return
+            return
         if 13 in atts or 23 in atts or 33 in atts:
-	    if 13 not in atts or 23 not in atts or 33 not in atts:
-	        self.thanWarn("Damaged 3dface: probably corrupted file.")
-	        return
-	    c = 4
+            if 13 not in atts or 23 not in atts or 33 not in atts:
+                self.thanWarn("Damaged 3dface: probably corrupted file.")
+                return
+            c = 4
         else:
             c = 3
-        
-	self.defLay = atts.get(8, self.defLay)
+
+        self.defLay = atts.get(8, self.defLay)
         handle = atts.get(5, "")
-	col = atts.get(62, -1)
-	if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
+        col = atts.get(62, -1)
+        if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
         xx = [atts[10+i] for i in xrange(c)]
         yy = [atts[20+i] for i in xrange(c)]
         zz = [atts[30+i] for i in xrange(c)]

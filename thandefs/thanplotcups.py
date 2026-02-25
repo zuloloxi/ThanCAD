@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module provides plot capabilities except content.
 """
 
 import p_ggen
 from p_gtkwid import Twid as T
+import cupsfake
+try:
+    import cups
+except ImportError:
+    cups = cupsfake
+TOFILE = cupsfake.TOFILE
 
-TOFILE = "<FILE:>"
 thanTempPrefix = "untitled"      #Prefix for the names of new drawings
 
 
@@ -45,12 +50,8 @@ class ThanPlot:
         c2 = list(c1)
         c2[:2] = 10.0, 10.0
         self.butPick = c1, c2
-        print "ThanPlot.init(): name=", name
         name = p_ggen.path(name)
-        print "ThanPlot.init(): name=", name
-        print "ThanPlot.init(): name.parent=", name.parent
         self.filPlot = name.parent / name.namebase + ".ps"
-        print "ThanPlot.init(): self.filPlot=", self.filPlot
 
 
     def __defprinter(self, choPr=None):
@@ -93,7 +94,7 @@ class ThanPlot:
         fw.writeBeg("PLOT_DEFINITION")
         fw.pushInd()
         p = self.choPr
-        if p == TOFILE: p = "FILE:"
+        if p == cupsfake.TOFILE: p = "FILE:"
         fw.writeAtt("printer", p)
         fw.writeAtt("plotwhat", "%d" % self.radWhat)
         fw.writeBeg("WINDOW")
@@ -110,7 +111,7 @@ class ThanPlot:
         "Read the plot definition from thc format."
         fr.readBeg("PLOT_DEFINITION")    #May raise ValueError, StopIteration
         choPr = fr.readAtt("printer")[0]  #May raise ValueError, IndexError, StopIteration
-        if choPr == "FILE:": choPr = TOFILE
+        if choPr == "FILE:": choPr = cupsfake.TOFILE
         radWhat = int(fr.readAtt("plotwhat")[0])  #May raise ValueError, IndexError, StopIteration
         fr.readBeg("WINDOW")             #May raise ValueError, StopIteration
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
@@ -124,11 +125,9 @@ class ThanPlot:
 
 def getPrinters(host=None):
     "Initialize cups system, and get available printers."
-    fccups = FakeCCups()
+    fccups = cupsfake.Connection()
     fprinters = fccups.getPrinters()
-    try:
-        import cups
-    except ImportError:
+    if cups is cupsfake:
         return fccups, fprinters, T["Python module 'cups' has not been installed.\n"\
         "Please install module 'cups' and retry.\n"\
         "(Hint: if your OS does not support cups, consider switching to almost anything but WinDoze:)).\n"]
@@ -144,22 +143,3 @@ def getPrinters(host=None):
         return ccups, printers, ""
     except Exception, why:
         return fccups, fprinters, "%s:\n%s\n(%s)\n" % (T["Module cups failed while identifying printers"], why, host)
-
-
-class FakeCCups:
-    "A fake cups connection class which plots to file instead of printer."
-
-    def printFile(self, name, filename, desc, atts):
-        "Print to printer; just for compatibility."
-        print "Fake printing '%s (%s)' to '%s'" % (filename, desc, nam)
-        job = 314
-        return job
-
-    def getDefault(self):
-        "Return default printer's name; the 'file' printer."
-        return TOFILE
-
-    def getPrinters(self):
-        "Return the installed printers; the 'file' printer."
-        fakePrinters = {TOFILE: {"printer-make-and-model" : TOFILE}}
-        return fakePrinters

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the classes for layer attributes.
 """
 
-import copy
-import p_ggen, p_gimdxf
+import p_ggen, p_gcol
 
 ############################################################################
 ############################################################################
@@ -35,7 +34,7 @@ import p_ggen, p_gimdxf
 class ThanAtt:
     """The base for a standard attribute of a ThanLayer, such as monitor color.
 
-    This base class may be used for an attrinute that takes string values.
+    This base class may be used for an attribute that takes string values.
 
     An attribute class has the following properties:
 
@@ -79,7 +78,7 @@ class ThanAtt:
     def __init__(self, val, inherit=True):
         "Initialise attribute."
         self.thanValSet(val)
-        self.thanAct = None        # If it is not explicitely set later, there will be a failure
+        self.thanAct = None        # If it is not explicitly set later, there will be a failure
         self.thanPers = self.thanVal
         self.thanInher = bool(inherit)
 
@@ -214,7 +213,7 @@ class ThanAttOnoff(ThanAttOnoffInherit):
     "An attribute that takes False or True values but can't inherit."
 
     def __init__(self, val, inherit=False, on=" x ", off=" _ "):
-        assert not inherit, "Forced inheritence attributes can not be inherited manually."
+        assert not inherit, "Forced inheritance attributes can not be inherited manually."
         ThanAttOnoffInherit.__init__(self, val, inherit, on, off)
 
 
@@ -239,9 +238,9 @@ class ThanAttInt(ThanAtt):
     def tonum(self, val):
         "Makes the value boolean."
         if isinstance(val, ThanAtt): val = val.thanVal
-        val = self.intorfloat(val)    #If it is a string or a differnet number,  it is converted to correct number
-        if self.valmin != None and val < self.valmin: raise ValueError, self.tera % (val,)
-        if self.valmax != None and val > self.valmax: raise ValueError, self.tera % (val,)
+        val = self.intorfloat(val)    #If it is a string or a different number,  it is converted to correct number
+        if self.valmin is not None and val < self.valmin: raise ValueError, self.tera % (val,)
+        if self.valmax is not None and val > self.valmax: raise ValueError, self.tera % (val,)
         if self.nonzero        and val == 0:          raise ValueError, self.tera % (val,)
         return val
 
@@ -278,48 +277,48 @@ class ThanAttCol(ThanAtt):
 #      ThanAtt.__init__(self, self.thanVal, inherit)     # Initialise Base class
 
     def thanValSet(self, val):
-      """Tranforms val to ThanCol object; raises ValueError for invalid colors.
+        """Transforms val to ThanCol object; raises ValueError for invalid colors.
 
-      val  may be one of the following:
-      1. ThanCol instance
-      2. A string which contains the name of the color (e.g. "yellow")
-      3. A string which contains 1 integer which is the index of the color in the
-         partial list (e.g. "2")
-      4. A string which contains 3 integers, separated by spaces, which represent
-         the rgb value of the color (e.g. "10 50 200")
-      5. A list/tuple/sequence of 3 texts or 3 integers, which represent the rgb
-         value of the color (e.g. ["10","50","200"])
-      """
-      col = val
-      terr = "Invalid ThanCad color: %s" % (col,)
-      if isinstance(col, ThanAttCol): self.__dict__.update(col.__dict__); return
-      try: col + ""      # Is it string?
-      except: string = False
-      else: string = True
-      if string:
-          cs = col.split()
-      else:
-          try: cs = col[0], col[1], col[2]; n = len(cs)
-          except: raise ValueError, terr
-          if n != 3: raise ValueError, terr
+        val  may be one of the following:
+        1. ThanCol instance
+        2. A string which contains the name of the color (e.g. "yellow")
+        3. A string which contains 1 integer which is the index of the color in the
+           partial list (e.g. "2")
+        4. A string which contains 3 integers, separated by spaces, which represent
+           the rgb value of the color (e.g. "10 50 200")
+        5. A list/tuple/sequence of 3 texts or 3 integers, which represent the rgb
+           value of the color (e.g. ["10","50","200"])
+        """
+        col = val
+        terr = "Invalid ThanCad color: %s" % (col,)
+        if isinstance(col, ThanAttCol): self.__dict__.update(col.__dict__); return
+        try: col + ""      # Is it string?
+        except: string = False
+        else: string = True
+        if string:
+            cs = col.split()
+        else:
+            try: cs = col[0], col[1], col[2]; n = len(cs)
+            except: raise ValueError, terr
+            if n != 3: raise ValueError, terr
 
-      if len(cs) == 1:
-          col = cs[0]
-          try: rgb = p_gimdxf.thanDxfColName2Rgb.get(col, None) or p_gimdxf.thanDxfColCode2Rgb.get(int(col), None)
-          except ValueError: raise ValueError, terr
-          if not rgb: raise ValueError, terr
-      elif len(cs) != 3:
-           raise ValueError, terr
-      else:
-          try: rgb = tuple(map(int, cs))
-          except ValueError: raise ValueError, terr
-          for i in rgb:
-              if i < 0 or i > 255: raise ValueError, terr
-      self.thanVal = rgb
-      self.thanPartial = p_gimdxf.thanRgb2DxfColCode.get(rgb, None)
-      self.thanName = p_gimdxf.thanRgb2DxfColName.get(rgb, None)
-      self.thanTk = p_gimdxf.thanFormTkcol % rgb
-      self.thanNorm = str(self.thanName or self.thanPartial or ("%d %d %d" % rgb))
+        if len(cs) == 1:
+            col = cs[0]
+            try: rgb = p_gcol.thanDxfColName2Rgb.get(col, None) or p_gcol.thanDxfColCode2Rgb.get(int(col), None)
+            except ValueError: raise ValueError, terr
+            if not rgb: raise ValueError, terr
+        elif len(cs) != 3:
+            raise ValueError, terr
+        else:
+            try: rgb = tuple(map(int, cs))
+            except ValueError: raise ValueError, terr
+            for i in rgb:
+                if i < 0 or i > 255: raise ValueError, terr
+        self.thanVal = rgb
+        self.thanPartial = p_gcol.thanRgb2DxfColCode.get(rgb, None)
+        self.thanName = p_gcol.thanRgb2DxfColName.get(rgb, None)
+        self.thanTk = p_gcol.thanFormTkcol % rgb
+        self.thanNorm = str(self.thanName or self.thanPartial or ("%d %d %d" % rgb))
 
     def __str__(self): return self.thanNorm
 
@@ -331,12 +330,12 @@ class ThanAttCol(ThanAtt):
 
     def thanDxf(self):
         "Returns a dxf color that resembles self's color."
-        return p_gimdxf.thanRgb2DxfColCodeApprox(self.thanVal)
+        return p_gcol.thanRgb2DxfColCodeApprox(self.thanVal)
 
 
     def than2Gray(self):
         "Transform the colour to gray scale according to ITU-R 601-2 transform; return an integer."
-        return p_gimdxf.thanRgb2Gray(self.thanVal)
+        return p_gcol.thanRgb2Gray(self.thanVal)
 
 
     def thanExpThc (self, fw, name):

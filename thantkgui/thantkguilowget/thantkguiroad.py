@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,17 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines line states, i.e. as the user moves the mouse, a road
 (which is a line with circular arcs) is drawn from a given point to mouse
 cursor, continuously.
 """
-from math import hypot
-import Tkinter
-from thantkconst import *
-from thanvar import thanLogTk, calcRoadNode, calcRoadNodeR, tkRoadNode, tkRoadNodeR
-
+from thantkconst import THAN_STATE_NONE
+from thanvar import calcRoadNode, tkRoadNode, tkRoadNodeR
 from thantkguigeneric import ThanStateGeneric
 
 
@@ -53,7 +50,7 @@ class ThanStateRoadp(ThanStateGeneric):
         self.__dragged = (dc.create_line(10000, 10000, 10001, 10001),)  # Dummy element to avoid complexity in onMotion()
         for i1 in self.__dragged:
             dc.thanTempItems.add(i1)
-        if self.__x3 != None:
+        if self.__x3 is not None:
 #           hopefully everything is set, and the following event will trigger __onMotion to do the drawing work
             dc.event_generate("<Motion>", when="head", x=self.__x3, y=self.__y3, warp=1)  # Set mouse position to the previous c3 point
 
@@ -108,7 +105,7 @@ class ThanStateRoadr(ThanStateGeneric):
         self.__y3 = y3
         self.__r1 = r1
         dc = self.thanProj[2].thanCanvas
-#        dc.thanOrtho.enable(x3, y3)               # Ortho is akward here
+#        dc.thanOrtho.enable(x3, y3)               # Ortho is awkward here
         self.__dragged = (dc.create_line(10000, 10000, 10001, 10001),)  # Dummy element to avoid complexity in onMotion()
         for i1 in self.__dragged:
             dc.thanTempItems.add(i1)
@@ -120,7 +117,7 @@ class ThanStateRoadr(ThanStateGeneric):
     def thanOnMotion(self, event, x, y):
         "Well, here is what should be drawn each time mouse moves."
         dc = self.thanProj[2].thanCanvas
-#        x, y = dc.thanOrtho.orthoxy(x, y)         # Ortho is akward here
+#        x, y = dc.thanOrtho.orthoxy(x, y)         # Ortho is awkward here
         ct = self.thanProj[2].thanCt
         draggedp = self.__dragged
         self.__dragged, ct = tkRoadNodeR(self.__x1, self.__y1, self.__x2, self.__y2,

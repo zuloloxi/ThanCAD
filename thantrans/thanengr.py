@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek.
 """
@@ -212,6 +212,9 @@ en2gr = \
 "&Engineering"                                    : u"Μηχανική",
 "&Grid"                                           : u"Κάναβος",
 
+"Draw &Greece"                                    : u"Σχεδίαση Ελλάδας",
+"Draws the perimeter of Greece in EGSA87 coordinates": u"Σχεδιάζει την περίμετρο της Ελλάδας σε συντεταγμένες ΕΓΣΑ87",
+
 "Load DE&Ms"                                      : u"Εισαγωγή ΨΜΕπ",
 "Loads DEMs (USGS format) stored in .tif files"   : u"Εισαγωγή Ψηφιακών Μοντέλων Επιφανείας (μορφή USGS) που είναι αποθηκευμένα σε αρχεία .tif",
 "Manage DE&Ms"                                    : u"Διαχείριση ΨΜΕπ",
@@ -301,6 +304,7 @@ en2gr = \
 "Select new layer for the elements"               : u"Επιλογή νέας διαφάνειας για τα στοιχεία",
 "Origin of rotation (Insertion point): "          : u"Κέντρο περιστροφής (I=σημείο εισαγωγής): ",
 "Rotation angle"                                  : u"Γωνία περιστροφής",
+"Rotation angle (azimuth)"                        : u"Γωνία περιστροφής (γωνία διεύθυνσης)",
 "&Modify"                                         : u"Μεταβολή",
 "Change &layer"                                   : u"Αλλαγή διαφάνειας",
 "&Erase"                                          : u"Διαγραφή",
@@ -521,6 +525,41 @@ en2gr = \
 "Bitmap"                                          : u"Άσπρο/μαύρο",
 "CHANGES DETECTED"                                : u"ΑΝΙΧΝΕΥΘΗΚΑΝ ΑΛΛΑΓΕΣ",
 "Camera"                                          : u"Φωτομηχανή",
+
+"&Background colour"                              : u"Χρώμα παρασκηνίου",
+"Changes the canvas background colour"            : u"Αλλάγή του χρώματος παρασκηνίου του καμβά",
+"Inserts a new image to the current drawing"      : u"Εισαγωγή νέας εικόνας στο τρέχον σχέδιο",
+"Import tiled Image"                              : u"Εισαγωγή τεμαχισμένης εικόνας",
+"Inserts a Digital Globe image split into multiple tiles": u"Εισαγωγή εικόνας της Digital Globe που είναι χωρισμένη σε πολλαπλά τεμάχια",
+"Import/convert TerraSAR Image"                   : u"Εισαγωγή/μετατροπή εικόνας TerraSAR",
+"Convert a complex pixel valued TerraSAR image to 8bit GeoTiff and inserts it to the current drawing":
+    u"Μετατροπή εικόνας TerraSAR μιγαδικών pixels σε GeoTiff 8bits και εισαγωγή της στο τρέχον σχέδιο",
+"TerraSAR image file open failed"                 : u"Αποτυχία ανοίγματος εικόνας TerraSAR",
+"Locates the image file of an image"              : u"Προσδιορισμός της θέσης του αρχείου μίας εικόνας",
+"Locates the directory for missing image files"   : u"Προσδιορισμος της θέσης φακέλλου που περιέχει αρχεία από εικόνες που λείπουν",
+"Embed images"                                    : u"Ενσωμάτωση εικόνων",
+"Saves the images into ThanCad's native file (.thcx)": u"Αποθήκευση εικόνων σε εγγενές αρχείο του ThanCad (.thcx)",
+"Clips an image to a smaller rectangle"           : u"Κάνει (μικρότερο) ορθογωνικό απόσπασμα μίας εικόνας",
+"Manages the mode of rendering images"            : u"Διαχείριση του τρόπου απόδοσης των εικόνων",
+"&Interpolate line"                               : u"Παρεμβολή σημείων σε γραμμή",
+"&Ellipse"                                        : u"Έλλειψη",
+"Traces a curve in a bitmap raster image"         : u"Ιχνηλατηση καμπύλης σε εικόνα bitmap",
+"Tr&iangulation"                                  : u"Τριγωνισμός",
+"Lets the user convert points to named points interactively": u"Διαδραστική μετατροπή σημείων σε ονοματισμένα σημεία",
+"Changes the z and higher coordinates of selected elements": u"Αλλαγή του z και υψηλότερων διαστάσεων σεε πιλεγμένα στοιχεία",
+"Shows font for debugging"                        : u"Προβολή γραμματοσειράς για εκσφαλμάτωση",
+"Shows window dimensions for debugging"           : u"Προβολή διαστάσεων παραθύρου για εκσφαλμάτωση",
+"Saves the text of the command window"            : u"Αποθήκευση κειμένου του παραθύρου εντολών",
+"Saves translation status to a file"              : u"Αποθήκευση της απογραφής μετάφρασης σε αρχείο",
+"Show &handles"                                   : u"Προβολή κωδικών",
+"Shows element handles for debugging"             : u"Προβολή των κωδικών των στοιχείων για εκσφαλμάτωση",
+"Demonstrates a fractal made of colored lines"    : u"Επίδειξη κλασματικού από έγχρωμες γραμμές",
+"Run &tests"                                      : u"Εκτέλεση ελέγχων",
+"Runs unit tests of ThanCad"                      : u"Εκτέλεση μοναδιαίων ελεχων του ThanCad",
+"ThanDrawing"                                     : "1",
+"La Universitat de Valencia"                      : u"Πανεπιστήμιο Βαλέντσιας",
+"Purge [Layers/Objects/Do-undo history] <L>: "    : u"Εκκαθάριση [L=διαφάνειες/O=αντικείμενα/D=ιστορία αναίρεσης/επαναφοράς] <L>: ",
+"Choose image tiles"                              : u"Επιλογή τεμαχίων εικόνας",
 }
 
 T = Translation(en2gr)

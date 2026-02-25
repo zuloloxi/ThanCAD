@@ -1,5 +1,5 @@
 from math import sin, cos, pi
-from types import *
+from types import IntType
 from thanfonts import thanFontPrime1
 
 
@@ -33,11 +33,11 @@ def thanSymbolLine7f(xz, yz, h, a, theta, tfont=thanFontPrime1, linefun=None):
             k = ord(c)
             if type(tfont[k]) is IntType: k = tfont[k]
             if k < 0 or k > 255:
-                self.thanDebug("Character with code:" + str(k))
+                print ("Character with code:" + str(k))
                 return
 
             for pl in tfont[k]:                   # Loop of all polylines of a char
-#                plr = [	(xz+xx*bx-yy*by, yz-(xx*by+yy*bx)) for (xx, yy) in pl ]
+#                plr = [ (xz+xx*bx-yy*by, yz-(xx*by+yy*bx)) for (xx, yy) in pl ]
                 xpp = [	xz+xx*bx-yy*by for (xx, yy) in pl ]
                 ypp = [	yz+xx*by+yy*bx for (xx, yy) in pl ]
                 linefun(xpp, ypp)

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,19 +23,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines a Tkinter window to display ThanCad's main window.
 """
 
 import sys, weakref, Tkinter, tkFont
-import p_gtkuti, p_gtkwid, p_ggen
+import p_gtkwid, p_ggen
 import thanvar, thancom
 from thanvers import tcver
-import thantkguiwindraw, thanmenus
 import thantk
 from thanopt import thancadconf
-from thantrans import T
+import thanmenus
 thanfiles = thanvar.thanfiles
 
 
@@ -69,7 +68,7 @@ class ThanTkGuiWinMain(Tkinter.Tk):
         projnew[2].thanGudCommandEnd()
 
         fn, terr = p_ggen.configFile("thancad.scr", "thancad")
-        if fn == None: return projnew
+        if fn is None: return projnew
         try: fr = open(fn)
         except IOError: return  projnew
         thanVarScriptDo(projnew, fr)
@@ -87,7 +86,7 @@ class ThanTkGuiWinMain(Tkinter.Tk):
 
     def __fonts(self):
         "Use fonts that support Greek encodings."
-#       save thanFo reference. Note that p_gtkuti.thanFontRefSave() will not work well here (see source)
+#       save thanFo reference. Note that p_gtkwid.thanFontRefSave() will not work well here (see source)
 #       self.thanFo = tkFont.Font(family="Arial", size=10)          # Negative size means size in pixels; else in points
         self.thanFo = tkFont.Font(family=thancadconf.thanFontfamily,
                                       size=thancadconf.thanFontsize)          # Negative size means size in pixels; else in points
@@ -112,21 +111,16 @@ class ThanTkGuiWinMain(Tkinter.Tk):
         self.thanCom.grid(sticky="swne")
         thantk.deficon(self)   # Decorates main window
 
-    def thanPrt(self, mes, tag="info"):
-        "Print to the command window; this is info, warnings, error etc."
-        self.thanCom.thanAppend("%s\n" % mes, tag)
-
 
     def thanGudCommandBegin(self, t):
         "The user entered a command; launch it."
-        w = self
-        n = len(t); t = t.lower()
+        t = t.lower()
         c, fun = thancom.thanComFun(t)
         assert fun, "Unrecognised command"
         fun(thanfiles.ThanCad)
 
 
-    def thanGudCommandEnd(self, t, mestype="can"):
+    def thanGudCommandEnd(self, t=None, mestype="can"):
         "After command is executed; not needed."
         pass
 
@@ -137,7 +131,7 @@ class ThanTkGuiWinMain(Tkinter.Tk):
 
     def thanPrtCan(self):
         "Prints 'cancelled' to the command window."
-#        from thantkcmd import DEFCAN
+#        from thanvar import DEFCAN
 #        self.thanCom.thanAppend("%s\n" % DEFCAN, "can")
     def thanPrt(self, mes, tag="info1"):
         "Print to the command window; this is info, warnings, error etc."
@@ -161,8 +155,8 @@ class ThanTkGuiWinMain(Tkinter.Tk):
 
     def destroy(self):
         "Deletes circular references."
-	del self.thanFo, self.thanMenu, self.thanTkPos
-	Tkinter.Tk.destroy(self)
+        del self.thanFo, self.thanMenu, self.thanTkPos
+        Tkinter.Tk.destroy(self)
 
 
 if __name__ == "__main__":

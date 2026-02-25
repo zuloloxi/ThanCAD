@@ -1,20 +1,20 @@
 ##############################################################################
 # ThanCad 0.1.2 "Free": 2dimensional CAD with raster support for engineers.
-# 
+#
 # Copyright (c) 2001-2010 Thanasis Stamos,  December 23, 2010
 # URL:     http://thancad.sourceforge.net
 # e-mail:  cyberthanasis@excite.com
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,10 +29,12 @@ Tkinter lists.
 
 
 import types
-from Tkinter import *
+from Tkinter import Scrollbar, Frame, Label, EXTENDED, END, VERTICAL, HORIZONTAL
 import p_ggen
 from p_ggen import Canc
-from p_gtkuti import thanGudModalMessage, thanGudGetText, ThanScheduler
+from thantkutila import thanGudModalMessage
+from xinp import xinpStrB
+from thansched import ThanScheduler
 import thanwids
 from thanwidstrans import T
 
@@ -59,14 +61,14 @@ class ThantkClistBare(Frame, ThanScheduler):
 
         self.thanAtts = atts
 
-        if attmain == None:
+        if attmain is None:
             if atts[0] == _EXPAND: attmain = atts[1]
             else:                  attmain = atts[0]
         self.thanAttmain = attmain
 
-        if labels == None: labels=dict((k,p_ggen.thanUnicode(k)) for k in atts)
+        if labels is None: labels=dict((k,p_ggen.thanUnicode(k)) for k in atts)
         self.thanLabels = labels
-        if widths == None: widths = (20,)*len(atts)
+        if widths is None: widths = (20,)*len(atts)
         self.thanWidths = widths
 
         self.thanLabs = labels
@@ -134,7 +136,7 @@ class ThantkClistBare(Frame, ThanScheduler):
     def thanListsDel(self, first, last=None):
         "Deletes data from lists."
         for li in self.thanLists.itervalues():
-            if last == None: li.delete(first)
+            if last is None: li.delete(first)
             else:            li.delete(first, last)
 
 
@@ -269,7 +271,7 @@ class ThantkClistBare(Frame, ThanScheduler):
             li = self.thanLists[att]
             indexes = li.curselection()
             if len(indexes) == 0:                              # No indexes; retry once
-                if evt == None: return                         # second try; still no indexes
+                if evt is None: return                         # second try; still no indexes
                 self.after_cancel(self.__id)                   # Suspend ordinary mechanism
                 self.after(100, self.__onListClick, att, None) # Reschedule itself for execution
                 self.__id = self.after(250, self.__limainpoll) # Reschedule ordinary mechanism
@@ -330,64 +332,64 @@ class ThanMixinUtil:
         if not self.thanClipCom: return
         i0 = i = len(self.thanListLayers)
 
-	for lay1 in self.thanClipLays:
-	    lay = lay1
-	    if self.thanClipCom != "move": lay = lay1.thanClone()
-	    name = lay.thanAtts[self.thanAttmain]
+        for lay1 in self.thanClipLays:
+            lay = lay1
+            if self.thanClipCom != "move": lay = lay1.thanClone()
+            name = lay.thanAtts[self.thanAttmain]
             if type(lay.thanRename(name)) in types.StringTypes:
-	        for j in xrange(1000000):
-	            if type(lay.thanRename(name+str(j))) in types.StringTypes: break
+                for j in xrange(1000000):
+                    if type(lay.thanRename(name+str(j))) in types.StringTypes: break
 
             lay.thanParent = None
             self.thanListLayers.insert(i, lay)     # layer pointer
             for att in self.thanAtts: self.thanLists[att].thanInsert(i, lay.thanAtts[att])
-	    i += 1
+            i += 1
 
         for li in self.thanLists.itervalues(): li.see(END)
-	self.thanSel1(i0, END)
-	self.thanModified = True
+        self.thanSel1(i0, END)
+        self.thanModified = True
 
 #============================================================================
 
     def thanLayerNew(self):
         "Makes a new layer."
-	lay = self.thanListLayers[0]
-	lay = lay.thanNew()
+        lay = self.thanListLayers[0]
+        lay = lay.thanNew()
 
-	i = len(self.thanListLayers)
+        i = len(self.thanListLayers)
         self.thanListLayers.insert(i, lay)     # layer pointer
         for att in self.thanAtts: self.thanLists[att].thanInsert(i, lay.thanAtts[att])
 
-	for li in self.thanLists.itervalues(): li.see(END)
-	self.thanSel1(i)
-	self.thanModified = True
+        for li in self.thanLists.itervalues(): li.see(END)
+        self.thanSel1(i)
+        self.thanModified = True
 
 #============================================================================
 
     def thanLayerRen(self):
         "Renames a highligthed layer."
         (indexes, lays) = self.thanSelGet()
-	i = 0
-	if len(indexes) > 0: i = int(indexes[0])
-	self.thanSel1(i)
+        i = 0
+        if len(indexes) > 0: i = int(indexes[0])
+        self.thanSel1(i)
         lay = self.thanListLayers[i]
-	name = str(lay.thanAtts[self.thanAttmain])
-	name1 = self.thanLimain.thanGet(i)
+        name = str(lay.thanAtts[self.thanAttmain])
+        name1 = self.thanLimain.thanGet(i)
 
-	for j in xrange(len(name1)):
-	    if name1[j] != ".": break
-	else: assert None, "Layer name all dots!!"
-	dots = ""
-	if j > 0: dots = name1[:j]
+        for j in xrange(len(name1)):
+            if name1[j] != ".": break
+        else: assert None, "Layer name all dots!!"
+        dots = ""
+        if j > 0: dots = name1[:j]
 
-	name1 = name
-	while 1:
-	    name1 = thanGudGetText(self, T["Rename Layer"]+" "+name, name1)
-	    if name1 == None: return Canc
-	    lay1 = lay.thanRename(name1)
-	    if type(lay1) not in types.StringTypes: break        # Check if name is valid
-	    thanGudModalMessage(self, lay1, T["Rename Failed"])
-	    return Canc
+        name1 = name
+        while 1:
+            name1 = xinpStrB(self, T["Rename Layer"]+" "+name, name1)
+            if name1 is None: return Canc
+            lay1 = lay.thanRename(name1)
+            if type(lay1) not in types.StringTypes: break        # Check if name is valid
+            thanGudModalMessage(self, lay1, T["Rename Failed"])
+            return Canc
 
         self.thanLimain.delete(i)
         self.thanLimain.thanInsert(i, dots+name1)
@@ -397,7 +399,7 @@ class ThanMixinUtil:
 
     def destroy(self):
         "Destroys the circlular reference of attrinutes."
-	pass
+        pass
 
 
 #############################################################################
@@ -412,82 +414,82 @@ class ThanMixinHierUtil(ThanMixinUtil):
 
     def thanLayerChildNew(self):
         "Makes a new child layer."
-	lay = thanLayerChildNewHouse()
-	if type(lay) in types.StringTypes:
-	    thanGudModalMessage(self, lay, "New Child Layer Failed")
-	    return
+        lay = self.thanLayerChildNewHouse()
+        if type(lay) in types.StringTypes:
+            thanGudModalMessage(self, lay, "New Child Layer Failed")
+            return
 
 
     def thanLayerChildNewHouse(self, name=None):
         "Makes a new child layer without complaining to the user."
         (indexes, lays) = self.thanSelGet()
-	if len(lays) <= 0:
-	    i = 0
-	    laypar = self.thanListLayers[0]
-	else:
-  	    i = int(indexes[0])
-	    laypar = lays[0]
+        if len(lays) <= 0:
+            i = 0
+            laypar = self.thanListLayers[0]
+        else:
+            i = int(indexes[0])
+            laypar = lays[0]
 
-	self.thanBranchCollapse(i)
-	lay = laypar.thanChildNew(name)
-	if type(lay) in types.StringTypes: return lay     # New Child Layer Failed
-	lay.thanAtts[_EXPAND].thanVal = " "
+        self.thanBranchCollapse(i)
+        lay = laypar.thanChildNew(name)
+        if type(lay) in types.StringTypes: return lay     # New Child Layer Failed
+        lay.thanAtts[_EXPAND].thanVal = " "
 
-	laypar.thanAtts[_EXPAND].thanVal = "+"
-	li = self.thanLiexpand
+        laypar.thanAtts[_EXPAND].thanVal = "+"
+        li = self.thanLiexpand
         li.delete(i); li.thanInsert(i, "+")
 
-	self.thanBranchExpand(i)
+        self.thanBranchExpand(i)
 
-	for j in xrange(i, len(self.thanListLayers)):
-	    if self.thanListLayers[j] == lay: break
-	else:
-	    assert None, "Newly created child layer not found!"
-	for li in self.thanLists.itervalues(): li.see(j)
-	self.thanSel1(j)
-	self.thanModified = True
-	if self.thanCur == laypar:
-	    assert self.thanTryCur(laypar.thanChildren), "These should be leaf layers!"
-	return lay
+        for j in xrange(i, len(self.thanListLayers)):
+            if self.thanListLayers[j] == lay: break
+        else:
+            assert None, "Newly created child layer not found!"
+        for li in self.thanLists.itervalues(): li.see(j)
+        self.thanSel1(j)
+        self.thanModified = True
+        if self.thanCur == laypar:
+            assert self.thanTryCur(laypar.thanChildren), "These should be leaf layers!"
+        return lay
 
 #============================================================================
 
     def thanSelCopy(self):
         "Copies selection to the clipboard."
-	self.thanSelStore("copy")
+        self.thanSelStore("copy")
 
 #============================================================================
 
     def thanSelCut(self):
         "Copies selection to the clipboard."
-	self.thanSelStore("move")
-	self.thanSelDel(self.thanClipLays)
-	self.thanSelNone()
-	self.thanModified = True
+        self.thanSelStore("move")
+        self.thanSelDel(self.thanClipLays)
+        self.thanSelNone()
+        self.thanModified = True
 
 #============================================================================
 
     def thanSelStore(self, com):
         "Moves selection to the clipboard; the actual move happens with paste."
-	(indexes, lays) = self.thanSelGet()
-	lays = [lay for lay in lays if lay != self.thanListLayers[0]] # Erases root layer from the selection
+        (indexes, lays) = self.thanSelGet()
+        lays = [lay for lay in lays if lay != self.thanListLayers[0]] # Erases root layer from the selection
 
 #-------Erases all the child layers from the selection
 
         todel = {}
         for lay in lays: todel[lay] = 0
-	for lay in lays:
-	    par = lay.thanParent
-	    while par != None:
-	        if par in todel: todel[lay] = 1; break
-	        par = par.thanParent
+        for lay in lays:
+            par = lay.thanParent
+            while par is not None:
+                if par in todel: todel[lay] = 1; break
+                par = par.thanParent
 
-	if com == "move":
-	    self.thanClipLays = [lay for (lay, val) in todel.iteritems() if val == 0]
-	else:
-	    self.thanClipLays = [lay.thanClone() for (lay, val) in todel.iteritems() if val == 0]
+        if com == "move":
+            self.thanClipLays = [lay for (lay, val) in todel.iteritems() if val == 0]
+        else:
+            self.thanClipLays = [lay.thanClone() for (lay, val) in todel.iteritems() if val == 0]
 
-	self.thanClipCom = com
+        self.thanClipCom = com
 
 #============================================================================
 
@@ -497,54 +499,54 @@ class ThanMixinHierUtil(ThanMixinUtil):
         if not self.thanClipCom: return
         (indexes, lays) = self.thanSelGet()
         if len(lays) <= 0:
-	    i = 0
-	    laypar = self.thanListLayers[0]
-	else:
-	    laypar = lays[0]
+            i = 0
+            laypar = self.thanListLayers[0]
+        else:
+            laypar = lays[0]
             i = int(indexes[0])
-	self.thanBranchCollapse(i)
+        self.thanBranchCollapse(i)
 
-	er = laypar.thanChildAdd(self.thanClipLays)
-	if type(er) in types.StringTypes:
-	    thanGudModalMessage (self, er, T["Paste Failed"])
-	    return
+        er = laypar.thanChildAdd(self.thanClipLays)
+        if type(er) in types.StringTypes:
+            thanGudModalMessage (self, er, T["Paste Failed"])
+            return
 
-	laypar.thanAtts[_EXPAND].thanVal = "+"
-	li = self.thanLiexpand
+        laypar.thanAtts[_EXPAND].thanVal = "+"
+        li = self.thanLiexpand
         li.delete(i); li.thanInsert(i, "+")
 
-	self.thanBranchExpand(i)
+        self.thanBranchExpand(i)
         self.thanSel1(i)
 
-	self.thanClipCom = "copy"       # Move works only the first time
+        self.thanClipCom = "copy"       # Move works only the first time
         self.thanClipLays = [lay.thanClone() for lay in self.thanClipLays]
-	self.thanModified = True
+        self.thanModified = True
 
 #============================================================================
 
     def thanSelDel(self, lays):
         "Deletes selection if object permits it."
-	for lay in lays:
+        for lay in lays:
             i = self.thanListLayers.index(lay)
             self.thanBranchCollapse(i)
             del self.thanListLayers[i]
             for li in self.thanLists.itervalues(): li.delete(i)
-	    par = lay.thanParent
-	    lay.thanUnlink()
+            par = lay.thanParent
+            lay.thanUnlink()
 
 #-----------If parent is childless, erase expand sign
 
-	    if par == None: continue
-	    if len(par.thanChildren) > 0: continue
-	    i = self.thanListLayers.index(par)
-	    li = self.thanLiexpand
-	    par.thanAtts[_EXPAND].thanVal = " "
-	    li.delete(i); li.thanInsert(i, " ")
-	self.thanModified = True
+            if par is None: continue
+            if len(par.thanChildren) > 0: continue
+            i = self.thanListLayers.index(par)
+            li = self.thanLiexpand
+            par.thanAtts[_EXPAND].thanVal = " "
+            li.delete(i); li.thanInsert(i, " ")
+        self.thanModified = True
 
     def destroy(self):
-        "Destroys the circlular reference of attrinutes."
-	ThanMixinUtil.destroy(self)
+        "Destroys the circular reference of attributes."
+        ThanMixinUtil.destroy(self)
 
 
 #############################################################################
@@ -574,7 +576,7 @@ class ThanMixinHierUtil1(ThanMixinHierUtil):
         self.thanModified = True
 
     def destroy(self):
-        "Destroys the circlular reference of attrinutes."
+        "Destroys the circular reference of attributes."
         ThanMixinHierUtil.destroy(self)
 
 
@@ -582,7 +584,7 @@ class ThanMixinHierUtil1(ThanMixinHierUtil):
 #############################################################################
 
 class ThantkClistHierBare(ThantkClistBare):
-    "Mixin for hierachical values."
+    "Mixin for hierarchical values."
 
     def __init__(self, *args, **kw):
         "Initialise base class."
@@ -613,69 +615,69 @@ class ThantkClistHierBare(ThantkClistBare):
 
     def __onclickExpand (self, evt):
         "Expand or collapse branches."
-	li = self.thanLiexpand
-	i = int(li.nearest(evt.y))
-	sign = self.thanListLayers[i].thanAtts[_EXPAND].thanVal
-#	sign = li.thanGet(i)
+        li = self.thanLiexpand
+        i = int(li.nearest(evt.y))
+        sign = self.thanListLayers[i].thanAtts[_EXPAND].thanVal
+#        sign = li.thanGet(i)
 
-	if sign == "+":
-	    self.thanBranchExpand(i)
-	elif sign == "-":
-	    self.thanBranchCollapse(i)
+        if sign == "+":
+            self.thanBranchExpand(i)
+        elif sign == "-":
+            self.thanBranchCollapse(i)
 
-	return "break"
+        return "break"
 
 #============================================================================
 
     def thanBranchExpand (self, i):
         "Expand or collapse branches."
-	li = self.thanLiexpand
+        li = self.thanLiexpand
         lay = self.thanListLayers[i]
-	sign = lay.thanAtts[_EXPAND].thanVal
-#	sign = li.thanGet(i)
-	if sign == "+":
-	    self.thanSelNone()
-	    sign = "-"
-	    lay.thanAtts[_EXPAND].thanVal = sign
-	    li.delete(i)
-	    li.thanInsert(i, sign)
+        sign = lay.thanAtts[_EXPAND].thanVal
+#        sign = li.thanGet(i)
+        if sign == "+":
+            self.thanSelNone()
+            sign = "-"
+            lay.thanAtts[_EXPAND].thanVal = sign
+            li.delete(i)
+            li.thanInsert(i, sign)
 
             m = self.thanLimain.thanGet(i)
-	    for j in xrange(len(m)):
-	        if m[j] != ".": break
-	    prefix = m[0:j]
-	    i = self.thanInsert2Lists(i, lay.thanChildren, prefix+"....")
+            for j in xrange(len(m)):
+                if m[j] != ".": break
+            prefix = m[0:j]
+            i = self.thanInsert2Lists(i, lay.thanChildren, prefix+"....")
 
 #============================================================================
 
     def thanBranchCollapse (self, i):
         "Collapse branches."
-	li = self.thanLiexpand
+        li = self.thanLiexpand
         lay = self.thanListLayers[i]
-	sign = lay.thanAtts[_EXPAND].thanVal
-#	sign = li.thanGet(i)
-	if sign == "-":
-	    self.thanSelNone()
-	    sign = "+"
-	    lay.thanAtts[_EXPAND].thanVal = sign
-	    li.delete(i)
-	    li.thanInsert(i, sign)
+        sign = lay.thanAtts[_EXPAND].thanVal
+#        sign = li.thanGet(i)
+        if sign == "-":
+            self.thanSelNone()
+            sign = "+"
+            lay.thanAtts[_EXPAND].thanVal = sign
+            li.delete(i)
+            li.thanInsert(i, sign)
 
-	    self.__delete2Lists(i, lay.thanChildren)
+            self.__delete2Lists(i, lay.thanChildren)
 
 #============================================================================
 
     def __initExpand(self, layers):
         "Initialise expand attributes."
-	for lay in layers:
-	    if len(lay.thanChildren) == 0:
-	        e = " "
+        for lay in layers:
+            if len(lay.thanChildren) == 0:
+                e = " "
             else:
-	        e = lay.thanAtts[_EXPAND].thanVal
+                e = lay.thanAtts[_EXPAND].thanVal
                 if e != "-": e = "+"
-	    lay.thanAtts[_EXPAND].thanVal = e
+            lay.thanAtts[_EXPAND].thanVal = e
 
-	    if e != " ": self.__initExpand(lay.thanChildren)
+            if e != " ": self.__initExpand(lay.thanChildren)
 
 #============================================================================
 
@@ -712,8 +714,8 @@ class ThantkClistHierBare(ThantkClistBare):
 
     def destroy(self):
         "Destroy circular reference of attributes."
-	del self.thanLiexpand, self.thanListLayers
-	ThantkClistBare.destroy(self)
+        del self.thanLiexpand, self.thanListLayers
+        ThantkClistBare.destroy(self)
 
 #############################################################################
 #############################################################################
@@ -724,76 +726,76 @@ class ThanMixinPartial:
 #============================================================================
 
     def __init__(self):
-	"Not needed."
-	pass
+        "Not needed."
+        pass
 
 #============================================================================
 
     def thanMakePartial(self, sets=None, vlistl=2, hlen=50):
         """Arrange that only sets of lists are visible at a time.
 
-	vlistl: Number of lists to keep always visible, from the left
-	hlen  : Number of characters that can be visible on a row
-	"""
+        vlistl: Number of lists to keep always visible, from the left
+        hlen  : Number of characters that can be visible on a row
+        """
         self.thanVlistl = vlistl
-	if sets == None:
-	    self.thanSetsFind(vlistl, hlen)                   # Find sets of lists
-	else:
-	    self.thanSetsList = sets                          # Sets of lists are given
+        if sets is None:
+            self.thanSetsFind(vlistl, hlen)                   # Find sets of lists
+        else:
+            self.thanSetsList = sets                          # Sets of lists are given
         atts = list(self.thanAtts)
         for i in xrange(vlistl): del atts[0]
-	self.thanHideLists(atts)                              # Hide all lists
-	self.thanSetI = 0
-	self.thanShowLists(self.thanSetsList[self.thanSetI])  # Show first set of lists
+        self.thanHideLists(atts)                              # Hide all lists
+        self.thanSetI = 0
+        self.thanShowLists(self.thanSetsList[self.thanSetI])  # Show first set of lists
 
 #============================================================================
 
     def thanHideLists(self, setList):
         "Hides a set of lists."
-	for att in setList:
-	    if self.thanLabs[att]: self.thanLabs[att].grid_forget()
-	    self.thanLists[att].grid_forget()
-	    if self.thanHsbars[att]: self.thanHsbars[att].grid_forget()
+        for att in setList:
+            if self.thanLabs[att]: self.thanLabs[att].grid_forget()
+            self.thanLists[att].grid_forget()
+            if self.thanHsbars[att]: self.thanHsbars[att].grid_forget()
 
 #============================================================================
 
     def thanShowLists(self, setList):
         "Shows a set of lists."
-	ir = self.thanLabRow
-	ic = self.thanLabCol + self.thanVlistl
+        ir = self.thanLabRow
+        ic = self.thanLabCol + self.thanVlistl
 
-	for att in setList:
-	    if self.thanLabs[att]: self.thanLabs[att].grid(row=ir, column=ic, sticky="w")
-	    self.thanLists[att].grid(row=ir+1, column=ic, sticky="wesn")
-	    if self.thanHsbars[att]: self.thanHsbars[att].grid(row=ir+2, column=ic, sticky="we")
-	    ic += 1
+        for att in setList:
+            if self.thanLabs[att]: self.thanLabs[att].grid(row=ir, column=ic, sticky="w")
+            self.thanLists[att].grid(row=ir+1, column=ic, sticky="wesn")
+            if self.thanHsbars[att]: self.thanHsbars[att].grid(row=ir+2, column=ic, sticky="we")
+            ic += 1
 
     def thanSetNext(self):
         "Displays next set of lists."
-	if self.thanSetI >= len(self.thanSetsList)-1: return
+        if self.thanSetI >= len(self.thanSetsList)-1: return
         self.thanHideLists(self.thanSetsList[self.thanSetI])
-	self.thanSetI += 1
+        self.thanSetI += 1
         self.thanShowLists(self.thanSetsList[self.thanSetI])
 
     def thanSetPrev(self):
         "Displays previous set of lists."
-	if self.thanSetI <= 0: return
+        if self.thanSetI <= 0: return
         self.thanHideLists(self.thanSetsList[self.thanSetI])
-	self.thanSetI -= 1
+        self.thanSetI -= 1
         self.thanShowLists(self.thanSetsList[self.thanSetI])
 
     def thanSetsFind(self, vlistl, hlen):
-	"Finds sets of lists that can be shown simultaneously."
-	hl = hl1 = reduce(lambda s, x: x+s, self.thanWidths[:vlistl])
-	self.thanSetsList = [ ]
-	setList = [ ]
-	for i in xrange(self.thanVlistl, len(self.thanLists)):
-	    if hl > hlen:
-	        self.thanSetsList.append(setList)
-		setList = [ ]
+        "Finds sets of lists that can be shown simultaneously."
+        hl = hl1 = reduce(lambda s, x: x+s, self.thanWidths[:vlistl])
+        self.thanSetsList = [ ]
+        setList = [ ]
+        for i in xrange(self.thanVlistl, len(self.thanLists)):
+            if hl > hlen:
+                self.thanSetsList.append(setList)
+                setList = [ ]
                 hl = hl1
-	    hl += self.thanWidths[i]
-	    setList.append(self.thanAtts[i])
+            hl += self.thanWidths[i]
+            setList.append(self.thanAtts[i])
 
         if len(setList) > 0: self.thanSetsList.append(setList)
 

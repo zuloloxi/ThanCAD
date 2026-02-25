@@ -1,23 +1,12 @@
-import matdat, matk, matdxf
+from p_ggen import xfrangec
+import matk, matdat
 
-def main():
-    fr = matdat.openFiles()
-    tit, blen, bstep, loads = matdat.datAll(fr)
-    fr.close()
-
-    coefs = computeCoefs(loads)
-    coefs = genInteg(coefs)
-    Q = genEval(coefs, 0.0, blen, bstep)
-    coefs = genInteg(coefs)
-    M = genEval(coefs, 0.0, blen, bstep)
-    matdxf.diag(Q, M, tit)
-    matk.diag(Q, M, tit)
 
 class Macauly:
     "Object to find bending moments and shear forces of a beam."
 
     def __init__(self, loads=()):
-        "Get loads and compute internal coeficients."
+        "Get loads and compute internal coefficients."
         self.loads = list(loads)
         self.computeCoefs()
 
@@ -61,7 +50,6 @@ class Macauly:
         Q, M = self.allQM(blen, bstep)
         if axmac == None: N = None
         else:             N = axmac.allN(blen, bstep)
-#        matdxf.diag(Q, M, tit)
         matk.diag(Q, M, N, tit, **kw)
 
 
@@ -87,7 +75,7 @@ def genInteg(coefs):
 def genEval(coefs, xa, xb, dx):
     "Evaluates generalised functions."
     xy = []
-    for x in xrangec(xa-dx*0.01, xb+dx*0.01, dx):
+    for x in xfrangec(xa-dx*0.01, xb+dx*0.01, dx):
         y = 0.0
         for f1, x1, pow1 in coefs: 
             if pow1 >= 0 and x > x1: y += f1 * (x-x1)**pow1
@@ -121,16 +109,6 @@ def computeCoefs(loads):
     return coefs
 
 
-def xrangec(xa, xb, dx):
-    "Iterates through xa to xb by dx, including xa, xb."
-    if xb < xa: return
-    x = xa
-    while x < xb:
-        yield x
-        x += dx
-    yield xb
-
-
 def test():
     L = 5.0; P=20.0; w=30.0
     RBy = RGy = (w * (1.5*L) + P) / 2
@@ -147,9 +125,10 @@ def test():
         print "x=%8.3f : Q=%8.3f  M=%8.3f" % (x, mac.evalQ(x), mac.evalM(x))
     import matax
     axmac=matax.test()
-#    mac.diags(gc="pil")
-#    mac.diags(gc="dxf")
-    mac.diags(1.5*L, axmac=axmac, gc="tk")
+    mac.diags(gcname="pil")
+    mac.diags(gcname="dxf")
+    mac.diags(1.5*L, axmac=axmac, gcname="tk")
 
 
-if __name__ == "__main__": test()
+if __name__ == "__main__":
+    test()

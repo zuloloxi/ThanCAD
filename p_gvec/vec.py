@@ -29,7 +29,7 @@ class Vector2:
             raise TypeError, "Don't know how to add Vector2 by " + `type(other)`
 
     def __sub__ (self, other):
-        "Substraction of vectors."
+        "Subtraction of vectors."
         if isinstance(other, Vector2):
             return Vector2(self.x-other.x, self.y-other.y)
         else:
@@ -59,7 +59,7 @@ class Vector2:
         isinstance(other, types.IntType):
             return Vector2(self.x / other, self.y / other)
         else:
-            raise TypeError, "Don't know how to devide Vector2 by " + `type(other)`
+            raise TypeError, "Don't know how to divide Vector2 by " + `type(other)`
 
     def __rmul__ (self, other):
         "Just an alias of multiplication."
@@ -82,20 +82,23 @@ class Vector2:
         return Vector2(-self.y / a, self.x / a)
 
     def dircos(self):
-         "Compute direction cosines."
-	 t = self.unit()
-	 if t == None: return 0.0, 0.0
-	 return t.x, t.y
+        "Compute direction cosines."
+        t = self.unit()
+        if t == None: return 0.0, 0.0
+        return t.x, t.y
 
-    def cross(a, b):
+    def cross(self, b):
         """Return the cross product of 2d vectors: self x b; the result is a scalar value.
-	
-	The result is a vector whose direction is normal to the xy plane.
-	Thus: a. The x,y components of the result are zero; the z component is nonzero.
-	      b. The result can not be represented as a 2d vector.
-	So the z component of the result is returned as a scalar value.      
-	"""
-	return a.x*b.y-a.y*b.x
+
+        The result is a vector whose direction is normal to the xy plane.
+        Thus: a. The x,y components of the result are zero; the z component is nonzero.
+              b. The result can not be represented as a 2d vector.
+        So the z component of the result is returned as a scalar value.
+        If you want a 3d vector as a result of the cross product a x b, use:
+        c = Vector3(0.0, 0.0, a.cross(b))        or:
+        c = a.vector3().cross(b.vector3())      
+        """
+        return self.x*b.y-self.y*b.x
 
     def rot (self, f):
         "Rotates the vector to f counterclockwise radians."
@@ -121,8 +124,8 @@ class Vector2:
 
     def vector3(self, z=0.0):
         "Transform self to a 3d vector with given or zero z."
-	import vec3
-	return vec3.Vector3(self.x, self.y, z)
+        import vec3
+        return vec3.Vector3(self.x, self.y, z)
 
     def __str__ (self):
         "Just a string representation of the object."

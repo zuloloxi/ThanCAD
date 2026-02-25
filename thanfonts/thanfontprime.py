@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,11 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines ThanCad fonts made by straight lines.
 """
-from types import *
+from types import IntType
 from thanfont import ThanFont, ThanFontLine, thanFonts
 
 def makePrime1Lines():
@@ -296,11 +296,11 @@ def makePrime1Lines():
 
 #109 : [ [ 0,4, 0,0 ],
 #        [ 0,3, 1,4, 2,4, 3,3, 4,4, 5,4, 6,3, 6,0 ],
-#	[ 3,3, 3,0 ]                                              # "m"
+#      [ 3,3, 3,0 ]                                              # "m"
 #      ],
 109 : [ [ 0,4, 0,0 ],
         [ 0,3, 1,4, 1.5,4, 2.5,3, 3.5,4, 4,4, 5,3, 5,0 ],
-	[ 2.5,3, 2.5,0 ]                                              # "m"
+        [ 2.5,3, 2.5,0 ]                                              # "m"
       ],
 
 110 : [ [ 0,4, 0,0 ],
@@ -541,7 +541,7 @@ def makePrime1Lines():
 
 250 : [ [ 1,4, 1,1, 2,0, 3,1 ],
         [ 0,5, 0,4 ],
-	[ 2,5, 2,4 ]                                              #  "ϊ"
+        [ 2,5, 2,4 ]                                              #  "ϊ"
       ],
 251 : [ [ 0,4, 0,1, 1,0, 3,0, 4,1, 4,4 ],
         [ 1,5, 1,4 ],
@@ -563,7 +563,7 @@ def makePrime1Lines():
 }
     for lines in dilines.itervalues():
         if type(lines) == IntType: continue  # An integer for indirection
-	lines.append([(7, 0)])               # The next character start position
+        lines.append([(7, 0)])               # The next character start position
     return dilines
 
 #=============================================================================
@@ -742,7 +742,7 @@ def makePrime2Lines():
           4.000,          6.000,
           4.000,          0.000,
           3.500,          0.000,
-	  3.500,          2.750
+          3.500,          2.750
         ],
         [ 3.500,          3.250,
           3.500,          5.793,
@@ -750,8 +750,8 @@ def makePrime2Lines():
           1.207,          6.500,
           0.500,          5.793,
           0.500,          3.250,
-	  3.500,          3.250
-	]
+          3.500,          3.250
+        ]
       ],
  66 : [ [4,1, 3,0, 0,0, 0,7, 3,7, 4,6, 4,5, 3,4, 4,3, 4,1],
         [ 2.543,          3.750,
@@ -780,8 +780,8 @@ def makePrime2Lines():
           1.207,          6.500,
           2.793,          6.500,
           3.646,          5.646,
-	  4,              6
-	]
+          4,              6
+        ]
       ],
  68 : [  [3,7, 4,6, 4,1, 3,0, 0,0, 0,7, 3,7],                     # "D"
          [2.793,          6.500,
@@ -790,8 +790,8 @@ def makePrime2Lines():
           2.793,          0.500,
           0.500,          0.500,
           0.500,          6.500,
-	  2.793,          6.500
-	 ],
+          2.793,          6.500
+         ],
       ],
  69 : [ [ 4,0,0,0,0,7,4,7,0,7,0,4,3,4 ]                           # "E"
       ],
@@ -890,7 +890,7 @@ def makePrime2Lines():
       ],
 109 : [ [ 0,4, 0,0 ],
         [ 0,3, 1,4, 2,4, 3,3, 4,4, 5,4, 6,3, 6,0 ],
-	[ 3,3, 3,0 ]                                              # "m"
+        [ 3,3, 3,0 ]                                              # "m"
       ],
 110 : [ [ 0,4, 0,0 ],
         [ 0,3, 1,4, 3,4, 4,3, 4,0 ]                               # "n"
@@ -1125,7 +1125,7 @@ def makePrime2Lines():
 
 250 : [ [ 1,4, 1,1, 2,0, 3,1 ],
         [ 0,5, 0,4 ],
-	[ 2,5, 2,4 ]                                              #  "ϊ"
+        [ 2,5, 2,4 ]                                              #  "ϊ"
       ],
 251 : [ [ 0,4, 0,1, 1,0, 3,0, 4,1, 4,4 ],
         [ 1,5, 1,4 ],
@@ -1147,7 +1147,7 @@ def makePrime2Lines():
 }
     for lines in dilines.itervalues():
         if type(lines) == IntType: continue
-	lines.append([(7, 0)])
+        lines.append([(7, 0)])
     return dilines
 
 def makeLcd1Lines():
@@ -1264,7 +1264,7 @@ def makeLcd1Lines():
       ],
  72 : [ [0,0, 0,2],
         [2,0, 2,2],
-	[0,1, 2,1],                                               # "H"
+        [0,1, 2,1],                                               # "H"
       ],
  73 : [ [1,0, 1,2],                                               # "I"
       ],
@@ -1466,7 +1466,7 @@ def makeLcd1Lines():
       ],
 217 : [ [0,1, 2,1, 2,2, 0,2, 0,1],
         [1,1, 1,0],
-	[0,0, 2,0],                                               # "Ω"
+        [0,0, 2,0],                                               # "Ω"
       ],
 
 #----------Not defined
@@ -1544,7 +1544,7 @@ def makeLcd1Lines():
         if type(lines) == IntType: continue
         for li in lines:
             for i in xrange(0, len(li), 2): li[i] *= 0.75
-	lines.append([(2, 0)])
+        lines.append([(2, 0)])
     return dilines
 
 

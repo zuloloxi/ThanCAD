@@ -1,14 +1,14 @@
 # -*- coding: iso-8859-7 -*-
 from fnmatch import fnmatch
 import p_ggen
-from thanimpdxfget import ThanDrWarn
+import thanimpdxfget, thanimpdxf
 
 
-class ThanDrConpas(ThanDrWarn):
+class ThanDrConpas(thanimpdxfget.ThanDrWarn):
     "A class which gets control/pass points from a .dxf file."
 
     def __init__(self, filnam="<undefined>", ctype="noname", layer=("fotost*", ), prt=p_ggen.prg):
-        """Sets the type of points and the layers to serach.
+        """Sets the type of points and the layers to search.
 
         If type == "noname" then x, y, z coordinates of all points plus an
             arbitrary name are returned.
@@ -30,7 +30,7 @@ class ThanDrConpas(ThanDrWarn):
             Another possibility is if layer ends with * (for example fotost*). In
             this case all the layers beginning with fotost are searched.
         """
-        ThanDrWarn.__init__(self, layer, prt=prt)
+        thanimpdxfget.ThanDrWarn.__init__(self, layer, prt=prt)
         self.cxypix = []       # pixel coordinates of control points
         self.cname =  []       # texts (names of points or name/height of points
         self.filnam = filnam   # Name of the dxf file
@@ -69,7 +69,7 @@ class ThanDrConpas(ThanDrWarn):
 
 
     def splitTexts(self):
-        "In the case of control3 there are exactly 3 layers; split cname to last 2 layers which shjould have the texts."
+        "In the case of control3 there are exactly 3 layers; split cname to last 2 layers which should have the texts."
         cname = [[], [], []]
         for cname1 in self.cname:
             lay = cname1[-1]
@@ -87,7 +87,7 @@ class ThanDrConpas(ThanDrWarn):
             try:
                 t = cname1[0]
                 ht = float(t)
-            except ValueError, IndexError:
+            except (ValueError, IndexError):
                 self.prt("Error in file %s: Illegal height '%s':" % (self.filnam, t), "can")
                 self.prt("The height must be a numeric value.", "can")
                 self.prt("For example: '128.89' or '12.989'", "can")
@@ -103,7 +103,7 @@ class ThanDrConpas(ThanDrWarn):
             try:
                 t1, t2 = t.split("/")
                 ht = float(t2)
-            except ValueError, IndexError:
+            except (ValueError, IndexError):
                 pass
             else:
                 self.prt("Warning in file %s: It seems that you defined height to point '%s':" % (self.filnam, t), "can1")
@@ -120,7 +120,7 @@ class ThanDrConpas(ThanDrWarn):
             try:
                 t1, t2 = t.split("/")
                 ht = float(t2)
-            except ValueError, IndexError:
+            except (ValueError, IndexError):
                 self.prt("Error in file %s: Illegal point name '%s':" % (self.filnam, t), "can")
                 self.prt("The point should be of the form:", "can")
                 self.prt(" <name> / <height>", "can")
@@ -180,7 +180,6 @@ def thanDxfGetConpas(fdxf, ctype, layer=("fotost*",), prt=p_ggen.prg):
                 κοντά στο σημείο (η συντεταγμένη Z ΑΓΝΟΕΙΤΑΙ). Η μεταβλητή
                 layer πρέπει να είναι tuple/list με ακριβώς 3 στοιχεία.
     """
-    import thanimpdxf
     dr = ThanDrConpas(fdxf.name, ctype, layer, prt)
     t = thanimpdxf.ThanImportDxf(fdxf, dr)
     t.thanImport()
@@ -213,7 +212,7 @@ def thanDxfGetConpas(fdxf, ctype, layer=("fotost*",), prt=p_ggen.prg):
             dr.cxypix[i][0] = cname[i][0]
             dr.cxypix[i][3] = cheight[i][3]
     else:
-        prt("Uknown type of points: '%s'" % (ctype,))
+        prt("Unknown type of points: '%s'" % (ctype,))
         raise p_ggen.RecordedError, "Errors recorded above."
     return dr.cxypix
 
@@ -232,7 +231,6 @@ def testThanDxfGetConpas():
 
 def testThanDrConpas():
     "Test dxf import."
-    from p_gimdxf import ThanImportDxf
     f = file("trap1.dxe", "r")
     xy = thanDxfGetConpas(f, ctype="EGSA87")
     for xy1 in xy: print xy1

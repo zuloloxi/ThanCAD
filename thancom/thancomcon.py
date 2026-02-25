@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module defines various constants.
@@ -30,20 +30,20 @@ This module defines various constants.
 import thandr, thanopt
 import thancomsel, thancommod, thancommodext, thancomedit, thancomdraw, thancomfile
 import thancomvar, thancomview, thancomedu, thancomtool, thancomhatch, thancomeng
-import thancompr, thancomim, thancomtest
-__all__ = "thanComFun",
+import thancompr, thancomim, thancomtest, thanpedit
 
 
-def __prepare():
+def thanAddCommands(coms1, abbrevs1):
     "Prepare commands for easy look up."
-    coms.sort()
-    coms.reverse()
-    for c,f in coms:
-        thanComs[c] = c, f
+    coms1 = sorted(coms1)
+    #coms1.reverse()
+    for c,f in coms1:
+        if c in thanComsOri: raise KeyError, "Command %s is already defined" % (c,)
+        thanComsOri[c] = thanComs[c] = c, f
         if c == "exit": continue     #Do not abbreviate exit; it is very similar to extend :)
         for i in xrange(1, min(len(c), 10)):
-            thanComs[c[:i]] = c, f
-    for c,f in abbrevs: thanComs[c] = thanComs[f]
+            if c[:i] not in thanComs: thanComs[c[:i]] = c, f  #Avoid an abbreviation to overwrite a previous command/abbreviation
+    for c,f in abbrevs1: thanComs[c] = thanComs[f]
 
 
 def __packages():
@@ -58,7 +58,7 @@ def __packages():
         __import__(name1)
         coms.extend(getattr(sys.modules[name1], "coms"))
 
-    for name in "urban architect thermo".split():
+    for name in "urban thermo architect".split():
         ok = getattr(thanFrape, name)
         if not ok: continue
         name1 = "thanpackages.%s.thancom.thancomcon" % (name,)
@@ -75,10 +75,10 @@ def thanComFun(com):
 
 dr = thancomdraw.thanTkDrawElem
 coms = \
-[ ("arc",         lambda w, cl=thandr.ThanArc,   dr=dr: dr(w, cl)),
-  ("about",       thancomvar.thanHelpAbout),
+[ ("about",       thancomvar.thanHelpAbout),
   ("angle",       thancomtool.thanToolAngle),
   ("area",        thancomtool.thanToolArea),
+  ("arc",         lambda w, cl=thandr.ThanArc,   dr=dr: dr(w, cl)),
   ("edubiocityplan", thancomedu.thanEdubiocityplan),
   ("background",  thancomvar.thanBackroundColor),
   ("break",       thancommod.thanModBreak),
@@ -135,6 +135,7 @@ coms = \
   ("find",        thancomtool.thanToolTextfind),
   ("fractal",     thancomvar.thanFractal),
   ("gpl",         thancomvar.thanHelpGpl),
+  ("greeceperimeter", thancomeng.thanGreecePerimeter),
   ("hatchopen",   thancomhatch.thanHatchOpen),
   ("help",        thancomvar.thanHelpHelp),
   ("hull",        thancomtool.thanToolHull),
@@ -154,6 +155,7 @@ coms = \
   ("imagelog",    thancomim.thanTkGetLog),
   ("imagerender", thancomim.thanImageRendering),
   ("imagescan",   thancompr.thanImageScan),
+  ("imageterrasar", thancomim.thanTkGetTerrasar),
   ("imagetiles",  thancomim.thanTkGetTiles),
   ("imagetfw",    thancomim.thanTkGetTfw),
   ("imageunload", thancomim.thanTkImageUnload),
@@ -171,6 +173,7 @@ coms = \
   ("list",        thancomvar.thanList),
   ("mirror",      thancommod.thanModMirror),
   ("move",        thancommod.thanModMove),
+  ("movelinepoint", thanpedit.thanModMoveLinepoint),
   ("new",         thancomfile.thanFileNew),
   ("osnap",       thancomtool.thanToolOsnap),
   ("open",        thancomfile.thanFileOpen),
@@ -242,6 +245,7 @@ abbrevs = \
   ("jg", "joingap"),
   ("l", "line"),              #Prevent l to mean language
   ("m", "move"),
+  ("mlp","movelinepoint"),
   ("q", "quit"),
   ("p", "panrealtime"),
   ("po", "point"),
@@ -253,6 +257,7 @@ abbrevs = \
 )
 
 thanComs = {}
+thanComsOri = {}
 __packages()
-__prepare()
+thanAddCommands(coms, abbrevs)
 del dr, coms, abbrevs

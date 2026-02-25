@@ -442,26 +442,6 @@ class path(_base):
         """ Open this file.  Return a file object. """
         return file(self, mode)
 
-    def openser(fpath, mode="r", ntries=100):          #Thanasis2011_02_23:new method
-        "Open a filename trying many serial numbers."
-        pref = fpath.basename()
-        suf = fpath.suf
-        i = 2
-        fn = fpath
-        while True:
-            if not fn.exists():
-                try:
-                    frw = open(fn, mode)
-                    return fn, frw
-                except:
-                    pass
-            if i >= ntries: break
-            fn = pref / "%03d%s" % (i, suf)
-            i += 1
-        raise IOError, "%s can not be opened: perhaps too many same filenames" % (fpath, )
-
-
-
     def bytes(self):
         """ Open this file, read all bytes, return them as a string. """
         f = self.open('rb')
@@ -557,8 +537,8 @@ class path(_base):
             text = text.replace(u'\n', os.linesep)
             if encoding is None:
                 encoding = sys.getdefaultencoding()
-            bytes = text.encode(encoding, errors)
-            self.write_bytes(bytes, append)
+            bytes1 = text.encode(encoding, errors)
+            self.write_bytes(bytes1, append)
         else:
             if append:
                 mode = 'a'
@@ -727,9 +707,9 @@ class path(_base):
 
     def makedirs1(self, mode=0777):  #Thanasis2011_02_23:new method
         try: 
-	    os.makedirs(self, mode)
+            os.makedirs(self, mode)
         except:
-	    pass
+            pass
         if not self.exists(): raise    #makedirs did not succeed to make directory
         if not self.isdir(): raise     #makedirs did not succeed because a file with this name exists
 

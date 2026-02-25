@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the polyline element.
 """
@@ -32,12 +32,12 @@ from p_ggen import iterby2, thanUnicode
 from p_gmath import dpt, PI2, thanNearx, thanNear2, thanNear3, fsign
 from p_gvec import Vector2
 import p_ggeom
-import thanintall
-from thanelem import ThanElement
-from thanvar import Canc, thanCleanLine3, thanCleanLine2t
+from thanvar import Canc, thanCleanLine3, thanCleanLine2t, thanExtendNodeDims, thanCumulDis
 from thanvar.thanoffset import thanOffsetLine
 from thantrans import T
-from thanutil import thanPntNearest, thanPntNearest2, thanSegNearest, thanPerpPoints
+import thanintall
+from thanelem import ThanElement
+from thanutil import thanPntNearest2, thanSegNearest, thanPerpPoints, thanPerpPointsC
 try: import pyx
 except ImportError: pass
 
@@ -71,7 +71,7 @@ class ThanLine(ThanElement):
 #       if len(cp) == 2 and it is closed then it is degenerate and this function returns false
 #       if len(cp) == 3 and it is closed then it is degenerate polygon but
 #       a good line, so this function returns True
-        try:    cp = self.cpori   #To acommodate ThanSpline
+        try:    cp = self.cpori   #To accommodate ThanSpline
         except: cp = self.cp
         if len(cp) < 2: return False   # Return False if line is degenerate
         it = iter(cp)
@@ -84,7 +84,7 @@ class ThanLine(ThanElement):
     def thanIsClosed(self):
         "Returns False if the line is not degenerate and the first and last nodes coincide."
         if not self.thanIsNormal(): return False
-        try:    cp = self.cpori   #To acommodate ThanSpline
+        try:    cp = self.cpori   #To accommodate ThanSpline
         except: cp = self.cp
         return thanNear3(cp[0], cp[-1])
 
@@ -169,12 +169,12 @@ class ThanLine(ThanElement):
 
     def thanBreak(self, c1=None, c2=None):
         "Breaks a line to 2 pieces; c1 and c2 may be identical."
-        if c1 == None: return True                 # Report that break IS implemented
+        if c1 is None: return True                 # Report that break IS implemented
         cp1, i1, tcp1 = self.thanPntNearest2(c1)
         cp2, i2, tcp2 = self.thanPntNearest2(c2)
         if tcp2 < tcp1:
             cp1, i1, cp2, i2 = cp2, i2, cp1, i1
-        assert cp1 != None and cp2 != None, "It should have been checked (that c1 and c2 are indeed near line)!"
+        assert cp1 is not None and cp2 != None, "It should have been checked (that c1 and c2 are indeed near line)!"
         cs1 = self.cp[:i1]
         if len(cs1) > 0:
             cs1.append(cp1)
@@ -196,12 +196,12 @@ class ThanLine(ThanElement):
 
     def thanStraighten(self, c1=None, c2=None):
         "Straighten the line between c1 and c2; c1 and c2 may not be identical."
-        if c1 == None: return True                 # Report that break IS implemented
+        if c1 is None: return True                 # Report that break IS implemented
         cp1, i1, tcp1 = self.thanPntNearest2(c1)
         cp2, i2, tcp2 = self.thanPntNearest2(c2)
         if tcp2 < tcp1:
             cp1, i1, cp2, i2 = cp2, i2, cp1, i1
-        assert cp1 != None and cp2 != None, "It should have been checked (that c1 and c2 are indeed near line)!"
+        assert cp1 is not None and cp2 != None, "It should have been checked (that c1 and c2 are indeed near line)!"
         assert cp1 != cp2, "It should have been checked (that c1 and c2 are not identical)!"
         assert i1>0 and i2>0, "impossible error: thanNearest2 returns i>0, or cp1==None"
         cs1 = self.cp[:i1]
@@ -215,7 +215,7 @@ class ThanLine(ThanElement):
 
     def thanExplode(self, than=None):
         "Transform the line to a set of smaller 2-point lines."
-        if than == None: return True               # Break IS implemented
+        if than is None: return True               # Break IS implemented
         return self.__explode()
     def __explode(self):
         "Transform the line to a set of smaller 2-point lines; do the job as a generator."
@@ -226,11 +226,11 @@ class ThanLine(ThanElement):
 
 
     def thanOffset(self, through=None, distance=None, sidepoint=None):
-        "Offset line by distance disstance; to the right if distance>0 and to the left otherwise."
+        "Offset line by distance distance; to the right if distance>0 and to the left otherwise."
         if through==None and distance==None: return True  # Offset is implemented
         assert sidepoint != None, "sidepoint must not be none neither in through nor in distance mode."
         distance = self._offsetVecdistance(through, distance, sidepoint)
-        if distance == None: return None #sidepoint is outside (to the leftor to the right) of line
+        if distance is None: return None #sidepoint is outside (to the left or to the right) of line
         try: cs = self.cpori     #For ThanSpline
         except: cs = self.cp
         cs = thanOffsetLine(cs, distance)
@@ -242,11 +242,11 @@ class ThanLine(ThanElement):
 
 
     def _offsetVecdistance(self, through=None, distance=None, sidepoint=None):
-        "Find vector diasatnce of offset line; offset to the right if distance>0 and to the left otherwise."
+        "Find vector distance of offset line; offset to the right if distance>0 and to the left otherwise."
 #        if through==None and distance==None: return True  # Offset is implemented
         assert through!=None or distance!=None, "Both distance and offset are zero; it should have been found"
         cp1, iseg, tcp1 = self.thanPntNearest2(sidepoint)
-        if cp1 == None: return None      # Invalid point
+        if cp1 is None: return None      # Invalid point
         t = Vector2(*self.cp[iseg][:2])-Vector2(*self.cp[iseg-1][:2])
         n = t.normal()
         t = Vector2(*sidepoint[:2])-Vector2(*cp1[:2])
@@ -294,9 +294,9 @@ class ThanLine(ThanElement):
         xy1 = [g2l(c1[0], c1[1]) for c1 in self.cp]
         if thanNear2(self.cp[0], self.cp[-1]):   # Even if fill="", which means no fill
 #            temp = than.dc.create_polygon(xy1, outline=than.outline, fill=than.fill, tags=self.thanTags, width=w)
-            temp = than.dc.create_line(   xy1,                       fill=than.outline, dash=than.dash, tags=self.thanTags, width=w)
+            temp = than.dc.create_line(   xy1, fill=than.outline, dash=than.dash, tags=self.thanTags, width=w)
         else:
-            temp = than.dc.create_line(   xy1,                       fill=than.outline, dash=than.dash, tags=self.thanTags, width=w)
+            temp = than.dc.create_line(   xy1, fill=than.outline, dash=than.dash, tags=self.thanTags, width=w)
 
 
     def thanExpDxf(self, fDxf):
@@ -377,17 +377,17 @@ class ThanLine(ThanElement):
         #FIXME: report width of polyline
         if len(self.cp) < 2: return
         g2l = than.ct.global2Local
-	if len(self.cp) == 2:
-	    ca = g2l(self.cp[0][0], self.cp[0][1])
-	    cb = g2l(self.cp[1][0], self.cp[1][1])
-	    p = pyx.path.line(ca[0], ca[1], cb[0], cb[1])
-	else:
-	    lineto = pyx.path.lineto
-	    moveto = pyx.path.moveto
+        if len(self.cp) == 2:
+            ca = g2l(self.cp[0][0], self.cp[0][1])
+            cb = g2l(self.cp[1][0], self.cp[1][1])
+            p = pyx.path.line(ca[0], ca[1], cb[0], cb[1])
+        else:
+            lineto = pyx.path.lineto
+            moveto = pyx.path.moveto
             xy1 = [lineto(*g2l(c1[0], c1[1])) for c1 in islice(self.cp, 1, None)]
-	    xy1.insert(0, moveto(*g2l(self.cp[0][0], self.cp[0][1])))
-	    if thanNear2(self.cp[0], self.cp[-1]): xy1[-1] = pyx.path.closepath()
-	    p = pyx.path.path(*xy1)
+            xy1.insert(0, moveto(*g2l(self.cp[0][0], self.cp[0][1])))
+            if thanNear2(self.cp[0], self.cp[-1]): xy1[-1] = pyx.path.closepath()
+            p = pyx.path.path(*xy1)
         than.dc.stroke(p)
 
 
@@ -427,7 +427,7 @@ class ThanLine(ThanElement):
             line = self.thanClone() #The new line takes the handle (identity) of self (it also takes the tag)
             line.cp[iend] = cp
         elif method == 1:                         #One extended line, with node iend retained
-            line = self.thanClone() #The new line takes the handle (identity) of self (it also teakes the tag)
+            line = self.thanClone() #The new line takes the handle (identity) of self (it also takes the tag)
             if iend == 0: line.cp.insert(0, cp)
             else:         line.cp.append(cp)
         else:                                     #Net extension (line); original line retained
@@ -457,12 +457,12 @@ class ThanLine(ThanElement):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "mid", c))
         if "nea" in otypes:
             c = self.thanPntNearest(ccu)
-            if c != None:
+            if c is not None:
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "nea", c))
-        if cori != None and "per" in otypes:
+        if cori is not None and "per" in otypes:
             for c in self.thanPerpPoints(cori):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "per", c))
-        if eother != None and "int" in otypes:
+        if eother is not None and "int" in otypes:
             ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
         if len(ps) < 1: return None
         return min(ps)
@@ -506,24 +506,24 @@ class ThanLine(ThanElement):
     def __tkGetn(self, proj, cp):
         "Gets the following points of the line interactively from a window."
         cla = proj[1].thanLayerTree.thanCur
-	g2l = proj[2].than.ct.global2Local
-	cl = proj[2].than.dc.create_line
-	delete = proj[2].than.dc.delete
-	fi = proj[2].than.outline
-	wpix = proj[2].than.tkThick
-	c1 = cp[-1]
+        g2l = proj[2].than.ct.global2Local
+        cl = proj[2].than.dc.create_line
+        delete = proj[2].than.dc.delete
+        fi = proj[2].than.outline
+        wpix = proj[2].than.tkThick
+        c1 = cp[-1]
         while True:
             res = self.__getPointLin(proj[2], c1, len(cp))
             if res == Canc and len(cp) < 2: return Canc          # Line cancelled
             if res == Canc or res == "" or res == "c": break     # Line ended (we know that line has more than 1 point)
-	    if res == "u":
-		delete("e"+str(len(cp)))
-	        c1 = cp[-2]
-		del cp[-1]
+            if res == "u":
+                delete("e"+str(len(cp)))
+                c1 = cp[-2]
+                del cp[-1]
             else:
                 c1 = res
                 cp.append(c1)
-	        tags = "e0", cla.thanTag, "e"+str(len(cp))
+                tags = "e0", cla.thanTag, "e"+str(len(cp))
                 temp = cl((g2l(cp[-2][0], cp[-2][1]), g2l(c1[0], c1[1])), fill=fi, width=wpix, tags=tags)
 #               print "line:thantkget:fi=", fi
         if res == "c":
@@ -647,10 +647,10 @@ class ThanCurve(ThanLine):
     Basically an ordinary polyline, with the difference that osnap does not snap
     to the end points and midpoints of the linear segments.
     For the tangent osnap to work, it is supposed that the curve is continuous (it has
-    to be, noncontinuous can not be represented by a ThanLine) and that the line segments
+    to be, non-continuous can not be represented by a ThanLine) and that the line segments
     which simulate the curve are dense enough to show the smooth character of the curve,
     (where the curve is indeed smooth). If the curve has some real corners, these are taken
-    into account by the threshold of the difference between tagents.
+    into account by the threshold of the difference between tangents.
     """
     thanElementName = "CURVE"    # Name of the element's class
 
@@ -666,22 +666,23 @@ class ThanCurve(ThanLine):
             xp = [c1[0] for c1 in self.cp]
             yp = [c1[1] for c1 in self.cp]
             self.setBoundBox([min(xp), min(yp), max(xp), max(yp)])
+        self.thanSetToldeg()    #Set default smoothness tolerance in decimal degrees
 #        self.thanTags = ()            # thanTags is initialised in ThanElement
 
 
     def than2Line(self, dt=0.0, ta=None, tb=None):
         "Represent the curve with straight line segments."
-        if dt == None: return False               #than2Line is NOT implemented
+        if dt is None: return False               #than2Line is NOT implemented
         assert False, "than2Line is not implemented. It should have already been found :("
 
 
     def thanSetToldeg(self, tol=2.0):
-        "Set the toperances of smoothness for radius and tangents to work (in decimal degrees."
+        "Set the tolerance of smoothness for radius and tangents to work (in decimal degrees."
         self.thtol = tol*pi/180
 
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
-        "Return a point of type otype nearest to xcu, ycu."
+        "Return a point of type in otypes nearest to xcu, ycu."
         if "ena" not in otypes: return None            # Object snap is disabled
         ps = []
         if "end" in otypes:       # type "end" without type "int"
@@ -691,21 +692,21 @@ class ThanCurve(ThanLine):
             c = self.thanMidPoint()
             ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "mid", c))
         if "tan" in otypes:
-            if cori != None:
+            if cori is not None:
                 for c in self.thanTanPoints(cori):
                     ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "tan", c))
         if "cen" in otypes:
             c, r, ctang = self.thanCenterPoint(ccu)
-            if c != None:
+            if c is not None:
                 ps.append((fabs(ctang[0]-ccu[0])+fabs(ctang[1]-ccu[1]), "cen", c))
         if "nea" in otypes:
             c = self.thanPntNearest(ccu)
-            if c != None:
+            if c is not None:
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "nea", c))
-        if cori != None and "per" in otypes:
+        if cori is not None and "per" in otypes:
             for c in self.thanPerpPoints(cori):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "per", c))
-        if eother != None and "int" in otypes:
+        if eother is not None and "int" in otypes:
             ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
         if len(ps) < 1: return None
         return min(ps)
@@ -747,7 +748,7 @@ class ThanCurve(ThanLine):
     def thanCenterPoint(self, ccu):
         "Finds the center and the radius of the circle which is tangent to point nearest to ccu."
         cp1, i, tcp1 = self.thanPntNearest2(ccu)
-        if cp1 == None: return None, None, None
+        if cp1 is None: return None, None, None
         if i+1 >= len(self.cp): return None, None, None
         ca, cb, cc = self.cp[i-1:i+2]
         a = hypot(cb[0]-ca[0], cb[1]-ca[1])
@@ -802,11 +803,9 @@ class ThanSpline(ThanCurve):
         """
         self.cpori = thanCleanLine3(cp)
         n = len(self.cpori)
-        if n > 1:
-            d = sum(hypot(hypot(cb[0]-ca[0], cb[1]-ca[1]), cb[2]-ca[2]) for ca, cb in iterby2(self.cpori))/(n-1)
-            cp = self.__calcC(d/5.0)  # temporarily until thanTkDraw is called
-        ThanCurve.thanSet(self, cp)
-        self.thanSetToldeg(20)        # Set angle tolerance for smoothness
+        cp, tp = self.than2Line(-1.0)   # temporarily until thanTkDraw is called
+        ThanCurve.thanSet(self, cp, tp)
+        self.thanSetToldeg(20.0)        # Set angle (deg) tolerance for smoothness
 
     def thanChelev(self, z):
         "Set constant elevation of z."
@@ -831,8 +830,8 @@ class ThanSpline(ThanCurve):
     def thanTkGet(self, proj):
         "Gets the attributes of the cubic spline interactively from a window."
         g2l = proj[2].than.ct.global2Local
-        g2lr= proj[2].than.ct.global2LocalRel
-        l2g = proj[2].than.ct.local2Global
+        #g2lr= proj[2].than.ct.global2LocalRel
+        #l2g = proj[2].than.ct.local2Global
         dc = proj[2].than.dc
         fi = proj[2].than.outline
 
@@ -892,7 +891,7 @@ class ThanSpline(ThanCurve):
         "Draws the spline to a Tk Canvas."
         dx, dy = than.ct.global2LocalRel(1.0, 1.0)
         dt = hypot(1.0, 1.0)/hypot(dx, dy)*10.0
-        self.cp = self.__calcC(dt)
+        self.cp, self.tp = self.than2Line(dt)
         ThanCurve.thanTkDraw1(self, than)
 
 
@@ -904,22 +903,25 @@ class ThanSpline(ThanCurve):
         fw.writeNodes(self.cpori)
 
 
-    def __calcC(self, dt):
-        "Calculates interpolation points on the cubic spline curve."
+    def than2Line(self, dt=0.0, ta=None, tb=None):
+        "Represent the spline with straight line segments."
+        if dt is None: return True               #than2Line IS implemented
+        if dt < 0.0: return self.cpori, thanCumulDis(self.cpori)  #Return the original nodes
         ic = 0
         if thanNear3(self.cpori[0], self.cpori[-1]): ic = 1     # closed
         xs = [c[0] for c in self.cpori]
         ys = [c[1] for c in self.cpori]
         zs = [c[2] for c in self.cpori]
-        try: s = ThanSplineC(ic, xs, ys, zs)
-        except ZeroDivisionError: return self.cpori
-        tmax = s.tmax
-        del xs, ys
-        cs = []
-        for ts in xfrangec(0.0, tmax, dt):
-            x, y, z = s.splfun(ts)
-            cs.append((x, y, z))
-        return cs
+        try:
+            if len(xs) < 3: raise ZeroDivisionError, "Too few point to create a spline"
+            s = ThanSplineC(ic, xs, ys, zs)
+        except ZeroDivisionError:    #Something went wrong; return the original nodes
+            del xs, ys, zs
+            return self.cpori, thanCumulDis(self.cpori)
+        del xs, ys, zs
+        cp, tp = s.than2Line(dt, ta, tb)
+        cp = thanExtendNodeDims(cp, self.cpori[0])
+        return cp, tp
 
 
     def thanTransform(self, fun):

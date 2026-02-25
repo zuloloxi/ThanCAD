@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,17 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to print a drawing.
 """
 import copy
-from Tkinter import *
-import p_ggen
-from p_gtkuti import (ThanDialog, thanGudModalMessage, thanGudAskOkCancel, thanGudGetSaveFile,
-                      thanGrabRelease, thanGrabSet)
-from p_gtkwid import ThanChoice, ThanRadio, ThanButton, ThanEntry, ThanLabel, ThanFile, ThanValidator
-from thanvar import Canc
+from Tkinter import Button, Label, SUNKEN, DISABLED, NORMAL
+from p_gtkwid import (ThanDialog, thanGudModalMessage,
+                      thanGrabRelease, thanGrabSet,
+                      ThanChoice, ThanRadio, ThanFile, ThanValidator)
+from thanvar import Canc, DEFCAN
+
 from thandefs import thanplotcups
 from thantrans import T
 
@@ -48,7 +48,7 @@ class ThanButtonCargo:
 
     def __pressed(self):
         "Run 'command' and save its result."
-        if self.__command == None: return
+        if self.__command is None: return
         res = self.__command()
         if res == Canc: return Canc
         self.__cargo = res
@@ -105,7 +105,7 @@ class ThanDiaPlot(ThanDialog):
 
     def thanValsDef(self, new=None):
         "Build default values; set to new values if new are valid."
-        if new == None: v = thanplotcups.ThanPlot()
+        if new is None: v = thanplotcups.ThanPlot()
         else: v = copy.deepcopy(new)
         v.thanRepair(self.thanProj)
         return v
@@ -180,7 +180,6 @@ class ThanDiaPlot(ThanDialog):
 
     def __pick(self):
         "Pick a window from user."
-        from thantkgui.thantkcmd import DEFCAN
         thanGrabRelease()
         self.withdraw()
         win = self.thanProj[2]
@@ -225,11 +224,11 @@ class ThanDiaPlot(ThanDialog):
         vs = copy.deepcopy(self.thanValsSaved)
         for key,tit,wid,vld in self.thanWids:
             v1 = vld.thanValidate(wid.thanGet())
-            if v1 == None:
+            if v1 is None:
                 ret = False
                 if strict:
                     tit = u'"%s":\n%s' % (tit, vld.thanGetErr())
-                    p_gtkuti.thanGudModalMessage(self, tit, T["Error in data"])
+                    thanGudModalMessage(self, tit, T["Error in data"])
                     self.initial_focus = wid
                     return ret
                 else:

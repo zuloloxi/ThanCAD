@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for a clipboard memory, shared among all ThanCad's
@@ -46,7 +46,7 @@ thanClip.ref = [0.0, 0.0, 0.0]
 def thanModUndo(proj):
     "Cancels previous command, restoring the drawing/display as it were before previous command."
     com = proj[1].thanDoundo.thanUndotry()
-    if com == None: proj[2].thanGudCommandEnd(T["Nothing left to undo!"], "can"); return
+    if com is None: proj[2].thanGudCommandEnd(T["Nothing left to undo!"], "can"); return
     proj[2].thanPrt("Undo "+com)
     proj[1].thanDoundo.thanUndo(proj)
     proj[2].thanGudCommandEnd()
@@ -54,7 +54,7 @@ def thanModUndo(proj):
 def thanModRedo(proj):
     "Cancels previous command, restoring the drawing/display as it were before previous command."
     com = proj[1].thanDoundo.thanRedotry()
-    if com == None: return proj[2].thanGudCommandEnd(T["Nothing left to redo!"], "can")
+    if com is None: return proj[2].thanGudCommandEnd(T["Nothing left to redo!"], "can")
     proj[2].thanPrt("Redo "+com)
     proj[1].thanDoundo.thanRedo(proj)
     proj[2].thanGudCommandEnd()
@@ -72,8 +72,8 @@ def thanClipCopy(proj, c1=None):
     res = thanSelectGen(proj, standalone=False)
     if res == Canc: return thanModCanc(proj)              # clipboard copy was cancelled
     elems = proj[2].thanSelall
-    if len(elems) == 0: return thanModCanc(proj, T["No elements found"])  # No elememnts selected
-    if c1 == None:
+    if len(elems) == 0: return thanModCanc(proj, T["No elements found"])  # No elements selected
+    if c1 is None:
         c1 = iter(elems).next().getInspnt()
         c1[2] = proj[1].thanVar["elevation"][2] #So that z is taken from the elevation command
     selold = proj[2].thanSelold
@@ -84,7 +84,7 @@ def thanClipCopy(proj, c1=None):
 
 
 def __clipCopyDo(proj, c1):
-    "Copies selected elements to clipboard; it actualy does the job."
+    "Copies selected elements to clipboard; it actually does the job."
     import time
     dcop = copy.deepcopy
     t1 = time.time()
@@ -114,8 +114,8 @@ def thanClipCut(proj, c1=None):
     res = thanSelectGen(proj, standalone=False)
     if res == Canc: return thanModCanc(proj)               # clipboard cut was cancelled
     elems = proj[2].thanSelall
-    if len(elems) == 0: return thanModCanc(proj, T["No elements found"])  # No elememnts selected
-    if c1 == None: c1 = iter(elems).next().getInspnt()
+    if len(elems) == 0: return thanModCanc(proj, T["No elements found"])  # No elemements selected
+    if c1 is None: c1 = iter(elems).next().getInspnt()
     selold = proj[2].thanSelold
     __clipCutDo(proj, c1)
     proj[1].thanDoundo.thanAdd("cutclip", thanClipCutRedo, (elems,),
@@ -123,25 +123,25 @@ def thanClipCut(proj, c1=None):
     thanModEnd(proj, "%d %s." % (len(elems), T["element(s) copied to clipboard"]), "info")   # 'Reset color" is completely unnecessary here..
                                                                     # ..so there is room for optimisation
 def __clipCutDo(proj, c1):
-    "Copies selected elements to clipboard; it actualy does the job."
+    "Copies selected elements to clipboard; it actually does the job."
     dcop = copy.deepcopy
     thanClip.elems = [dcop(e) for e in proj[2].thanSelall]  # Deepcopy, in case the elements are..
     thanClip.ref = c1                                       # .. "un-cut" and then changed
     __modEraseDo(proj)
 
 def __modEraseDo(proj):
-    "Erases selected elements; it actualy does the job."
+    "Erases selected elements; it actually does the job."
     import time
     t1 = time.time()
     proj[2].thanGudSetSelDel()
     proj[2].thanImages.difference_update(proj[2].thanSelall)  #Delete deleted images from thanImages
-    t2 = time.time(); proj[1].thanDelSel(proj[2].thanSelall)  #thanTouch is implicitely called
+    t2 = time.time(); proj[1].thanDelSel(proj[2].thanSelall)  #thanTouch is implicitly called
     t3 = time.time()
     print "Erase time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
     proj[2].thanGudSetSelClear()
 
 def thanClipCutRedo(proj, elems):
-    "Erases selected elements; it actualy does the job."
+    "Erases selected elements; it actually does the job."
     proj[2].thanGudSetSelClear()
     proj[2].thanGudSetSelElem(elems)
     __modEraseDo(proj)
@@ -187,7 +187,7 @@ def thanClipPasteorig(proj):
     thanModEnd(proj, "%d %s." % (len(copelems), T["element(s) copied from clipboard"]), "info")   # 'Reset color" is necessary here
 
 def __clipPasteDo(proj, c1, c2):
-    "Pastes the clipboard elements to the drawin, current layer."
+    "Pastes the clipboard elements to the drawing, current layer."
     dc = [b-a for a,b in izip(c1, c2)]
     dcop = copy.deepcopy
     copelems = []
@@ -198,7 +198,7 @@ def __clipPasteDo(proj, c1, c2):
         e1 = proj[1].thanTagel.get(e.handle)
         #if we get the elements with cutclip, their handles have been deleted from thanTagel..
         #and when they are pasted for the first time, they keep their original handle.
-        if e1 != None: e.thanUntag()           #Ivalidate tag because tag already exists in the drawing
+        if e1 is not None: e.thanUntag()           #Invalidate tag because tag already exists in the drawing
         dr.thanElementAdd(e)
         e.thanTkDraw(proj[2].than)
         copelems.append(e)

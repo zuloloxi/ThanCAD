@@ -5,43 +5,43 @@ from jorpath import path
 
 
 def inpDouble(mes, douDef=None):
-      "Inputs a double with default value."
-      while True:
-          dline = raw_input(tog(mes)).strip()
-          if dline == '' and douDef != None: return douDef     # Default value
-          try: return float(dline)
-          except: pass
-          prg("\nΑναμένεται πραγματικός αριθμός\nΠροσπαθείστε πάλι.\n")
+    "Inputs a double with default value."
+    while True:
+        dline = raw_input(tog(mes)).strip()
+        if dline == '' and douDef != None: return douDef     # Default value
+        try: return float(dline)
+        except: pass
+        prg("\nΑναμένεται πραγματικός αριθμός\nΠροσπαθείστε πάλι.\n")
 
 
 def inpLong(mes, douDef=None):
-      "Inputs an integer with default value."
-      while True:
-          dline = raw_input(tog(mes)).strip()
-          if dline == '' and douDef != None: return douDef     # Default value
-          try: return int(dline)
-          except: pass
-          prg("\nΑναμένεται ακέραιος αριθμός\nΠροσπαθείστε πάλι.\n")
+    "Inputs an integer with default value."
+    while True:
+        dline = raw_input(tog(mes)).strip()
+        if dline == '' and douDef != None: return douDef     # Default value
+        try: return int(dline)
+        except: pass
+        prg("\nΑναμένεται ακέραιος αριθμός\nΠροσπαθείστε πάλι.\n")
 
 
 def inpNo(mes, douDef=None):
-      "Inputs yes or no."
-      while True:
-          dline = raw_input(tog(mes)).strip()
-          if dline == '' and douDef != None: return douDef     # Default value
-          dl = ing(dline[:2])
-#---------Check what We read
-          if dl in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): return True
-          if dl in ('οχ', 'ΟΧ', 'ox', 'OX', 'no', 'NO', '0'): return False
-          prg('\nΑναμένεται ΝΑΙ (ΝΑ, να, na, ye, YE, 1) ή ΟΧΙ (ΟX, οχ, οx, no, NO, 0)\nΠροσπαθείστε πάλι.\n')
+    "Inputs yes or no."
+    while True:
+        dline = raw_input(tog(mes)).strip()
+        if dline == '' and douDef != None: return douDef     # Default value
+        dl = ing(dline[:2])
+#-------Check what We read
+        if dl in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): return True
+        if dl in ('οχ', 'ΟΧ', 'ox', 'OX', 'no', 'NO', '0'): return False
+        prg('\nΑναμένεται ΝΑΙ (ΝΑ, να, na, ye, YE, 1) ή ΟΧΙ (ΟX, οχ, οx, no, NO, 0)\nΠροσπαθείστε πάλι.\n')
 
 
 def inpStr(mes, douDef=None):
-      "Inputs a string with default value."
-      while True:
-          dline = ing(raw_input(tog(mes)).strip())
-          if dline == '' and douDef != None: return douDef     # Default value
-          return dline
+    "Inputs a string with default value."
+    while True:
+        dline = ing(raw_input(tog(mes)).strip())
+        if dline == '' and douDef != None: return douDef     # Default value
+        return dline
 
 
 def inpFiles(mes, suf="", nest=False):
@@ -76,17 +76,6 @@ def inpFiles(mes, suf="", nest=False):
         if len(fildats) > 0: return fildats
         prg("Error: No %s files defined or found." % suf)
         prg("Try again.")
-
-
-def inpImage(mes, initialfile=""):
-    "Open an image with PIL."
-    import p_gbmp
-    while True:
-        fn = p_ggen.inpStrB(mes, initialfile)
-        im, ter = p_gbmp.imageOpen(fn)
-        if im != None: return fn, im
-        ter = "Error while accessing %s:\n%s\nTry again." % (fn, ter)
-        prg(ter, "can1")
 
 
 def inpSaveFile(ext, mes, mode="w", initialfile=""):
@@ -134,32 +123,32 @@ def inpDir(mes, mustexist=False, mustnotexist=False, default=None):
 
 
 def inpStrB(mes, douDef=None):
-      "Inputs a non-blank string with default value."
-      while True:
-          dline = ing(raw_input(tog(mes)).strip())
-          if dline == '' and douDef != None: dline = douDef         # Default value
-          if dline.strip() != '': return dline
-          prg('\nΑναμένεται κείμενο (μη κενό)\nΠροσπαθείστε πάλι.\n')
+    "Inputs a non-blank string with default value."
+    while True:
+        dline = ing(raw_input(tog(mes)).strip())
+        if dline == '' and douDef != None: dline = douDef         # Default value
+        if dline.strip() != '': return dline
+        prg('\nΑναμένεται κείμενο (μη κενό)\nΠροσπαθείστε πάλι.\n')
 
 
 def inpDoubleR (mes, douMin, douMax, douDef):
-      "Inputs a double with default value and range check."
-      while True:
-          dou = inpDouble(mes, douDef)
-          if douMin <= dou <= douMax: return dou
-          prg('\nΑναμένεται πραγματικός αριθμός εντός των ορίων:')
-          prg('%.3f και %.3f' % (douMin, douMax))
-          prg('\nΠροσπαθείστε πάλι.\n')
+    "Inputs a double with default value and range check."
+    while True:
+        dou = inpDouble(mes, douDef)
+        if douMin <= dou <= douMax: return dou
+        prg('\nΑναμένεται πραγματικός αριθμός εντός των ορίων:')
+        prg('%.3f και %.3f' % (douMin, douMax))
+        prg('\nΠροσπαθείστε πάλι.\n')
 
 
 def inpLongR (mes, douMin, douMax, douDef):
-      "Inputs an integer with default value and range check."
-      while True:
-          dou = inpLong(mes, douDef)
-          if douMin <= dou <= douMax: return dou
-          prg('\nΑναμένεται ακέραιος αριθμός εντός των ορίων:')
-          prg('%d και %d' % (douMin, douMax))
-          prg('\nΠροσπαθείστε πάλι.\n')
+    "Inputs an integer with default value and range check."
+    while True:
+        dou = inpLong(mes, douDef)
+        if douMin <= dou <= douMax: return dou
+        prg('\nΑναμένεται ακέραιος αριθμός εντός των ορίων:')
+        prg('%d και %d' % (douMin, douMax))
+        prg('\nΠροσπαθείστε πάλι.\n')
 
 
 def inpMchoice(mes, coms, douDef=1):
@@ -174,83 +163,94 @@ def inpMchoice(mes, coms, douDef=1):
 #===========================================================================
 
 def medDouble(un, mes, douDef):
-      """
-c-----This routine tries to read a double number dou from unit iun.
+    """
+    This routine tries to read a double number dou from unit iun.
 
-c     If it does -> OK. If dou can not be read
-c     dou takes the default value, and warning message mes is printed.
-c     This routine is used to read values from file "mediate.tmp". See
-c     library fildat
-      """
-      dline = un.readline()
-      if dline != "":                  # not end of file
-          try:
-              dou = float(dline.strip())
-              return dou
-          except:
-              pass
-      prg("%s %.3f" % (mes, douDef))  # Use the default value and print message
-      return douDef
+    If it does -> OK. If dou can not be read
+    dou takes the default value, and warning message mes is printed.
+    This routine is used to read values from file "mediate.tmp". See
+    library fildat
+    """
+    dline = un.readline()
+    if dline != "":                  # not end of file
+        try:
+            dou = float(dline.strip())
+            return dou
+        except:
+            pass
+    prg("%s %.3f" % (mes, douDef))  # Use the default value and print message
+    return douDef
+
+
+def medNo(un, mes, douDef):
+    "Reads yes or no from un."
+    dline = un.readline()
+    if dline != "":                  # not end of file
+        dl = dline[:2]
+#-------Check what We read
+        if dl in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): return True
+        if dl in ('οχ', 'ΟΧ', 'ox', 'OX', 'no', 'NO', '0'): return False
+    return douDef      # Default value
 
 
 def medDoubleR (un, mes, douMin, douMax, douDef):
-      """
-c-----This routine tries to read a double number dou from unit iun.
+    """
+    This routine tries to read a double number dou from unit iun.
 
-c     If it does and dou is between douMin and douMax -> OK.
-c     If dou can not be read or is outside douMin-douMax,
-c     dou takes the default value, and warning message mes is printed.
-c     This routine is used to read values from file "mediate.tmp". See
-c     library fildat
-      """
-      dline = un.readline()
-      if dline != "":                  # not end of file
-          try:
-              dou = float(dline.strip())
-              if douMin <= dou <= douMax: return dou
-          except:
-              pass
-      prg("%s %.3f" % (mes, douDef))  # Use the default value and print message
-      return douDef
+    If it does and dou is between douMin and douMax -> OK.
+    If dou can not be read or is outside douMin-douMax,
+    dou takes the default value, and warning message mes is printed.
+    This routine is used to read values from file "mediate.tmp". See
+    library fildat
+    """
+    dline = un.readline()
+    if dline != "":                  # not end of file
+        try:
+            dou = float(dline.strip())
+            if douMin <= dou <= douMax: return dou
+        except:
+            pass
+    prg("%s %.3f" % (mes, douDef))  # Use the default value and print message
+    return douDef
 
 
 def medLongR (un, mes, douMin, douMax, douDef):
-      """
-c-----This routine tries to read a long number dou from unit iun.
+    """
+    This routine tries to read a long number dou from unit iun.
 
-c     If it does and dou is between douMin and douMax -> OK.
-c     If dou can not be read or is outside douMin-douMax,
-c     dou takes the default value, and warning message mes is printed.
-c     This routine is used to read values from file "mediate.tmp". See
-c     library fildat
-      """
-      dline = un.readline()
-      if dline != "":                  # not end of file
-          try:
-              dou = int(dline.strip())
-              if douMin <= dou <= douMax: return dou
-          except:
-              pass
-      prg("%s %d" % (mes, douDef))  # Use the default value and print message
-      return douDef
+    If it does and dou is between douMin and douMax -> OK.
+    If dou can not be read or is outside douMin-douMax,
+    dou takes the default value, and warning message mes is printed.
+    This routine is used to read values from file "mediate.tmp". See
+    library fildat
+    """
+    dline = un.readline()
+    if dline != "":                  # not end of file
+        try:
+            dou = int(dline.strip())
+            if douMin <= dou <= douMax: return dou
+        except:
+            pass
+    prg("%s %d" % (mes, douDef))  # Use the default value and print message
+    return douDef
 
 
 def medStr(un, mes, douDef):
-      """
-c-----This routine tries to read a string dou from unit iun.
+    """
+    This routine tries to read a string dou from unit iun.
 
-c     If it does and dou is not blank -> OK.
-c     If dou can not be read or is blank,
-c     dou takes the default value, and warning message mes is printed.
-c     This routine is used to read values from file "mediate.tmp". See
-c     library fildat
-      """
-      dline = un.readline()
-      if dline != "":                  # not end of file
-          dline = dline.strip()
-          if dline != "": return dline
-      prg("%s %s" % (mes, douDef))  # Use the default value and print message
-      return douDef
+    If it does and dou is not blank -> OK.
+    If dou can not be read or is blank,
+    dou takes the default value, and warning message mes is printed.
+    This routine is used to read values from file "mediate.tmp". See
+    library fildat
+    """
+    dline = un.readline()
+    if dline != "":                  # not end of file
+        dline = dline.strip()
+        if dline != "": return dline
+    prg("%s %s" % (mes, douDef))  # Use the default value and print message
+    return douDef
 
 
 def medDir(un, mes, mustexist=False, mustnotexist=False, default=None):
@@ -276,7 +276,7 @@ def medDir(un, mes, mustexist=False, mustnotexist=False, default=None):
         if f.exists() and not f.isdir():      #In case that both mustexist=False and mustnotexist=False
             break                         #Ο φάκελλος %s δεν είναι φάκελλος (είναι αρχείο).
         return f
-    prg("%s %s" % (mes, douDef))          # Use the default value and print message
+    prg("%s %s" % (mes, default))          # Use the default value and print message
     return f
 
 

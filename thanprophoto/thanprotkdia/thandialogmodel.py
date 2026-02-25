@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,15 +23,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This dialog defines a photogrammeric model.
 """
 
-import sys, copy, ConfigParser, Tkinter, Image
+import sys, copy, ConfigParser, Tkinter
 from tkMessageBox import ERROR
 import p_gtkuti, p_gtkwid, p_ggen
 from thanvar import thanfiles
+import thandefs
 from thanopt.thancadconf import thanUndefPrefix
 from thantrans import Tphot
 #T = p_gtkwid.Translation(dict(__TRANSLATION__=("en", "EN", "en", "EN")))  ##############
@@ -120,11 +121,8 @@ class ThanModel(p_gtkwid.ThanComDialog):
 
     def __validateraster(self, filnam):
         "Validate that the raster can be accessed and it is not degenerate."
-        try:
-            im = Image.open(filnam)
-            b,h = im.size
-            if b<3 or h<3: raise ValueError, "Image size too small"
-        except Exception, why:
+        im, terr = thandefs.imageOpen(filnam)
+        if terr != "":
             mm(self, "%s:\n\n%s" % (filnam, why), Tphot["Error while reading image"], ERROR)   # (Gu)i (d)ependent
             return False
         fildir = filnam.parent

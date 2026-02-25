@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes commands related to engineering.
@@ -31,16 +31,26 @@ This module processes commands related to engineering.
 
 from math import hypot, fabs
 import weakref
-import Image
-import p_ggen, p_gtkuti, p_gtri, p_gvec
-import thaneng, thandr,  thantkdia
+import p_ggen, p_gtkwid, p_gtri, p_gvec, p_gearth, p_ggeod, p_gcom
+import thaneng, thandr, thanobj
 from thanopt import thancadconf
 from thanvar import Canc, thanfiles
 from thantrans import T
-from thansupport import thanTextSize
-import thancomsel, thanundo
+from thansupport import thanTextSize, thanToplayerCurrent
+import thancomsel, thancomview, thanundo
 from thancommod import thanModEnd, thanModCanc
 import thancomfile
+
+
+def thanGreecePerimeter(proj):
+    "Draw the perimeter of Greece."
+    thanToplayerCurrent(proj, "greece_perimeter", current=True, moncolor="cyan")
+    for cp in thaneng.thanIterGreece():
+        e = thandr.ThanLine()
+        e.thanSet(cp)
+        proj[1].thanElementAdd(e)
+        e.thanTkDraw(proj[2].than)
+    thancomview.thanZoomExt(proj)  #This also calls thanGudCommandEnd()
 
 
 def thanEngGrid(proj):
@@ -84,20 +94,20 @@ def getquad(proj):
             fill="blue", tags=("e0",))
         while True:
             c3 = proj[2].thanGudGetLine2(c1, c2, T["Third quadrilateral grid corner (Undo): "],
-	        options=("undo",))
+                options=("undo",))
             if c3 == Canc: than.dc.delete("e0"); return Canc
-	    if c3 == "u": than.dc.delete("e0"); break
+            if c3 == "u": than.dc.delete("e0"); break
             temp = than.dc.create_line(g2l(c2[0], c2[1]), g2l(c3[0], c3[1]),
                 fill="blue", tags=("e0","e1"))
             c4 = proj[2].thanGudGetLine2(c1, c3, T["Fourth quadrilateral grid corner (Undo): "],
-	        options=("undo",))
+                options=("undo",))
             if c4 == Canc: than.dc.delete("e0"); return Canc
-	    if c4 == "u": than.dc.delete("e1"); continue
+            if c4 == "u": than.dc.delete("e1"); continue
             temp = than.dc.create_line(g2l(c2[0], c2[1]), g2l(c3[0], c3[1]),
                fill="blue", tags=("e0","e1"))
-	    than.dc.delete("e0")
-	    return [c1, c2, c3, c4]
-	if c3 == "u": continue
+            than.dc.delete("e0")
+            return [c1, c2, c3, c4]
+        if c3 == "u": continue
 
 
 def thanEngTrace(proj):
@@ -138,18 +148,17 @@ def thanEngInterchange(proj):
 
 def thanEngDem(proj):
     "Manage DEMs."
-    mes = T["DEM: Load/load Srtm/load Aster/draw Boundary/draw Nodes/Draw Contours/Export nodes (enter=L): "]
-    res = proj[2].thanGudGetOpts(mes, default="L", options=("Load", "Srtm", "Aster", "Boundary", "Nodes", "Contours", "Export"))
+    mes = T["DEM: Load/load Global dem/draw Boundary/draw Nodes/draw Contours/Export nodes (enter=L): "]
+    res = proj[2].thanGudGetOpts(mes, default="L", options=("Load", "Global", "Boundary", "Nodes", "Contours", "Export"))
     if res == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
     if res == "l":
         return thanDemLoad(proj)
-    if res == "s":
-        return thanDemLoadGdem(proj, "SRTM")
-    if res == "a":
-        return thanDemLoadGdem(proj, "ASTER")
+    if res == "g":
+        return thanDemLoadGdem(proj)
     elif res == "b":
         if thanNoDtmdems(proj, iterdtm=False): return proj[2].thanGudCommandCan(T["No DEM has been defined!"])
         elems, newport, oldport = __demdrawbou(proj, iterDtmdems(proj, iterdtm=False))
+        if elems is None: return proj[2].thanGudCommandCan(T["No DEM or Global DEM frame has been loaded!"])
         proj[1].thanDoundo.thanAdd("demload", __demdrawbouRedo, (elems, newport, (), ()),
                                               __demdrawbouUndo, (elems, oldport, (), ()))
         return proj[2].thanGudCommandEnd()
@@ -177,7 +186,10 @@ def thanEngDem(proj):
         if c1 != "a":
             c2 = proj[2].thanGudGetRect(c1, T["Other window corner: "])
             if c2 == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
-            xymm = min(c1[0], c2[0]), min(c1[1], c2[1]), max(c1[0], c2[0]), max(c1[1], c2[1])
+            xymm = p_gcom.Xymm()
+            xymm.includePoint(x1)
+            xymm.includePoint(c2)
+            #xymm = min(c1[0], c2[0]), min(c1[1], c2[1]), max(c1[0], c2[0]), max(c1[1], c2[1])
         fn, fw = thancomfile.thanTxtopen(proj, T["Choose .syn file to save points to"], suf=".syn", mode="w")
         if fn == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
         proj[2].thanPrt(T["Please wait.."])
@@ -190,13 +202,15 @@ def thanEngDem(proj):
                     fw.write("%-10d%15.3f%15.3f%15.3f\n" % (n, cc[0], cc[1], cc[2]))
             else:
                 dxymm = dem.thanXymm()
-                if dxymm[0] > xymm[2]: continue
-                if dxymm[1] > xymm[3]: continue
-                if dxymm[2] < xymm[0]: continue
-                if dxymm[3] < xymm[1]: continue
+                if not xymm.intersectsXymm(dxymm): continue
+                #if dxymm[0] > xymm[2]: continue
+                #if dxymm[1] > xymm[3]: continue
+                #if dxymm[2] < xymm[0]: continue
+                #if dxymm[3] < xymm[1]: continue
                 for cc in dem.iterNodes(xymm=xymm):
-                    if cc[0] < xymm[0] or cc[0] > xymm[2]: continue
-                    if cc[1] < xymm[1] or cc[1] > xymm[3]: continue
+                    if cc not in xymm: continie
+                    #if cc[0] < xymm[0] or cc[0] > xymm[2]: continue
+                    #if cc[1] < xymm[1] or cc[1] > xymm[3]: continue
                     n += 1
                     fw.write("%-10d%15.3f%15.3f%15.3f\n" % (n, cc[0], cc[1], cc[2]))
         fw.close()
@@ -205,26 +219,23 @@ def thanEngDem(proj):
         assert 0, "Unknown option!"
 
 
-class Xymm(list):
-    "A rectangular region."
-    __slots__ = ()
-    def lengthen(self, other):
-        "Extend region to contain other region."
-        if other[0] < self[0]: self[0] = other[0]
-        if other[1] < self[1]: self[1] = other[1]
-        if other[2] > self[2]: self[2] = other[2]
-        if other[3] > self[3]: self[3] = other[3]
-
-
 def __demdrawbou(proj, demobjs):
     "Draw the boundary of all dems and zoom to see all."
     elems = []
     newport = None
     for demobj in demobjs:
-        elems1 = __demdrawbou1(proj, demobj)
-        elems.extend(elems1)
-        if newport == None: newport = Xymm(demobj.dtm.thanXymm()); print newport
-        else:               newport.lengthen(demobj.dtm.thanXymm()); print newport
+        if isinstance(demobj.dtm, p_gearth.GDEM):
+            dems = demobj.dtm.cgiarDem.itervalues()
+            nameprefix = demobj.dtm.name
+        else:
+            dems = [demobj.dtm]
+            nameprefix = ""
+        for dem in dems:
+            elems1 = __demdrawbou1(proj, dem, nameprefix)
+            elems.extend(elems1)
+            if newport is None: newport = p_gcom.Xymm(dem.thanXymm()); print newport
+            else:               newport.includeXymm(dem.thanXymm()); print newport
+    if newport is None: return None, None, None
     oldport = tuple(proj[1].viewPort)             #make distict copy
     newport = proj[2].thanGudZoomWin(newport)     #Returns a tuple
     proj[1].viewPort[:] = newport
@@ -232,11 +243,10 @@ def __demdrawbou(proj, demobjs):
     return elems, newport, oldport
 
 
-def __demdrawbou1(proj, demobj):
+def __demdrawbou1(proj, dem, nameprefix=""):
     "Draw the boundary (rectangle) and the name of one DEM."
     ca = list(proj[1].thanVar["elevation"])
     cc = list(ca)
-    dem = demobj.dtm
     dxymm = dem.thanXymm()
     ca[:2] = dxymm[:2]
     cc[:2] = dxymm[2:]
@@ -256,11 +266,12 @@ def __demdrawbou1(proj, demobj):
     h = (c2[0]-c1[0])/40.0
     ca = list(c1)
 
-    tb, th = thanTextSize(proj, dem.filnam, h)
+    name = dem.filnam + nameprefix
+    tb, th = thanTextSize(proj, name, h)
     ca[0] = (c1[0] + c2[0])*0.5 - tb*0.5
     ca[1] = (c1[1] + c2[1])*0.5 - th*0.5
 
-    t.thanSet(dem.filnam, ca, h, theta)
+    t.thanSet(name, ca, h, theta)
     proj[1].thanElementAdd(t)
     t.thanTkDraw(proj[2].than)
     return el, t
@@ -268,7 +279,7 @@ def __demdrawbou1(proj, demobj):
 
 def __demdrawbouRedo(proj, elems, port, demsold, demsnew):
     "Redo the demdrawboundary command."
-    if port != None:
+    if port is not None:
         proj[1].viewPort[:] = proj[2].thanGudZoomWin(port)
         proj[2].thanAutoRegen(regenImages=True)
     delelems = ()
@@ -279,7 +290,7 @@ def __demdrawbouRedo(proj, elems, port, demsold, demsnew):
 
 def __demdrawbouUndo(proj, elems, port, demsold, demsnew):
     "Redo the demdrawboundary command."
-    if port != None:
+    if port is not None:
         proj[1].viewPort[:] = proj[2].thanGudZoomWin(port)
         proj[2].thanAutoRegen(regenImages=True)
     delelems = ()
@@ -303,21 +314,22 @@ def thanDemLoadold(proj):
     "Loads many USGS DEM stored in geotif format and draws them."
     fildir = thanfiles.getFiledir()
     while True:
-        fns = p_gtkuti.thanGudGetReadFile(proj[2], ".tif", T["Choose DEM (USGS) tif file"],
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], ".tif", T["Choose DEM (USGS) tif file"],
               initialdir=fildir, multiple=True)
-        if fns == None: return proj[2].thanGudCommandCan()            # Image canceled
+        if fns is None: return proj[2].thanGudCommandCan()            # Image canceled
         demobjs = []
         nopened = 0
         for fi in fns:
             dem = p_gtri.ThanDEMusgs()
             ok, ter = dem.thanSet(fi)
             if ok:
-                demobj = thandr.thanobject.ThanDEMusgs()
+                demobj = thanobj.ThanDEMusgs()
                 demobj.dtm = dem
                 demobjs.append(demobj)
                 nopened += 1
             else:
-                p_gtkuti.thanGudModalMessage(proj[2], ter, tit)   # (Gu)i (d)ependent
+                tit = T["Error while loading %s"] % (fi.basename(),)
+                p_gtkwid.thanGudModalMessage(proj[2], ter, tit)   # (Gu)i (d)ependent
         if nopened > 0: break
     elems, newport, oldport = __demdrawbou(proj, demobjs)     #This calls thanTouch implicitelly
     for demobj in demobjs: proj[1].thanObjects["DEMUSGS"].append(demobj)
@@ -326,14 +338,13 @@ def thanDemLoadold(proj):
     proj[2].thanGudCommandEnd()
 
 
-
 def thanDemLoad(proj):
     "Loads many USGS DEMs stored in geotif format, or ESRI BIL/HDR DEMs stored in bil format, and draws them."
     fildir = thanfiles.getFiledir()
     while True:
-        fns = p_gtkuti.thanGudGetReadFile(proj[2], (".tif .bil .hdr"), T["Choose DEM tif (USGS) or bil (ESRI BIL/HDR) files"],
+        fns = p_gtkwid.thanGudGetReadFile(proj[2], (".tif .bil .hdr"), T["Choose DEM tif (USGS) or bil (ESRI BIL/HDR) files"],
               initialdir=fildir, multiple=True)
-        if fns == None: return proj[2].thanGudCommandCan()            # Image canceled
+        if fns is None: return proj[2].thanGudCommandCan()            # Image canceled
         demobjs = []
         nopened = 0
         for fi in fns:
@@ -344,12 +355,13 @@ def thanDemLoad(proj):
                 dem = p_gtri.ThanDEMusgs()
             ok, ter = dem.thanSet(fi)
             if ok:
-                demobj = thandr.thanobject.ThanDEMusgs()
+                demobj = thanobj.ThanDEMusgs()
                 demobj.dtm = dem
                 demobjs.append(demobj)
                 nopened += 1
             else:
-                p_gtkuti.thanGudModalMessage(proj[2], ter, tit)   # (Gu)i (d)ependent
+                tit = T["Error while loading %s"] % (fi.basename(),)
+                p_gtkwid.thanGudModalMessage(proj[2], ter, tit)   # (Gu)i (d)ependent
         if nopened > 0: break
     elems, newport, oldport = __demdrawbou(proj, demobjs)     #This calls thanTouch implicitelly
     for demobj in demobjs: proj[1].thanObjects["DEMUSGS"].append(demobj)
@@ -360,7 +372,6 @@ def thanDemLoad(proj):
 
 def thanDemLoadSrtmold(proj):
     "Loads many parts of the SRTM as USGS DEM stored in geotif format and draws them."
-    import p_gearth
     proj[2].thanPrt(T["Select rectangular area for which SRTM is needed:"])
     ca = proj[2].thanGudGetPoint(T["First window corner: "])
     if ca == Canc: return proj[2].thanGudCommandCan()      # SRTM cancelled
@@ -379,7 +390,7 @@ def thanDemLoadSrtmold(proj):
         return proj[2].thanGudCommandCan(T["No SRTM DEMs were loaded (%d duplicate, %d not found)."] % (ndup, notfound))
     demobjs = []
     for dem in demsnew:
-        demobj = thandr.thanobject.ThanDEMusgs()
+        demobj = thanobj.ThanDEMusgs()
         demobj.dtm = dem
         demobjs.append(demobj)
     elems, newport, oldport = __demdrawbou(proj, demobjs)     #This calls thanTouch implicitelly
@@ -389,14 +400,29 @@ def thanDemLoadSrtmold(proj):
     proj[2].thanGudCommandEnd(T["%d SRTM DEMs were loaded (%d duplicate, %d not found)."] % (len(demsnew), ndup, notfound))
 
 
-def thanDemLoadGdem(proj, name):
+def thanDemLoadGdem(proj):
     "Loads many parts of the SRTM as USGS DEM stored in geotif format and draws them."
-    import p_gearth
+    mes = T["Load global DEM: Srtm/Aster/Greekc/tandem-xIdem (enter=S): "]
+    res = proj[2].thanGudGetOpts(mes, default="S", options=("Srtm", "Aster", "Greekc", "Idem"))
+    if res == Canc: return proj[2].thanGudCommandCan()     # DEM operation was cancelled
+    if   res == "s":
+        name = "SRTM"
+        geodp = p_ggeod.UTMercator(EOID=p_ggeod.NAD83_1997, zone=10, north=True)
+    elif res == "a":
+        name = "ASTER"
+        geodp = p_ggeod.egsa87
+    elif res == "g":
+        name = "GREEKC"
+        geodp = p_ggeod.egsa87
+    else:
+        name = "TANIDEM"
+        geodp = p_ggeod.egsa87
     dtm = p_gearth.gdem(name)    #This is empty initially so that it doesn't cost much memory and time
     for demobj in proj[1].thanObjects["DEMUSGS"]:
         if isinstance(demobj.dtm, dtm.__class__):
             return proj[2].thanGudCommandCan(T["%s gdem is already loaded!"] % (dtm.name,))
-    demobj = thandr.thanobject.ThanDEMusgs()
+#    dtm.thanSetProjection(geodp)
+    demobj = thanobj.ThanDEMusgs()
     demobj.dtm = dtm
     proj[1].thanObjects["DEMUSGS"].append(demobj)
     proj[1].thanTouch()
@@ -408,24 +434,24 @@ def thanDemLoadGdem(proj, name):
 def thanDemImageDir(proj):
     "Locate the directory where missing image files for DEMs can be found."
     for elem in proj[1].thanObjects["DEMUSGS"]:
-        if elem.dtm.im == None: break
+        if elem.dtm.im is None: break
     else:
         return proj[2].thanGudCommandCan(T["No image files are missing."])
     tit = T["Select directory for missing image files of DEMs"],
     fildir = thanfiles.getFiledir()
     while True:
-        dn = p_gtkuti.thanGudGetDir(proj[2], tit, initialdir=fildir)
-        if dn == None: return proj[2].thanGudCommandCan()        # location canceled
+        dn = p_gtkwid.thanGudGetDir(proj[2], tit, initialdir=fildir)
+        if dn is None: return proj[2].thanGudCommandCan()        # location canceled
         dn = p_ggen.path(dn)
         nmiss = 0
         delelems = []
         newelems = []
         for elem in proj[1].thanObjects["DEMUSGS"]:
-            if elem.dtm.im != None: continue
+            if elem.dtm.im is not None: continue
             fi = dn / p_ggen.path(elem.filnam).basename()
             dem = p_gtri.ThanDEMusgs()
             ok, ter = dem.thanSet(fi)
-            newelem = thandr.thanobject.ThanDEMusgs()
+            newelem = thanobj.ThanDEMusgs()
             newelem.dtm = dem
             if not ok:
                 nmiss += 1
@@ -434,7 +460,7 @@ def thanDemImageDir(proj):
                 delelems.append(elem)
         assert not (len(newelems) == 0 and nmiss == 0), "It should have been found!!"
         if len(newelems) > 0: break
-        p_gtkuti.thanGudModalMessage(proj[2], T["No image files were found. Try again."], tit)
+        p_gtkwid.thanGudModalMessage(proj[2], T["No image files were found. Try again."], tit)
     elems, newport, oldport = __demdrawbou(proj, newelems)     #This calls thanTouch implicitelly
     for elem in delelems: proj[1].thanObjects["DEMUSGS"].remove(elem)
     for elem in newelems: proj[1].thanObjects["DEMUSGS"].append(elem)
@@ -448,7 +474,6 @@ def thanDemImageDir(proj):
 def thanEngDtmmake(proj):
     "Asks the user to select lines to be used as DTM."
 #    from p_gtri import ThanDTMlines
-    from thandr.thanobject import ThanDTMlines
     proj[2].thanCom.thanAppend(T["Select lines to generate DTM:\n"], "info1")
     res = thancomsel.thanSelectGen(proj, standalone=False, filter=lambda e: isinstance(e, thandr.ThanLine))
     if res == Canc: return thanModCanc(proj)     # Make dtm was cancelled
@@ -459,11 +484,10 @@ def thanEngDtmmake(proj):
     thanAddLines(dtm, proj[2].thanSelall)
     ok, ter = dtm.thanRecreate()
     if not ok: return thanModCanc(proj, T["Error creating DTM: %s"]%ter)
-    dtmobj = ThanDTMlines()
+    dtmobj = thanobj.ThanDTMlines()
     dtmobj.dtm = dtm
     proj[1].thanObjects["DTMLINES"][:] = [dtmobj]
     proj[1].thanTouch()
-#    from thansupport import thanToplayerCurrent
 #    thanToplayerCurrent(proj, "dtmlines", current=True, moncolor="white")
 #    for cp in dtm.thanLines:
 #        e = thandr.ThanLine()
@@ -488,26 +512,26 @@ def iterDtmdems(proj, iterdtm=True, iterdem=True):
     "Iterate through dtms."
     if iterdtm:
         for dtm in proj[1].thanObjects["DTMLINES"]:
-          if dtm.thanIsNormal():
-              yield dtm
+            if dtm.thanIsNormal():
+                yield dtm
     if iterdem:
-      for dem in proj[1].thanObjects["DEMUSGS"]:
-          if dem.thanIsNormal():
-              yield dem
+        for dem in proj[1].thanObjects["DEMUSGS"]:
+            if dem.thanIsNormal():
+                yield dem
 
 
 def thanPointZ(proj, cp):
-    "Calculate the z coordinate of a point when multimple DTMs/DEMs are available."
+    "Calculate the z coordinate of a point when multiple DTMs/DEMs are available."
     return p_gtri.thanPointZ((obj.dtm for obj in iterDtmdems(proj)), cp)
 
 
 def thanLineZ(proj, cp):
-    "Calculate the z coordinates along the line cp when multimple DTMs/DEMs are available."
+    "Calculate the z coordinates along the line cp when multiple DTMs/DEMs are available."
     return p_gtri.thanLineZ((obj.dtm for obj in iterDtmdems(proj)), cp)
 
 
 def thanLineZendpointstoo(proj, cp):
-    "Calculate the z coordinates along the line cp when multimple DTMs/DEMs are available."
+    "Calculate the z coordinates along the line cp when multiple DTMs/DEMs are available."
     return p_gtri.thanLineZendpointstoo((obj.dtm for obj in iterDtmdems(proj)), cp)
 
 
@@ -517,7 +541,7 @@ def thanEngDtmpoint1(proj):
     cp = proj[2].thanGudGetPoint(T["Specify a point: "])
     if cp == Canc: return thanModCanc(proj)     # Point cancelled
     z = thanPointZ(proj, cp)
-    if z == None: return thanModCanc(proj, T["Can't compute z: No DTMs/DEMs are near the selected point."])
+    if z is None: return thanModCanc(proj, T["Can't compute z: No DTMs/DEMs are near the selected point."])
     cp = list(cp)
     cp[2] = z
     return thanModEnd(proj, T["Point with z: %s"] % proj[1].thanUnits.strcoo(cp), "info")
@@ -561,7 +585,7 @@ def thanEngDtmpoints(proj):
     nlin = 0
     for e in proj[2].thanSelall:
         z = thanPointZ(proj, e.cc)
-        if z == None:
+        if z is None:
             prt(T["Can't compute z: No DTM lines are near the selected point."])
         else:
             e.cc[2] = z
@@ -593,14 +617,13 @@ def thanEngQuickprofile(proj):
             hed.append(cb[2])
         cori = list(projnew[1].thanVar["elevation"])
         cori[:2] = 0.0, 0.0
-        pf = thandr.thanobject.ThanProfile(aa, xth, hed, cori)
+        pf = thanobj.ThanProfile(aa, xth, hed, cori)
         pfs = projnew[1].thanObjects["PROFILE"][:] = [pf]
     return thanModEnd(proj, T["%d profiles were created."]%len(proj[2].thanSelall), "info")
 
 
 def thanEngTri(proj):
     "Asks the user to select lines to make triangulation from."
-    from thandr.thanobject import ThanTri
     mes = T["Triangulation: Make/Read/Save/draw Contours or"] + "\n" + \
           T["draw Edges/draw Triangles/draw ceNtroids (enter=c): "]
     res = proj[2].thanGudGetOpts(mes, default="C",
@@ -614,11 +637,11 @@ def thanEngTri(proj):
             fr = open(fn, "r")
         except Exception, why:
             return thanModCanc(proj, "Can not read triangulation from %s:\n%s" % (fn, why))
-        tri = ThanTri()
+        tri = thanobj.ThanTri()
         tri.readtri(fr)
         fr.close()
         proj[1].thanObjects["TRIANGULATION"][:] = [tri]
-        return thanModEnd(proj, "Triangulation was succesfully read from %s" % fn, "info")
+        return thanModEnd(proj, "Triangulation was successfully read from %s" % fn, "info")
     elif res == "s":
         tris = proj[1].thanObjects["TRIANGULATION"]
         if len(tris) == 0: return thanModCanc(proj, T["No triangulation has been defined!"])
@@ -649,7 +672,6 @@ def thanEngTri(proj):
 def plotcontours(proj, tris):
     "Plots contour lines given a triangulation."
     from p_gtri import ThanYpyka
-    from thansupport import thanToplayerCurrent
     dhl = 1.0
     dhx = 5.0
     dmax = 0.0
@@ -684,7 +706,6 @@ def thanEngTrimake(proj):
     with many points, as it is the case here.
     Thus we select all the elements, which is 10 times faster, but then process
     only lines and points."""
-    from thandr.thanobject import ThanTri
     from thandr import ThanLine, ThanPoint, ThanPointNamed
     proj[2].thanCom.thanAppend(T["Select points/lines to generate triangulation from:\n"], "info1")
     res = thancomsel.thanSelectGen(proj, standalone=False)
@@ -699,8 +720,9 @@ def thanEngTrimake(proj):
             cp.append((e.name, e.cc[0], e.cc[1], e.cc[2]))
         elif isinstance(e, ThanPoint):
             cp.append((None, e.cc[0], e.cc[1], e.cc[2]))
-    tri = ThanTri()
-    ok, ter = tri.make(cp, convex=False, infinite=False)
+    tri = thanobj.ThanTri()
+#    ok, ter = tri.make(cp, convex=False, infinite=False)
+    ok, ter = tri.make(cp, convex=True, infinite=False)
     if not ok: return thanModCanc(proj, T["Error creating triangulation: %s"]%ter)
     tri.sortlinks()
 
@@ -713,40 +735,42 @@ def thanEngTrimake(proj):
                 tri.brkapply(ca, cb)
 
     n = 0
-    for _ in tri.itertriangles(): n += 1
+    for _ in tri.itertriangles(1.0e100): n += 1     #Find all triangles regardless their dimenions
     proj[1].thanObjects["TRIANGULATION"][:] = [tri]
     thanModEnd(proj, T["%d triangles were generated."] % n, "info")
+    proj[1].thanTouch()          #Drawing has been modified
 
 
 def __tridraw(proj, edges=False, triangles=False, centroids=False, aa=False):
     "Draw triangulation."
-    from thansupport import thanToplayerCurrent
     tris = proj[1].thanObjects["TRIANGULATION"]
     if len(tris) == 0: return thanModCanc(proj, T["No triangulation has been defined!"])
     tri = tris[0]
     thanToplayerCurrent(proj, "trilines", current=True, moncolor="yellow")
-    apmax = 500.0
-    if edges:
+    apmax = 1.0e100     #Iterate through all triangles regardless of their dimenions
+    if edges:           #Draw edged as ThanLines
         for ca, cb in tri.iteredges():
             e = thandr.ThanLine()
             e.thanSet([ca, cb])
             proj[1].thanElementAdd(e)
             e.thanTkDraw(proj[2].than)
-    if centroids:
+    if centroids:       #Draw centroids as points
         for ca, cb, cc in tri.itertriangles(apmax):
             cen = [(a+b+c)/3.0 for a,b,c in zip(ca, cb, cc)]
             e = thandr.ThanPoint()
             e.thanSet(cen)
             proj[1].thanElementAdd(e)
             e.thanTkDraw(proj[2].than)
-    if aa:
+    if aa:              #Count the centroids
+        ntr = 0
         for ca, cb, cc in tri.itertriangles(apmax):
             cen = [(a+b+c)/3.0 for a,b,c in zip(ca, cb, cc)]
             e = thandr.ThanText()
+            ntr += 1
             e.thanSet(str(ntr), cen, 1.0, 0.0)
             proj[1].thanElementAdd(e)
             e.thanTkDraw(proj[2].than)
-    if triangles:
+    if triangles:       #Draw triangles as closed ThanLines
         for ca, cb, cc in tri.itertriangles(apmax):
             e = thandr.ThanLine()
             e.thanSet([ca, cb, cc, ca])

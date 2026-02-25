@@ -3,11 +3,12 @@ import random, time, bisect, itertools
 from math import pi, atan2, hypot
 from p_gmath import dpt, thanSegSeguw
 from p_ggen import prg
+import ypyka
 
 class ThanLinks(set):
     "A set with ordered iteration."
-#    __slots__ = ["seq"]     # It seems that (bug?) __slots__ are not pickled
-                             # ..so removing __slots__ makes ThanLinks use more memory
+#    __slots__ = ["seq"]    # It seems that (bug?) __slots__ are not pickled
+                            # ..so removing __slots__ makes ThanLinks use more memory
 
     def resequence(self):
         "Recreate the iteration sequence (e.g. after additions)."
@@ -27,7 +28,7 @@ class ThanLinks(set):
         return self.seq[i]
 
 
-class ThanLinksdelegate:
+class ThanLinksdelegate(object):
     "A set with ordered iteration."
 #   This is a slower version than ThanLinks, but it uses (?) less memory..
 #   ..I'm not sure, since there is the __dict__ of the instance
@@ -56,7 +57,7 @@ class ThanLinksdelegate:
         return self.seq[i]
 
 
-class ThanTri:
+class ThanTri(object):
     "Thanasis triangulation."
 
     def __init__(self):
@@ -68,7 +69,7 @@ class ThanTri:
         "Clear all triangles."
         self.ls = {}
         self.aa = {}             # point names; associates coordinates to name; for compatibility with .tri files
-        self.xyapeira = set()    # inifinite points
+        self.xyapeira = set()    # infinite points
         self.ipref = 0           # Counter used to name unnamed points
         self.hull = None         # Temporary object that should be deleted after computation
         self.xy = None           # Temporary object that should be deleted after computation
@@ -157,7 +158,7 @@ class ThanTri:
 
     def flat(self, i2, flatmin):
         "Flattens if angle too small."
-        if len(self.hull) <= 3: return False     #In case the orginal kernel is 3 colinear points
+        if len(self.hull) <= 3: return False     #In case the original kernel is 3 colinear points
         i1 = i2 - 1                              # Note that -1 is a valid python index
         i3 = (i2 + 1) % len(self.hull)
         c1 = self.hull[i1][1]
@@ -174,8 +175,6 @@ class ThanTri:
 
     def convex(self):
         "Make the boundary convex."
-        from p_gchart import ThanChart, vis
-        chs = []
         i = 0
         flattened = True
         while flattened:
@@ -321,28 +320,28 @@ class ThanTri:
 
 
     def itertriangles(self, apmax=50.0):
-      "Iterate through the triangles of the triangulation."
-      apMaxEn2 = apmax**2
-      seen = set()
-      for ca, linksa in self.ls.iteritems():
-          if ca in self.xyapeira: continue                # throw Infinite points out
-          cb = linksa[0]
-          bigKb = (cb[0]-ca[0])**2 + (cb[1]-ca[1])**2 > apMaxEn2
-          for ib in xrange(len(linksa)):
-              ic = (ib + 1) % len(linksa)                 ### ΠΡΟΣΟΧΗ: ΝΑ ΜΗΝ ΥΠΑΡΧΕΙ ΑΣΥΝΕΧΕΙΑ
-              cc = linksa[ic]
-              bigKc = (cc[0]-ca[0])**2 + (cc[1]-ca[1])**2 > apMaxEn2
-              discont = cc not in self.ls[cb]
-              tri = ca, cb, cc
-              triset = frozenset(tri)
-              if bigKb or bigKc or cb in self.xyapeira or cc in self.xyapeira or discont or triset in seen:
-#                  print "Duplicate/invalid:", tri
-                  pass
-              else:
-                  seen.add(triset)
-                  yield tri
-              cb = cc
-              bigKb = bigKc
+        "Iterate through the triangles of the triangulation."
+        apMaxEn2 = apmax**2
+        seen = set()
+        for ca, linksa in self.ls.iteritems():
+            if ca in self.xyapeira: continue                # throw Infinite points out
+            cb = linksa[0]
+            bigKb = (cb[0]-ca[0])**2 + (cb[1]-ca[1])**2 > apMaxEn2
+            for ib in xrange(len(linksa)):
+                ic = (ib + 1) % len(linksa)                 ### ΠΡΟΣΟΧΗ: ΝΑ ΜΗΝ ΥΠΑΡΧΕΙ ΑΣΥΝΕΧΕΙΑ
+                cc = linksa[ic]
+                bigKc = (cc[0]-ca[0])**2 + (cc[1]-ca[1])**2 > apMaxEn2
+                discont = cc not in self.ls[cb]
+                tri = ca, cb, cc
+                triset = frozenset(tri)
+                if bigKb or bigKc or cb in self.xyapeira or cc in self.xyapeira or discont or triset in seen:
+#                    print "Duplicate/invalid:", tri
+                    pass
+                else:
+                    seen.add(triset)
+                    yield tri
+                cb = cc
+                bigKb = bigKc
 
     def serialise(self):
         "Make the triangulation as a sequence."
@@ -376,7 +375,7 @@ class ThanTri:
 
 
     def writetrp(self, fw, p, hphoto, form1="%-10s%15.3f%15.3f%15.3f%10d%10d\n", form2="%10d\n"):
-        "Write the trianguation in trp file; the links must be already sorted."
+        "Write the triangulation in trp file; the links must be already sorted."
         iaa, seq = self.serialise()      # The points must be written with a certain sequence
         for c in seq:
             ca = list(c[:3])
@@ -393,7 +392,7 @@ class ThanTri:
     apnames = frozenset(('####ΚΑ####', '####ΚΔ####', '####ΠΔ####', '####ΠΑ####'))
 
     def readtri(self, fr):
-        "Reads the trianguation from a tri file; it sorts the links."
+        "Reads the triangulation from a tri file; it sorts the links."
         self.clear()
         it = iter(fr)
         xy = {}
@@ -435,7 +434,7 @@ class ThanTri:
 
 
     def thanExpThc1(self, fw):
-        "Writes the trianguation to a .thc file."
+        "Writes the triangulation to a .thc file."
         iaa, seq = self.serialise()      # The points must be written with a certain sequence
         form = fw.formFloat * 3
         for c in seq:
@@ -449,7 +448,7 @@ class ThanTri:
 
 
     def thanImpThc1(self, fr, ver):
-        "Reads the trianguation from a .thc file; it sorts the links."
+        "Reads the triangulation from a .thc file; it sorts the links."
         tend = "</" + self.thanObjectName + ">"
         self.clear()
         xy = {}
@@ -481,71 +480,100 @@ class ThanTri:
 
 
     def apeira(self):
-      "Add infinite points to make a convex quadrilateral."
+        "Add infinite points to make a convex quadrilateral."
 
-#-----Βρες xmin,xmax,ymin,ymax
+#-------Βρες xmin,xmax,ymin,ymax
 
-      xmin = min(c[0] for c in self.xy)
-      xmax = max(c[0] for c in self.xy)
-      ymin = min(c[1] for c in self.xy)
-      ymax = max(c[1] for c in self.xy)
+        xmin = min(c[0] for c in self.xy)
+        xmax = max(c[0] for c in self.xy)
+        ymin = min(c[1] for c in self.xy)
+        ymax = max(c[1] for c in self.xy)
 
-#-----Διόρθωσε xmin,xmax,ymin,ymax έτσι ώστε να είναι πιο μακριά
+#-------Διόρθωσε xmin,xmax,ymin,ymax έτσι ώστε να είναι πιο μακριά
 
-      dymax = (xmax - xmin) * 1.0e-1 + 1.0
-      if dymax < 500.0: dymax = 500.0
-      xmin = xmin - dymax
-      xmax = xmax + dymax
-      dymax = (ymax - ymin) * 1.0e-1 + 1.0
-      if dymax < 500.0: dymax = 500.0
-      ymin = ymin - dymax
-      ymax = ymax + dymax
-      dymax = dymax * 0.5
+        dymax = (xmax - xmin) * 1.0e-1 + 1.0
+        if dymax < 500.0: dymax = 500.0
+        xmin = xmin - dymax
+        xmax = xmax + dymax
+        dymax = (ymax - ymin) * 1.0e-1 + 1.0
+        if dymax < 500.0: dymax = 500.0
+        ymin = ymin - dymax
+        ymax = ymax + dymax
+        dymax = dymax * 0.5
 
-#-----Πρόσθεσε "άπειρα σημεία" που σχηματίζουν περιγεγραμμένο κυρτό
-#     τετράπλευρο. Ετσι αποφεύγουμε bug στο πρόγραμμα triangle
-#     και βγάζουμε αποτελέσματα συμβατά με το πρόγραμμα deltri
+#-------Πρόσθεσε "άπειρα σημεία" που σχηματίζουν περιγεγραμμένο κυρτό
+#       τετράπλευρο. Ετσι αποφεύγουμε bug στο πρόγραμμα triangle
+#       και βγάζουμε αποτελέσματα συμβατά με το πρόγραμμα deltri
 
-      for add in self.xy: break
-      add = add[2:]
-      s = []
-      c = (xmin, ymin) + add
-      s.append(c)
-      self.aa[c] = '####ΚΑ####'
+        for add in self.xy: break
+        add = add[2:]
+        s = []
+        c = (xmin, ymin) + add
+        s.append(c)
+        self.aa[c] = '####ΚΑ####'
 
-      c = (xmax, ymin) + add
-      s.append(c)
-      self.aa[c] = '####ΚΔ####'
+        c = (xmax, ymin) + add
+        s.append(c)
+        self.aa[c] = '####ΚΔ####'
 
-      c = (xmax, ymax-dymax) + add
-      s.append(c)
-      self.aa[c] = '####ΠΔ####'           #Το -dymax εξασφαλίζει γωνία διευθύνσεως  < 0
+        c = (xmax, ymax-dymax) + add
+        s.append(c)
+        self.aa[c] = '####ΠΔ####'           #Το -dymax εξασφαλίζει γωνία διευθύνσεως  < 0
 
-      c = (xmin, ymax) + add
-      s.append(c)
-      self.aa[c] = '####ΠΑ####'
+        c = (xmin, ymax) + add
+        s.append(c)
+        self.aa[c] = '####ΠΑ####'
 
-      for c in s:
-          self.xyapeira.add(c)
-      self.xy.extend(s)
+        for c in s:
+            self.xyapeira.add(c)
+        self.xy.extend(s)
 
-#-----Πρόσθεσε τις πλευρές του τετραπλεύρου στις break lines
+#-------Πρόσθεσε τις πλευρές του τετραπλεύρου στις break lines
 
-#      call erInc1 (nBrk, MSYNT, 0, 'break lines')
-#      ke1(nBrk) = nSYnt - 3
-#      ke2(nBrk) = nSYnt - 2
+#        call erInc1 (nBrk, MSYNT, 0, 'break lines')
+#        ke1(nBrk) = nSYnt - 3
+#        ke2(nBrk) = nSYnt - 2
 #
-#      call erInc1 (nBrk, MSYNT, 0, 'break lines')
-#      ke1(nBrk) = nSYnt - 2
-#      ke2(nBrk) = nSYnt - 1
+#        call erInc1 (nBrk, MSYNT, 0, 'break lines')
+#        ke1(nBrk) = nSYnt - 2
+#        ke2(nBrk) = nSYnt - 1
 #
-#      call erInc1 (nBrk, MSYNT, 0, 'break lines')
-#      ke1(nBrk) = nSYnt - 1
-#      ke2(nBrk) = nSYnt
+#        call erInc1 (nBrk, MSYNT, 0, 'break lines')
+#        ke1(nBrk) = nSYnt - 1
+#        ke2(nBrk) = nSYnt
 #
-#      call erInc1 (nBrk, MSYNT, 0, 'break lines')
-#      ke1(nBrk) = nSYnt
-#      ke2(nBrk) = nSYnt - 3
+#        call erInc1 (nBrk, MSYNT, 0, 'break lines')
+#        ke1(nBrk) = nSYnt
+#        ke2(nBrk) = nSYnt - 3
+
+
+    def contoursPlot(tri, dhl, apmax, dhx, dxf, xmin=0.0, ymin=0.0, scale=1.0):
+        "Compute and plot the contour lines of the dem using a trianguilation."
+        def saveis(icod, cs):
+            "Save a contourline."
+            z1 = cs[0][2]
+            if p_gmath.pollap(z1, dhx, dhm): dxf.thanDxfSetLayer("YX")
+            else:                            dxf.thanDxfSetLayer("YL")
+            x = [(x1-xmin)*scale for x1, y1, z1 in cs]
+            y = [(y1-ymin)*scale for x1, y1, z1 in cs]
+            z = [z1          for x1, y1, z1 in cs]
+            dxf.thanDxfPlotPolyline3(x, y, z)
+        dm = min(dhl, dhx)
+        dhm = 0.1 * dm
+        cont = ypyka.ThanYpyka(tri.ls, saveis)
+        cont.ypyka(dhl=dhl, apmax=apmax)
+
+
+    def contoursSave(tri, dhl, apmax, fw):
+        "Compute and save the contour lines of the dem using a trianguilation."
+        def saveis(icod, cs):
+            "Save a contourline."
+            fw.write("%15.3f\n" % (cs[0][2],))
+            for cc in cs:
+                fw.write("%15.3f%15.3f\n" % (cc[0], cc[1]))
+            fw.write("$\n")
+        cont = ypyka.ThanYpyka(tri.ls, saveis)
+        cont.ypyka(dhl=dhl, apmax=apmax)
 
 
     def show(self, chs=None):

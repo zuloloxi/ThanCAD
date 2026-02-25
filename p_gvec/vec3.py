@@ -1,18 +1,11 @@
 from math import fabs
-import math
-import types
-from p_gmath import thanThresholdx
+import math, types, random
+import p_gmath, p_gnum
 
 #===========================================================================
 
 class Vector3:
     "Implements 3d vectors."
-
-    def __initolds__ (self, xx=0.0, yy=0.0, zz=0.0):
-        "Initialise a new 3d vector to zero by default."
-        self.x = float(xx)
-        self.y = float(yy)
-        self.z = float(zz)
 
     def __init__ (self, xx=None, yy=None, zz=0.0):
         "Initialise a new 3d vector to zero by default."
@@ -36,7 +29,7 @@ class Vector3:
             raise TypeError, "Don't know how to add Vector3 by " + `type(other)`
 
     def __sub__ (self, other):
-        "Substraction of vectors."
+        "Subtraction of vectors."
         if isinstance(other, Vector3):
             return Vector3(self.x-other.x, self.y-other.y, self.z-other.z)
         else:
@@ -86,47 +79,46 @@ class Vector3:
         "Compute a random unit vector normal to the vector's direction."
         t = self.unit()
         if t == None: return None
-	b = Vector3(1,0,0)
-	b = (b - (b*t)*t).unit()
-	if b != None: return b
-	b = Vector3(0,1,0)
-	b = (b - (b*t)*t).unit()
-	assert b != None
-	return b
+        b = Vector3(1,0,0)
+        b = (b - (b*t)*t).unit()
+        if b != None: return b
+        b = Vector3(0,1,0)
+        b = (b - (b*t)*t).unit()
+        assert b != None
+        return b
 
     def normal2(self):
-         "Find 2 random unit vectors so that they and t are mutually normal."
-         import random
-         t = self.unit()
-         r = random.Random()
-         while True:
+        "Find 2 random unit vectors so that they and t are mutually normal."
+        t = self.unit()
+        r = random.Random()
+        while True:
             a = Vector3(r.uniform(0, 1), r.uniform(0, 1), r.uniform(0, 1))  # Note that it is not a unit vector..
             na = a - (t*a)*t                                                # but I don't want to ensure that it is <>0
             nn = abs(na)
             if nn > 0.1: break
-         na /= nn
-         while True:
+        na /= nn
+        while True:
             b = Vector3(r.uniform(0, 1), r.uniform(0, 1), r.uniform(0, 1))
             nb = b-(t*b)*t
             if abs(nb) > 0.1:
                 nb = nb - (na*nb)*na
                 nn = abs(nb)
                 if nn > 0.1: break
-         nb /= nn
-         assert fabs(na*nb) < thanThresholdx
-         assert fabs(t*na) < thanThresholdx
-         assert fabs(t*nb) < thanThresholdx
-         return na, nb
+        nb /= nn
+        assert fabs(na*nb) < p_gmath.thanThresholdx
+        assert fabs(t*na) < p_gmath.thanThresholdx
+        assert fabs(t*nb) < p_gmath.thanThresholdx
+        return na, nb
 
     def dircos(self):
-         "Compute direction cosines."
-	 t = self.unit()
-	 if t == None: return 0.0, 0.0, 0.0
-	 return t.x, t.y, t.z
+        "Compute direction cosines."
+        t = self.unit()
+        if t == None: return 0.0, 0.0, 0.0
+        return t.x, t.y, t.z
 
-    def cross(a, b):
+    def cross(self, b):
         "Return the cross product of vectors self x b."
-	return Vector3(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x)
+        return Vector3(self.y*b.z-self.z*b.y, self.z*b.x-self.x*b.z, self.x*b.y-self.y*b.x)
 
 #    def rot (self, f):
 #        "Rotates the vector to f counterclockwise radians."
@@ -148,19 +140,17 @@ class Vector3:
           ->     ->     ->    ->
         a DA + b DB + c DC = SELF
         """
-        from Numeric import array, Float
-	from LinearAlgebra import solve_linear_equations
-	A = array(((da.x, db.x, dc.x),
-	           (da.y, db.y, dc.y),
-	           (da.z, db.z, dc.z),
-		 ))
-        B = array((self.x, self.y, self.z))
-        return solve_linear_equations(A, B)
+        A = p_gnum.array(((da.x, db.x, dc.x),
+                          (da.y, db.y, dc.y),
+                          (da.z, db.z, dc.z),
+                        ))
+        B = p_gnum.array((self.x, self.y, self.z))
+        return p_gnum.solve_linear_equations(A, B)
 
     def vector2(self):
         "Return a 2d vector, discarding z."
-	import vec
-	return vec.Vector2(self.x, self.y)
+        import vec
+        return vec.Vector2(self.x, self.y)
 
     def __str__ (self):
         "Just a string representation of the object."

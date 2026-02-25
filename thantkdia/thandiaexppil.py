@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to export to a raster image
 using Python Image Library.
@@ -32,6 +32,7 @@ import p_ggen, p_gtkwid
 from thantrans import T
 from thanvar import thanfiles
 from thandefs.thanatt import ThanAttCol
+from thandialogcol import ThanColor
 
 
 thanImageTypes = ( (".bmp", "BMP"),
@@ -136,7 +137,7 @@ class ThanTkExppil(p_gtkwid.ThanComDialog):
         wid.grid(row=ir, column=2, sticky="we")
         self.thanWids.append((key, tit, wid, val))
 
-                                  #T["width (pixels)"],             T["height (pixels)"]
+                                    #T["width (pixels)"],             T["height (pixels)"]
         for key, tit in ("entWidth", "width (pixels)"), ("entHeight", "height (pixels)"):
             ir += 1
             val = p_gtkwid.ThanValInt(3, 100000)
@@ -163,14 +164,13 @@ class ThanTkExppil(p_gtkwid.ThanComDialog):
 
     def __onBackGr(self, i, obj, text):
         "If user selected other, display the colour dialog."
-        import thantkdia
         print "__onBackGr:", text
         if i != 3: return              #If not "other", there is nothing to do
         colold = thanBackGrs[2][0]     #Previous "other" colour
         print "colold=", colold
-        w = thantkdia.ThanColor(self, colold, special=False, title=T["Select background colour"])
+        w = ThanColor(self, colold, special=False, title=T["Select background colour"])
         colnew = w.result
-        if colnew != None: thanBackGrs[2] = (colnew, str(colnew))
+        if colnew is not None: thanBackGrs[2] = (colnew, str(colnew))
         self.after(200, self.choBackGr.thanSet, thanBackGrs[2][0])
 
 

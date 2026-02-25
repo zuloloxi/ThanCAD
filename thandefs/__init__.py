@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This package contains definitions (classes etc.) which do not
 depend on (do not import) any other ThanCad Package.
@@ -29,6 +29,7 @@ They may depend on p_g*.py libraries.
 """
 
 from thanunits import ThanUnits
-from thanvardefs import ThanTstyle, ThanImageMissing, imageOpen, ThanCoor, ThanMultiSet, ThanId
+from thanvardefs import ThanTstyle, imageOpen, ThanId
 import thanplotcups
 from thandashes import ThanLtype, thanDashes
+from p_gimage import ThanImageMissing

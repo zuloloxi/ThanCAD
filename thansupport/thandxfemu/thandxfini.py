@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,22 +22,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This package emulates the dxf library in ThanCad.
 """
 
-from os.path import splitext
-from math import fabs
 from p_gimdxf import ThanImportBase
+import p_ggen
 
 from thandxflin import ThanDxfLin
 from thandxfsym import ThanDxfSym
 from thandxfdra import ThanDxfDra
 from thandxfgeo import ThanDxfGeo
 from thandxfatt import ThanDxfAtt
-
-from thandxfext import thanCadCodes
 
 
 class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
@@ -70,8 +67,8 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
     def thanDxfPlots(self, uDxf1=None, defaultLayer=None):
         "User initialisation 1."
-        if uDxf1 != None: self.thanDr = uDxf1
-        if defaultLayer != None: self.defLay = defaultLayer
+        if uDxf1 is not None: self.thanDr = uDxf1
+        if defaultLayer is not None: self.defLay = defaultLayer
 
         self.thanDxfPlots1(uDxf1)
         self.thanDxfTableDef (' ', 0)
@@ -95,8 +92,8 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
     def thanDxfPlots1 (self, uDxf1=None, defaultLayer=None):
         "Initialisation 2."
-        if uDxf1 != None: self.thanDr = uDxf1
-        if defaultLayer != None: self.defLay = defaultLayer
+        if uDxf1 is not None: self.thanDr = uDxf1
+        if defaultLayer is not None: self.defLay = defaultLayer
 
         self.thanDxfSetLayer('P1')
         self.thanDxfSetLtype ('BYLAYER')
@@ -125,7 +122,7 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
         self.thanDotmin = 1.0 / self.thanDotxcm
 
-	self.thanDxfSetPlineWidth(0.0, 0.0)
+        self.thanDxfSetPlineWidth(0.0, 0.0)
 #        self.thanDxfPlot(1/dotxcm, 0, -3)
 #        self.thanDxfCls()
 
@@ -134,8 +131,8 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
         tableName:     Name of table to be created (STYLE, LAYER, LTYPE)
         iTableEntries: Number of elements of each table. For example, If we have 4 layers
-	               then ay TableName LAYER, iTableEntries=4.
-		       If iTableEntries==4 an initialisation is performed.
+                       then ay TableName LAYER, iTableEntries=4.
+                       If iTableEntries==4 an initialisation is performed.
         """
 
         if iTableEntries == 0:
@@ -145,18 +142,16 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
             self.__blocks   = 0
             self.__entities = 0
         elif self.__entities:
-            print 'thanTableDef(): Table definitions must precede ENTITIES.'
-	    sys.exit(1)
+            raise p_ggen.ThanImportError, 'thanTableDef(): Table definitions must precede ENTITIES.'
         elif tableName == 'ENTITIES':
-	    if self.__tabExist and not self.__blocks: pass #self.thanDxfWrEntry(0, 'ENDTAB')
+            if self.__tabExist and not self.__blocks: pass #self.thanDxfWrEntry(0, 'ENDTAB')
 #            self.thanDxfWrEntry(0, 'ENDSEC')
 #            self.thanDxfWrEntry(0, 'SECTION')
 #            self.thanDxfWrEntry(2, 'ENTITIES')
             self.__entities = 1
         elif tableName == 'BLOCKS':                        # TABLE start
             if self.__blocks:
-	        print 'thanTableDef(): Blocks already defined!'
-		sys.exit(1)
+                raise p_ggen.ThanImportError, 'thanTableDef(): Blocks already defined!'
             if self.__tabExist: pass #self.thanDxfWrEntry(0, 'ENDTAB')
 #            self.thanDxfWrEntry(0, 'ENDSEC')
 #            self.thanDxfWrEntry(0, 'SECTION')
@@ -165,8 +160,7 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
             self.__tabExist = 1
         else:
             if self.__blocks:
-	        print 'ThanTableDef(): Table defs must precede blocks.'
-		sys.exit(1)
+                raise p_ggen.ThanImportError, 'ThanTableDef(): Table defs must precede blocks.'
             if self.__tabExist: pass #self.thanDxfWrEntry(0, 'ENDTAB')
 #            self.thanDxfWrEntry(0, 'TABLE')
 #            self.thanDxfWrEntry(2, tableName)
@@ -180,8 +174,8 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
         name  :  layer name
         color :  layer color
         linetype :  layer Linetype
-	lineweight: The thickness of the "pen" that the layer is
-	            plotted with (mm)
+        lineweight: The thickness of the "pen" that the layer is
+                    plotted with (mm)
 
         TABLE LAYER
          62:  5 (or positive) : layer on
@@ -190,7 +184,7 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
                             if flags & 1: it is frozen
                      bit 2: if set layer is locked (its elements can not be altered)
                             if flags & 4: it is locked
-	      4  : layer locked
+              4  : layer locked
         370: 106 :  lineweight 1.06 mm
               60 :             0.60 mm
               -3 :             Autocad's default lineweight (who knows what this means!)
@@ -206,24 +200,24 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
         linName    : Line type name
         linDescr   : Line type description
         rElems     : Line elements
-	"""
-	pass
+        """
+        pass
 
     def thanDxfCrTstyle(self, fName, fFontFileName):
         """Creates a text style entry in the dxf file.
 
         fName        : Text Style name
         fFontFileName: Font filename. If it has ".shx" extension, then it is
-	               defined as complex linestyle.
-	"""
+                       defined as complex linestyle.
+        """
         pass
 
     def thanDxfCrBlock(self, bFileName):
         """Creates a block entry in the dxf file.
 
-	The block definition in the dxf file must not include
-	code 5 (handle), because Intellicad has trouble with it
-	(it may be either Intellicad's dxfin bug, or Autocad's
-	dxfout bug.
-	ThanCad is indifferent (it does not support blocks yet ;) )."""
+        The block definition in the dxf file must not include
+        code 5 (handle), because Intellicad has trouble with it
+        (it may be either Intellicad's dxfin bug, or Autocad's
+        dxfout bug.
+        ThanCad is indifferent (it does not support blocks yet ;) )."""
         pass

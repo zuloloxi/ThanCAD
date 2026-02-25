@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,32 +23,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This package includes dialogs (forms to get user input) implemented with Tkinter.
 This module contains the dialog which asks for line type settings.
 """
 
 import Tkinter
-import p_gtkwid, p_gtkuti, p_ggen
+import p_gtkwid, p_ggen
 from thantrans import T
 from thanvar import THANBYPARENT, THANPERSONAL
-from thanopt import thancadconf
-__font1 = None
+import thantk
 
 
 class ThanDialogLtype(p_gtkwid.ThanComDialog):
-    "Dialog for the line simlification algorithm."
+    "Dialog for line type settings."
 
     def __init__(self, *args, **kw):
         "Just set the title."
         proj = kw["cargo"]
         kw.setdefault("title", "%s - %s" % (proj[0].name, T["Line type settings"]))
         p_gtkwid.ThanComDialog.__init__(self, *args, **kw)
-        thanFontfamily = "Liberation serif"
-        thanFontsize = 10
-        thanFontfamilymono = "Liberation mono"
-        thanFontsizemono = thanFontsize - 1
 
 
     def thanValsDef(self):
@@ -130,11 +125,11 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
         try: i = self.__labs1.index(namlt)
         except IndexError: i = self.__labs1.index("continuous")
 
-        from thantkgui.thantkcmd import thanFonts
-#        self.option_add("*%s*font" % (self.winfo_name(),), thanFonts[0])
-        win = p_gtkwid.ThanPoplist(self, self.__labs2, width=100, height=20, selectmode=Tkinter.SINGLE, default=i, font=thanFonts[0])
+#        self.option_add("*%s*font" % (self.winfo_name(),), thantk.thanFonts[0])
+        win = p_gtkwid.ThanPoplist(self, self.__labs2, width=100, height=20, selectmode=Tkinter.SINGLE,
+            default=i, font=thantk.thanFonts[0])
         r = win.result
-        if r != None:
+        if r is not None:
             i = win.result1
             self.butPattern.thanSet(self.__labs1[i])
         self.__enable()

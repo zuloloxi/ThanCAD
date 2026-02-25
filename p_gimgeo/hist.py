@@ -1,5 +1,6 @@
 import re, Tkinter
-import p_gtkuti, p_gtkwid
+import p_gnum, p_gtkwid
+p_gtkuti = p_gtkwid
 from gdal_bands import readWv2mBands, readWv2pBand
 
 #dline="     16393: (  310,  310,  310) #013601360136 rgb(0.47303%,0.47303%,0.47303%)"
@@ -31,9 +32,9 @@ class Hist(object):
 
     def fromArray(self, band):
         "Compute and add the colour frequencies of numarray band."
-        import numpy
-        h, _ = numpy.histogram(band, 4096, (0, 4096))
+        h, _ = p_gnum.histogram(band, 4096, (0, 4096))
         self.freq = dict(zip(range(4096), h))
+        self.freq[0] = 0  #############################delete this
 
     def statistics(self):
         "Find min, max etc."
@@ -43,6 +44,29 @@ class Hist(object):
         self.colmax = self.cols[-1]
         self.fmax = max(self.freq.itervalues())
         print "statistics: colimn, colmax, fmax=", self.colmin, self.colmax, self.fmax
+
+    def approx(self):
+        "Find an initial approximation of position and size, inspecting histograms."
+        x1 = 4095
+        x2 = 0
+        per = 0.01  #Percentage of max frequency importance threshold
+        h1 = self
+        if 1:
+            fmax = per*h1.fmax
+            print "fmax=",fmax
+            for i in xrange(len(h1.cols)):
+                if h1.freq[i] < fmax: continue
+                if i < x1: x1 = i
+                break
+            print "x1, col(x1)=", x1, h1.cols[x1]
+            print "col[4095]=", h1.cols[4095]
+            for i in xrange(len(h1.cols)-1, 0, -1):
+                if h1.freq[i] < fmax: continue
+                if i > x2: x2 = i
+                break
+            print "x2, col(x2)=", x2, h1.cols[x2]
+        return x1, x2
+
 
     def plot(self, than):
         "plot the histogram to a canvas."
@@ -157,7 +181,7 @@ class HistWin(p_gtkuti.ThanDialog, p_gtkuti.ThanFontResize):
 
 
     def auto(self):
-        "Autoarrange the scale of the x-axis and position and size of the rectangle."
+        "Auto arrange the scale of the x-axis and position and size of the rectangle."
         self.findLimits()
         self.redrawHist()
         self.rect.approx(self.his)
@@ -206,8 +230,8 @@ class DragRectangle(object):
         pass
 
 
-    def approx(self, his):
-        "Find an initial approximation of position and size, inspctinh histograms."
+    def approxold(self, his):
+        "Find an initial approximation of position and size, inspecting histograms."
         x1 = 4095
         x2 = 0
         per = 0.01  #Percentage of max frequency importance threshold
@@ -225,6 +249,18 @@ class DragRectangle(object):
                 if i > x2: x2 = i
                 break
             print "x2, col(x2)=", x2, h1.cols[x2]
+        self.x1 = x1
+        self.sizex = x2-x1
+
+
+    def approx(self, his):
+        "Find an initial approximation of position and size, inspecting histograms."
+        x1 = 1000000000
+        x2 = 0
+        for h1 in his:
+            x3, x4 = h1.approx()
+            x1 = min(x1, x3)
+            x2 = max(x2, x4)
         self.x1 = x1
         self.sizex = x2-x1
 
@@ -296,7 +332,7 @@ def selectColourRange(band, root):
 
 
 def selectColourRange1(fns, root):
-    "Let the user select the colour range of givel histograms saved in files."
+    "Let the user select the colour range of given histograms saved in files."
     n = len(fns)
     if n == 1: pcols = ["gray"]
     else:      pcols = ["red", "green", "blue"]

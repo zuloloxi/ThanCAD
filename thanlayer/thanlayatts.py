@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the valid attributes of a layer, their type, and their
 default value.
@@ -29,25 +29,25 @@ It also defines the actions to do to elements, when an attribute is forced
 on them.
 """
 
-import copy, collections
-import p_gtkwid
-from p_gmath import thanNear2
+import collections
+import p_gtkwid, p_ggen
 from thanvar import Canc, THANBYPARENT, THANPERSONAL
-from thanlaycon import *
-from thandefs.thanatt import *
-from thandefs import ThanLtype
+from thandefs.thanatt import (ThanAttNI, ThanAttTextbNI, ThanAttCol, ThanAttLtype,
+    ThanAttScale, ThanAttOnoffInherit, ThanAttTextb, ThanAttOnoff, ThanAttInt,
+    ThanAttThick,ThanAttFloat)
 from thanopt import thancadconf
 from thantrans import T
+from thandr import ThanPointNamed
+import thantkdia
+from thanlaycon import THANNAME
 
 ############################################################################
 ############################################################################
 
 def thanPlotcolorGet (*args): pass
-def thanLinetypeGet  (*args): pass
 def thanPointstyleGet(*args): pass
 def thanHatchGet     (*args): pass
 
-def thanFillGet      (*args): pass
 def thanLockedGet    (*args): pass
 def thanNoplotGet    (*args): pass
 
@@ -58,7 +58,7 @@ def thanProtectedGet (*args): pass
 def thanOnclick(evt, win, attname, indexes, selLayers):
     "Calls the appropriate function for the attribute and layers chosen by the user."
     fun = thanLayAtts[attname][1]
-    if fun == None: return                     # No function; do nothing
+    if fun is None: return                     # No function; do nothing
     newval,keepsel = fun(win, attname, selLayers)
     if newval == Canc:                         # User cancelled
         if len(indexes) < 2: win.thanSelNone() # Keep the selection (unless only 1 layer)
@@ -74,11 +74,10 @@ def thanOnclick(evt, win, attname, indexes, selLayers):
 
 def thanMoncolorGet(win, att, selLayers):
     "Lets the user select monitor colour."
-    import thantkdia
     c =__commonVal(att, selLayers)
     w = thantkdia.ThanColor(win, c, special=True, title=T["Select ThanCad Colour"])
     r = w.result
-    if r == None: r = Canc
+    if r is None: r = Canc
     return r, True
 
 
@@ -107,7 +106,7 @@ def thanFillGet(win, att, selLayers):
     ia = selLayers[0].thanAtts[att]     # A sample attribute value
     tlabs = [str(THANBYPARENT), str(THANPERSONAL), ia.thanOn, ia.thanOff]
     w = p_gtkwid.ThanPoplist(win, tlabs, width=15, title=T["Select ThanCad Fill mode"])
-    if w.result == None: return Canc, True
+    if w.result is None: return Canc, True
     if w.result == str(THANBYPARENT): return THANBYPARENT, True
     if w.result == str(THANPERSONAL): return THANPERSONAL, True
     class_ = thanLayAtts[att][3]
@@ -124,7 +123,7 @@ def thanTstyleGet(win, att, selLayers):
     tlabs.insert(0, str(THANBYPARENT))
     tlabs.insert(1, str(THANPERSONAL))
     w = p_gtkwid.ThanPoplist(win, tlabs, width=40, title=T["Select ThanCad Text Style"])
-    if w.result == None: return Canc, True
+    if w.result is None: return Canc, True
     if w.result == str(THANBYPARENT): return THANBYPARENT, True
     if w.result == str(THANPERSONAL): return THANPERSONAL, True
     class_ = thanLayAtts[att][3]
@@ -134,7 +133,6 @@ def thanTstyleGet(win, att, selLayers):
 
 def thanLinetypeGet(win, att, selLayers):
     "Lets the user select new textstyle for the selected layers."
-    import thantkdia
     name = collections.Counter()
     unit = collections.Counter()
     scale = collections.Counter()
@@ -162,7 +160,7 @@ def thanLinetypeGet(win, att, selLayers):
     if i: s.butPattern = str(THANBYPARENT)
     win = thantkdia.ThanDialogLtype(master=win, vals=s, cargo=win.thanCargo, translation=None)
     s = win.result
-    if s == None: return Canc, True
+    if s is None: return Canc, True
     if s.butPattern == str(THANBYPARENT): return THANBYPARENT, True
     if s.butPattern == str(THANPERSONAL): return THANPERSONAL, True
     class_ = thanLayAtts[att][3]
@@ -172,11 +170,10 @@ def thanLinetypeGet(win, att, selLayers):
 
 def thanDraworderGet (win, att, selLayers):
     "Lets the user select new draworder for the selected layers."
-    import thantkdia
     c =__commonVal(att, selLayers)
     w = thantkdia.ThanDro(win, c, title="Select Draw Order")
     r = w.result
-    if r == None: return Canc, True
+    if r is None: return Canc, True
     if r in (THANBYPARENT, THANPERSONAL): return r, True
     class_ = thanLayAtts[att][3]
     r = class_(r)
@@ -185,11 +182,10 @@ def thanDraworderGet (win, att, selLayers):
 
 def thanPenthickGet (win, att, selLayers):
     "Lets the user select new pen  thickness (mm of linear objects) for the selected layers."
-    import thantkdia
     c =__commonVal(att, selLayers)
     w = thantkdia.ThanPen(win, c, "Pen", title="Select Pen Thickness")
     r = w.result
-    if r == None: return Canc, True
+    if r is None: return Canc, True
     if r in (THANBYPARENT, THANPERSONAL): return r, True
     class_ = thanLayAtts[att][3]
     r = class_(r)
@@ -198,11 +194,10 @@ def thanPenthickGet (win, att, selLayers):
 
 def thanLinethickGet (win, att, selLayers):
     "Lets the user select new thickness (user unints of linear objects) for the selected layers."
-    import thantkdia
     c =__commonVal(att, selLayers)
     w = thantkdia.ThanPen(win, c, "Line", title="Select Line Thickness")
     r = w.result
-    if r == None: return Canc, True
+    if r is None: return Canc, True
     if r in (THANBYPARENT, THANPERSONAL): return r, True
     class_ = thanLayAtts[att][3]
     r = class_(r)
@@ -217,7 +212,6 @@ def thanUpdateElementsold(proj, leaflayers, updatelayers=True):
     TO CALL proj[2].thanLayerTree.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
     """
 #    for lay,atts in leaflayers.iteritems(): print lay.thanGetPathname(), "->", atts
-    from thandr import ThanPointNamed, ThanCircle, ThanLine
     draworder = False
     dc = proj[2].thanCanvas
     than = proj[2].than
@@ -292,12 +286,10 @@ def thanUpdateElements(proj, leaflayers, updatelayers=True):
     TO CALL proj[2].thanLayerTree.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
     """
 #    for lay,atts in leaflayers.iteritems(): print lay.thanGetPathname(), "->", atts
-    from thandr import ThanPointNamed, ThanCircle, ThanLine
     draworder = False
     dc = proj[2].thanCanvas
     than = proj[2].than
     for lay,atts in leaflayers.iteritems():
-        colourhasbeenset = False
         if "frozen" in atts:
             nval = atts["frozen"]
             if nval:
@@ -319,7 +311,6 @@ def thanUpdateElements(proj, leaflayers, updatelayers=True):
 #                than.outline = lay.ThanAttCol(nval).thanTk
                 proj[2].thanGudGetSelLayerx(lay.thanTag)
                 proj[2].thanGudSetSelColorx(than.outline, than.fill)
-                colourhasbeenset = True
             elif a == "draworder":
                 draworder = True
             elif a == "penthick":
@@ -438,7 +429,7 @@ thanLayAttsType = \
           or nonzero (generalised true). When this attribute
           becomes a<>0 (true), then all its
           children behave as this attribute were also set to a.
-          However, when this attribure becomes 0 (false) again, the
+          However, when this attribute becomes 0 (false) again, the
           children retain their original attribute value.
        """,
     2: """Type 2 attributes work like type 1, but the user can not modify them.

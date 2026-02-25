@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the dimension element.
 """
 
 from math import hypot, atan2, fabs
+from itertools import izip, islice
 from p_ggen import thanUnicode
 from p_gmath import thanNear2
-from itertools import izip, islice
+from thanvar import Canc
+from thantrans import T
 from thanelem import ThanElement
 from thanline import ThanLine
 from thantext import ThanText
-from thanvar import Canc
-from thantrans import T
+
 try: import pyx
 except ImportError: pass
 
@@ -80,7 +81,7 @@ class ThanDimali(ThanElement):
 
     def thanIsNormal(self):
         "Returns False if the the aligned dimension is degenerate (it is blank)."
-        return not thanNear2(cp[0], cp[1])  # Degenerate dimension
+        return not thanNear2(self.cp[0], self.cp[1])  # Degenerate dimension
 
 
 #    def thanClone(self): Inherited from ThanElement: deepcopy of the instance is OK
@@ -104,18 +105,18 @@ class ThanDimali(ThanElement):
 
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
-	for cc in self.cp:
-	    cc[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(cc, cs)]
-	cscs = [cs[0], cs[1], cs[0], cs[1]]
-	self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.thanXymm, cscs)]
+        for cc in self.cp:
+            cc[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(cc, cs)]
+        cscs = [cs[0], cs[1], cs[0], cs[1]]
+        self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.thanXymm, cscs)]
 
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
-	for cc in self.cp:
-	    cc[:] = [cc1+dd1 for (cc1,dd1) in izip(cc, dc)]
-	dcdc = [dc[0], dc[1], dc[0], dc[1]]
-	self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in izip(self.thanXymm, dcdc)]
+        for cc in self.cp:
+            cc[:] = [cc1+dd1 for (cc1,dd1) in izip(cc, dc)]
+        dcdc = [dc[0], dc[1], dc[0], dc[1]]
+        self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in izip(self.thanXymm, dcdc)]
 
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
@@ -136,7 +137,7 @@ class ThanDimali(ThanElement):
 
     def thanExplode(self, than=None):
         "Transform the dimension to a set of smaller elements."
-        if than == None: return True               # Break IS implemented
+        if than is None: return True               # Break IS implemented
         return iter(self.__decompose())
 
 
@@ -183,7 +184,7 @@ class ThanDimali(ThanElement):
         w = hypot(cost, sint)
         cost /= w; sint /= w
         dis = "%.2f" % w
-        mes = "%s (enter=%s): " % (T["Dimension text"], dis)
+        mes = "%s (enter=%s): " % (T["Dimension text"], un.strdis(dis))
         text = proj[2].thanGudGetText(mes, dis)
         if text == Canc: return Canc                     # text cancelled
 
@@ -203,7 +204,7 @@ class ThanDimali(ThanElement):
     textsize = 0.20
     dimscale = 10.0
     def thanTkDraw1(self, than):
-        "Draws the alined dimension in Tkinter canvas."
+        "Draws the aligned dimension in Tkinter canvas."
         for e in self.__decompose():
             e.thanTkDraw(than)
 
@@ -307,21 +308,21 @@ class ThanDimali(ThanElement):
         if h < 0.05: return                                  # Size too small to be seen; draw rectangle instead
         lines = than.thanFont.than2lines(xa, ya, h, self.text, self.theta, mirrory=True)
 
-	lineto = pyx.path.lineto
-	moveto = pyx.path.moveto
-	closepath = pyx.path.closepath
-	for cp in lines:
-	    if len(cp) < 2: continue
-	    if len(cp) == 2:
-	        ca = cp[0][0], cp[0][1]
-	        cb = cp[1][0], cp[1][1]
-	        p = pyx.path.line(ca[0], ca[1], cb[0], cb[1])
-	    else:
+        lineto = pyx.path.lineto
+        moveto = pyx.path.moveto
+        closepath = pyx.path.closepath
+        for cp in lines:
+            if len(cp) < 2: continue
+            if len(cp) == 2:
+                ca = cp[0][0], cp[0][1]
+                cb = cp[1][0], cp[1][1]
+                p = pyx.path.line(ca[0], ca[1], cb[0], cb[1])
+            else:
                 xy1 = [lineto(c1[0], c1[1]) for c1 in islice(cp, 1, None)]
-	        xy1.insert(0, moveto(cp[0][0], cp[0][1]))
-	        if cp[0] == cp[-1]: xy1[-1] = closepath()
-	        p = pyx.path.path(*xy1)
-	    than.dc.stroke(p)
+                xy1.insert(0, moveto(cp[0][0], cp[0][1]))
+                if cp[0] == cp[-1]: xy1[-1] = closepath()
+                p = pyx.path.path(*xy1)
+            than.dc.stroke(p)
 
 
     def thanTransform(self, fun):

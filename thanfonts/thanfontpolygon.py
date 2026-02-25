@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 This module defines ThanCad fonts made by straight lines. The lines
 have thickness and the characters resemble the arial font.
 """
 
-from types import *
+from types import type, IntType
 from math import cos, sin, pi
-from thanfontprime import ThanFontPrime
+from thanfont import ThanFontLine
 
 
 ##############################################################################
 ##############################################################################
 
-class ThanFontPolygon(ThanFontPrime):
+class ThanFontPolygon(ThanFontLine):
     "Font class made by filled polygons."
 
 #=============================================================================
@@ -42,7 +42,7 @@ class ThanFontPolygon(ThanFontPrime):
     def __init__(self, name, dilines):
         "Initialisation."
 
-        ThanFontPrime.__init__(self, name, dilines)
+        ThanFontLine.__init__(self, name, dilines)
 
 #=============================================================================
 
@@ -57,9 +57,9 @@ class ThanFontPolygon(ThanFontPrime):
         by = by*sin(theta)
         hx2 = hf * bx
         hy2 = hf * by
-	tfont = self.thanDilines
-	col = self.thanColor
-	fill = self.thanFill
+        tfont = self.thanDilines
+        col = self.thanColor
+        fill = self.thanFill
 
 #-------Transform the coordinates
 
@@ -72,7 +72,7 @@ class ThanFontPolygon(ThanFontPrime):
 
             for pl in tfont[k]:                   # Loop of all polylines of a char
                 plr = [	(xz+xx*bx-yy*by, yz-(xx*by+yy*bx)) for (xx, yy) in pl ]
-	        dc.create_polygon(plr, outline=col, fill=fill)
+                dc.create_polygon(plr, outline=col, fill=fill)
 
             xz += hx2     # Advance character position
             yz -= hy2

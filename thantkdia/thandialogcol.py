@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,22 +21,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog fro the user to enter a color.
 It also has the routine to get the user defined colors from the config files.
 """
 
-from Tkinter import *
+from Tkinter import Frame, Label, Button, Entry, BitmapImage, END, GROOVE
 from tkColorChooser import askcolor
 from p_ggen import ThanStub as S, Pyos
-import p_gtkuti, p_gimdxf
+import p_gtkwid, p_gcol
 import thanvar
 from thandefs import thanatt
 from thanopt import thancadconf
 
 
-class ThanColor(p_gtkuti.ThanDialog):
+class ThanColor(p_gtkwid.ThanDialog):
     "Dialog for the visibility of a layer."
     thanAttsTk = None
 
@@ -44,7 +44,7 @@ class ThanColor(p_gtkuti.ThanDialog):
         "Extract initialcolor."
         self.__val = str(val)
         self.__special = special
-        p_gtkuti.ThanDialog.__init__(self, master, *args, **kw)
+        p_gtkwid.ThanDialog.__init__(self, master, *args, **kw)
 
     def body(self, fra):
         "Create dialog widgets."
@@ -86,7 +86,7 @@ class ThanColor(p_gtkuti.ThanDialog):
 
         ic1 = 1
         for jcol in xrange(0, 10):
-            thc = thanatt.thanAttCol(p_gimdxf.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
+            thc = thanatt.thanAttCol(p_gcol.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
             but = Button(f, width=buwi, bd=1, bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
             but.grid(row=1, column=ic1, padx=buwi)
             ic1 += 1
@@ -94,7 +94,7 @@ class ThanColor(p_gtkuti.ThanDialog):
 
     def __grayShades(self, fra, ir, ic, buwi):
         "Shows shades of gray."
-        grays = [rgb for rgb in p_gimdxf.thanDxfColCode2Rgb.itervalues()  if rgb[0] == rgb[1] == rgb[2]]
+        grays = [rgb for rgb in p_gcol.thanDxfColCode2Rgb.itervalues()  if rgb[0] == rgb[1] == rgb[2]]
         grays.sort()
         n = len(grays)
 
@@ -143,31 +143,31 @@ class ThanColor(p_gtkuti.ThanDialog):
         w = Frame(f, width=5); w.grid(row=0, column=len(thancadconf.thanColUser)+1)
 
         ic1 = 1
-	self.rbut = [None]*len(thancadconf.thanColUser)
-	for i,col in enumerate(thancadconf.thanColUser):
-	    if col == None:
-	        self.rbut[i] = Button(f, width=buwi, bd=1, command=None)
-	    else:
+        self.rbut = [None]*len(thancadconf.thanColUser)
+        for i,col in enumerate(thancadconf.thanColUser):
+            if col is None:
+                self.rbut[i] = Button(f, width=buwi, bd=1, command=None)
+            else:
                 thc = thanatt.thanAttCol(col)
-	        self.rbut[i] = Button(f, width=buwi, bd=1, bg=thc.thanTk, activebackground=thc.thanTk,
-		                      command=S(self.__updateChosen, str(thc)))
-	    self.rbut[i].grid(row=1, column=ic1, pady=4, padx=buwi)
-	    ic1 += 1
+                self.rbut[i] = Button(f, width=buwi, bd=1, bg=thc.thanTk, activebackground=thc.thanTk,
+                                      command=S(self.__updateChosen, str(thc)))
+            self.rbut[i].grid(row=1, column=ic1, pady=4, padx=buwi)
+            ic1 += 1
 
         f1 = Frame(f)
-	f1.grid(row=2, column=1, columnspan=max((len(thancadconf.thanColUser), 1)), sticky="e")
-	but = Button(f1, text="Nearest palette color", command=S(self.__nearest))
-	but.grid(row=0, column=0, sticky="e")
-	but = Button(f1, text="Define new...", command=S(self.__choosecol))
-	but.grid(row=0, column=1, sticky="e")
+        f1.grid(row=2, column=1, columnspan=max((len(thancadconf.thanColUser), 1)), sticky="e")
+        but = Button(f1, text="Nearest palette color", command=S(self.__nearest))
+        but.grid(row=0, column=0, sticky="e")
+        but = Button(f1, text="Define new...", command=S(self.__choosecol))
+        but.grid(row=0, column=1, sticky="e")
 
 
     def __nearest(self):
         "Find nearest 'full color palette' color to the one chosen."
-	thc = self.__updateChosen()
-	if thc in (None, thanvar.THANBYPARENT, thanvar.THANPERSONAL): return
-	col = thc.thanDxf()
-	self.__updateChosen(str(col))
+        thc = self.__updateChosen()
+        if thc in (None, thanvar.THANBYPARENT, thanvar.THANPERSONAL): return
+        col = thc.thanDxf()
+        self.__updateChosen(str(col))
 
 
     def __partialFullColor(self, fra, ir, ic):
@@ -182,7 +182,7 @@ class ThanColor(p_gtkuti.ThanDialog):
         for i in range(18, 9, -2)+range(11, 20, 2):
             ic1 = 0
             for jcol in xrange(i, 230+i+1, 10):
-                thc = thanatt.thanAttCol(p_gimdxf.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
+                thc = thanatt.thanAttCol(p_gcol.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
 #                but = Button(f, image=blankim1, width=10, height=8, # Blank image instead of blank text, so that button is arbitrarily small
                 but = Button(f, image=blankim1, width=14, height=8, # Blank image instead of blank text, so that button is arbitrarily small
                 bd=1, bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
@@ -197,96 +197,96 @@ class ThanColor(p_gtkuti.ThanDialog):
 
     def __chosenValue(self, fra, ir, ic, buwi):
         "Shows the chosen value and the capability to compose a new rgb one."
-	f = Frame(fra, bd=0, relief=GROOVE); f.grid(row=ir, column=ic, sticky="we", ipady=4, pady=4)
-	f.columnconfigure(10, weight=1)
+        f = Frame(fra, bd=0, relief=GROOVE); f.grid(row=ir, column=ic, sticky="we", ipady=4, pady=4)
+        f.columnconfigure(10, weight=1)
 
-	w = Label(f, text="Chosen Color:")
-	w.grid(row=0, column=1, sticky="w")
-	self.thanCol = Entry(f, width=12)
-	self.thanCol.grid(row=0, column=2, sticky="w")
-	self.cbut = Button(f, width=buwi, bd=1, command=self.__updateChosen)
-	self.cbut.grid(row=0, column=3, sticky="w", padx=buwi)
-	self.thanColRGB = Label(f, text="")
-	self.thanColRGB.grid(row=0, column=4, sticky="w")
+        w = Label(f, text="Chosen Color:")
+        w.grid(row=0, column=1, sticky="w")
+        self.thanCol = Entry(f, width=12)
+        self.thanCol.grid(row=0, column=2, sticky="w")
+        self.cbut = Button(f, width=buwi, bd=1, command=self.__updateChosen)
+        self.cbut.grid(row=0, column=3, sticky="w", padx=buwi)
+        self.thanColRGB = Label(f, text="")
+        self.thanColRGB.grid(row=0, column=4, sticky="w")
 
-	self.__updateChosen(self.__val)
-	del self.__val
+        self.__updateChosen(self.__val)
+        del self.__val
 
 
     def __updateChosen(self, txtcol=None):
         "Updates the button with the chosen value."
-        if txtcol == None: txtcol = self.thanCol.get()
+        if txtcol is None: txtcol = self.thanCol.get()
         txtcol = txtcol.strip()
         thc = thanatt.thanAttCol(txtcol)
-        if thc != None:
+        if thc is not None:
             txtcol = str(thc)
             tkcol = thc.thanTk
             rgb = thc.rgbShow()
-	elif txtcol == str(thanvar.THANBYPARENT):
-	    thc = thanvar.THANBYPARENT
-	    tkcol = self.thanAttsTk[1]
-	    rgb = ""
-	elif txtcol == str(thanvar.THANPERSONAL):
-	    thc = thanvar.THANPERSONAL
-	    tkcol = self.thanAttsTk[1]
-	    rgb = ""
-	else:
-	    tkcol = self.thanAttsTk[1]
-	    rgb = ""
+        elif txtcol == str(thanvar.THANBYPARENT):
+            thc = thanvar.THANBYPARENT
+            tkcol = self.thanAttsTk[1]
+            rgb = ""
+        elif txtcol == str(thanvar.THANPERSONAL):
+            thc = thanvar.THANPERSONAL
+            tkcol = self.thanAttsTk[1]
+            rgb = ""
+        else:
+            tkcol = self.thanAttsTk[1]
+            rgb = ""
         self.cbut.config(bg=tkcol, activebackground=tkcol)
-	self.thanColRGB.config(text=rgb)
-	self.thanColRGB.update_idletasks()  		         # _idletasks breaks WinDoze (98?) support. Skotistika
-	self.thanCol.delete(0, END)
-	self.thanCol.insert(0, txtcol)
-	return thc
+        self.thanColRGB.config(text=rgb)
+        self.thanColRGB.update_idletasks()                           # _idletasks breaks WinDoze (98?) support. Skotistika
+        self.thanCol.delete(0, END)
+        self.thanCol.insert(0, txtcol)
+        return thc
 
 
     def __getAttrs(self):
         "Returns suitable fonts, colors and images."
-        if self.thanAttsTk == None:
-	    but = Button(self)
-	    butfont1 = p_gtkuti.thanFontGet(but)
-	    butcol1 = but["bg"]
-	    but.destroy()
-	    butfont1.config(size=6)
-	    self.__class__.thanAttsTk = butfont1, butcol1, \
-	                               BitmapImage(data=chr(0)*2) # A blank b/w image of size 2x2 pixels
+        if self.thanAttsTk is None:
+            but = Button(self)
+            butfont1 = p_gtkwid.thanFontGet(but)
+            butcol1 = but["bg"]
+            but.destroy()
+            butfont1.config(size=6)
+            self.__class__.thanAttsTk = butfont1, butcol1, \
+                                       BitmapImage(data=chr(0)*2) # A blank b/w image of size 2x2 pixels
 
     def __choosecol(self, *args):
         "Lets the user define a new TGB color."
         thc = self.__updateChosen()
-	if thc in (None, thanvar.THANBYPARENT, thanvar.THANPERSONAL): tkcol = "white"
-	else: tkcol = thc.thanTk
+        if thc in (None, thanvar.THANBYPARENT, thanvar.THANPERSONAL): tkcol = "white"
+        else: tkcol = thc.thanTk
         col, tkcol = askcolor(tkcol, master=self, parent=self)
-	if col == None: return
-	tkcol = str(tkcol)
-	thc = thanatt.thanAttCol((int(tkcol[1:3], 16), int(tkcol[3:5], 16), int(tkcol[5:7], 16)))
-	thc = self.__updateChosen(str(thc))    # Note that this returns a valid color
+        if col is None: return
+        tkcol = str(tkcol)
+        thc = thanatt.thanAttCol((int(tkcol[1:3], 16), int(tkcol[3:5], 16), int(tkcol[5:7], 16)))
+        thc = self.__updateChosen(str(thc))    # Note that this returns a valid color
 
-	if str(thc) in thancadconf.thanColUser: return
-	del thancadconf.thanColUser[-1]; thancadconf.thanColUser.insert(0, str(thc))
-	for i,col in enumerate(thancadconf.thanColUser):
-            if col == None: continue
-	    thc = thanatt.thanAttCol(col)
-	    self.rbut[i].config(bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
+        if str(thc) in thancadconf.thanColUser: return
+        del thancadconf.thanColUser[-1]; thancadconf.thanColUser.insert(0, str(thc))
+        for i,col in enumerate(thancadconf.thanColUser):
+            if col is None: continue
+            thc = thanatt.thanAttCol(col)
+            self.rbut[i].config(bg=thc.thanTk, activebackground=thc.thanTk, command=S(self.__updateChosen, str(thc)))
 
     def validate(self):
         "Returns true if the value chosen by the user is valid."
-	thc = self.__updateChosen()
-	if thc == None:
-	    p_gtkuti.thanGudModalMessage(self, "Invalid ThanCad color", "Error Message")
-	    return False
-	if thc in (thanvar.THANBYPARENT, thanvar.THANPERSONAL):
-	    self.result = thc
-	else:
-	    self.result = thc
-	return True
+        thc = self.__updateChosen()
+        if thc is None:
+            p_gtkwid.thanGudModalMessage(self, "Invalid ThanCad color", "Error Message")
+            return False
+        if thc in (thanvar.THANBYPARENT, thanvar.THANPERSONAL):
+            self.result = thc
+        else:
+            self.result = thc
+        return True
 
 
     def destroy(self):
         "Deletes references to widgets, so that it breaks circular references."
         del self.rbut, self.thanCol, self.cbut, self.thanColRGB
-        p_gtkuti.ThanDialog.destroy(self)
+        p_gtkwid.ThanDialog.destroy(self)
 
 
     def __del__(self):

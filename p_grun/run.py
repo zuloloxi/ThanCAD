@@ -34,16 +34,15 @@ import os, sys
 from subprocess import Popen, PIPE, STDOUT
 try: import pexpect
 except ImportError: pexpect = None
-from p_ggen import togi, path, thanUnicode, Pyos
-import p_gtkuti, p_gfil
+from p_ggen import togi, path, thanUnicode, Pyos, Tgui, isString
+import p_gtkwid
 from winerror import ThanTkWinError, ThanShellError
 
 
 def runExecWin(app, pdir, pexpectline=True, popen=False, shell=False, env=None, **kw):
     "Opens a window, runs an executable and redirect the output to this window."
-    from p_gfil import Tgui
     out = ThanTkWinError(**kw)
-    p_gtkuti.thanGudPosition(out)
+    p_gtkwid.thanGudPosition(out)
     out.thanTkSetFocus()
     try:
         runExec(app, pdir, out, pexpectline, popen, env)
@@ -51,7 +50,7 @@ def runExecWin(app, pdir, pexpectline=True, popen=False, shell=False, env=None, 
     except BaseException, e:
         dl = "%s '%s'" % (Tgui["Error while executing external program"], app)
         out.thanPrt("\n%s:\n%s" % (dl, e), "can")
-        p_gtkuti.thanGudModalMessage(out, "%s.\n." % (dl, Tgui["Details were recorded on output window"]),
+        p_gtkwid.thanGudModalMessage(out, "%s.\n." % (dl, Tgui["Details were recorded on output window"]),
                                           "%s %s" % (Tgui["ERROR executing"], thanUnicode(app)))
         out.thanPrt("\n%s\n" % (Tgui["Close this window to finish.."],), "mes")
 
@@ -87,6 +86,7 @@ def runExec(app, pdir, out, pexpectline=True, popen=False, shell=False, env=None
 def _pexpectCharun(app, out, env=None, timeout=2000):
         "Run the program with pexpect."
 #        p1 = pexpect.spawn(app, cwd=pdir)
+        if not isString(app): app = " ".join(app)
         p1 = pexpect.spawn(app, timeout=timeout, env=_envmerge(env))
         prts = out.thanPrts
         try:
@@ -101,6 +101,7 @@ def _pexpectCharun(app, out, env=None, timeout=2000):
 def _pexpectLinerun(app, out, env=None, timeout=2000):
         "Run the program with pexpect; a whole line must be submitted by the program in oprder yo be diaplyed in the window."
 #        p1 = pexpect.spawn(app, cwd=pdir)
+        if not isString(app): app = " ".join(app)
         p1 = pexpect.spawn(app, timeout=timeout, env=_envmerge(env))
         prts = out.thanPrts
         while True:
@@ -164,9 +165,10 @@ def _popenrun(app, pdir, out, shell=False, env=None):
 
 def runCompileScript(script, dir1=".", out=None, env=None):
         "Runs a Thanasis' compile script."
-        if out == None:
-            winmain, _, _ = p_gfil.openfileWinget()
-            out = ThanShellError() if winmain == None else winmain
+#        if out == None:
+#            winmain, _, _ = p_gfil.openfileWinget()
+#            out = ThanShellError() if winmain == None else winmain
+        if out == None: out = ThanShellError()
         prt = out.thanPrt
         if script == None:
             prt("******Warning: no compile script found!", "can1")

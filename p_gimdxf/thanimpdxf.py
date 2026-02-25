@@ -1,32 +1,6 @@
-##############################################################################
-# ThanCad 0.0.4: 2dimensional CAD with raster support for engineers.
-# 
-# Copyright (C)  14, September 2002  by Thanasis Stamos
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
-# 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-##############################################################################
-
-"""\
-ThanCad 0.0.4: 2dimensional CAD with raster support for engineers.
-This module defines an object which reads a .dxf file and it creates
-ThanCad's elements to represent it in ThanCad.
-"""
 import p_ggen
 from math import isnan
+import thanimpdxfget
 from thanimpdxfent import ThanEntities
 from thanimpdxfhead import ThanHeader
 from thanimpdxftab import ThanTables
@@ -116,7 +90,10 @@ class ThanImportDxf(ThanImportBase, ThanHeader, ThanEntities, ThanTables):
                 self.thanEr1s("Dxf code not an integer")
             s = self.fDxf.readline()
             if s == "": return -1, ""             # End Of File: incomplete dxf file 
-            s = s.rstrip()             #Thanasis2011_12_30: Changed from strip() to rstrip() - Happy new year!!
+            if icodp < 10 and icodp != 1:  #Thanasis2013_04_21: If code<10 and not 1 then it is a name
+                s = s.strip().upper()      #Thanasis2013_04_21
+            else:
+                s = s.rstrip()             #Thanasis2011_12_30: Changed from strip() to rstrip() - Happy new year!!
             self._prevline = icodp, s
             self._lindxf += 2
         return self._prevline
@@ -155,22 +132,22 @@ class ThanImportDxf(ThanImportBase, ThanHeader, ThanEntities, ThanTables):
 
     @staticmethod
     def trAtts(atts, func, *keys):
-     """Tries to convert values of keys to the correct type.
+        """Tries to convert values of keys to the correct type.
 
      If a key is negative then it doesn't matter if key is not present in dict
      atts. If it is positive, it is an error if key is not in atts.
      Then, the func is applied to the atts[key] and if this is not
      possible an error is returned.
-     """
-     for key1 in keys:
-        key = abs(key1)
-        if key not in atts:
-            if key1 >= 0: return 1     # Key should be present; return error
-        else:
-            try: a = func(atts[key])                  # Try to covert to the correct type
-            except (ValueError, TypeError): return 1  # Conversion failed; return error
-            else:  atts[key] = a                      # Conversion succesful
-     return 0
+        """
+        for key1 in keys:
+            key = abs(key1)
+            if key not in atts:
+                if key1 >= 0: return 1     # Key should be present; return error
+            else:
+                try: a = func(atts[key])                  # Try to covert to the correct type
+                except (ValueError, TypeError): return 1  # Conversion failed; return error
+                else:  atts[key] = a                      # Conversion succesful
+        return 0
 
 
     @staticmethod
@@ -185,22 +162,19 @@ class ThanImportDxf(ThanImportBase, ThanHeader, ThanEntities, ThanTables):
         possible an error is returned.
         """
         for key1 in keys:
-           key = abs(key1)
-           if key not in atts:
-               if key1 >= 0: return 1     # Key should be present; return error
-           else:
-               try:
-                   a = float(atts[key])        # Try to covert to the correct type
-                   if isnan(a): return 1       # Conversion failed: Not A Number; return error
-               except (ValueError, TypeError):
-                   return 1                    # Conversion failed; return error
-               else:
-                   atts[key] = a               # Conversion succesful
+            key = abs(key1)
+            if key not in atts:
+                if key1 >= 0: return 1     # Key should be present; return error
+            else:
+                try:
+                    a = float(atts[key])        # Try to covert to the correct type
+                    if isnan(a): return 1       # Conversion failed: Not A Number; return error
+                except (ValueError, TypeError):
+                    return 1                    # Conversion failed; return error
+                else:
+                    atts[key] = a               # Conversion succesful
         return 0
 
-
-############################################################################
-############################################################################
 
 def thanImportDxf(fDxf, dr, defaultLayer="0"):
     "Creates an instance of the class to do the import."
@@ -208,13 +182,9 @@ def thanImportDxf(fDxf, dr, defaultLayer="0"):
     return ti.thanImport()
 
 
-############################################################################
-############################################################################
-
-#MODULE LEVEL CODE: THIS IS EXECUTED ONLY ONCE
-
 if 0:
     f = file("mhk.dxf", "r")
+    dr = thanimpdxfget.ThanDrSave();
     t = ThanImportDxf(f, dr)
     t.thanImport()
     f.close()

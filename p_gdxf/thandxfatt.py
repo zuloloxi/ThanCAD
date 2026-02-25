@@ -1,5 +1,5 @@
 class ThanDxfAtt:
-    "Mixin for setting and writting attributes."
+    "Mixin for setting and writing attributes."
 
     def __init__(self):
         "Initialisation is not needed, but for compatibility."

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This package emulates the dxf library in ThanCad.
 """
@@ -34,15 +34,15 @@ class ThanDxfSym:
 
     def __init__(self):
         "No initialisation needed."
-	pass
+        pass
 
     def thanDxfPlotNumber (self, x, y, h, dn, theta, nn):
         "Plots a number to .dxf file."
         if nn < 0:
-	    s = str(int(dn+0.5))
-	else:
-	    s = ("%." + str(nn) + "f") % (dn, )
-	self.thanDxfPlotSymbol(x, y, h, s, theta)
+            s = str(int(dn+0.5))
+        else:
+            s = ("%." + str(nn) + "f") % (dn, )
+        self.thanDxfPlotSymbol(x, y, h, s, theta)
 
     def thanDxfPlotSymbol3(self, xx, yy, zz, hh, text, th):
         "Plots a 3d string to a .dxf file."
@@ -53,7 +53,7 @@ class ThanDxfSym:
         al = hh * self.thanXfac * len(text)
         self.thanPXnow = px + al * cos(pt)
         self.thanPYnow = py + al * sin(pt)
-	self.thanPZnow = pz
+        self.thanPZnow = pz
 
     def thanDxfPlotSymbol(self, xx, yy, hh, text, th):
         "Plots a string to a .dxf file."
@@ -83,8 +83,8 @@ c     words."""
 #        FVDW=1.0+1.0/2.0)
 
         t = (th - 90.0) * pi / 180.0
-        sh = FVDL * h * dsin(t)
-        ch = FVDL * h * dcos(t)
+        sh = FVDL * h * sin(t)
+        ch = FVDL * h * cos(t)
         xx = x
         yy = y
 

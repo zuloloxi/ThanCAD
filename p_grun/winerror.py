@@ -29,10 +29,10 @@ future, if the user doubleclicks an error message, appropriate action will be
 carried out, to correct the error (with the user's help).
 """
 import time, Tkinter
-import p_gtkwid, p_gtkuti, p_ggen
+import p_gtkwid, p_ggen
 
 
-class ThanTkWinError(Tkinter.Toplevel, p_gtkuti.ThanFontResize):
+class ThanTkWinError(Tkinter.Toplevel, p_gtkwid.ThanFontResize):
     "A window with active error messages."
 
     def __init__(self, master, mes="", title="", modal=False, hbar=0, vbar=1, width=80, height=25,
@@ -40,7 +40,7 @@ class ThanTkWinError(Tkinter.Toplevel, p_gtkuti.ThanFontResize):
         "Create the Information window."
         Tkinter.Toplevel.__init__(self, master)
         self.thanResizeFont(font)
-        if modal: thanGrabSet(self)
+        if modal: p_gtkwid.thanGrabSet(self)
         self.title(p_ggen.thanUnicode(title))
         self.thanTxtHelp = p_gtkwid.ThanScrolledText(self, readonly=True, hbar=hbar, vbar=vbar,
             background=background, foreground=foreground, width=width, height=height)
@@ -108,7 +108,7 @@ class ThanTkWinError(Tkinter.Toplevel, p_gtkuti.ThanFontResize):
     def destroy(self):
         "Erases circular dependencies."
         del self.thanTxtHelp
-        p_gtkuti.ThanFontResize.thanDestroy(self)
+        p_gtkwid.ThanFontResize.thanDestroy(self)
         Tkinter.Toplevel.destroy(self)
 
 

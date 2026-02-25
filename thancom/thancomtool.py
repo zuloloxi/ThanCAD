@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for the commands of the tool menu.
@@ -32,7 +32,7 @@ import copy
 import p_ggen, p_ggeom
 from p_ggeom import area
 from p_gtri import hull
-import thandr, thantkdia, thanlayer
+import thandr, thanobj, thantkdia
 from thanvar import Canc
 from thanopt import thancadconf
 from thantrans import T
@@ -42,13 +42,12 @@ import thancomsel, thanundo
 def thanToolSimplif(proj):
     "Simplifies a line."
     from thancommod import thanModEnd, thanModCanc, thanModCancSel
-    import thantkdia
     ThanLine = thandr.ThanLine
     name = "LINESIMPLIFICATION"
     lss = proj[1].thanObjects[name]
     if len(lss) == 0:
         objold = []
-        s = thandr.thanobject.LineSimplification()
+        s = thanobj.LineSimplification()
     else:
         objold = [(name, lss[0])]
         s = copy.deepcopy(lss[0])
@@ -65,10 +64,10 @@ def thanToolSimplif(proj):
         if res == "s":
             thanModCancSel(proj)   #The user did not select anything so cancel current (empty) selection
             w = thantkdia.ThanSimplificationSettings(proj[2], vals=s.toDialog(), cargo=proj)
-            if w.result == None:
-                 proj[2].thanPrtCan()  #Inform user that the dialog was cancelled
+            if w.result is None:
+                proj[2].thanPrtCan()  #Inform user that the dialog was cancelled
             else:
-                 s.fromDialog(w.result)
+                s.fromDialog(w.result)
             continue
         break
     elems = proj[2].thanSelall
@@ -109,7 +108,6 @@ __dismin = 0.1
 def thanToolInterpolate(proj):
     "Simplifies a line."
     from thancommod import thanModEnd, thanModCanc, thanModCancSel
-    import thantkdia
     global __disint, __dismin
     disint = __disint
     dismin = __dismin
@@ -180,7 +178,7 @@ def thanToolHull(proj):
     cp = []
     for lin1 in lins: cp.extend(lin1.cp)
     u = hull(cp)
-    if u == None: return thanModCanc(proj, T["Degenerate convex hull."])
+    if u is None: return thanModCanc(proj, T["Degenerate convex hull."])
     elem = thandr.ThanLine()
     elem.thanSet(u)
     proj[1].thanElementAdd(elem)
@@ -270,7 +268,7 @@ def thanToolAngle(proj):
 def thanToolOsnap(proj):
     "Displays a dialog for the drafting settings."
     d = thantkdia.ThanTkOsnap(proj[2], thancadconf.thanOsnapModes, thancadconf.thanBOSN, title="Drafting Settings")
-    if d.result == None:
+    if d.result is None:
         proj[2].thanGudCommandCan()
     else:
         thancadconf.thanOsnapModes.clear()

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,12 +21,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines base class for ThanCad fonts made by straight lines.
 """
 
-from types import *
+from types import IntType
 from math import pi, cos, sin
 import copy
 
@@ -47,57 +47,57 @@ class ThanFontLine(ThanFont):
 
     def __init__(self, name, A, B, C, proportional, dilines):
         """Initialisation.
-	o--------o B     All capital characters and most small ones fit into
-	|        |       the AB rectangle. Some small characters as p,q,j
-      h	|        |       use the AC rectangle.
-	|        |       The insertion point of the character is point A.
-	|   b    |       The local coordinates of points A, B, C must be defined.
+        o--------o B     All capital characters and most small ones fit into
+        |        |       the AB rectangle. Some small characters as p,q,j
+      h        |        |       use the AC rectangle.
+        |        |       The insertion point of the character is point A.
+        |   b    |       The local coordinates of points A, B, C must be defined.
       A o--------o       It is assumed that xA == xC.
-	|        |       If proportional is True, then the last line of each character,
-	|        | h1    (which is not really a line), defines one and only one point,
-      C	o--------o       which will be the origin of the next character.
+        |        |       If proportional is True, then the last line of each character,
+        |        | h1    (which is not really a line), defines one and only one point,
+      C        o--------o       which will be the origin of the next character.
                          Note that proportional fonts (which define the above last point)
-			 can be also used as fixed-size, since lines with one point are
-			 ignored.
+                         can be also used as fixed-size, since lines with one point are
+                         ignored.
 
-	"""
+        """
         ThanFont.__init__(self, name)
-	self.thanABC = tuple(A), tuple(B), tuple(C)       # Dimensions of a rectangle
-	self.thanProp = proportional
-	self.thanDilines = dilines
-	self.thanVert = False
-	self.thanMakepairs()
-#	self.thanObliqueMake(30)
-#	self.thanVerticalMake()
+        self.thanABC = tuple(A), tuple(B), tuple(C)       # Dimensions of a rectangle
+        self.thanProp = proportional
+        self.thanDilines = dilines
+        self.thanVert = False
+        self.thanMakepairs()
+#       self.thanObliqueMake(30)
+#       self.thanVerticalMake()
 
     def thanCopy(self):
         "Make a distinct copy of self."
-	return copy.deepcopy(self)
+        return copy.deepcopy(self)
 
     def thanCopypartial(self, keep):
         "Make a distinct copy of self, copying only certain characters."
-	sty = copy.copy(self)
-	dil = self.thanDilines; dilnew = {}; cop = copy.deepcopy
-	for c in keep+chr(self.thanImiss):
-	    i = ord(c)
-	    try: dilnew[i] = cop(dil[i])
-	    except KeyError: pass
-	sty.thanDilines = dilnew
-	return sty
+        sty = copy.copy(self)
+        dil = self.thanDilines; dilnew = {}; cop = copy.deepcopy
+        for c in keep+chr(self.thanImiss):
+            i = ord(c)
+            try: dilnew[i] = cop(dil[i])
+            except KeyError: pass
+        sty.thanDilines = dilnew
+        return sty
 
     def thanExportTxt(self, fw):
         "Export the font coordinates to a text file."
-	fw.write("%s\n" % self.thanName)
-	fw.write("%s\n" % (("fixed", "proportional")[self.thanProp],))
-	tfont = self.thanDilines
-	linesdef = tfont[self.thanImiss]
+        fw.write("%s\n" % self.thanName)
+        fw.write("%s\n" % (("fixed", "proportional")[self.thanProp],))
+        tfont = self.thanDilines
+        linesdef = tfont[self.thanImiss]
         for i in xrange(256):                          # Loop of all the characters
-	    fw.write("%d\n" % i)
-	    lines = tfont.get(i, linesdef)
+            fw.write("%d\n" % i)
+            lines = tfont.get(i, linesdef)
             for pl in lines:                           # Loop of all polylines of a char
                 for (xx, yy) in pl: fw.write("%15.3f%15.3f\n" % (xx, yy))
-		fw.write("$\n")
-	    fw.write("$\n")
+                fw.write("$\n")
+            fw.write("$\n")
 
 
 #=============================================================================
@@ -207,22 +207,22 @@ class ThanFontLine(ThanFont):
         assert h >= 1, "Text height must be > 1 pixel"
         c = cos(theta); s = sin(theta)
         scale = h / self.thanHnorm; bx  = scale * c; by = scale * s
-	if self.thanVert:
+        if self.thanVert:
             hx2 = 1.2*(0*bx - (-self.thanHnorm*by)); hy2 = 1.2*(-0*by - (-self.thanHnorm*bx))
-	else:
+        else:
             hx2 = self.thanBnorm*bx - 0*by; hy2 = -self.thanBnorm*by - 0*bx
 
 #-------Transform the coordinates
 
-	tfont = self.thanDilines
-	linesdef = tfont[self.thanImiss]
+        tfont = self.thanDilines
+        linesdef = tfont[self.thanImiss]
         dc = tk.dc; col = tk.outline; wid = tk.widthline
         print "thanPilPaint: a=", a
         for c in a:                                    # Loop of all the characters in text
             try: lines = tfont[ord(c)]
             except KeyError: lines = linesdef
             for pl in lines:                           # Loop of all polylines of a char
-                plr = [	(xz+xx*bx-yy*by, yz-(xx*by+yy*bx)) for (xx, yy) in pl ]
+                plr = [        (xz+xx*bx-yy*by, yz-(xx*by+yy*bx)) for (xx, yy) in pl ]
                 if len(plr) > 1: dc.line(plr, fill=col, width=wid)
             if self.thanProp: xz, yz = plr[0]          # Next character position is defined within current char
             else:             xz += hx2; yz += hy2     # Advance to next fixed character position
@@ -231,35 +231,35 @@ class ThanFontLine(ThanFont):
 
     def thanMakepairs(self):
         "Makes the list of coordinates as list of tuples and normalises coordinates."
-	xor, yor = self.thanABC[0]
-	scale = self.thanHnorm / (self.thanABC[1][1] - yor)
-	self.thanBnorm = (self.thanABC[1][0] - xor) * scale
+        xor, yor = self.thanABC[0]
+        scale = self.thanHnorm / (self.thanABC[1][1] - yor)
+        self.thanBnorm = (self.thanABC[1][0] - xor) * scale
         for lines in self.thanDilines.itervalues():
             if type(lines) == IntType: continue
             for li in lines:
-	        if len(li) < 1: continue
-		c = li[0]
-		try:    c[0]; c[1]
-		except: li[:] = [((li[i]-xor)*scale, (li[i+1]-yor)*scale) for i in xrange(0, len(li), 2)]
-		else:   li[:] = [((x-xor)*scale, (y-yor)*scale) for x,y in li]
+                if len(li) < 1: continue
+                c = li[0]
+                try:    c[0]; c[1]
+                except: li[:] = [((li[i]-xor)*scale, (li[i+1]-yor)*scale) for i in xrange(0, len(li), 2)]
+                else:   li[:] = [((x-xor)*scale, (y-yor)*scale) for x,y in li]
 
-	self.thanDilines.setdefault(self.thanImiss, [(self.thanBnorm*0.5, 0.0)] )
+        self.thanDilines.setdefault(self.thanImiss, [(self.thanBnorm*0.5, 0.0)] )
 
         for i in xrange(10): # De-index font
-	    again = False
+            again = False
             for key,lines in self.thanDilines.iteritems():
                 if type(lines) != IntType: continue
-	        self.thanDilines[key] = self.thanDilines[lines]   # Note that this does NOT waste memory
-	        again = True
-	    if not again: return
-	raise ValueError, "font %s: key indexing too nested or circular!!" % self.thanName
+                self.thanDilines[key] = self.thanDilines[lines]   # Note that this does NOT waste memory
+                again = True
+            if not again: return
+        raise ValueError, "font %s: key indexing too nested or circular!!" % self.thanName
 
     def thanWidthScale(self, scale):
         "Scale only x coordinates by f."
-	assert scale > 0.0
+        assert scale > 0.0
         for lines in self.thanDilines.itervalues():
-	    lines[:] = [ [(x*scale, y) for x,y in li] for li in lines]
-	self.thanBnorm *= scale
+            lines[:] = [ [(x*scale, y) for x,y in li] for li in lines]
+        self.thanBnorm *= scale
 
     def thanObliqueMake(self, phi):
         "Make the font oblique; rotate only y coordinate; affects only x coordinate."
@@ -269,26 +269,26 @@ class ThanFontLine(ThanFont):
             lines[:] = [ [(x + y*s, y) for x,y in li] for li in lines]
 
     def thanUpsidedownMake(self):
-        "Makes the font upside down; essentialy the letters are mirrored."
-	h = self.thanHnorm
+        "Makes the font upside down; essentially the letters are mirrored."
+        h = self.thanHnorm
         for lines in self.thanDilines.itervalues():
-	    lines[:-1] = [ [(x, h-y) for x,y in li] for li in lines[:-1]]
+            lines[:-1] = [ [(x, h-y) for x,y in li] for li in lines[:-1]]
 
     def thanBackwardsMake(self):
-        "Makes the font look backwards; essentialy the letters are mirrored."
+        "Makes the font look backwards; essentially the letters are mirrored."
         for lines in self.thanDilines.itervalues():
-	    if self.thanProp: b = lines[-1][0][0]
-	    else:             b = self.thanBnorm
-	    lines[:-1] = [ [(b-x, y) for x,y in li] for li in lines[:-1]]
+            if self.thanProp: b = lines[-1][0][0]
+            else:             b = self.thanBnorm
+            lines[:-1] = [ [(b-x, y) for x,y in li] for li in lines[:-1]]
 
     def thanVerticalMake(self):
-        "Makes the font look backwards; essentialy the letters are mirrored."
+        "Makes the font look backwards; essentially the letters are mirrored."
         for lines in self.thanDilines.itervalues():
-	    if self.thanProp: b = lines[-1][0][0]*0.5
-	    else:             b = self.thanBnorm*0.5
-	    h = self.thanHnorm
-	    lines[:-1] = [ [(x-b, y-h) for x,y in li] for li in lines[:-1]]
-	self.thanProp = False            # Next character position defined within current char, is invalid
-	self.thanVert = True
+            if self.thanProp: b = lines[-1][0][0]*0.5
+            else:             b = self.thanBnorm*0.5
+            h = self.thanHnorm
+            lines[:-1] = [ [(x-b, y-h) for x,y in li] for li in lines[:-1]]
+        self.thanProp = False            # Next character position defined within current char, is invalid
+        self.thanVert = True
 
 thanFonts = {}

@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which creates a floor plan design automatically.
 """
@@ -31,6 +31,7 @@ import random, copy
 from functools import partial
 from p_ggen import prg
 from p_ganneal import SAAnnealable
+import p_gimage
 
 class Room:
     "A class which represents a room, posible divided."
@@ -71,8 +72,8 @@ class Room:
         if self.isleaf():
             sall.append(self)                #Splitable
         else:
-            if self.roomll.isplit == None and \
-                self.roomur.isplit == None: chall.append(self) #Changable: parent, but not a grandparent
+            if self.roomll.isplit is None and \
+                self.roomur.isplit is None: chall.append(self) #Changable: parent, but not a grandparent
             mall.append(self)                #Mergeable
             self.roomll.list(all, mall, sall, chall)
             self.roomur.list(all, mall, sall, chall)
@@ -313,21 +314,20 @@ class RoomConfiguration(SAAnnealable):
 
     def imageForegroundState(self, im, ct, colot, T, e):
         "Superimpose image foreground to the given the background image."
-        import ImageDraw
-        imd = ImageDraw.Draw(im)
+        import p_gimage
+        imd = p_gimage.Draw(im)
         if colot == "green":
             self.root.plot3(imd, ct, -1)
         else:
             self.root.plot3(imd, ct, 0)
-            if T != None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill="yellow")
+            if T is not None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill="yellow")
 
     def imageBackgroundState(self, imsize):
         "Create and return background image and object for coordinate transformation."
-        import Image
         from p_gmath import ThanRectCoorTransf
         width, height = imsize
         ct = ThanRectCoorTransf(self.root.xymm, (5, height-5, width-5, 5))
-        im = Image.new("RGB", imsize, (0, 0, 0))
+        im = p_gimage.new("RGB", imsize, (0, 0, 0))
         return im, ct
 
 

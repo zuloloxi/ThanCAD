@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,9 +22,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
-This module computes intersection of 2 lines sgements (extending them if
+This module computes intersection of 2 lines segments (extending them if
 necessary and joins them with circular arc.
 """
 from math import pi
@@ -34,7 +34,7 @@ from thanroad import calcRoadNode
 
 
 def thanFiletCalc(a, b, rr, anear=None, bnear=None):
-      """
+    """
 c-----Εύρεση τομής δύο ευθυγράμμων τμημάτων
 c                                                ->     ->
 c     Ο αλγόριθμος θεωρεί ότι όταν τα διανύσματα AB και 12 είναι
@@ -60,52 +60,52 @@ c                      \        w is essentially the normalised distance between
 c                       \       1-w is the normalised distance between 1 and T
 c                        \      If absisline==True, the a-b is considered infinite line
 c                         o 1   If c12isline==True, the 1-2 is considered infinite line
-      """
+    """
 
-      assert rr >= 0.0, "negative radius?!"
-      assert len(a.cp) == 2 and len(b.cp) == 2, "This routine can filet only single line segments"
+    assert rr >= 0.0, "negative radius?!"
+    assert len(a.cp) == 2 and len(b.cp) == 2, "This routine can filet only single line segments"
 
 #-----Υπολόγισε διανύσματα
 
-      ca, cb, c1, c2 = map(Vector2, a.cp+b.cp)
-      cab = cb - ca
-      c12 = c2 - c1
-      ca2 = c2 - ca
+    ca, cb, c1, c2 = map(Vector2, a.cp+b.cp)
+    cab = cb - ca
+    c12 = c2 - c1
+    ca2 = c2 - ca
 
 #-----Ανάλυση σε δύο συνιστώσες παράληλλες προς τα 2 ευθ. τμήματα
 
-      u, w = ca2.anal(cab, c12)
-      if u == None: return 1, None     #No intersection
-      w = 1.0-w
+    u, w = ca2.anal(cab, c12)
+    if u is None: return 1, None     #No intersection
+    w = 1.0-w
 
-      K2 = ca+u*cab
-      K1, ia = __keep(ca, cb, u, anear)
-      K3, ib = __keep(c1, c2, w, bnear)
+    K2 = ca+u*cab
+    K1, ia = __keep(ca, cb, u, anear)
+    K3, ib = __keep(c1, c2, w, bnear)
 
-      if rr == 0.0:
-          a.cp[ia][:2] = K2.x, K2.y
-          b.cp[ib][:2] = K2.x, K2.y
-          return 0, None
-      c = calcRoadNode(K1.x, K1.y, K2.x, K2.y, K3.x, K3.y, rr)
+    if rr == 0.0:
+        a.cp[ia][:2] = K2.x, K2.y
+        b.cp[ib][:2] = K2.x, K2.y
+        return 0, None
+    c = calcRoadNode(K1.x, K1.y, K2.x, K2.y, K3.x, K3.y, rr)
 
-      if c.T1 >= abs(K2-K1): return 2, None        # Circular arc is outside the first line
-      if c.T2 >= abs(K2-K3): return 2, None        # Circular arc is outside the second line
-      a.cp[ia][:2] = c.pa.x, c.pa.y
-      b.cp[ib][:2] = c.pt.x, c.pt.y
-      cc = list(a.cp[ia])
-      cc[0:2] = c.pc.x, c.pc.y
-      return 0, (cc, rr, c.theta1*pi/180, c.theta2*pi/180)
+    if c.T1 >= abs(K2-K1): return 2, None        # Circular arc is outside the first line
+    if c.T2 >= abs(K2-K3): return 2, None        # Circular arc is outside the second line
+    a.cp[ia][:2] = c.pa.x, c.pa.y
+    b.cp[ib][:2] = c.pt.x, c.pt.y
+    cc = list(a.cp[ia])
+    cc[0:2] = c.pc.x, c.pc.y
+    return 0, (cc, rr, c.theta1*pi/180, c.theta2*pi/180)
 
 
 def __keep(ca, cb, u, anear):
-      "Decide which line end point to keep."
-      if anear != None:
-          cab = cb - ca
-          un = (Vector2(anear)-ca) * cab / abs(cab)**2
-          print "u=", u, "un=", un
-      if   u <= 0 or thanNearx(u, 0.0): K1 = cb; ia = 0     #Intersection beyound ca, keep cb
-      elif u >= 1 or thanNearx(u, 1.0): K1 = ca; ia = 1     #Intersection beyound cb, keep ca
-      elif anear != None and un <= u:   K1 = ca; ia = 1     #Intersection between ca and cb, user chooses to keep ca
-      elif anear != None and un >  u:   K1 = cb; ia = 0     #Intersection between ca and cb, user chooses to keep cb
-      else:                             K1 = ca; ia = 1     #Intersection between ca and cb, no user choice, keep ca (original orientation)
-      return K1, ia
+    "Decide which line end point to keep."
+    if anear is not None:
+        cab = cb - ca
+        un = (Vector2(anear)-ca) * cab / abs(cab)**2
+        print "u=", u, "un=", un
+    if   u <= 0 or thanNearx(u, 0.0): K1 = cb; ia = 0     #Intersection beyond ca, keep cb
+    elif u >= 1 or thanNearx(u, 1.0): K1 = ca; ia = 1     #Intersection beyond cb, keep ca
+    elif anear is not None and un <= u:   K1 = ca; ia = 1     #Intersection between ca and cb, user chooses to keep ca
+    elif anear is not None and un >  u:   K1 = cb; ia = 0     #Intersection between ca and cb, user chooses to keep cb
+    else:                             K1 = ca; ia = 1     #Intersection between ca and cb, no user choice, keep ca (original orientation)
+    return K1, ia

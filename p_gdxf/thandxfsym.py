@@ -5,29 +5,30 @@ from math import pi, cos, sin
 
 class ThanDxfSym:
     "Mixin to draw text to .dxf file."
-	
+
 #===========================================================================
 
     def __init__(self):
         "No initialisation needed."
-	pass
+        pass
 
 #===========================================================================
 
     def thanDxfPlotNumber (self, x, y, h, dn, theta, nn):
         "Plots a number to .dxf file."
         if nn < 0:
-	    s = str(int(dn+0.5))
-	else:
-	    s = ("%." + str(nn) + "f") % (dn, )
-	
-	self.thanDxfPlotSymbol(x, y, h, s, theta)
+            #s = str(int(dn+0.5))    #This does not round negative numbers!!!!!!
+            s = str(int(round(dn)))  #Thanasis2014_06_07(bug after 10 years)
+        else:
+            s = ("%." + str(nn) + "f") % (dn, )
+
+        self.thanDxfPlotSymbol(x, y, h, s, theta)
 
 #===========================================================================
 
     def thanDxfPlotSymbol3(self, xx, yy, zz, hh, text, th):
         "Plots a 3d string to a .dxf file."
-	
+
         (px, py, pz) = self.thanDxfTop3(xx, yy, zz)
 
         self.thanDxfWrEntry(0, 'TEXT')
@@ -47,13 +48,13 @@ class ThanDxfSym:
         al = hh * self.thanXfac * len(text)
         self.thanPXnow = px + al * cos(pt)
         self.thanPYnow = py + al * sin(pt)
-	self.thanPZnow = pz
+        self.thanPZnow = pz
 
 #===========================================================================
 
     def thanDxfPlotSymbol(self, xx, yy, hh, text, th):
         "Plots a string to a .dxf file."
-	
+
         (px, py) = self.thanDxfTop(xx, yy)
 
         self.thanDxfWrEntry(0, 'TEXT')
@@ -96,8 +97,8 @@ c     words."""
 #        FVDW=1.0+1.0/2.0)
 
         t = (th - 90.0) * pi / 180.0
-        sh = FVDL * h * dsin(t)
-        ch = FVDL * h * dcos(t)
+        sh = FVDL * h * sin(t)
+        ch = FVDL * h * cos(t)
         xx = x
         yy = y
 
@@ -106,16 +107,6 @@ c     words."""
             xx = xx + ch
             yy = yy + sh
 
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL FUNCTIONS
-
-
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
 
 if __name__ == "__main__":
     dxf = ThanDxfSym()

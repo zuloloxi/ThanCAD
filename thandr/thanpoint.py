@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the point element.
 """
@@ -30,9 +30,9 @@ from math import fabs, hypot
 from itertools import izip
 import p_ggen
 from p_gmath import thanNearx
-from thanelem import ThanElement
-from thanvar import Canc
 from thantrans import T
+from thanelem import ThanElement
+from thantext import ThanText
 try: import pyx
 except ImportError: pass
 
@@ -97,7 +97,7 @@ class ThanPoint(ThanElement):
 
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
-        "Return a point of type otype nearest to xcu, ycu."
+        "Return a point of type in otypes nearest to xcu, ycu."
         if "ena" not in otypes: return None            # Object snap is disabled
         if "nod" in otypes:
             return fabs(self.cc[0]-ccu[0])+fabs(self.cc[1]-ccu[1]), "nod", self.cc
@@ -135,7 +135,7 @@ class ThanPoint(ThanElement):
         xa, ya = than.ct.global2Local(self.cc[0], self.cc[1])
         dc = than.dc
 #        print "point thanTkDraw1(): stereo = %s stereoon=%s" % (than.stereo, dc.thanStereoOn)
-        if than.stereo != None and dc.thanStereoOn:
+        if than.stereo is not None and dc.thanStereoOn:
             size = 3
             iparal = than.stereo.dpix(self.cc[2])
             dc.pointpair(xa, ya, size, iparal, tags=self.thanTags)
@@ -160,6 +160,14 @@ class ThanPoint(ThanElement):
         than.write(than.form % (than.ibr, cp1[0], cp1[1], cp1[2]))
 
 
+    def thanExpKml(self, than):
+        "Exports the point to syn file."
+        than.ibr += 1
+        cp1 = self.cc
+        aa = than.form % (than.ibr,)
+        than.kml.writePlacemark(aa, cp1, than.layname, desc="")
+
+
     def thanExpThc1(self, fw):
         "Save the point in thc format."
         fw.writeNode(self.cc)
@@ -172,18 +180,24 @@ class ThanPoint(ThanElement):
     def thanExpPil(self, than):
         "Exports the point to a PIL raster image."
         x1, y1 = than.ct.global2Locali(self.cc[0], self.cc[1])
-	if than.rwidth <= 1.5:
-	    than.dc.point((x1, y1), fill=than.outline)
-	else:
-	    i1, i2 = than.widtharc
-	    than.dc.rectangle((x1-i1, y1-i1, x1+i2, y1+i2), outline=than.outline, fill=than.fill)
+        if than.rwidth <= 1.5:
+            than.dc.point((x1, y1), fill=than.outline)
+        else:
+            i1, i2 = than.widtharc
+            than.dc.rectangle((x1-i1, y1-i1, x1+i2, y1+i2), outline=than.outline, fill=than.fill)
+
+        if 0:
+            temp = than.thanPoints["chi"].thanPilPaint(than.dc, x1, y1, self.psize,
+                color=than.outline, fill=than.fill, tags=self.thanTags)
+            self.wsize, _ = than.ct.local2GlobalRel(self.psize, 0.0)    #Recalculate the size in world coordinates
+
 
     def thanPlotPdf(self, than):
         "Plots the point to a pdf file."
-	g2l = than.ct.global2Local
-	ca = g2l(self.cc[0], self.cc[1])
-	p = pyx.path.circle(ca[0], ca[1], 0.05)
-	than.dc.stroke(p)
+        g2l = than.ct.global2Local
+        ca = g2l(self.cc[0], self.cc[1])
+        p = pyx.path.circle(ca[0], ca[1], 0.05)
+        than.dc.stroke(p)
 
 
     def thanTransform(self, fun):
@@ -215,7 +229,7 @@ class ThanPointNamed(ThanPoint):
         self.height = str(c[2])    #The first call to thanTkDraw1 will set this to the correct number of digits
         self.plotname = self.plotheight = False #The first call to thanTkDraw1 will set these to the correct values
         n = len(c)
-        if validc == None: validc = [True]*n
+        if validc is None: validc = [True]*n
         else: validc = list(validc)
         while len(validc) < n: validc.append(True)     # Support n dimensional points
         self.validc = validc
@@ -261,7 +275,6 @@ class ThanPointNamed(ThanPoint):
 
     def _crtext(self, text, dx, dy, psize):
         "Creates a ThanCad text with the name/height of the point."
-        from thantext import ThanText
         t = ThanText()
         c1 = list(self.cc)
         c1[0] += dx*psize
@@ -287,6 +300,13 @@ class ThanPointNamed(ThanPoint):
         "Exports the named point to syn file."
         cp1 = self.cc
         than.write(than.formnam % (self.name, cp1[0], cp1[1], cp1[2]))
+
+
+    def thanExpKml(self, than):
+        "Exports the point to syn file."
+        cp1 = self.cc
+        aa = self.name
+        than.kml.writePlacemark(aa, cp1, than.layname, desc="")
 
 
     def thanExpThc1(self, fw):

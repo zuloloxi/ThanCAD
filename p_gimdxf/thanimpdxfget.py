@@ -1,11 +1,21 @@
 # -*- coding: iso-8859-7 -*-
-import sys
+from math import cos, sin, pi
 from fnmatch import fnmatch
 import p_ggen
 
 
 class ThanDrIgnore:
     "A class which ignores the elements read by ThanImportDxf."
+    POLYLINE = "polyline"
+    LINE     = "line"
+    CIRCLE   = "circle"
+    POINT    = "point"
+    ARC      = "arc"
+    ELLIPSE  = "ellipse"
+    TEXT     = "text"
+    BLOCK    = "block"
+    IMAGE    = "image"
+    FACE3D   = "3dface"
 
     def __init__(self, prt=p_ggen.prg):
         "Just get print function."
@@ -109,17 +119,6 @@ class ThanDrWarn(ThanDrIgnore):
     def dxfLayer    (self, name, atts):            self.warnFuncty("Layer definition")
     def dxfLtype    (self, name, desc, elems):     self.warnFuncty("Line type definition")
 
-    POLYLINE = "polyline"
-    LINE     = "line"
-    CIRCLE   = "circle"
-    POINT    = "point"
-    ARC      = "arc"
-    ELLIPSE  = "ellipse"
-    TEXT     = "text"
-    BLOCK    = "block"
-    IMAGE    = "image"
-    FACE3D   = "3dface"
-
     def dxfPolyline (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.POLYLINE)
     def dxfLine     (self, xx, yy, zz, lay, handle, col):                 self.warnObj(lay, self.LINE) 
     def dxfCircle   (self, xx, yy, zz, lay, handle, col, r):              self.warnObj(lay, self.CIRCLE) 
@@ -211,7 +210,7 @@ class ThanDrSave(ThanDrIgnore):
         self.thanLines.append((xx, yy, zz, lay, col))
 
     def dxfCircle(self, xx, yy, zz, lay, handle, col, r):
-        "Saves a View Port."
+        "Saves a circle."
         self.thanCircles.append((xx, yy, zz, lay, col, r))
 
     def dxfPoint(self, xx, yy, zz, lay, handle, col):
@@ -246,18 +245,18 @@ class ThanDrSave(ThanDrIgnore):
         "Saves a text."
         self.prt("Contents of dxf file:", "info")
         n = ""
-	if self.thanXymm == None: n = "NOT"
-	self.prt("Max, min of x,y     : %s defined in dxf file" % n, "info1")
+        if self.thanXymm == None: n = "NOT"
+        self.prt("Max, min of x,y     : %s defined in dxf file" % n, "info1")
 
         self.prt("Number of variables : %d" % len(self.thanVars), "info1")
         self.prt("Number of view ports: %d" % len(self.thanVports), "info1")
         self.prt("Number of layers    : %d" % len(self.thanLayers), "info1")
-	self.prt("Number of line types: %d" % len(self.thanLtypes), "info1")
+        self.prt("Number of line types: %d" % len(self.thanLtypes), "info1")
         self.prt("Number of polylines : %d" % len(self.thanPolylines), "info1")
-	self.prt("Number of lines     : %d" % len(self.thanLines), "info1")
+        self.prt("Number of lines     : %d" % len(self.thanLines), "info1")
         self.prt("Number of texts     : %d" % len(self.thanTexts), "info1")
-	self.prt("Number of points    : %d" % len(self.thanPoints), "info1")
-	self.prt("Number of circles   : %d" % len(self.thanCircles), "info1")
+        self.prt("Number of points    : %d" % len(self.thanPoints), "info1")
+        self.prt("Number of circles   : %d" % len(self.thanCircles), "info1")
         self.prt("Number of arcs      : %d" % len(self.thanArcs), "info1")
         self.prt("Number of ellipses  : %d" % len(self.thanEllipses), "info1")
         self.prt("Number of blocks ins: %d" % len(self.thanBlocks), "info1")
@@ -271,7 +270,7 @@ class ThanDxfDrawing(ThanDrSave):
     The object reads a dxf file and stores all its elements (the elements supported
     by ThanImportDxf.
     Then it can:
-    a. Plot the draing into a new dxf file translated, scaled and rotated.
+    a. Plot the drawing into a new dxf file translated, scaled and rotated.
     b. Find its reference point, either the center or the lower-left point.
     c. Find text element with a given text value.
     d. Replace the text value of a text element, and optionally justify it (left, center, right).
@@ -333,7 +332,6 @@ class ThanDxfDrawing(ThanDrSave):
 
     def dxfOut(self, dxf, xor, yor, scale, phi, layer=None, color=None):
         "Plot all the elements of this drawing at point xor, yor scaled and rotated."
-        from math import cos, sin, pi
         cs = cos(phi*pi/180)*scale
         ss = sin(phi*pi/180)*scale
         xref = self.xref; yref = self.yref
@@ -385,7 +383,12 @@ class ThanDxfDrawing(ThanDrSave):
         for xx, yy, lay, col, r, theta1, theta2 in self.thanArcs:
             atts(lay, col)
             xx, yy = af1(xx, yy)
-            dxf.thanDxfPlotArc(afxx, yy, r*scale, theta1+phi, theta2+phi)
+            dxf.thanDxfPlotArc(xx, yy, r*scale, theta1+phi, theta2+phi)
+
+        for xx, yy, zz, lay, col, a, b, phia, phib, theta, full in self.thanEllipses:
+            atts(lay, col)
+            xx, yy = af1(xx, yy)
+            dxf.thanDxfPlotEllipse(xx, yy, a, b, phia, phib, theta)
 
         for xx, yy, lay, col, text, h, theta in self.thanTexts:
             atts(lay, col)
@@ -400,47 +403,233 @@ class ThanDxfDrawing(ThanDrSave):
             atts(lay, col)
             pass
 
-
-def testThanDrSave():
-    "Test dxf import."
-    from p_gimdxf import ThanImportDxf
-    f = file("116.dxf", "r")
-    dr = ThanDrSave()
-    t = ThanImportDxf(f, dr)
-    t.thanImport()
-    f.close()
-    dr.statistics()
+        for  xx, yy, zz, lay, handle, col in self.than3dfaces:
+            atts(lay, col)
+            pass
 
 
-def testThanDrLayer():
-    "Test dxf import."
-    from p_gimdxf import ThanImportDxf, ThanDrLayer, thanDxfColCode2Rgb
-    fr = file("shm.dxf", "r")
-    dr = ThanDrLayer()           # Instantiate the receiver object that collects the layers
-    t = ThanImportDxf(fr, dr)    # Instantiate the producer object which reads the dxf file
-    t.thanImport()               # Read and parse the dxf file
-    fr.close()
-    del t
-    fw = file("shm.csv", "w")
-    form = "%s\t" * 9 + "\n"
-    fw.write(form % ("Name", "Autocad Color", "RGB color", "line type", "frozen",
-                     "off", "locked", "lineweight", "noplot"))
-    for name in dr.layer:
-        atts = dr.layer[name]
-        fw.write(form % (name, atts["color"], thanDxfColCode2Rgb[atts["color"]], 
-                 atts["linetype"], atts["frozen"], atts["off"], atts["locked"],
-                 atts["lineweight"], atts["noplot"]))
-    fw.close()
+class ThanDxfDrawing2(ThanDrIgnore):
+    "A class which stores the elements read by ThanImportDxf and creates an index with handles."
+
+    def __init__(self, **kw):
+        "Creates an instance of the class."
+        ThanDrIgnore.__init__(self, **kw)
+        self.thanVars = {}
+        self.thanVports = [ ]
+        self.thanLayers = [ ]
+        self.thanLtypes = [ ]
+        self.thanXymm = None
+        self.thanPolylines = [ ]
+        self.thanLines = [ ]
+        self.thanCircles = [ ]
+        self.thanPoints = [ ]
+        self.thanArcs = [ ]
+        self.thanEllipses = [ ]
+        self.thanTexts = [ ]
+        self.thanBlocks = []
+        self.thanImages = []
+        self.than3dfaces = []
+        self.xref = self.yref = 0.0
+        self.ind = {}
+        self.deleted = []
+        self.added = []
+        self.ihandle = 1000
 
 
-def testThanDrWarn():
-    "Test dxf import."
-    from p_gimdxf import ThanImportDxf
-    f = file("116.dxf", "r")
-    dr = ThanDrWarn()
-    t = ThanImportDxf(f, dr)
-    t.thanImport()
-    f.close()
+    def dxfVars(self, v):
+        "Saves the variables."
+        self.thanVars.update(v)
+
+    def dxfVport(self, name, x1, y1, x2, y2):
+        "Saves a View Port."
+        self.thanVports.append((name, x1, y1, x2, y2))
+
+    def dxfXymm(self, x1, y1, x2, y2):
+        "Saves xmin,ymin,xmax,ymax of the dxf drawing."
+        self.thanXymm = x1, y1, x2, y2
+
+    def dxfLayer(self, name, atts):
+        "Saves a layer."
+        self.thanLayers.append((name, atts))
+
+    def dxfLtype(self, name, desc, elems):
+        "Saves a line type."
+        self.thanLtypes.append((name, desc, elems))
+
+    def uniq(self, handle):
+        "Make the handle of an element uniq."
+        if handle == "":
+            self.prt("Empty handle for element found")
+            return self.newHandle()
+        if handle in self.ind:
+            self.prt("Duplicate handle found: '%s'" % (handle, ))
+            return self.newHandle()
+        return handle   #Handle is ok
+
+    def newHandle(self):
+        "Return a new uniq handle."
+        while True:
+            self.ihandle += 1
+            h = "T"+str(self.ihandle)
+            if h not in self.ind: return h
+
+    def saveElem(self, *args):
+        "Saves an element."
+        handle = self.uniq(args[4])    #Fifth argument is the handle
+        seq = args[-1]                 #Last argument is the list to save the element into
+        elem = args[:-1]
+        seq.append(elem)
+        self.ind[handle] = elem
+
+    def dxfPolyline(self, xx, yy, zz, lay, handle, col):
+        self.saveElem(xx, yy, zz, lay, handle, col, self.POLYLINE, self.thanPolylines)
+
+    def dxfLine(self, xx, yy, zz, lay, handle, col):
+        self.saveElem(xx, yy, zz, lay, handle, col, self.LINE, self.thanLines)
+
+    def dxfCircle(self, xx, yy, zz, lay, handle, col, r):
+        self.saveElem(xx, yy, zz, lay, handle, col, r, self.CIRCLE, self.thanCircles)
+
+    def dxfPoint(self, xx, yy, zz, lay, handle, col):
+        self.saveElem(xx, yy, zz, lay, handle, col, self.POINT, self.thanPoints)
+
+    def dxfArc(self, xx, yy, zz, lay, handle, col, r, theta1, theta2):
+        self.saveElem(xx, yy, zz, lay, handle, col, r, theta1, theta2, self.ARC, self.thanArcs)
+
+    def dxfEllipse (self, xx, yy, zz, lay, handle, col, a, b, phia, phib, theta, full):
+        self.saveElem(xx, yy, zz, lay, handle, col, a, b, phia, phib, theta, full, self.Ellipse, self.thanEllipses)
+
+    def dxfText(self, xx, yy, zz, lay, handle, col, text, h, theta):
+        self.saveElem(xx, yy, zz, lay, handle, col, text, h, theta, self.TEXT, self.thanTexts)
+
+    def dxfBlockAtt(self, xx, yy, zz, lay, handle, col, blname, blatts):
+        self.saveElem(xx, yy, zz, lay, handle, col, blname, blatts, self.BLOCK, self.thanBlocks)
+
+    def dxfThanImage(self, xx, yy, zz, lay, handle, col, filnam, size, scale, theta):
+        self.saveElem(xx, yy, zz, lay, handle, col, filnam, size, scale, theta, self.IMAGE, self.thanImages)
+
+    def dxf3dface  (self, xx, yy, zz, lay, handle, col):
+        self.saveElem(xx, yy, zz, lay, handle, col, self.FACE3D, self.than3dfaces)
+
+    def dif(self, other):
+        "Find the differences of this drawing and another."
+        indother = other.ind.copy()
+        for handle, elem in self.ind.iteritems():
+            elemother = indother.get(handle)
+            if elemother == None:
+                self.prt("Element handle '%s' (%s) was deleted in B." % (handle, elem[-1]))   #elem[-1] is the type of element
+                self.deleted.append(elem)
+                continue
+            del indother[handle]
+            if elem[-1] != elemother[-1]:
+                self.prt("Element handle '%s' is %s in A but it is %s in B." % (handle, elem[-1], elemother[-1]))   #elem[-1] is the type of element
+                continue
+            if elem[:3] != elemother[:3]:
+                self.prt("Element handle '%s' (%s) has changed coordinates in B." % (handle, elem[-1]))   #elem[-1] is the type of element
+                continue
+            if elem[6:] != elemother[6:]:
+                self.prt("Element handle '%s' (%s) has changed geometry/text in B." % (handle, elem[-1]))   #elem[-1] is the type of element
+                continue
+        for handle, elem in indother.iteritems():
+            self.prt("Element handle '%s' (%s) was added to B." % (handle, elem[-1]))   #elem[-1] is the type of element
+            self.added.append(elem)
+            continue
+
+    def remove(self, elems):
+        "Remove elements elems from the index."
+        for elem in elems:
+            handle = elem[4]
+            del self.ind[handle]
+
+    def add(self, elems):
+        "Add elements elems to the index."
+        for elem in elems:
+            handle = elem[4]
+            self.ind[handle] = elem
 
 
-if __name__ == "__main__": testThanDrLayer()
+    def dxfOut(self, elems, dxf, xor=0.0, yor=0.0, scale=1.0, phi=0.0, layer=None, color=None):
+        "Plot the elements elems at point xor, yor scaled and rotated."
+        cs = cos(phi*pi/180)*scale
+        ss = sin(phi*pi/180)*scale
+        xref = self.xref; yref = self.yref
+        if layer != None: dxf.thanDxfSetLayer(layer)   # Override layer
+        if color != None: dxf.thanDxfSetColor(color)   # Override color
+
+        def af(xx, yy):
+            "Perform translation rotation and scale in set of coordinates."
+            xx1 = []; yy1 = []
+            for i in xrange(len(xx)):
+                xa = xx[i] - xref; ya = yy[i] - yref
+                xt = xa*cs - ya*ss
+                yt = xa*ss + ya*cs
+                xx1.append(xt+xor); yy1.append(yt+yor)
+            return xx1, yy1
+
+        def af1(xx, yy):
+            "Perform translation rotation and scale in set of coordinates."
+            xa = xx - xref; ya = yy - yref
+            xt = xa*cs - ya*ss
+            yt = xa*ss + ya*cs
+            return xt+xor, yt+yor
+
+        def atts(lay=None, col=None):
+            "Override layer, color if necessary."
+            if layer == None:
+                if lay != None: dxf.thanDxfSetLayer(lay)
+            if color == None:
+                if col != None: dxf.thanDxfSetColor(col)
+                dxf.thanDxfSetColor(0)                    # By layer
+
+        for elem in elems:
+            typ = elem[-1]
+            if typ == self.POLYLINE:
+                xx, yy, zz, lay, handle, col = elem[:-1]
+                atts(lay, col)
+                dxf.thanDxfPlotPolyline(*af(xx, yy))
+            elif typ == self.LINE:
+                xx, yy, zz, lay, handle, col = elem[:-1]
+                atts(lay, col)
+                dxf.thanDxfPlotLine(*af(xx, yy))
+            elif typ == self.CIRCLE:
+                xx, yy, zz, lay, handle, col, r = elem[:-1]
+                atts(lay, col)
+                xx, yy = af1(xx, yy)
+                dxf.thanDxfPlotCircle(xx, yy, r*scale)
+            elif typ == self.POINT:
+                xx, yy, zz, lay, handle, col = elem[:-1]
+                atts(lay, col)
+                dxf.thanDxfPlotPoint(*af1(xx, yy))
+            elif typ == self.ARC:
+                xx, yy, zz, lay, handle, col, r, theta1, theta2 = elem[:-1]
+                atts(lay, col)
+                xx, yy = af1(xx, yy)
+                dxf.thanDxfPlotArc(xx, yy, r*scale, theta1+phi, theta2+phi)
+
+            elif typ == self.ELLIPSE:
+                xx, yy, zz, lay, handle, col, a, b, phia, phib, theta, full = elem[:-1]
+                atts(lay, col)
+                xx, yy = af1(xx, yy)
+                dxf.thanDxfPlotEllipse(xx, yy, a, b, phia, phib, theta)
+            elif typ == self.TEXT:
+                xx, yy, zz, lay, handle, col, text, h, theta = elem[:-1]
+                atts(lay, col)
+                xx, yy = af1(xx, yy)
+                dxf.thanDxfPlotSymbol(xx, yy, h*scale, text, theta+phi)
+            elif typ == self.BLOCK:
+                xx, yy, zz, lay, handle, col, blname, blatts = elem[:-1]
+                atts(lay, col)
+                xx, yy = af1(xx, yy)
+                pass
+            elif typ == self.IMAGE:
+                xx, yy, zz, lay, handle, col, filnam, size, ale, theta = elem[:-1]
+                atts(lay, col)
+                xx, yy = af1(xx, yy)
+                pass
+            elif typ == self.FACE3D:
+                xx, yy, zz, lay, handle, col = elem[:-1]
+                atts(lay, col)
+                xx, yy = af(xx, yy)
+                pass
+            else:
+                assert 0, "Unknown element type: %s" % (typ, )

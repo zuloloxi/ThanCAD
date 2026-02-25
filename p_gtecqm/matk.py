@@ -1,17 +1,19 @@
 from itertools import islice
 from math import fabs
-import Tkinter, dxfinter, pilinter
-_gc = Tkinter
-_root = None
+import Tkinter
+from p_ggen import Struct
+from p_gtkem import dxfinter, pilinter
 
-class Struct: pass
+gcs   = {"dxf":dxfinter, "pil":pilinter, "tk":Tkinter}
+roots = {"dxf":None,     "pil":None,     "tk":None}
 
-def replot(evt, c, g):
+
+def replot(evt, c, g, gc):
     "Replot the diagrams each time the user changes window dimensions."
     c.update()
     b = c.winfo_width()
     h = c.winfo_height()
-    c.delete(_gc.ALL)
+    c.delete(gc.ALL)
 
     axis = (g.xmin, 0), (g.xmax,0)
 
@@ -77,12 +79,8 @@ def plot1(c, Q, xmin, scalex, Qmin, scaleQ, h, dy, axis, pr):
     c.create_line(xy, fill= "yellow")
 
 
-def diag(Q, M, N, tit, gc="tk+", width=400, height=600, textsize=7, texttheta=0.0):
+def diag(Q, M, N, tit, gcname="tk+", width=400, height=600, textsize=7, texttheta=0.0):
     "Initialise diagram."
-    global _gc, _root
-    if   gc == "dxf": _gc = dxfinter
-    elif gc == "pil": _gc = pilinter
-    else:             _gc = Tkinter
     g = Struct()
     xmin = Q[0][0]; xmax = Q[-1][0]
     Qmax = max([fabs(y) for (x,y) in Q]); Qmin = -Qmax
@@ -95,22 +93,27 @@ def diag(Q, M, N, tit, gc="tk+", width=400, height=600, textsize=7, texttheta=0.
         Nmax = max([fabs(y) for (x,y) in N]); Nmin = -Nmax
         g.sN, g.Nmin, g.Nmax = margins(Nmin, Nmax)
 
-    if _root == None:
-        win = _root = _gc.Tk()
+    if gcname == "tk+":
+        gcname = "tk"
+        doloop = False
     else:
-        if   gc == "dxf": win = _root
-        elif gc == "pil": win = _root
-        else:             win = _gc.Toplevel(_root)
-    c = _gc.Canvas(win, background= "black", width=width, height=height)
+        doloop = True
+    gc = gcs[gcname]
+    if roots[gcname] == None:
+        win = roots[gcname] = gc.Tk()
+    else:
+        win = gc.Toplevel(roots[gcname])
+    c = gc.Canvas(win, background= "black", width=width, height=height)
     c.grid(sticky="wesn")
     c.textsize = textsize
     c.texttheta = texttheta
     win.columnconfigure(0, weight=1)
     win.rowconfigure(0, weight=1)
-    replot(None, c, g)
-    c.bind("<Configure>", lambda evt=None, c=c, g=g: replot(evt, c, g))
+    replot(None, c, g, gc)
+    c.bind("<Configure>", lambda evt=None, c=c, g=g, gc=gc: replot(evt, c, g, gc))
     win.title(tit)
-    if gc != "tk+": _root.mainloop()
+    if doloop: roots[gcname].mainloop()
+
 
 def margins(xmin, xmax):
     "Extend xmin, xmax so that we have some margins."

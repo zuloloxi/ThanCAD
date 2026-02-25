@@ -2,10 +2,6 @@ from math import fabs
 import thandxfext
 
 
-############################################################################
-############################################################################
-
-
 class ThanTables:
     "Mixin to import the tables section of a dxf file."
 
@@ -43,13 +39,13 @@ class ThanTables:
         while 1:
             icod, text = self.thanGetDxf()
             if icod == -1: return
-	    if icod != 0: continue
+            if icod != 0: continue
             if text == "ENDTAB": return
             if text == "ENDSEC" or text == "SECTION":
                 self.__ungetDxf()
                 self.thanWarn("Incomplete section TABLES: probably corrupted file.")
                 return 0
-	    if text != "VPORT": continue
+            if text != "VPORT": continue
 
 #-----------Vport found: read attributes
 
@@ -65,17 +61,17 @@ class ThanTables:
             if self.trAtts(atts, str, 2) or self.trAttsFloat(atts, 12, 22, 40):
                 self.thanWarn("Damaged viewport: probably corrupted file.")
             else:
-		name = atts[2]
-		if name == "*ACTIVE":
-		    if activefound: self.thanWarn("More than 1 active viewports: the last one is kept.")
-		    activefound = 1
-		else:
-		    if activefound: continue
-		xc = atts[12]
-		yc = atts[22]
-		dx = atts[40]
-		dy = dx*0.01
-		self.thanDr.dxfVport(name, xc-dx, yc-dy, xc+dx, xc+dy)
+                name = atts[2]
+                if name == "*ACTIVE":
+                    if activefound: self.thanWarn("More than 1 active viewports: the last one is kept.")
+                    activefound = 1
+                else:
+                    if activefound: continue
+                xc = atts[12]
+                yc = atts[22]
+                dx = atts[40]
+                dy = dx*0.01
+                self.thanDr.dxfVport(name, xc-dx, yc-dy, xc+dx, xc+dy)
 
 #===========================================================================
 
@@ -85,13 +81,13 @@ class ThanTables:
         while 1:
             icod, text = self.thanGetDxf()
             if icod == -1: return              # End of file
-	    if icod != 0: continue
+            if icod != 0: continue
             if text == "ENDTAB": return
             if text == "ENDSEC" or text == "SECTION":
                 self.__ungetDxf()
                 self.thanWarn("Incomplete section TABLES: probably corrupted file.")
                 return
-	    if text != "LAYER": continue
+            if text != "LAYER": continue
 
 #-----------Layer found: read attributes
 
@@ -106,43 +102,43 @@ class ThanTables:
 
             if self.trAtts(atts, str, 2):
                 self.thanWarn("Damaged layer: probably corrupted file.")
-		return
-	    name = atts[2]
-	    natts = {}
+                return
+            name = atts[2]
+            natts = {}
             if thancad:
-	        for code,att,func in thandxfext.thanCadAtts:
+                for code,att,func in thandxfext.thanCadAtts:
                     if func == float: res = self.trAttsFloat(atts, -code)
                     else:             res = self.trAtts(atts, func, -code)
                     if res:
                         self.thanWarn("Damaged layer: probably corrupted file.")
-			return
-		    try: natts[att] = atts[code]
-		    except KeyError: pass
-	    else:
+                        return
+                    try: natts[att] = atts[code]
+                    except KeyError: pass
+            else:
                 if self.trAtts(atts, str, -6) or self.trAtts(atts, int, -62, -70, -290, -370):
                     self.thanWarn("Damaged layer: probably corrupted file.")
-		    return
-		col = atts.get(62, 7)                        # default is 7 (white)
-		if col == 0: col = 7                         # Sometimes thAtCAD sets undefined color zero :(
-		if col < 0: natts["color"] = -col; natts["off"] = True
-		else:       natts["color"] =  col; natts["off"] = False
-		natts["linetype"] = atts.get(6, "continuous")
-		flags = atts.get(70, 0)
-		natts["frozen"] = bool(flags & 1)
-		natts["locked"] = bool(flags & 4)
-#		 natts["noplot"] = "noplot" in atts              # For dxf 12?
-		natts["noplot"] = atts.get(290, 1) == 0         # If code 290 is zero then do not plot the layer
-		w = atts.get(370, -3)                           # -3 means default value
-		if w == -3: w = 30                              # hundredths of mm
-		natts["lineweight"] = w / 100.0                 # mm
-	    self.thanDr.dxfLayer(name, natts)
+                    return
+                col = atts.get(62, 7)                        # default is 7 (white)
+                if col == 0: col = 7                         # Sometimes thAtCAD sets undefined color zero :(
+                if col < 0: natts["color"] = -col; natts["off"] = True
+                else:       natts["color"] =  col; natts["off"] = False
+                natts["linetype"] = atts.get(6, "continuous")
+                flags = atts.get(70, 0)
+                natts["frozen"] = bool(flags & 1)
+                natts["locked"] = bool(flags & 4)
+#                 natts["noplot"] = "noplot" in atts              # For dxf 12?
+                natts["noplot"] = atts.get(290, 1) == 0         # If code 290 is zero then do not plot the layer
+                w = atts.get(370, -3)                           # -3 means default value
+                if w == -3: w = 30                              # hundredths of mm
+                natts["lineweight"] = w / 100.0                 # mm
+            self.thanDr.dxfLayer(name, natts)
 
 #===========================================================================
 
     def __getLtypes(self):
         "Reads a polyline from .dxf file."
-        ltypes1 = {"continuous", "bylayer", "byblock"} #bylayer, byblock are not real linetypes, just sentinels..
-                                                       #..and continuous is automatically inside ThanCad
+        ltypes1 = {"continuous", "bylayer", "byblock"}  #bylayer, byblock are not real linetypes, just sentinels..
+                                                        #..and continuous is automatically inside ThanCad
 #-------try to find ltype
 
         while True:
@@ -154,8 +150,8 @@ class ThanTables:
                 self.__ungetDxf()
                 self.thanWarn("Incomplete section TABLES: probably corrupted file.")
                 return
-            if text != "LTYPE": continue   #Dxf entries between TABLE LTYPE and the first line type definition are ignored..
-                                           #..or between linetype definitions
+            if text != "LTYPE": continue    #Dxf entries between TABLE LTYPE and the first line type definition are ignored..
+                                            #..or between linetype definitions
 #-----------Layer found: read attributes
 
             atts = {}

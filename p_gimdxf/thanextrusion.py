@@ -17,7 +17,7 @@ def thanDxfExtrusionVectorsold(az):
 
     This routine is needed for dxf deciphering. It seems that any(?) object
     in a .dxf file (even version 12) may have an "extrusion" vector, which is
-    the direction ofthe element thickness (if there is one). The components of
+    the direction of the element thickness (if there is one). The components of
     the extrusion vector are given as code 210, 220, 230.
     The weird thing is that, if an 
     extrusion vector is defined, then the coordinates of the object are given
@@ -121,7 +121,7 @@ THC0000005        -28.489         20.352         -1.401"""
 
 
 def testazold(az, ccw, ccl):
-    "Tests the extrusioon transformation with given data."
+    "Tests the extrusion transformation with given data."
     vx, vy, vz, wx, wy, wz = thanDxfExtrusionVectors(az)
     print "system world to local="
     print vx
@@ -145,7 +145,7 @@ def testazold(az, ccw, ccl):
 
 
 def testaz(az, ccw, ccl):
-    "Tests the extrusioon transformation with given data."
+    "Tests the extrusion transformation with given data."
     vx, vy, vz, wx, wy, wz = thanDxfExtrusionVectors(az)
     print "system world to local="
     print vx

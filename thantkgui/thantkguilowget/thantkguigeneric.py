@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines generic state, i.e. how ThanCad reacts to events for a
 defined job. This generic state which does nothing
@@ -56,13 +56,13 @@ class ThanStateGeneric:
             for e in proj[2].thanSelall: break
         proj[2].thanGudSetSelExternalFilter(None)        # Reset filter
         proj[2].thanGudSetSelRestore()                   # Restores previous selection
-        if res[0] == 0: return                           # Selection of 1 element is unsuccesful
+        if res[0] == 0: return                           # Selection of 1 element is unsuccessful
         if isinstance(e, ThanPoint):
             c1 = e.getInspnt()
             text = "z=" + proj[2].than.strdis(c1[2])
         else:
             c1 = e.thanPntNearest(cc)
-            if c1 == None:
+            if c1 is None:
                 print "ThanStateGeneric.thanOnClick(): Nearest not found! It should!"
                 return
             zpol = e.cp[0][2]
@@ -93,5 +93,3 @@ class ThanStateGeneric:
         else:                            fill = ""
         proj[2].thanGudGetSelElemx([e])
         proj[2].thanGudSetSelColorx(outline, fill)
-
-

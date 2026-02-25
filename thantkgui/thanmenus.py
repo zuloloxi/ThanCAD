@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,27 +23,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the menus and the mechanism to create and update them.
 """
-import p_ggen, p_gtkuti
+import p_ggen, p_gtkwid
 import thanopt
 from thanvers import tcver
 from thantrans import T, Tmatch, Tphot, Tarch, Tcivil, Turban
 
 
-class ThanCadTkMenu:
+class ThanCadTkMenu(object):
     "It creates ThanCad menu system and modifies it if necessary."
 
-    def __init__(self, win, main=False):
+    def __initold__(self, win, main=False):
         "Create the menu system."
         if main: seq, menus = thanMainMenus(win.thanGudCommandBegin)
         else:    seq, menus = thanStandardMenus(win.thanGudCommandBegin)
         ms = []
         for m in seq: ms.extend(menus[m])
-        if main: menubar, self.__submenus = p_gtkuti.thanTkCreateThanMenus2(win, ms)
-        else:    menubar, self.__submenus = p_gtkuti.thanTkCreateThanMenus2(win, ms, win.thanStatusBar.thanInfoSet)
+        if main: menubar, self.__submenus = p_gtkwid.thanTkCreateThanMenus2(win, ms)
+        else:    menubar, self.__submenus = p_gtkwid.thanTkCreateThanMenus2(win, ms, win.thanStatusBar.thanInfoSet)
         win["menu"] = menubar
         if not main:
             self.__submenus["File"]   = self.__submenus[T["&File"].replace("&", "")]
@@ -52,7 +52,33 @@ class ThanCadTkMenu:
         self.__irecent = len(menus["File"]) - 4  #Position in file menu where new recent file will be inserted
         self.__recent = []                       #Paths of all recent files
         self.__iopened = 0                       #Position in file menu where new opened file will be inserted
-        self.__opened = []                       #String representation of all oepned projects
+        self.__opened = []                       #String representation of all opened projects
+
+
+    def __init__(self, win, main=False):
+        "Create the menu system."
+        if main: seq, menus = thanopt.thanmenus2.thanSeqMain, thanopt.thanmenus2.thanMenusMain
+        else:    seq, menus = thanopt.thanmenus2.thanSeq, thanopt.thanmenus2.thanMenus
+        S = p_ggen.ThanStub
+        B = win.thanGudCommandBegin
+        ms = []
+        for m in seq:
+            for ent in menus[m]:
+                if len(ent) >= 3 and ent[0] != "menu":
+                    ent = list(ent)
+                    ent[0] = S(B, ent[0])
+                ms.append(ent)
+        if main: menubar, self.__submenus = p_gtkwid.thanTkCreateThanMenus2(win, ms)
+        else:    menubar, self.__submenus = p_gtkwid.thanTkCreateThanMenus2(win, ms, win.thanStatusBar.thanInfoSet)
+        win["menu"] = menubar
+        if not main:
+            self.__submenus["File"]   = self.__submenus[T["&File"].replace("&", "")]
+            self.__submenus["Window"] = self.__submenus[T["&Window"].replace("&", "")]
+
+        self.__irecent = len(menus["File"]) - 4  #Position in file menu where new recent file will be inserted
+        self.__recent = []                       #Paths of all recent files
+        self.__iopened = 0                       #Position in file menu where new opened file will be inserted
+        self.__opened = []                       #String representation of all opened projects
 
 
     def thanAddRecent(self, proj, fpath, MAXRECENT):
@@ -68,7 +94,7 @@ class ThanCadTkMenu:
             thancom.thancomfile.thanFileOpenPaths(proj, [fpath])
             if proj[1]: proj[2].thanGudCommandEnd()    #in case proj is ThanCad and not another drawing
         fmenu.insert_command(self.__irecent, label=fpath.name, foreground="blue",
-            command=op, help=fpath)              #Insert fpath as the newset recent file
+            command=op, help=fpath)              #Insert fpath as the newest recent file
         self.__recent.insert(0, fpath)           #Save fpath
 
 
@@ -81,7 +107,7 @@ class ThanCadTkMenu:
 
 
     def thanAddOpened(self, projnew):
-        "Adds a new (cuurently) opened project to the window menu."
+        "Adds a new (currently) opened project to the window menu."
         wmenu = self.__submenus["Window"]
         wmenu.add_command(label=projnew[0].name,
             command=lambda win=projnew[2]: win.thanTkSetFocus(), help=projnew[0])
@@ -251,7 +277,8 @@ def thanStandardMenus(B):
               (S(B, "engorthoimage"),Tphot["&Orthoimage GDEM"], Tphot["Image orthorectification using global DEM"]),
             ])
         m1.extend(
-        [ (S(B, "EngTrace"),  T["&Trace"],       "Traces a curve in a bitmap raster image"),
+        [ (S(B, "EngTrace"),  T["&Trace"],           T["Traces a curve in a bitmap raster image"]),
+          (S(B, "greeceperimeter"), T["Draw &Greece"], T["Draws the perimeter of Greece in EGSA87 coordinates"]),
           ("-",),
           (S(B, "demload"),   T["Load DE&Ms"],       T["Loads DEMs (USGS format) stored in .tif files"]),
           (S(B, "dem"),       T["Manage DE&Ms"],     T["Manages DEMs (USGS format) stored in .tif files"]),
@@ -283,7 +310,7 @@ def thanStandardMenus(B):
         m1.append(("endmenu",))
 
         if thanFrape.photo:
-          m["Photogrammetry"] = m1 =\
+            m["Photogrammetry"] = m1 =\
           [ ("menu", Tphot["&Photogrammetry"], ""),        # Menu Title
           ("menu", Tphot["INTERIOR ORIENTATION (&mm)"], Tphot["Interior orientation submenu"], "blue"),
           (S(B, "photimage"),     T["Insert Raster &Image"],     "Inserts an image in a predefined layer in mm"),
@@ -310,16 +337,16 @@ def thanStandardMenus(B):
           ("-",),
           (S(B, "photmodel"),    Tphot["&Model definition"],     Tphot["Defines the images which make a photogrammetric model"]),
           ]
-          if thanFrape.stereo:
-            m1.extend(\
-            [ ("-",),
-              (S(B, "stereotoggle"),  Tphot["&Stereo toggle"],  Tphot["Sets stereo (blue/red) mode on and off"]),
-              (S(B, "stereoaverage"), Tphot["&Stereo average"], Tphot["Zooms the z coordinates so that they are easily visible"]),
-              (S(B, "stereogridtoggle"),  Tphot["&Stereo grid"],  Tphot["Sets a grid at the reference elevation on and off to aid stereo viewing"]),
-            ])
-          m1.append(("endmenu",))
+            if thanFrape.stereo:
+                m1.extend(\
+                [ ("-",),
+                  (S(B, "stereotoggle"),  Tphot["&Stereo toggle"],  Tphot["Sets stereo (blue/red) mode on and off"]),
+                  (S(B, "stereoaverage"), Tphot["&Stereo average"], Tphot["Zooms the z coordinates so that they are easily visible"]),
+                  (S(B, "stereogridtoggle"),  Tphot["&Stereo grid"],  Tphot["Sets a grid at the reference elevation on and off to aid stereo viewing"]),
+                ])
+            m1.append(("endmenu",))
         elif thanFrape.stereo:
-          m["Photogrammetry"] = m1 =\
+            m["Photogrammetry"] = m1 =\
             [ ("menu", Tphot["&Photogrammetry"], ""),        # Menu Title
               (S(B, "stereotoggle"),  Tphot["&Stereo toggle"],  Tphot["Sets stereo (blue/red) mode on and off"]),
               (S(B, "stereoaverage"), Tphot["&Stereo average"], Tphot["Zooms the z coordinates so that they are easily visible"]),
@@ -368,6 +395,7 @@ def thanStandardMenus(B):
               (S(B, "EduMatch2"),     Tmatch["&Match 2d"],         Tmatch["Matches two 2d polylines"]),
               (S(B, "EduMatch23"),    Tmatch["&Match 3d to 2d"],   Tmatch["Matches one 3d polyline to one 2d polylines"]),
               (S(B, "EduMatch3"),     Tmatch["&Match 3d"],         Tmatch["Matches two 3d polylines"]),
+              (S(B, "EduMatchSplines3d"), Tmatch["&Match 3d splines"], Tmatch["Matches two 3d cubic splines"]),
               ("-",),
               (S(B, "EduMatchMult2"), Tmatch["&Match multiple 2d"],Tmatch["Matches two sets of 2d polylines"]),
               (S(B, "EduMatchMult23"),Tmatch["&Match multiple 3d to 2d"],Tmatch["Matches one set of 3d polylines to one set of 2d polylines"]),
@@ -470,7 +498,6 @@ def thanMainMenus(B):
         return s, m
 
 if __name__ == "__main__":
-    import p_ggen
     tcver = p_ggen.Struct()
     tcver.name = "GREAT ThanCad"
     thanMenusSeq, thanMenus = thanStandardMenus()

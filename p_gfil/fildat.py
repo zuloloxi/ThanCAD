@@ -1,6 +1,6 @@
 import p_ggen
-import openfile, opgui, opguitrans
-Tgui = opguitrans.Tgui
+import openfile, opgui
+Tgui = p_ggen.Tgui
 
 
 class File1:

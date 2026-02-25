@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines utilities for lines.
 """
@@ -101,7 +101,7 @@ def thanPerpPoints(cp, ccu):
             if   thanNearx(dt, 0.0) : dt = 0.0
             elif thanNearx(dt, aa)  : dt = aa
             elif dt < 0.0 or dt > aa: continue
-            dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
+            #dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
             cp1 = [e+(f-e)*dt/aa for (e,f) in izip(cp[i-1], cp[i])]
             ps.append(cp1)
         return ps
@@ -123,7 +123,7 @@ def thanPerpPointsC(cp, ccu, thtol):
             if   thanNearx(dt, 0.0): dt = 0.0
             elif thanNearx(dt, aa) : dt = aa
             if dt < 0.0 or dt > aa:
-                if dtp != None and dt*dtp < 0.0:
+                if dtp is not None and dt*dtp < 0.0:
                     th1 = atan2(cp[i-1][0]-cp[i-2][0], cp[i-1][1]-cp[i-2][1])
                     th2 = atan2(cp[i][0]-cp[i-1][0], cp[i][1]-cp[i-1][1])
                     dth = dpt(th2-th1)
@@ -131,7 +131,7 @@ def thanPerpPointsC(cp, ccu, thtol):
                     if dth <= thtol:             # It is smooth enough (it is not a corner)
                         ps.append(list(cp[i-1]))
             else:
-                dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
+                #dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
                 cp1 = [e+(f-e)*dt/aa for (e,f) in izip(cp[i-1], cp[i])]
                 ps.append(cp1)
             dtp = dt

@@ -11,7 +11,7 @@ THANINTELLICAD:  Extensions which, if present, do not cause
                  intellicad to complain
 THANCAD:         ThanCad is able to cope with all extensions
 """
-		 
+ 
 THANCADSPECIFIC = 1
 THANINTELLICAD  = 1 << 1
 THANCAD         = THANCADSPECIFIC | THANINTELLICAD

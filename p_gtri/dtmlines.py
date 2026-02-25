@@ -2,7 +2,7 @@ from bisect import bisect_left, bisect_right
 from math import hypot, fabs
 from p_ggen import iterby2
 from p_gmath import thanSegSeguw
-from dtmvar import ThanDTMDEM, interpolatez, _uniqint
+from dtmvar import ThanDTMDEM, _uniqint
 
 
 class ThanDTMlines(ThanDTMDEM):
@@ -11,9 +11,9 @@ class ThanDTMlines(ThanDTMDEM):
     def __init__(self, dxmax=20.0, dext=50.0):
         "Initialize DEM."
         self.thanLines = []
-        self.thanDxmax = dxmax   #Max X distance of the end points of a line segment
-        self.thanDext = dext     #X distance that a line segment is Max extended at both ends..
-                                 #..in order to find an intersection
+        self.thanDxmax = dxmax  #Max X distance of the end points of a line segment
+        self.thanDext = dext    #X distance that a line segment is Max extended at both ends..
+                                #..in order to find an intersection
         self.thanCena = (0.0, 0.0, 0.0)  #Centroid of the area of the dtm
         self.thanNori = 0        #Number of original line segments (just for information)
 
@@ -61,8 +61,8 @@ class ThanDTMlines(ThanDTMDEM):
 
     def thanMinxy(self):
         "Find the minimun x and y coordinates (the DTM is assumed ordered)."
-        cmin = list(thanLines[0][0])
-        cmin[1] = min(c[1] for c in lin1 for lin1 in self.thanLines)
+        cmin = list(self.thanLines[0][0])
+        cmin[1] = min(c[1] for lin1 in self.thanLines for c in lin1)
         return cmin
 
     def thanIntersegZ(self, ca, cb, native=False):
@@ -128,11 +128,11 @@ class ThanDTMlines(ThanDTMDEM):
             if d1 < 0.001: return d1, cint[0][1][2]  # 1 intersection, but exactly on the isoline, with 0.1% tolerance
             return None, None
         if cint[0][0] > 0.5:
-             if cint[0][0] < 0.501: return cint[0][0]-0.5, cint[0][1][2]     # Allow for 0.1% error
-             return None, None
+            if cint[0][0] < 0.501: return cint[0][0]-0.5, cint[0][1][2]     # Allow for 0.1% error
+            return None, None
         if cint[-1][0] < 0.5:
-             if cint[-1][0] > 0.499: return 0.5-cint[-1][0], cint[-1][1][2]  # Allow for 0.1% error
-             return None, None
+            if cint[-1][0] > 0.499: return 0.5-cint[-1][0], cint[-1][1][2]  # Allow for 0.1% error
+            return None, None
         j = bisect_left(cint, (0.5, cp))
 #        print "cint[j], j=", j
         i = j-1
@@ -146,7 +146,7 @@ class ThanDTMlines(ThanDTMDEM):
 #           very common indeed) where we seek the z of exactly
 #           this endnode. The program will find two intersections (one intersection for
 #           each segment) that will have exactly the same coordinates, and the di and dj
-#           (generalized distance) will be exactly 0.5 (for both intesections). This can
+#           (generalized distance) will be exactly 0.5 (for both intersections). This can
 #           also happen if we have duplicate line segments.
 #           Because we seek distance 0.5 in the bisect_left() function, the position
 #           returned should be the first 0.5 (counting from left), so that if we have
@@ -174,7 +174,6 @@ class ThanDTMlines(ThanDTMDEM):
     def thanExpThc1(self, fw):
         "Saves the lines of the DTM to a .thc file."
         f = fw.formFloat
-        f3 = "  ".join((f, f, f))
         fw.writeAtt("maxdistancex", f % (self.thanDxmax,))
         fw.writeAtt("extensionx", f % (self.thanDext,))
         fw.writeSnode("centroid", 3, self.thanCena)

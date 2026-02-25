@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes draw commands.
@@ -30,10 +30,9 @@ from math import cos, sin
 from p_gmath import thanNear2
 import p_ggen
 import thandr
-from thanvar import Canc
+from thanvar import Canc, thanCumulDis, THANBYPARENT
 from thantrans import T
 from thansupport import thanToplayerCurrent
-
 import thanundo
 from thancommod import thanModCanc, thanModEnd
 from thancomsel import thanSelect1, thanSelectGen
@@ -45,7 +44,7 @@ def thanTkDrawElem(proj, elemClass, fn="thanTkGet", **kw):
     elem = elemClass()
     comname = elemClass.thanElementName
     if getattr(elem, fn)(proj, **kw) == Canc: return proj[2].thanGudCommandCan()
-    proj[1].thanElementAdd(elem)             # thanTouch is implicitely called
+    proj[1].thanElementAdd(elem)             # thanTouch is implicitly called
 #    if elem.thanInbox(proj[1].viewPort): elem.thanTkDraw(proj[2].than)
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
@@ -91,7 +90,7 @@ def thanTkDrawPoint(proj):
             if res == "":   return proj[2].thanGudCommandEnd()    # No more points
             __housepoint(proj, res)
 
-    z = proj[1].thanVar["elevation"][2]                         # Get points with z given explicitelly
+    z = proj[1].thanVar["elevation"][2]                         # Get points with z given explicitly
     while True:
         res = proj[2].thanGudGetPoint(T["Specify a point xy (<enter>): "], options=("",))
         if res == Canc: return proj[2].thanGudCommandEnd()  # No more points
@@ -164,7 +163,7 @@ def __drawpnamed2(proj, cvis):
 def __drawpnamed3(proj, cvis):
     "Get multiple points asking explicitly for z."
     proj[2].thanPrt(T["Points with explicit z"])
-    z = proj[1].thanVar["elevation"][2]                         # Get points with z given explicitelly
+    z = proj[1].thanVar["elevation"][2]                         # Get points with z given explicitly
     while True:
         statonce = "%s: X=%r Y=%r Z=%r\n" % (cvis, gvalidc[0], gvalidc[1], gvalidc[2])
         res = proj[2].thanGudGetPoint(T["Specify a point xy (toggle X/toggle Y/toggle Z): "],
@@ -190,7 +189,7 @@ def __housepnamed(proj, cc, name):
     "Create and draw the named point and do housekeeping."
     elem = thandr.ThanPointNamed()
     elem.thanSet(cc, name, gvalidc)
-    proj[1].thanElementAdd(elem)              # thanTouch is implicitely called
+    proj[1].thanElementAdd(elem)              # thanTouch is implicitly called
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
     proj[1].thanDoundo.thanAdd("point", thanundo.thanReplaceRedo, ((), newelems),
@@ -204,7 +203,7 @@ def thanTkDrawPolygon(proj):
     if not thanNear2(cp[0], cp[-1]): cp.append(list(cp[0]))
     elem = thandr.ThanLineFilled()
     elem.thanSet(cp, persistentfilled=False)
-    proj[1].thanElementAdd(elem)          # thanTouch is implicitely called
+    proj[1].thanElementAdd(elem)          # thanTouch is implicitly called
     elem.thanTkDraw(proj[2].than)
     newelems = (elem,)
     proj[1].thanDoundo.thanAdd("polygon", thanundo.thanReplaceRedo, ((), newelems),
@@ -217,21 +216,45 @@ def thanTkDrawSolid(proj):
     prt = proj[2].thanPrt
     prt("ThanCad hint: The combination of polygons (which are closed polylines) with")
     prt("the 'fill' attribute of layers is superior to the 'solid' command.")
+
     lay = proj[1].thanLayerTree.thanCur
-    ia = lay.thanAtts["fill"]
     res = False
-    if not ia.thanVal:
+    fillold = fillnew = None
+    if not lay.thanAtts["fill"].thanVal:
         res = proj[2].thanGudGetYesno(T["Set Fill mode ON for current layer (recommended) [yes/no] <yes>:"], default="yes")
-        if res == Canc: return proj[2].thanGudCommandCan()  # Polygon cancelled
+        if res == Canc: return proj[2].thanGudCommandCan()  # Solid cancelled
+        if res:
+            fillold = False
+            if lay.thanAtts["fill"].thanInher: fillold = THANBYPARENT
+            fillnew = True
+
     cp = getsolid(proj)
-    if cp == Canc: return proj[2].thanGudCommandCan()  # Polygon cancelled
+    if cp == Canc: return proj[2].thanGudCommandCan()  # Solid cancelled
     if not thanNear2(cp[0], cp[-1]): cp.append(list(cp[0]))
     elem = thandr.ThanLineFilled()
     elem.thanSet(cp, persistentfilled=True)
-    proj[1].thanElementAdd(elem)          # thanTouch is implicitely called
+    proj[1].thanElementAdd(elem)          # thanTouch is implicitly called
     elem.thanTkDraw(proj[2].than)
     if res: thanToplayerCurrent(proj, lay.thanGetPathname(), current=True, fill=res)  #This sets the fill mode to the layer
+    proj[1].thanDoundo.thanAdd("solid", __drawsolidRedo, (elem, fillnew),
+                                        __drawsolidUndo, (elem, fillold))
     proj[2].thanGudCommandEnd()
+
+
+def __drawsolidUndo(proj, elem, fill):
+    "Undraws the solid and resets the fill attribute to previous value."
+    thanundo.thanReplaceUndo(proj, delelems=(), newelems=(elem,))
+    if fill is not None:
+        lay = proj[1].thanLayerTree.thanCur
+        thanToplayerCurrent(proj, lay.thanGetPathname(), current=True, fill=fill)
+
+
+def __drawsolidRedo(proj, elem, fill):
+    "Redraws the solid and resets the fill attribute."
+    thanundo.thanReplaceRedo(proj, delelems=(), newelems=(elem,))
+    if fill is not None:
+        lay = proj[1].thanLayerTree.thanCur
+        thanToplayerCurrent(proj, lay.thanGetPathname(), current=True, fill=fill)
 
 
 def getpol(proj, nmax=-1):
@@ -271,7 +294,7 @@ def getsolid(proj, nmax=-1):
     """Get a triangle or quadrilateral in the style of thAtCAD.
 
     The solid is supposed to be filled with colour. In ThanCad, the 'fill'
-    attribute of the cirrent layer must be ON, in order to fill the solid.
+    attribute of the current layer must be ON, in order to fill the solid.
     Solid is just a closed polyline."""
     than = proj[2].than
     g2l = than.ct.global2Local
@@ -309,65 +332,8 @@ def getsolid(proj, nmax=-1):
                    fill="blue", tags=("e0",))
                 item.append(temp)
                 than.dc.delete("e0")          # Solid quadrilateral
-                cs[2], cs[3] = cs[3], cs[2]   # Imitate thAtCAD's sequence of ccordinates
+                cs[2], cs[3] = cs[3], cs[2]   # Imitate thAtCAD's sequence of coordinates
                 return cs
-
-
-def thanTkDrawTextold(proj):
-    "Draws multiple texts with the help of a GUI and stores them to database."
-    un = proj[1].thanUnits
-    size = proj[2].thanGudGetPosFloat(T["Text size: "], 10.00)
-    if size == Canc: return proj[2].thanGudCommandCan()              # Text cancelled
-    st = "%s(%s): " % (T["Rotation angle"], un.anglunit)
-    theta = proj[2].thanGudGetFloat(st, 0.00)
-    if theta == Canc: return proj[2].thanGudCommandCan()             # Text cancelled
-    c1 = proj[2].thanGudGetPoint(T["Text location: "])
-    if c1 == Canc: return proj[2].thanGudCommandCan()                # Text cancelled
-    theta = un.unit2rad(theta)
-    tt = cos(theta), sin(theta)
-    nn = -tt[1], tt[0]
-    while True:
-        text = proj[2].thanGudGetText(T["Text: "], "")
-        if text == Canc: return proj[2].thanGudCommandCan()          # Text cancelled
-        if text.strip() == "": return proj[2].thanGudCommandEnd()    # No more texts
-        elem = thandr.ThanText()
-        elem.thanSet(text, c1, size, theta)
-        proj[1].thanElementAdd(elem)              # thanTouch is implicitely called
-        elem.thanTkDraw(proj[2].than)
-        c1[:2] = c1[0]-1.2*size*nn[0], c1[1]-1.2*size*nn[1]
-
-_ts = p_ggen.Struct("Text settings")
-_ts.ct = None
-_ts.size = 10.0
-_ts.theta = 0.0
-def thanTkDrawText2(proj):
-    "Draws multiple texts with the help of a GUI and stores them to database."
-    un = proj[1].thanUnits
-    if _ts.ct == None: _ts.ct = list(proj[1].thanVar["elevation"])
-    c1 = proj[2].thanGudGetPoint("%s (enter=%s): " % (T["Text location"], T["below previous text"]), options=("",))
-    if c1 == Canc: return proj[2].thanGudCommandCan()                # Text cancelled
-    if c1 == "": c1 = _ts.ct
-    size = proj[2].thanGudGetPosFloat("%s (enter=%s): " % (T["Text size"], un.strdis(_ts.size)), _ts.size)
-    if size == Canc: return proj[2].thanGudCommandCan()              # Text cancelled
-    st = "%s (enter=%s): " % (T["Rotation angle"], un.strang(_ts.theta))
-    theta = proj[2].thanGudGetFloat(st, _ts.theta)
-    if theta == Canc: return proj[2].thanGudCommandCan()             # Text cancelled
-    theta = un.unit2rad(theta)
-    tt = cos(theta), sin(theta)
-    nn = -tt[1], tt[0]
-    _ts.ct = c1
-    _ts.size = size
-    _ts.theta = theta
-    while True:
-        text = proj[2].thanGudGetText(T["Text: "], "")
-        if text == Canc: return proj[2].thanGudCommandCan()          # Text cancelled
-        if text.strip() == "": return proj[2].thanGudCommandEnd()    # No more texts
-        elem = thandr.ThanText()
-        elem.thanSet(text, c1, size, theta)
-        proj[1].thanElementAdd(elem)              # thanTouch is implicitely called
-        elem.thanTkDraw(proj[2].than)
-        c1[:2] = c1[0]-1.2*size*nn[0], c1[1]-1.2*size*nn[1]
-        _ts.ct = c1
 
 
 _texset = p_ggen.Struct("Text settings")
@@ -377,10 +343,10 @@ _texset.theta = 0.0
 def thanTkDrawText(proj):
     "Draws multiple texts with the help of a GUI and stores them to database."
     un = proj[1].thanUnits
-    if _texset.ct == None: _texset.ct = list(proj[1].thanVar["elevation"])
+    if _texset.ct is None: _texset.ct = list(proj[1].thanVar["elevation"])
     texset = _texset.clone()
 
-    mes = "%s (%s, %s) <%s>: " % (T["Text location"], T["below Previous"], T["below Other"], T["below Other"])
+    mes = "%s (%s, %s) <%s>: " % (T["Text location"], T["below Previous"], T["below Other"], T["below Previous"])
     res = proj[2].thanGudGetPoint(mes, options=("previous", "other", ""))
     if res == Canc: return proj[2].thanGudCommandCan()                # Text cancelled
     if res == "" or res == "p":
@@ -399,32 +365,37 @@ def thanTkDrawText(proj):
 #    texset.size = proj[2].thanGudGetPosFloat("%s (enter=%s): " % (T["Text size"], un.strdis(texset.size)), texset.size)
     texset.size = proj[2].thanGudGetSize(texset.ct, "%s (enter=%s): " % (T["Text size"], un.strdis(texset.size)), texset.size)
     if texset.size == Canc: return proj[2].thanGudCommandCan()              # Text cancelled
-    mes = "%s (enter=%s): " % (T["Rotation angle"], un.strang(texset.theta))
+    mes = "%s (enter=%s): " % (T["Rotation angle (azimuth)"], un.strdir(texset.theta))
 #    texset.theta = proj[2].thanGudGetFloat(mes, un.rad2unit(texset.theta))
-    texset.theta = proj[2].thanGudGetAngle(texset.ct, mes, un.rad2unit(texset.theta))
+    texset.theta = proj[2].thanGudGetAzimuth(texset.ct, mes, un.rad2unit(texset.theta))
     if texset.theta == Canc: return proj[2].thanGudCommandCan()             # Text cancelled
-    texset.theta = un.unit2rad(texset.theta)
+    texset.theta = un.unit2raddir(texset.theta)
     tt = cos(texset.theta), sin(texset.theta)
     nn = -tt[1], tt[0]
     _texset.update(texset)
     ct = _texset.ct            #This an alias!!
+    newelems = []
     while True:
         text = proj[2].thanGudGetText(T["Text: "], "")
-        if text == Canc: return proj[2].thanGudCommandCan()          # Text cancelled
-        if text.strip() == "": return proj[2].thanGudCommandEnd()    # No more texts
-        elem = thandr.ThanText()
-        elem.thanSet(text, ct, _texset.size, _texset.theta)
-        proj[1].thanElementAdd(elem)              # thanTouch is implicitely called
-        elem.thanTkDraw(proj[2].than)
+        if text == Canc: break          # Text cancelled
+        if text.strip() != "":          # If blank, then advance a line (with no text)
+            elem = thandr.ThanText()
+            elem.thanSet(text, ct, _texset.size, _texset.theta)
+            proj[1].thanElementAdd(elem)    # thanTouch is implicitly called
+            elem.thanTkDraw(proj[2].than)
+            newelems.append(elem)
         ct[:2] = ct[0]-1.2*_texset.size*nn[0], ct[1]-1.2*_texset.size*nn[1]
-
-
+    if len(newelems) == 0: return proj[2].thanGudCommandCan()
+    proj[1].thanDoundo.thanAdd("dtext", thanundo.thanReplaceRedo, ((), newelems),
+                                        thanundo.thanReplaceUndo, ((), newelems))
+    proj[2].thanGudCommandEnd()
 
 
 def thanPointNamedReplace(proj):
     "Gets names points as point, name, height and deletes the original objects."
     elpnt = thanSelect1(proj, T["Select an unnamed point: "], filter=lambda e: isinstance(e, thandr.ThanPoint))
     if elpnt == Canc: return thanModCanc(proj)      # Point cancelled
+    selold = proj[2].thanSelold
     todel = [elpnt]
     elnam = thanSelect1(proj, T["Select a text element for point name (t=type name): "],
         filter=lambda e: isinstance(e, thandr.ThanText), options=("text", ))
@@ -455,58 +426,72 @@ def thanPointNamedReplace(proj):
         h = "%s" % (h, )
         todel.append(elh)
 
-    proj[1].thanElementDelete(todel, proj)                    # Delete original elements
     elem = thandr.ThanPointNamed()
     if h == "": elem.thanSet(elpnt.cc, nam)
     else:       elem.thanSet(elpnt.cc, "%s/%s" % (nam, h))
-    proj[1].thanElementAdd(elem)
-    elem.thanTkDraw(proj[2].than)
+    proj[1].thanElementTag(elem)
+    newelems = set((elem,))       #newelems must be set (not list) when its is used as selnew
+    thanundo.thanReplaceRedo(proj, todel, newelems, newelems)
+    proj[1].thanDoundo.thanAdd("pointreplace", thanundo.thanReplaceRedo, (todel, newelems, newelems),
+                                               thanundo.thanReplaceUndo, (todel, newelems, selold))
     proj[2].thanGudCommandEnd()
 
 
 def thanToCurve(proj):
     "Transforms a polyline to a curve (which has very similar properties)."
-    lin = thanSel1line(proj, T["Select a line to transform to curve: "])
-    if lin == Canc: return thanModCanc(proj)    # Curve cancelled
-    lin.__class__ = thandr.ThanCurve
-    lin.thanSetToldeg()      # Set default angle tolerance for smoothness
-    thanModEnd(proj, T["Line was succesfully transformed to curve."])
+    linori = thanSel1line(proj, T["Select a line to transform to curve: "])
+    if linori == Canc: return thanModCanc(proj)    # Curve cancelled
+    lin = thandr.ThanCurve()
+    lin.thanSet(linori.cp, thanCumulDis(linori.cp))
+    lin.thanTags = linori.thanTags
+    selold = proj[2].thanSelold
+    delelems = [linori]
+    newelems = set((lin,))       #newelems must be set (not list) when its is used as selnew
+    thanundo.thanReplaceRedo(proj, delelems, newelems, newelems) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("tocurve", thanundo.thanReplaceRedo, (delelems, newelems, newelems),
+                                          thanundo.thanReplaceUndo, (delelems, newelems, selold))
+#  'Reset color' is not needed, but it is called for only 1 element, so it is fast:
+    thanModEnd(proj, T["Line was successfully transformed to curve."])
 
 
 def thanToSpline(proj):
     "Transforms a polyline to a cubic spline curve."
-    lin = thanSel1line(proj, T["Select a line to transform to spline: "])
-    if lin == Canc: return thanModCanc(proj)    # Curve cancelled
-    lin.__class__ = thandr.ThanSpline
-    lin.thanSet(lin.cp)
-
-    proj[2].thanCanvas.delete(lin.thanTags[0])
-    lt = proj[1].thanLayerTree
-    lay = lt.dilay[lin.thanTags[1]]
-    if lay != lt.thanCur: lay.thanTkSet(proj[2].than)
-    lin.thanTkDraw(proj[2].than)
-    if lay != lt.thanCur: lt.thanCur.thanTkSet(proj[2].than)
-
-    thanModEnd(proj, T["Line was succesfully transformed to cubic spline curve."])
+    linori = thanSel1line(proj, T["Select a line to transform to spline: "])
+    if linori == Canc: return thanModCanc(proj)    # Curve cancelled
+    lin = thandr.ThanSpline()
+    lin.thanSet(linori.cp)
+    lin.thanTags = linori.thanTags
+    selold = proj[2].thanSelold
+    delelems = [linori]
+    newelems = set((lin,))       #newelems must be set (not list) when its is used as selnew
+    thanundo.thanReplaceRedo(proj, delelems, newelems, newelems) #Room for optimisation here.
+    proj[1].thanDoundo.thanAdd("tospline", thanundo.thanReplaceRedo, (delelems, newelems, newelems),
+                                           thanundo.thanReplaceUndo, (delelems, newelems, selold))
+#  'Reset color' is not needed, but it is called for only 1 element, so it is fast:
+    thanModEnd(proj, T["Line was successfully transformed to cubic spline curve."])
 
 
 def thanDecurve(proj):
     "Transforms a curves to lines."
     res = thanSelectGen(proj, standalone=False, filter=lambda e, cl=thandr.ThanCurve: isinstance(e, cl))
     if res == Canc: return thanModCanc(proj)    # Curve cancelled
-    for elem in proj[2].thanSelall:
+    selold = proj[2].thanSelold
+    selall = proj[2].thanSelall
+    delelems = []
+    newelems = []
+    for elem in selall:
         try:
-            elem.cp = elem.cpori
-            del elem.cpori
-        except AttributeError:
-            pass
-        elem.__class__ = thandr.ThanLine
+            elem.cpori
+        except AttributeError:   #Avoid ellipse
+            continue
+        eln = thandr.ThanLine()
+        eln.thanSet(elem.cpori)
+        eln.thanTags = elem.thanTags
+        delelems.append(elem)
+        newelems.append(eln)
 
-        proj[2].thanCanvas.delete(elem.thanTags[0])
-        lt = proj[1].thanLayerTree
-        lay = lt.dilay[elem.thanTags[1]]
-        if lay != lt.thanCur: lay.thanTkSet(proj[2].than)
-        elem.thanTkDraw(proj[2].than)
-        if lay != lt.thanCur: lt.thanCur.thanTkSet(proj[2].than)
-
-    thanModEnd(proj, T["%d curves were succesfully decurved."] % len(proj[2].thanSelall))
+    thanundo.thanReplaceRedo(proj, delelems, newelems, selall)
+    proj[1].thanDoundo.thanAdd("decurve", thanundo.thanReplaceRedo, (delelems, newelems, selall),
+                                          thanundo.thanReplaceUndo, (delelems, newelems, selold))
+#  'Reset color' is not needed. Room for optimisation here
+    thanModEnd(proj, T["%d curves were successfully decurved."] % len(newelems))

@@ -3,7 +3,7 @@ from p_gmath import thanNear2, thanNearx
 def areapn(cc):
     """Finds the area of polygon cc (positive->clockwise, negative->counterclockwise).
 
-    The first point of the popygon should coincide with the last.
+    The first point of the polygon should coincide with the last.
     The points should be in order."""
     xx = [c[0] for c in cc]
     yy = [c[1] for c in cc]
@@ -30,12 +30,12 @@ def spin(cp):
         cp = iter(cp)
         c1 = cp.next()
         for c2 in cp:
-            if not thanNear2(c1, c2): break  #Only x,y coordinate are taken into acount for the spin
+            if not thanNear2(c1, c2): break  #Only x,y coordinate are taken into account for the spin
         else:
             return 1      # All line points are close together:Degenerate line to a point: return 1 arbitrarily
         for a,b in zip(c1, c2):
             if thanNearx(a, b): continue
             if b > a: return 1  #If one straight line segment, then spin is positive if x2>x1,
             else:     return -1 # or else if y2>y1 or else z2>z1 etc. The same is true the line
-#                               # has equal segments in the closkwise and the counter closkwise direction
+#                               # has equal segments in the clockwise and the counter clockwise direction
         assert 0, "Degenerate line should have already been found!"

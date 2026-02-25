@@ -1,13 +1,32 @@
 import sys
 from gen import thanUnunicode
 
-class Translation:
+class Translation(object):
     "Translation class."
 
     def __init__(self, *tables):
         "Initialise object."
-        self.thanTables = tables    # Each table represents translation from one language to another
+        self.thanTables = list(tables)    # Each table represents translation from one language to another
+        self.__zero()   #Create empty translation variables, in case language "en" is not found
         self.thanLangSet("en", "en")
+
+
+    def __zero(self):
+        "Empty translation variables for new language."
+        self.thanTrans = {}
+        self.thanUnknown = {}
+        self.thanUnknownl = []
+
+
+    def updateTables(*tables):
+        "Update or add new tables."
+        for table in tables:
+            for etable in self.thanTables:
+                if table["__TRANSLATION__"] == etable["__TRANSLATION__"]:
+                    etable.update(table)
+                    break
+            else:
+                self.thanTables.append(table)
 
 
     def thanLangSet(self, from_, to):
@@ -24,14 +43,10 @@ class Translation:
                 if langfrom == from_: break
             else:
                 return None                  # The translation not found; don't change status
-            self.thanTrans = {}
-            self.thanUnknown = {}
-            self.thanUnknownl = []
+            self.__zero()
             return encto
 
-        self.thanTrans = {}
-        self.thanUnknown = {}
-        self.thanUnknownl = []
+        self.__zero()
         self.thanTrans.update(table)
         del self.thanTrans["__TRANSLATION__"]
         return encto

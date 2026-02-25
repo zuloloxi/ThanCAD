@@ -1,21 +1,19 @@
 # -*- coding: iso-8859-7 -*-
 import re
-from p_ggen import prg, tog, isString
-import opguitrans
-Tgui = opguitrans.Tgui
+from p_ggen import prg, tog, isString, Tgui
 
 
 class Datlin:
     "Class to assist reading text data."
     def __init__(self, fr, prt=None, comment="#"):
         self.fr = fr
-	if prt == None: self.prt = prg
-	else:           self.prt = prt
-	self.lin = 0
-	self.itok = 0
-	self.dlPrev = []
-	self.dlUnread = False
-	self._comment = comment
+        if prt == None: self.prt = prg
+        else:           self.prt = prt
+        self.lin = 0
+        self.itok = 0
+        self.dlPrev = []
+        self.dlUnread = False
+        self._comment = comment
         self.ncom = len(comment)
         if comment == "*": comment = r"\*"
 #        self._splitter = re.compile(r"""'.+'|".+"|%s.*|\S+""" % comment)
@@ -23,8 +21,8 @@ class Datlin:
 
     def __getstate__(self):
         odict = self.__dict__.copy()
-	del odict["_splitter"]          # Do not save the regulat expression in the file
-	return odict
+        del odict["_splitter"]          # Do not save the regulat expression in the file
+        return odict
 
     def __setstate__(self, odict):
         self.__dict__.update(odict)
@@ -44,24 +42,24 @@ class Datlin:
     def datLinold(self, failoneof=False):
         "Reads a new line, unless the previous line was unread."
         if not self.dlUnread:
-	    while 1:
-	        dl = self.fr.readline()
-	        if dl == "":
-	            if not failoneof: return False
-		    raise IOError, "Unexpected end of file after line %d." % self.lin
-	        self.dlPrev = dl.strip("\n")
-	        self.lin += 1
-		dl = dl.strip()
-		if dl != "" and dl[0:self.ncom] != self._comment: break
+            while 1:
+                dl = self.fr.readline()
+                if dl == "":
+                    if not failoneof: return False
+                    raise IOError, "Unexpected end of file after line %d." % self.lin
+                self.dlPrev = dl.strip("\n")
+                self.lin += 1
+                dl = dl.strip()
+                if dl != "" and dl[0:self.ncom] != self._comment: break
 #        self.dl = self.dlPrev.strip().split()
         self.dl = self._splitter.findall(self.dlPrev)
-	if len(self.dl) > 0:
-	    if self.dl[-1][0:self.ncom] == self._comment: del self.dl[-1]       # Delete trailing comment
-	for i,dl1 in enumerate(self.dl):
-	    if dl1[0] == "'" == dl1[-1] or dl1[0] == '"' == dl1[-1]:
-	        self.dl[i] = self.dl[i][1:-1]           # Delete apostrophis in strings
-	self.dlUnread = False
-	self.itok = 0
+        if len(self.dl) > 0:
+            if self.dl[-1][0:self.ncom] == self._comment: del self.dl[-1]       # Delete trailing comment
+        for i,dl1 in enumerate(self.dl):
+            if dl1[0] == "'" == dl1[-1] or dl1[0] == '"' == dl1[-1]:
+                self.dl[i] = self.dl[i][1:-1]           # Delete apostrophis in strings
+        self.dlUnread = False
+        self.itok = 0
         return True
 
 
@@ -143,33 +141,33 @@ class Datlin:
         i = self.itok
         if i >= len(self.dl):
             raise IOError, "Error at line %d: End of line encountered where a real number was expected." % self.lin
-	self.itok += 1
+        self.itok += 1
         try: return float(self.dl[i])
-	except ValueError:
-	    raise ValueError, "Error at line %d: '%s' was found where a real number was expected." % (self.lin, self.dl[i])
+        except ValueError:
+            raise ValueError, "Error at line %d: '%s' was found where a real number was expected." % (self.lin, self.dl[i])
 
     def datInt(self):
         "Tries to read an integer number."
-	i = self.itok
+        i = self.itok
         if self.itok >= len(self.dl):
             raise IOError, "Error at line %d: End of line encountered where an integer number was expected." % self.lin
-	self.itok += 1
+        self.itok += 1
         try: return int(self.dl[i])
-	except ValueError:
-	    raise ValueError, "Error at line %d: '%s' was found where an integer number was expected." % (self.lin, self.dl[i])
+        except ValueError:
+            raise ValueError, "Error at line %d: '%s' was found where an integer number was expected." % (self.lin, self.dl[i])
 
     def datStr(self, failoneol=True):
         "Tries to read a string."
-	i = self.itok
+        i = self.itok
         if self.itok >= len(self.dl):
-	    if not failoneol: return None
+            if not failoneol: return None
             raise IOError, "Error at line %d: End of line encountered where a string was expected." % self.lin
-	self.itok += 1
-	return self.dl[i]
+        self.itok += 1
+        return self.dl[i]
 
     def datYesno(self):
         "Tries to read an yes/no string."
-	t = self.datStr()[:2].strip()
+        t = self.datStr()[:2].strip()
         if t[:2] in ("ΝΑ", "να", "NA", "na", "YE", "ye", "1"): return True
         if t[:2] in ("ΟΧ", "οχ", "OX", "ox", "NO", "no", "0"): return False
         raise ValueError, "Error at line %d: '%s' was found where NAI/YES/OXI/NO was expected." % (self.lin, t)
@@ -219,14 +217,14 @@ def test():
     "Tests Datlin."
     class flike:
         def __init__(self, dlines):
-	    self.dlines = dlines
-	    self.i = 0
-	def readline(self):
-	    if self.i < len(self.dlines):
-	        self.i += 1
-		return self.dlines[self.i-1]
-	    else:
-	        return ""
+            self.dlines = dlines
+            self.i = 0
+        def readline(self):
+            if self.i < len(self.dlines):
+                self.i += 1
+                return self.dlines[self.i-1]
+            else:
+                return ""
 
     fr = flike(['Thanasis Stamos "andreas stella"  189.99 #comments 1+1+1',
                 "  'Thanasis Stamos'  ''  'andreas' # stella  189.99 #comments 1+1+1 "])

@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,12 +22,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which creates a bioclimatic city plan.
 """
 import random, copy
-import ImageDraw
+import p_gimage
 from math import pi
 import p_ggen, p_ganneal
 import hippo, roadut
@@ -187,9 +187,9 @@ class HippoAnneal(p_ganneal.SAAnnealable):
     def imageForegroundState(self, im, ct, colot, T, e):
         "Superimpose image foreground to the given the background image."
         ot = list(self.pol.iterOT(self.state))
-        imd = ImageDraw.Draw(im)
+        imd = p_gimage.Draw(im)
         self.pol.topil(imd, ct, ot=ot, colot=colot)
-        if T != None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill=colot)
+        if T is not None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill=colot)
 
 
     def imageBackgroundState(self, imsize):

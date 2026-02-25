@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides various high level selection routines.
@@ -33,7 +33,7 @@ import thandr, thancomsel
 
 
 def thanSel1line(proj, statonce, strict=True, options=()):
-    """Selects 1 line and return immediatelly.
+    """Selects 1 line and return immediately.
 
     The argument strict is not used and it is there for compatibility
     with thanSel1Order."""
@@ -105,21 +105,22 @@ def thanSel2linesOrder(proj, statonce1, statonce2):
     return gr
 
 
-def thanSelMultlines(proj, nsel, statonce1, strict=False):
+def thanSelMultlines(proj, nsel, statonce1, strict=False, name="LINE"):
     """Selects (at least) nsel lines.
 
     If strict == True then the user must select exactly nsel lines, otherwise it is an error.
-    If strict == False then the user must selct at least nsel lines, otherwise it is an error."
+    If strict == False then the user must select at least nsel lines, otherwise it is an error."
     """
     if strict: atl = T["Exactly"]
     else:      atl = T["At least"]
+    clas = thandr.thanElemClass[name]
     while True:
         elems = []
         proj[2].thanCom.thanAppend(statonce1, "info1")
-        res = thancomsel.thanSelectGen(proj, standalone=False, filter=lambda elem: isinstance(elem, thandr.ThanLine))
+        res = thancomsel.thanSelectGen(proj, standalone=False, filter=lambda elem: isinstance(elem, clas))
         if res == Canc: return Canc
         for elem in proj[2].thanSelall:
-            assert isinstance(elem, thandr.ThanLine), "filter does not work?"
+            assert isinstance(elem, clas), "filter does not work?"
         elems = proj[2].thanSelall
         if len(elems) == nsel: break
         if not strict and len(elems) >= nsel: break

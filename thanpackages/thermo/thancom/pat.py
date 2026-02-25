@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 The package automates the data input of the diploma thesis of Xaris Patounis
 and Nikos Simos of the School of Civil Engineering, National Technical
@@ -54,7 +54,7 @@ def pyMain():
         gridgen(None, wrSyn)
     except BaseException, e:
 #        raise
-        p_gfil.er1s("\n%s:\n%s" % (p_gfil.Tgui["Error while executing program"], e), "can")
+        p_gfil.er1s("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
     p_gfil.closeFiles1()                        #Not reentrant
 
 
@@ -78,7 +78,7 @@ def thanCadMain(proj):
         gridgen(proj, thancadSyn)
     except BaseException, e:
 #        raise
-        prg("\n%s:\n%s" % (p_gfil.Tgui["Error while executing program"], e), "can")
+        prg("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
         try: fr.close()
         except: pass
         proj[2].thanGudCommandEnd("(Μπορεί νά έχει γινει μερική εισαγωγή σημείων)")
@@ -258,7 +258,7 @@ def point(icole, irow):
 def wrSyn(proj, fn, icole, irowe, icolt, irowt, time_e, time_t, j):
     "Write coordinates of a whole row; j=0->temperature, j=1->humidity."
     fw = meas.get(fn)
-    if fw == None: fw = meas[fn] = open(pro+fn+".syn", "w")
+    if fw is None: fw = meas[fn] = open(pro+fn+".syn", "w")
     xe =  (icole-1)*step
     ye = -(irowe-1)*step
     xt =  (icolt-1)*step
@@ -301,7 +301,7 @@ def openFiles():
     p_gfil.openFile1(1, 'csv', 'old', 1, 'μετρήσεων σε μορφή .csv (από .xls)')
     frw = p_gfil.openFile1(887, ' ', ' ', 0, ' ')
     winmain, prg1, _ = p_gfil.openfileWinget()
-    if winmain != None: prg = prg1
+    if winmain is not None: prg = prg1
     pro = p_ggen.path(frw["csv"].name)
     pro = pro.parent/pro.namebase
 

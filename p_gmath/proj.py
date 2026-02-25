@@ -1,5 +1,8 @@
+"Projection transformation functions module."
+from math import hypot
 from p_gnum import array, matrixmultiply, transpose, solve_linear_equations, LinAlgError
-from var import linEq2
+from var import linEq2, thanNear2
+from thanintersect import thanSegSeg
 from projcom import _Projection
 
 
@@ -69,7 +72,7 @@ class DLTProjection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -133,7 +136,7 @@ class DLT2Projection(_Projection):
     NL = 15
 
     def __init__(self, L=None):
-        "Initialize the object with known coeffcients."
+        "Initialize the object with known coefficients."
         if (L == None):
             self.L = [None,
                       1.0, 0.0, 0.0,       # Coefs for xr
@@ -210,8 +213,8 @@ Y = ------------------------------------------------------------------
            (L1 L5 - L4 L2)       (L1 L5 - L4 L2)
 
         """
-        par = (L1*L5 - L4*L2)
         L = self.L
+        par = (L[1]*L[5] - L[4]*L[2])
         M = [ None,
           (L[5]      - L[6]*L[8]) / par,
           (L[3]*L[8] - L[2])      / par,
@@ -230,7 +233,7 @@ Y = ------------------------------------------------------------------
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -294,7 +297,7 @@ class Rational1Projection(_Projection):
     NL = 20
 
     def __init__(self, L=None):
-        "Initialize the object with known coeffcients."
+        "Initialize the object with known coefficients."
         if (L == None):
             self.L = [1.0, 0.0, 0.0, 0.0,       # Coefs for xr
                       0.0, 0.0, 0.0,            # Coefs for denominator xr
@@ -352,7 +355,7 @@ class Rational1Projection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -475,7 +478,7 @@ class Rational1_2DProjection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -598,7 +601,7 @@ class Rational2Projection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -657,7 +660,7 @@ class Rational2Projection(_Projection):
 ###############################################################################
 
 class Rational15Projection(_Projection):
-    "This class provides the machinery for the 2nd order mominator, first order denominator polynomial projection."
+    "This class provides the machinery for the 2nd order nominator, first order denominator polynomial projection."
     icodp = 5
     name = "2nd and 1st order rational"
     NL = 28
@@ -835,8 +838,8 @@ class Polynomial1Projection(_Projection):
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
             except LinAlgError, why:
-    #             print "Match2 polynomial solution failed: ", why
-                 return None, None, None
+#                print "Match2 polynomial solution failed: ", why
+                return None, None, None
             L.extend(list(a))
         self.L = L
         return self.er(fots)
@@ -845,7 +848,7 @@ class Polynomial1Projection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         assert ic == self.icodp, "Well it IS a polynomial1 projection!"
@@ -928,6 +931,7 @@ Y =   ----------------- x + ---------------- y + -----------------
         yn = M[3]*xp+M[4]*yp+M[5]
         """
         LL = [None]*6
+        L = self.L
         M = other.L
         LL[0] = M[0]*L[0] + M[1]*L[3]
         LL[1] = M[0]*L[1] + M[1]*L[4]
@@ -956,8 +960,8 @@ Y =   ----------------- x + ---------------- y + -----------------
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
             except LinAlgError, why:
-    #             print "Match2 polynomial solution failed: ", why
-                 return None, None, None
+#                print "Match2 polynomial solution failed: ", why
+                return None, None, None
             L.extend(list(a))
         self.L = L
         return self.er(fots)
@@ -966,7 +970,7 @@ Y =   ----------------- x + ---------------- y + -----------------
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         assert ic == self.icodp, "Well it IS a polynomial1 2D projection!"
@@ -1030,8 +1034,8 @@ class Polynomial2Projection(_Projection):
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
             except LinAlgError, why:
-    #             print "Match2 polynomial solution failed: ", why
-                 return None, None, None
+#                print "Match2 polynomial solution failed: ", why
+                return None, None, None
             L.extend(list(a))
         self.L = L
         return self.er(fots)
@@ -1040,7 +1044,7 @@ class Polynomial2Projection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -1109,8 +1113,8 @@ class Polynomial2_2DProjection(_Projection):
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
             except LinAlgError, why:
-    #             print "Match2 polynomial solution failed: ", why
-                 return None, None, None
+#                print "Match2 polynomial solution failed: ", why
+                return None, None, None
             L.extend(list(a))
         self.L = L
         return self.er(fots)
@@ -1119,7 +1123,7 @@ class Polynomial2_2DProjection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -1189,9 +1193,34 @@ class NonCartesian(_Projection):
         the y-axis. The origin is the intersection of the points.
         Returns False and error message if unsuccesful and True and blank text
         if it is successful."""
-        from p_gvec import Vector2
-        from var import thanNear2
-        from thanintersect import thanSegSeg
+        if thanNear2(ca, cb): return False, "The 2 x-axis definition points are identical"
+        if thanNear2(cc, cd): return False, "The 2 y-axis definition points are identical"
+        cor = thanSegSeg(ca, cb, cc, cd)
+        if cor == None: return False, "The 2 axes do not intersect (without extension)"
+        tab = cb[0]-ca[0], cb[1]-ca[1]
+        t = hypot(tab[0], tab[1])
+        tab = tab[0]/t, tab[1]/t
+        tcd = cd[0]-cc[0], cd[1]-cc[1]
+        t = hypot(tcd[0], tcd[1])
+        tcd = tcd[0]/t, tcd[1]/t
+        if align:
+            if tab[0]*1+tab[1]*0 < 0.0: tab = -tab[0], -tab[1]  #Make x-axis to the about the same direction as the world x-axis
+            tabn = -tab[1], tab[0]    #Normal to tab
+            if tcd[0]*tabn[0]+tcd[1]*tabn[1] < 0.0: tcd = -tcd[0], -tcd[1] #Make the system positive (standard)
+        self.L = [cor[0], cor[1], tab[0], tab[1], tcd[0], tcd[1]]
+        return True, ""
+
+
+    def from4old(self, ca, cb, cc, cd, align=False):
+        """Compute the coefficients using 4 points.
+
+        The first 2 points define the x-axis and the last 2 points define
+        the y-axis. The origin is the intersection of the points.
+        Returns False and error message if unsuccesful and True and blank text
+        if it is successful."""
+        #from p_gvec import Vector2
+        import p_ggen
+        Vector2 = p_ggen.Null
         if thanNear2(ca, cb): return False, "The 2 x-axis definition points are identical"
         if thanNear2(cc, cd): return False, "The 2 y-axis definition points are identical"
         cor = thanSegSeg(ca, cb, cc, cd)
@@ -1228,6 +1257,5 @@ class NonCartesian(_Projection):
         for i in xrange(6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
 
 
-if __name__ == "__main__": 
-    p = Polynomial2Projection()
-    p.write(open("q1.cof", "w"))
+if __name__ == "__main__":
+    print __doc__

@@ -7,7 +7,7 @@ written as comments in the beginning of every source file.
 descMod = __doc__
 
 import sys
-import p_ggen, p_gtkuti
+import p_ggen, p_gtkwid
 from thanvers import SENTCOM
 frw = {}
 winmain = None
@@ -23,7 +23,7 @@ def thanVersUpdate(thanCadAbout, title):
     try:
         doversion(thanCadAbout, title)
     except BaseException, e:
-        p_gfil.er1s("\n%s:\n%s" % (p_gfil.Tgui["Error while executing program"], e), "can")
+        p_gfil.er1s("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
     p_gfil.closeFiles1()                        #Not reentrant
 
 
@@ -35,7 +35,7 @@ def doversion(thanCadAbout, title):
     prg("excluded matched directories: %s" % (p_ggen.thancadrel.excludedmatch,), "info")
     prg("-----------------------------------------------------------------------------")
     if winmain == None: a = p_ggen.inpNo("Proceed with update (enter=yes)?", True)
-    else:               a = p_gtkuti.xinpNo(winmain, "Proceed with update (enter=yes)?", True)
+    else:               a = p_gtkwid.xinpNo(winmain, "Proceed with update (enter=yes)?", True)
     if not a: return
     thanUpdateSources(sourceDir, thanCadAbout, title)
     prg("-----------------------------------------------------------------------------")
@@ -45,7 +45,7 @@ def doversion(thanCadAbout, title):
         a = p_ggen.inpNo("Proceed with replace (enter=no)?", False)
     else:
         winmain.showEnd()
-        a = p_gtkuti.xinpNo(winmain, "Proceed with replace (enter=no)?", False)
+        a = p_gtkwid.xinpNo(winmain, "Proceed with replace (enter=no)?", False)
     if a:
         rotateSources(sourceDir)
         prg("done", "info")
@@ -166,7 +166,7 @@ def openfileParx (icod1, un):
         sourceDir = p_ggen.path(sourceDir).expand().abspath()
 #---Read parameters from xwin
     elif icod1 == 3:
-        sourceDir = p_gtkuti.thanGudGetDir(un, "Φάκελλος αρχείων κώδικα", initialdir=sourceDir1)
+        sourceDir = p_gtkwid.thanGudGetDir(un, "Φάκελλος αρχείων κώδικα", initialdir=sourceDir1)
         if sourceDir == None: sys.exit()
         sourceDir = p_ggen.path(sourceDir).expand().abspath()
     elif icod1 == 2:

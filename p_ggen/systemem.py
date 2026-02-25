@@ -3,7 +3,7 @@ from gen import Pyos
 
 if Pyos.Windows:
 #   from ctypes import *
-    from ctypes import Structure, windll, c_ulong
+    from ctypes import Structure, windll, c_ulong, byref
     from ctypes.wintypes import DWORD
     SIZE_T = c_ulong
 
@@ -48,6 +48,7 @@ elif Pyos.Linux:
         except (IOError, IndexError, ValueError), e:
             return None
         return m
+
 elif Pyos.Freebsd:
     def memTotal():
         "Return the total memory (kB) of the computer in FreeBsd."
@@ -55,10 +56,11 @@ elif Pyos.Freebsd:
             from subprocess import check_output, CalledProcessError
             dline = check_output("/sbin/sysctl hw.physmem")
             dl = dline.split()
-            m = int(dline[2])
+            m = int(dl[2])
         except (OSError, IndexError, ValueError, ImportError, CalledProcessError), e:
             return None
         return m
+
 else:
     def memTotal():
         "Return the total memory (kB) of the computer in other OSes."

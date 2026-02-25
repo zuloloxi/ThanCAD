@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter some text associated with a
 ThanCad element.
@@ -31,21 +31,21 @@ ThanCad element.
 
 from Tkinter import Frame, Button, Tk
 from p_ggen import prg
-import p_gtkuti, p_gtkwid
+import p_gtkwid
 from thantrans import T
 
 
-class ThanElemtext(p_gtkuti.ThanDialog):
+class ThanElemtext(p_gtkwid.ThanDialog):
     "Dialog for the text for association text and object."
 
     def __init__(self, master, vals=None, cargo=None, *args, **kw):
         "Extract initial parameters."
-	self.thanValsInit = vals           # This is structure not a scalar
-	self.thanProj = cargo
-	self.__master = master
-	kw.setdefault("title", T[u"ΣΗΜΕΙΩΣΕΙΣ - ΣΧΟΛΙΑ"])
-#	kw.setdefault("buttonlabels", ("Save and Exit", "Cancel", "Save and Run"))
-	p_gtkuti.ThanDialog.__init__(self, master, buttonlabels=3, *args, **kw)
+        self.thanValsInit = vals           # This is structure not a scalar
+        self.thanProj = cargo
+        self.__master = master
+        kw.setdefault("title", T[u"ΣΗΜΕΙΩΣΕΙΣ - ΣΧΟΛΙΑ"])
+#       kw.setdefault("buttonlabels", ("Save and Exit", "Cancel", "Save and Run"))
+        p_gtkwid.ThanDialog.__init__(self, master, buttonlabels=3, *args, **kw)
 
 
     def __position(self):
@@ -61,12 +61,11 @@ class ThanElemtext(p_gtkuti.ThanDialog):
     def destroy(self):
         "Break circular references."
         del self.thanHelp, self.thanValsInit, self.thanProj, self.thanValsSaved
-        p_gtkuti.ThanDialog.destroy(self)
+        p_gtkwid.ThanDialog.destroy(self)
 
 
     def __del__(self):
         "Say that it is deleted for debugging reasons."
-        from p_ggen import prg
         prg("ThanElemtext %s is deleted." % self)
 
 
@@ -74,19 +73,19 @@ class ThanElemtext(p_gtkuti.ThanDialog):
         fra = Frame(win)
         fra.grid(row=0, column=0, sticky="we")
         but = Button(fra, text="Do nothing", background="lightcyan", activebackground="cyan")
-	but.grid(row=0, column=0, sticky="w")
-	fra.columnconfigure(0, weight=1)
+        but.grid(row=0, column=0, sticky="w")
+        fra.columnconfigure(0, weight=1)
 
         self.thanHelp = p_gtkwid.ThanScrolledText(win, hbar=False, vbar=True, font=None,
-	    background="lightyellow", foreground="black", width=80, height=25)
-	self.thanHelp.grid(row=1, column=0, sticky="wesn")
-	self.thanSet(self.thanValsInit)
-	win.columnconfigure(0, weight=1)
-	win.rowconfigure(1, weight=1)
-	self.thanValsSaved = self.thanValsInit[:]
-	self.__position()
-	self.unbind("<Return>")
-	self.thanTkSetFocus()
+            background="lightyellow", foreground="black", width=80, height=25)
+        self.thanHelp.grid(row=1, column=0, sticky="wesn")
+        self.thanSet(self.thanValsInit)
+        win.columnconfigure(0, weight=1)
+        win.rowconfigure(1, weight=1)
+        self.thanValsSaved = self.thanValsInit[:]
+        self.__position()
+        self.unbind("<Return>")
+        self.thanTkSetFocus()
 
     def thanTkSetFocus(self):
         "Sets focus to the command window."
@@ -108,19 +107,19 @@ class ThanElemtext(p_gtkuti.ThanDialog):
         "Ask before cancel."
         if not self.validate(strict=False):   # If anything is wrong, then it must have been changed
             print "cancel: not validated"
-            a = p_gtkuti.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
+            a = p_gtkwid.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
         elif self.result != self.thanValsSaved: # If anything is wrong, then it must have been changed
             print self.thanValsSaved
             print self.result
-            a = p_gtkuti.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
+            a = p_gtkwid.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
-        p_gtkuti.ThanDialog.cancel(self, *args)
+        p_gtkwid.ThanDialog.cancel(self, *args)
 
 
     def apply2(self, *args):
         "Save the data given and run the program."
-        ret = p_gtkuti.ThanDialog.apply2(self)
+        ret = p_gtkwid.ThanDialog.apply2(self)
         if not ret: return
         self.thanValsSaved = self.result
 

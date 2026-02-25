@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This dialog performs photogrammetric interior orientation of a metric image.
 """
@@ -209,9 +209,9 @@ class ThanInterior(p_gtkwid.ThanComDialog):
 
     def __onClickr(self, event, ifid):
         "Well, here is what should be done when right mouse clicks."
-        if self.thanFloatMenu != None and self.thanFloatMenu.winfo_ismapped():
+        if self.thanFloatMenu is not None and self.thanFloatMenu.winfo_ismapped():
             self.thanFloatMenu.unpost()
-        if event == None:
+        if event is None:
             w = self.butFid[ifid]
             x, y = w.winfo_rootx(), w.winfo_rooty()
         else:
@@ -379,7 +379,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
             return
         tra = p_gmath.Polynomial1_2DProjection()  #First order Poynomial: affine transform
         er, _, _ = tra.lsm23(fots)
-        if er == None:
+        if er is None:
             mm(self, Tphot["The system of equations is singular."], Tphot["Error in computation"])
             return
         er = 0.0
@@ -399,14 +399,14 @@ class ThanInterior(p_gtkwid.ThanComDialog):
 
     def ok(self, *args):
         "Ensure that the user has done the computation."
-        if self.other.tra == None:
+        if self.other.tra is None:
             if not self.ok2change(Tphot["Computation not performed, OK to close dialog?"]): return # Ok was stopped
         p_gtkuti.ThanDialog.ok(self, *args)
 
 
     def cancel(self, *args):
         "In case of escape, if float menu exists, delete float menu."
-        if self.thanFloatMenu != None and self.thanFloatMenu.winfo_ismapped():
+        if self.thanFloatMenu is not None and self.thanFloatMenu.winfo_ismapped():
             self.thanFloatMenu.unpost()
             return "break"
         return p_gtkwid.ThanComDialog.cancel(self, *args)

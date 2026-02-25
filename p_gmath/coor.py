@@ -1,7 +1,7 @@
 from var import thanNearx
 
 class ThanRectCoorTransf:
-    """Class to tranform rectangular cordinates.
+    """Class to transform rectangular coordinates.
 
     A rectangle represents a coordinate system, that is the
     coordinates of lower left corner (point 1) and the coordinates
@@ -27,8 +27,8 @@ class ThanRectCoorTransf:
 
     def set(self, globalr, localr):
         "Computes new coefs for converting formulas."
-	xg1, yg1, xg2, yg2 = globalr
-	xl1, yl1, xl2, yl2 = localr
+        xg1, yg1, xg2, yg2 = globalr
+        xl1, yl1, xl2, yl2 = localr
         (self.axg2l, self.bxg2l) = self.coef(xg1, xg2, xl1, xl2)
         (self.ayg2l, self.byg2l) = self.coef(yg1, yg2, yl1, yl2)
         (self.axl2g, self.bxl2g) = self.coef(xl1, xl2, xg1, xg2)
@@ -82,26 +82,26 @@ class ThanRectCoorTransf:
 
 
 def thanRoundCenter(w, local, per=6):
-        "Rounds an abstract window w, so that it fits exactly to the actual (GuiDependent) window."
-        xa, ya, xb, yb = local
-        wpi = abs(xb - xa)
-        hpi = abs(yb - ya)
+    "Rounds an abstract window w, so that it fits exactly to the actual (GuiDependent) window."
+    xa, ya, xb, yb = local
+    wpi = abs(xb - xa)
+    hpi = abs(yb - ya)
 
-        wun = w[2] - w[0]
-        hun = w[3] - w[1]
+    wun = w[2] - w[0]
+    hun = w[3] - w[1]
 
-#       per =                                       # margin in pixels
-        if wpi < 10*per or hpi < 10*per: per = 0     # no margin for very small windows
-        if thanNearx(wun, 0.0):
-#            assert not thanNearx(hun, 0.0), "Zero world coordinates window dimensions"
-            if thanNearx(hun, 0.0): return tuple(w)  #Zero world coordinates window dimensions
-            sx = sy = float(hpi - per) / hun
-        elif thanNearx(hun, 0.0):
-            sx = float(wpi - per) / wun
-        else:
-            sx = float(wpi - per) / wun
-            sy = float(hpi - per) / hun
-            if sy < sx: sx = sy
-        dx = (wpi / sx - wun) * 0.5
-        dy = (hpi / sx - hun) * 0.5
-        return w[0]-dx, w[1]-dy, w[0]+wun+dx, w[1]+hun+dy
+#    per =                                       # margin in pixels
+    if wpi < 10*per or hpi < 10*per: per = 0     # no margin for very small windows
+    if thanNearx(wun, 0.0):
+#        assert not thanNearx(hun, 0.0), "Zero world coordinates window dimensions"
+        if thanNearx(hun, 0.0): return tuple(w)  #Zero world coordinates window dimensions
+        sx = sy = float(hpi - per) / hun
+    elif thanNearx(hun, 0.0):
+        sx = float(wpi - per) / wun
+    else:
+        sx = float(wpi - per) / wun
+        sy = float(hpi - per) / hun
+        if sy < sx: sx = sy
+    dx = (wpi / sx - wun) * 0.5
+    dy = (hpi / sx - hun) * 0.5
+    return w[0]-dx, w[1]-dy, w[0]+wun+dx, w[1]+hun+dy

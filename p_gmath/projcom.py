@@ -1,3 +1,4 @@
+"Base class for projection transformations and utilities."
 from math import sqrt, hypot
 from p_ggen import iterby2
 
@@ -160,3 +161,7 @@ def read1raw(fr):
         dl = fr.next().strip()
         if len(dl) > 0 and dl[0] != "#": break    # Comment lines
     return dl
+
+
+if __name__ == "__main__":
+    print __doc__

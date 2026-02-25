@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes photogrammetry related commands.
@@ -33,7 +33,7 @@ from p_gmath import thanSegSeg, thanNear2
 import p_ggen, p_gtkuti
 from thantrans import Tphot, T
 from thanvar import Canc
-import thandr, thandr.thanobject
+import thandr, thanobj
 from thanprophoto import thanprotkdia
 from thansupport import thanToplayerCurrent
 from thanopt import thancadconf
@@ -62,7 +62,7 @@ def thanPhotImage(proj, insertmode="p"):
 
     oldcl, oldroot = thanundo.thanLtClone(proj)   # This is not needed if no layers are created, but for simplicity...
     lay, terr = __crlayer(proj, "photogrammetry/raster", moncolor="red", draworder=500)
-    if lay == None: return proj[2].thanGudCommandCan(terr)
+    if lay is None: return proj[2].thanGudCommandCan(terr)
 
     delelems = []
     if nim > 0:
@@ -132,12 +132,12 @@ def thanPhotCosys(proj):
             if c4 == Canc: return __can() # cosys cancelled
             if not thanNear2(c3, c4): break
             proj[2].thanPrter(Tphot["Points of y-axis are identical. Try again."])
-        if thanSegSeg(c1, c2, c3, c4) != None: break
+        if thanSegSeg(c1, c2, c3, c4) is not None: break
         proj[2].thanPrter(Tphot["Y-axis does intersect x-axis (without extension). Try again."])
     elemy = __crarrow(c3, c4)
     proj[2].thanCanvas.delete("e0")
 
-    cosys = thandr.thanobject.NonCartesian()
+    cosys = thanobj.NonCartesian()
     ok, terr = cosys.from4(c1, c2, c3, c4)
     if not ok:
         s = "%s:\n" % (Tphot["Interior orientation system was not defined"], terr)
@@ -145,7 +145,7 @@ def thanPhotCosys(proj):
 
     oldcl, oldroot = thanundo.thanLtClone(proj)   # This is not needed if no layers are created, but for simplicity...
     lay, terr = __crlayer(proj, "photogrammetry/axes", moncolor="red")
-    if lay == None: return proj[2].thanGudCommandCan(terr)
+    if lay is None: return proj[2].thanGudCommandCan(terr)
     oldcosyses = proj[1].thanObjects["COSYS"][:]
     proj[1].thanObjects["COSYS"][:] = [cosys]
     proj[2].thanStatusBar.thanConfig(typ="image", every="move")
@@ -209,10 +209,10 @@ def __crlayer(proj, layname, moncolor, draworder=None):
     oldcl, oldroot = thanundo.thanLtClone(proj)
     lt = proj[1].thanLayerTree
     atts = {"moncolor":moncolor}
-    if draworder != None: atts["draworder"] = draworder
+    if draworder is not None: atts["draworder"] = draworder
     try:
         lay = lt.thanFindic(layname)
-        if lay == None:
+        if lay is None:
             lay = thanToplayerCurrent(proj, layname, current=False, **atts)
         else:
             lay = thanToplayerCurrent(proj, layname, current=False)
@@ -229,7 +229,7 @@ def thanPhotTranspose(proj, comname, transpose):
     "Rotates the image counterclockwise 0, 90, 180, 270 degrees."
     dimitra(proj, "interior")
     e, terr, _ = thanFindImage(proj)
-    if e == None: return proj[2].thanGudCommandCan(terr)
+    if e is None: return proj[2].thanGudCommandCan(terr)
     if transpose == 0: return proj[2].thanGudCommandEnd()   #Nothing to do
     tran_rev = transpose                                    #Reverse transpose
     if transpose != 2: tran_rev = (transpose+2) % 4         #Reverse transpose
@@ -254,13 +254,13 @@ def dimitra(proj, icom):
     pr = proj[2].thanPrtbo
     if icom == "interior":
         pr("Photogrammetry, Dimitra Vassilaki, PhD Candidate", "info")
-        pr("Lab of Photogrammetry, NTUA, 2010-2012", "info")
+        pr("Lab of Photogrammetry, NTUA, 2010-2014", "info")
 
 
 def thanPhotCamera(proj):
     "Display the camera management dialog."
     w = thanprotkdia.ThanCamera(proj[2], vals=None, cargo=proj)
-    if w.result == None: return proj[2].thanGudCommandCan()
+    if w.result is None: return proj[2].thanGudCommandCan()
     proj[2].thanGudCommandEnd()
 
 
@@ -269,11 +269,11 @@ def thanPhotIntcamera(proj):
     from thancom import thanundo
     from thancom.thancomfile import thanTxtopen
     im, terr = __getimage(proj)
-    if im == None: return proj[2].thanGudCommandCan(terr)
+    if im is None: return proj[2].thanGudCommandCan(terr)
     iors = proj[1].thanObjects["PHOTINTERIOR"]
     if len(iors) > 0:
         cam = iors[0].getCamera()
-        if cam != None:
+        if cam is not None:
             ret2 = p_gtkuti.thanGudAskOkCancel(proj[2],
             Tphot["A camera file is already loaded. "\
             "If a new camera file is loaded, "\
@@ -289,12 +289,12 @@ def thanPhotIntcamera(proj):
         v, terr = __checkCam(fr)
         fr.close()
         idir = filnam.parent
-        if v != None: break
+        if v is not None: break
         mm(proj[2], "%s:\n\n%s" % (fr.name, terr),
             "%s - %s" % (proj[0], Tphot["Camera file"]), ERROR)
     thancadconf.thanCameradir = idir
 
-    if len(iors) == 0: ior = thandr.thanobject.ThanPhotInterior()
+    if len(iors) == 0: ior = thanobj.ThanPhotInterior()
     else:              ior = iors[0].thanClone()
     ior.setImage(im)
     ior.setCamera(v)
@@ -310,11 +310,11 @@ def thanPhotIntcamera(proj):
 def __getimage(proj):
     "Try to load the image and report errors."
     im, terr, _ = thanFindImage(proj)
-    if im == None: return None, terr
+    if im is None: return None, terr
     iors = proj[1].thanObjects["PHOTINTERIOR"]
     if len(iors) > 0:
         imi = iors[0].getImage()
-        if imi != None and im != imi:
+        if imi is not None and im != imi:
             ret1 = p_gtkuti.thanGudAskOkCancel(proj[2],
             Tphot["ThanCad found that the image was changed. "\
             "Any previous computations have probably become invalid and must be redone.\n\n"
@@ -355,9 +355,9 @@ def thanPhotInterior(proj):
     "Display the dialog for computing photogrammetric interior orientation."
     from thancom import thanundo
     im, terr = __getimage(proj)
-    if im == None: return proj[2].thanGudCommandCan(terr)
+    if im is None: return proj[2].thanGudCommandCan(terr)
     iors = proj[1].thanObjects["PHOTINTERIOR"]
-    if len(iors) == 0 or iors[0].getCamera() == None:
+    if len(iors) == 0 or iors[0].getCamera() is None:
         return proj[2].thanGudCommandCan(Tphot["Please load a photogrammetric camera file and retry."])
     assert iors[0] != None
 
@@ -365,7 +365,7 @@ def thanPhotInterior(proj):
     oldport = list(v)
     oldcl, oldroot = thanundo.thanLtClone(proj)   # This is not needed if no layers are created, but for simplicity...
     lay, terr = __crlayer(proj, "photogrammetry/fiducials", moncolor="red")
-    if lay == None: return proj[2].thanGudCommandCan(terr)   #Laters could not be created
+    if lay is None: return proj[2].thanGudCommandCan(terr)   #Laters could not be created
     lt = proj[1].thanLayerTree
     lay.thanTkSet(proj[2].than)
 
@@ -376,7 +376,7 @@ def thanPhotInterior(proj):
     other.lay = lay
     other.newelems = newelems
     w = thanprotkdia.ThanInterior(proj[2], vals, proj, Tphot, other)
-    if w.result == None:                         #Interior cancelled
+    if w.result is None:                         #Interior cancelled
         thanundo.thanReplaceUndo(proj, delelems, newelems.values())
         thanundo.thanLtRestore(proj, oldcl, oldroot)   #It also calls thanTkSet for current layer
         proj[1].viewPort[:] = proj[2].thanGudZoomWin(oldport)
@@ -398,7 +398,7 @@ def thanFindImage(proj):
     "Try to find an image in layer 'photogrammetry/raster'."
     terr = Tphot["Please insert an image and retry."]
     lay = proj[1].thanLayerTree.thanFindic("photogrammetry/raster")
-    if lay == None: return None, terr, 0
+    if lay is None: return None, terr, 0
     ims = []
     for e in lay.thanQuad:
         if isinstance(e, thandr.ThanImage): ims.append(e)
@@ -416,11 +416,11 @@ def thanPhotModel(proj):
     from thancom import thanundo
     phs = proj[1].thanObjects["PHOTMODEL"]
     vals = None
-    if len(phs) > 0 and phs[0].model != None: vals = phs[0].model2dialog()
+    if len(phs) > 0 and phs[0].model is not None: vals = phs[0].model2dialog()
     w = thanprotkdia.ThanModel(proj[2], vals=vals, cargo=proj)
     v = w.result
-    if v == None: return proj[2].thanGudCommandCan()
-    phot = thandr.thanobject.ThanPhot(model=v)
+    if v is None: return proj[2].thanGudCommandCan()
+    phot = thanobj.ThanPhotModel(model=v)
     newobjs = [("PHOTMODEL", phot)]
     oldobjs = [("PHOTMODEL", phs[0])]
     thanundo.thanObjsRestore(proj, oldobjs, newobjs)

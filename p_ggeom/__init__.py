@@ -1,4 +1,4 @@
-from mesa import MesaQuad, MesaTri, MesaHull
+from mesa import MesaQuad, MesaTri, MesaTriLocal, MesaHull, MesaXymm
 from trilocal import TriLocal
 from polyg import Polygon
 from area import area, areapn, spin

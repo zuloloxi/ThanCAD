@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines an function which exports ThanCad line types to
 a .lin file (line type definitions)
@@ -38,17 +38,17 @@ def thanExpLin(fw, ltypes, prt):
 ;;
 """)
     for namlt in sorted(ltypes):
-	lt = ltypes[namlt]
+        lt = ltypes[namlt]
         fw.write("\n*%s,%s %s\n" % (lt.thanName, lt.thanName, lt.thanDesc))
-	dash = list(lt.thanDashes)
-	for i in xrange(1, len(dash), 2):
-	    dash[i] = -dash[i]
-	if len(dash) > 12:
-	    dash = dash[:12]
-	    prt("%s: only the first 12 segments are exported" % (lt.thanName,))
-	elif len(dash) < 1:
-	    dash = [1.0, 1.0]       #continuous
-	t = ["%.2f" % (d1,) for d1 in dash]
-	t.insert(0, "%s" % (lt.thanAlign,))
+        dash = list(lt.thanDashes)
+        for i in xrange(1, len(dash), 2):
+            dash[i] = -dash[i]
+        if len(dash) > 12:
+            dash = dash[:12]
+            prt("%s: only the first 12 segments are exported" % (lt.thanName,))
+        elif len(dash) < 1:
+            dash = [1.0, 1.0]       #continuous
+        t = ["%.2f" % (d1,) for d1 in dash]
+        t.insert(0, "%s" % (lt.thanAlign,))
         fw.write(",".join(t))
-	fw.write("\n")
+        fw.write("\n")

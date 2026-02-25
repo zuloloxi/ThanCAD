@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines various functions needed by other ThanCad's modules.
 """
 
+from math import hypot
 import tkFont
 from p_gmath import thanNear2, thanNear3
-import p_gtkuti
+import p_gtkwid, p_ggen
 from thanopt import thancadconf
+from thantrans import Tmatch
 
 
 def thanCleanLine2(c):
@@ -74,12 +76,30 @@ def thanShowFile(proj, fn, title=""):
     except Exception, why:
         t = Tmatch["Error while reading file %s:\n%s"] % (fn, why)
     font1 = tkFont.Font(family=thancadconf.thanFontfamilymono, size=thancadconf.thanFontsizemono)
-    p_gtkuti.thanGudHelpWin(proj[2], t, title, font=font1, width=60)
+    p_gtkwid.thanGudHelpWin(proj[2], t, title, font=font1, width=60)
 
 
-#The following is for compatibility with old .thc files and it should be deleted
-from thandefs import ThanId
+def thanExtendNodeDims(cs, cful):
+    "Extend the dimensions of each node of cs, to have the same dimensions as cful."
+    ns = len(cs[0])
+    if len(cful) <= ns: return cs
+    cp = []
+    for c1 in cs:
+        c2 = list(cful)
+        c2[:ns] = c1[:ns]
+        cp.append(c2)
+    return cp
 
+
+def thanCumulDis(cp):
+    "Find the cumulative distances of a line defined by nodes."
+    ts = [hypot(hypot(cb[0]-ca[0], cb[1]-ca[1]), cb[2]-ca[2])
+          for ca, cb in p_ggen.iterby2(cp)
+         ]
+    ts.insert(0, 0.0)
+    for i in xrange(1, len(ts)):
+        ts[i] += ts[i-1]
+    return ts
 
 
 if __name__ == "__main__":

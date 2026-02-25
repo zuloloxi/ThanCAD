@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the object snap functionality.
 """
@@ -110,71 +110,71 @@ class ThanOsnap:
         else:
             ps = []
             for item in items:
-#	        tags = dc.itemcget(item, "tags").split()
-	        if dc.type(item) == "image": continue # Ignore Tk images; only the bounding rectangle counts
-	        tags = dc.gettags(item)
-	        if len(tags) < 2: continue      # We avoid current (rubber line)
-	        if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
-	        e = tagel[tags[0]]
-	        p = e.thanOsnap(self.thanProj, otypes, ccu, None, self.cc1)
-	        if p != None:
-		    ps.append(p)
-		    if len(ps) > 2: break
+#               tags = dc.itemcget(item, "tags").split()
+                if dc.type(item) == "image": continue # Ignore Tk images; only the bounding rectangle counts
+                tags = dc.gettags(item)
+                if len(tags) < 2: continue      # We avoid current (rubber line)
+                if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
+                e = tagel[tags[0]]
+                p = e.thanOsnap(self.thanProj, otypes, ccu, None, self.cc1)
+                if p is not None:
+                    ps.append(p)
+                    if len(ps) > 2: break
         for item1 in self.items: dc.delete(item1)
-	if len(ps) < 1:
-	    self.items = ()
-	    self.preempt = False
-	    return
-	p = min(ps)
-	b, h = ct.global2LocalRel(p[0], p[0])
-	if b > 10*self.BSEL:
-	    self.items = ()
-	    self.preempt = False
-	    return
-	t = self.type = p[1]
-	cc = self.cc = p[2]
+        if len(ps) < 1:
+            self.items = ()
+            self.preempt = False
+            return
+        p = min(ps)
+        b, h = ct.global2LocalRel(p[0], p[0])
+        if b > 10*self.BSEL:
+            self.items = ()
+            self.preempt = False
+            return
+        t = self.type = p[1]
+        cc = self.cc = p[2]
         x, y = ct.global2Local(cc[0], cc[1])
-	self.x = x
-	self.y = y
-	b = h = self.size/2
-	tcol = self.tcol
-	if t == "end":
+        self.x = x
+        self.y = y
+        b = h = self.size/2
+        tcol = self.tcol
+        if t == "end":
             self.items = \
-	    ( dc.create_rectangle(x-b, y-h, x+b, y+h, width=3, outline=tcol, fill=""),
-	    )
-	elif t == "mid":
+            ( dc.create_rectangle(x-b, y-h, x+b, y+h, width=3, outline=tcol, fill=""),
+            )
+        elif t == "mid":
             self.items = \
             ( dc.create_polygon(x-b, y-b, x+b, y-b, x, y+b, width=3, outline=tcol, fill=""),
-	    )
-	elif t == "cen":
+            )
+        elif t == "cen":
             self.items = \
             ( dc.create_oval(x-b, y-b, x+b, y+b, width=3, outline=tcol, fill=""),
-	    )
-	elif t == "nod":
+            )
+        elif t == "nod":
             self.items = \
             ( dc.create_oval(x-b, y-b, x+b, y+b, width=3, outline=tcol, fill=""),
               dc.create_line(x-b, y-b, x+b, y+b, width=2, fill=tcol),
               dc.create_line(x-b, y+b, x+b, y-b, width=2, fill=tcol),
-	    )
-	elif t == "qua":
+            )
+        elif t == "qua":
             self.items = \
-	    ( dc.create_polygon(x-b,y, x,y+b, x+b,y, x,y-b, width=2, outline=tcol, fill=""),
-	    )
-	elif t == "int":
+            ( dc.create_polygon(x-b,y, x,y+b, x+b,y, x,y-b, width=2, outline=tcol, fill=""),
+            )
+        elif t == "int":
             self.items = \
             ( dc.create_line(x-b, y-b, x+b, y+b, width=2, fill=tcol),
               dc.create_line(x-b, y+b, x+b, y-b, width=2, fill=tcol),
-	    )
-	elif t == "tan":
-	    bb = 0.8*b
+            )
+        elif t == "tan":
+            bb = 0.8*b
             self.items = \
             ( dc.create_oval(x-bb, y-bb, x+bb, y+bb, width=3, outline=tcol, fill=""),
-	      dc.create_line(x-b, y-b, x+b, y-b, width=2, fill=tcol),
-	    )
-	elif t == "nea":
+              dc.create_line(x-b, y-b, x+b, y-b, width=2, fill=tcol),
+            )
+        elif t == "nea":
             self.items = \
-	    ( dc.create_polygon(x-b, y-b, x+b, y+b, x-b, y+b, x+b, y-b, width=2, outline=tcol, fill=""),
-	    )
+            ( dc.create_polygon(x-b, y-b, x+b, y+b, x-b, y+b, x+b, y-b, width=2, outline=tcol, fill=""),
+            )
         elif t == "per":
             self.items = \
             ( dc.create_line(x-b, y-b, x-b, y+b, x+b, y+b, width=3, fill=tcol),
@@ -195,7 +195,7 @@ class ThanOsnap:
             if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
             e = tagel[tags[0]]
             p = e.thanOsnap(self.thanProj, otypes, ccu, None, self.cc1)
-            if p != None: ps.append(p)
+            if p is not None: ps.append(p)
             break
         else: return ps
         etried = False
@@ -207,12 +207,12 @@ class ThanOsnap:
             etried = True
             e2 = tagel[tags[0]]
             p = e.thanOsnap(self.thanProj, otypes, ccu, e2, cc1)
-            if p != None: ps.append(p); break
+            if p is not None: ps.append(p); break
             e = e2
         if etried: return ps
         p = e.thanOsnap(self.thanProj, otypes, ccu, None, cc1)
 
-        if p != None: ps.append(p)
+        if p is not None: ps.append(p)
         return ps
 
 
@@ -250,7 +250,7 @@ class ThanOrtho:
 
 
     def toggle(self):
-        "Toggle on/off and return the currebt state."
+        "Toggle on/off and return the current state."
         self.on = not self.on
         return self.on
 

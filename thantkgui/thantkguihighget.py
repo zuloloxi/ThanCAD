@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for user interaction in a drawing
 window.
 """
 
 import time
-from math import pi, sqrt, atan2, hypot
+from math import atan2, hypot
 import tkSimpleDialog
 import p_gtkwid, p_ggen
 
-from thandr import ThanText, ThanPoint
 from thantrans import T
-from thantkguilowget.thantkconst import *
+from thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_SNAPELEM,
+    THAN_STATE_TEXT, THAN_STATE_ZOOMDYNAMIC, THAN_STATE_PANDYNAMIC,
+    THAN_STATE_POINT, THAN_STATE_POINT1, THAN_STATE_LINE, THAN_STATE_LINE2,
+    THAN_STATE_RECTANGLE, THAN_STATE_RECTRATIO, THAN_STATE_MOVE, THAN_STATE_ROADP,
+    THAN_STATE_ROADR, THAN_STATE_SPLINEP, THAN_STATE_POLAR, THAN_STATE_CIRCLE,
+    THAN_STATE_ARC, THAN_STATE_ELLIPSEB)
 from thanvar import Canc, ThanScheduler, thanfiles
 from thanopt import thancadconf
 
@@ -51,39 +55,39 @@ class ThanTkGuiHighGet:
 
     def thanGudSetSelExternalFilter(self, func):
         "Sets external filter function."
-	self.__externalFilterFunc = func    # External filter for the selection routines
+        self.__externalFilterFunc = func    # External filter for the selection routines
 
 
     def thanWaitFor(self, mes, state, cc1=None, cc2=None, cc3=None, rr1=None, tt1=None, tt2=None):
         "Sets the appropriate state to gui AND command line, and waits for either result."
-	dc = self.thanCanvas; cmd = self.thanCom
-	while True:
+        dc = self.thanCanvas; cmd = self.thanCom
+        while True:
             res, cargo = self.__WaitFor(mes, state, cc1, cc2, cc3, rr1, tt1, tt2)
-	    try:    nest1 = (res[:1] == "'")
-	    except: nest1 = False
-	    if not nest1: return res, cargo
+            try:    nest1 = (res[:1] == "'")
+            except: nest1 = False
+            if not nest1: return res, cargo
             if self.thanNest:
                 cmd.thanAppend("A nested command is currently being executed.\n"\
-	            "Please exit this nested command in order to begin a new one\n", "can")
-	        continue
-	    self.thanNest = True
-	    self.__cmdstate = cmd.__dict__.copy()
-	    self.__dcstate  = dc.__dict__.copy()
-	    self.__scheduler = self.thanScheduler
-	    self.thanScheduler = ThanScheduler()
-	    cmd.thanCleanup()                       # Cleanup saved answer in commandline
-	    dc.thanCleanup()                        # Cleanup gui
-	    cmd.thanAppend("Beginning nested command..\n", "mes")
-	    cmd.thanAppend("%s\n" % res[1:], "com")
-	    cmd.thanBeginCommandNest(res[1:])
-	    cmd.thanAppend("Resuming original command\n", "mes")
-	    cmd.thanCleanup()                       # Cleanup saved answer in commandline
-	    dc.thanCleanup()                        # Cleanup gui
-	    cmd.__dict__.update(self.__cmdstate)
-	    dc.__dict__.update(self.__dcstate)
-	    self.thanScheduler = self.__scheduler
-	    del self.__cmdstate, self.__dcstate, self.__scheduler
-	    self.thanNest = False
+                    "Please exit this nested command in order to begin a new one\n", "can")
+                continue
+            self.thanNest = True
+            self.__cmdstate = cmd.__dict__.copy()
+            self.__dcstate  = dc.__dict__.copy()
+            self.__scheduler = self.thanScheduler
+            self.thanScheduler = ThanScheduler()
+            cmd.thanCleanup()                       # Cleanup saved answer in commandline
+            dc.thanCleanup()                        # Cleanup gui
+            cmd.thanAppend("Beginning nested command..\n", "mes")
+            cmd.thanAppend("%s\n" % res[1:], "com")
+            cmd.thanBeginCommandNest(res[1:])
+            cmd.thanAppend("Resuming original command\n", "mes")
+            cmd.thanCleanup()                       # Cleanup saved answer in commandline
+            dc.thanCleanup()                        # Cleanup gui
+            cmd.__dict__.update(self.__cmdstate)
+            dc.__dict__.update(self.__dcstate)
+            self.thanScheduler = self.__scheduler
+            del self.__cmdstate, self.__dcstate, self.__scheduler
+            self.thanNest = False
 
 
     __READYSTATES = frozenset(\
@@ -98,64 +102,60 @@ class ThanTkGuiHighGet:
 
     def __WaitFor(self, mes, state, cc1=None, cc2=None, cc3=None, rr1=None, tt1=None, tt2=None):
         "Sets the appropriate state to gui AND command line, and waits for either result."
-        dc = self.thanCanvas; cmd = self.thanCom; ct = self.thanCt
-
-        strdis = self.thanProj[1].thanUnits.strdis
-        strang = self.thanProj[1].thanUnits.strang
+        dc = self.thanCanvas
+        cmd = self.thanCom
         strcoo = self.thanProj[1].thanUnits.strcoo
         dc.thanPrepare(state, cc1, cc2, cc3, rr1, tt1, tt2)
-
         while True:
-         cmd.thanPrompt(mes)
-         cmd.thanPrepare(state, cc1, cc2, rr1, tt1)     # It only sets the state and the ratio
-         for com1 in self.thanScriptComs:
-             cmd.thanEnter(com1)
-             break
-         while dc.thanState != THAN_STATE_NONE and cmd.thanState != THAN_STATE_NONE: dc.update()
+            cmd.thanPrompt(mes)
+            cmd.thanPrepare(state, cc1, cc2, rr1, tt1)     # It only sets the state and the ratio
+            for com1 in self.thanScriptComs:
+                cmd.thanEnter(com1)
+                break
+            while dc.thanState != THAN_STATE_NONE and cmd.thanState != THAN_STATE_NONE: dc.update()
 
-	 if dc.thanState == THAN_STATE_NONE:            # Gui answered
-	    res, cargo = dc.thanLastResult              # Get gui result
-	    dc.thanCleanup()                            # Cleanup saved answer in gui
-	    cmd.thanCleanup()                           # Cleanup commandline
-	    if res == Canc: return res, cargo
-	    if res == -2: return res, cargo
-	    if res == "c": return "c", cargo
-#            xx, yy = ct.local2Global(res[0], res[1])
-	    if state in self.__READYSTATES:
-	        cmd.thanCleanup("%s" % strcoo(res))
-		cmd.thanLastPoint(res)                  # Save last point for relative coords
-		return res, cargo
-	    elif state == THAN_STATE_SNAPELEM:
-	        cmd.thanCleanup(" ")
-	        return res, cargo
-	    elif state == THAN_STATE_TEXT:
-	        assert False, "Boy, I would like to see this bug :)"
-	    elif state == THAN_STATE_ZOOMDYNAMIC or state == THAN_STATE_PANDYNAMIC:
-	        return res, cargo
-	    else:
-	        assert False, "Unknown state "+str(state)
-	 else:                                          # Commandline answered
-	    res = cmd.thanLastResult                    # Get commandline result
-	    try:    nest1 = (res[:1] == "'")
-	    except: nest1 = False
-	    if nest1: return res, None
+            if dc.thanState == THAN_STATE_NONE:            # Gui answered
+                res, cargo = dc.thanLastResult              # Get gui result
+                dc.thanCleanup()                            # Cleanup saved answer in gui
+                cmd.thanCleanup()                           # Cleanup commandline
+                if res == Canc: return res, cargo
+                if res == -2: return res, cargo
+                if res == "c": return "c", cargo
+                if state in self.__READYSTATES:
+                    cmd.thanCleanup("%s" % strcoo(res))
+                    cmd.thanLastPoint(res)                  # Save last point for relative coords
+                    return res, cargo
+                elif state == THAN_STATE_SNAPELEM:
+                    cmd.thanCleanup(" ")
+                    return res, cargo
+                elif state == THAN_STATE_TEXT:
+                    assert False, "Boy, I would like to see this bug :)"
+                elif state == THAN_STATE_ZOOMDYNAMIC or state == THAN_STATE_PANDYNAMIC:
+                    return res, cargo
+                else:
+                    assert False, "Unknown state "+str(state)
+            else:                                          # Commandline answered
+                res = cmd.thanLastResult                    # Get commandline result
+                try:    nest1 = (res[:1] == "'")
+                except: nest1 = False
+                if nest1: return res, None
 
-            cmd.thanCleanup()                           # Cleanup saved answer in commandline
-	    dc.thanCleanup()                            # Cleanup gui
-	    if res == Canc: return res, None
-	    print "__waitfor: cmd answered: type=", type(res), "  result=", res
-	    return res, None
+                cmd.thanCleanup()                           # Cleanup saved answer in commandline
+                dc.thanCleanup()                            # Cleanup gui
+                if res == Canc: return res, None
+                #print "__waitfor: cmd answered: type=", type(res), "  result=", res
+                return res, None
 
 #============================================================================
 
     def thanGudCommandBegin(self, com):
         "Begins a new command, as if the user entered com via the keyboard."
-	self.thanCom.thanEnter(com, tags="com")
+        self.thanCom.thanEnter(com, tags="com")
 
     def thanGudCommandEnd(self, mes=None, mestype="can"):
         "Print optional message and reprompt."
-	if mes != None: self.thanCom.thanAppend("%s\n" % mes, mestype)
-	self.thanCom.thanPrompt()
+        if mes is not None: self.thanCom.thanAppend("%s\n" % mes, mestype)
+        self.thanCom.thanPrompt()
         self.thanCom.thanWaitingInput = True
 
     def thanGudCommandCan(self, mes=None, mestype="can"):
@@ -164,9 +164,9 @@ class ThanTkGuiHighGet:
         The meaning of this is that the precious command ended
         unsuccessfully and no do/undo was added. That's why
         the word 'cancel' is always shown. So that when the user
-        sees cancel, it means that the drawinh has not been altered."""
-        from thantkcmd import DEFCAN
-        if mes != None:
+        sees cancel, it means that the drawing has not been altered."""
+        from thanvar import DEFCAN
+        if mes is not None:
             self.thanCom.thanAppend("%s\n" % mes, mestype)
         self.thanCom.thanAppend("%s\n" % DEFCAN, mestype)
         self.thanCom.thanPrompt()
@@ -174,14 +174,14 @@ class ThanTkGuiHighGet:
 
     def thanPrtCan(self, tag="can"):
         "Prints 'cancelled' to the command window."
-        from thantkcmd import DEFCAN
+        from thanvar import DEFCAN
         self.thanCom.thanAppend("%s\n" % DEFCAN, tag)
 
     def thanPrt(self, mes, tag=()):
         "Print to the command window; this is info, warnings, error etc."
         self.thanCom.thanAppend("%s\n" % mes, tag)
     def thanPrts(self, mes, tag=()):
-        "Print to the command window without new aline at the end; this is info, warnings, error etc."
+        "Print to the command window without newline at the end; this is info, warnings, error etc."
         self.thanCom.thanAppend(mes, tag)
     def thanPrtbo(self, mes, tag="info"):
         "Print to the command window; default is bold info."
@@ -237,13 +237,13 @@ class ThanTkGuiHighGet:
 #-----------Transform response to text and check if it is object snap override
             res1 = str(res).strip().lower()
             if res1 == "non":
-                    if osnapOrig == None: osnapOrig = thancadconf.thanOsnapModes.copy()
+                    if osnapOrig is None: osnapOrig = thancadconf.thanOsnapModes.copy()
                     thancadconf.thanOsnapModes.clear()
                     stat = " of: "
                     continue
-            for osnap1,_ in thancadconf.thanOsnapModesText:  # Check snap override and repeate inquiry
+            for osnap1,_ in thancadconf.thanOsnapModesText:  # Check snap override and repeat inquiry
                 if res1 == osnap1:
-                    if osnapOrig == None: osnapOrig = thancadconf.thanOsnapModes.copy()
+                    if osnapOrig is None: osnapOrig = thancadconf.thanOsnapModes.copy()
                     thancadconf.thanOsnapModes.clear()
                     thancadconf.thanOsnapModes[osnap1] = True
                     thancadconf.thanOsnapModes["ena"] = True
@@ -272,7 +272,7 @@ class ThanTkGuiHighGet:
             self.thanCom.thanAppend(stat, "can")
             stat = stat1
 #-------Before returning the response, restore original object snap settings
-        if osnapOrig != None:
+        if osnapOrig is not None:
             thancadconf.thanOsnapModes.clear()
             thancadconf.thanOsnapModes.update(osnapOrig)
         return ret
@@ -301,7 +301,7 @@ class ThanTkGuiHighGet:
                 size = hypot(c2[1]-c1[1], c2[0]-c1[0])
                 if size > 0.0: return size
             elif typ == "t":
-                if res.strip() == "" and default != None: res = default
+                if res.strip() == "" and default is not None: res = default
                 try:
                     size = float(res)
                 except ValueError:
@@ -313,8 +313,14 @@ class ThanTkGuiHighGet:
             self.thanPrter(T["Invalid size. Try again."])
 
 
-    def thanGudGetAngle(self, c1, stat, default=None, statonce="", options=()):
-        "Gets a point from user with possible options or a real number."
+    def thanGudGetAzimuth(self, c1, stat, default=None, statonce="", options=()):
+        """Gets a directional angle (azimuth) from user as a point with possible options, or a real number.
+
+        The real number is the azimuth in the unit and spin defined by the
+        units command. If a point is given, then the azimuth from point c1 to
+        this points is computed, and it is transformed to the unit and spin
+        specified by the units command.
+        """
         while True:
             res, typ, cargo = self.__getPoint(stat, statonce, strict=False, options=options,
                state=THAN_STATE_LINE, args=(c1,))
@@ -328,7 +334,7 @@ class ThanTkGuiHighGet:
                     un = self.thanProj[1].thanUnits
                     return un.rad2unit(theta)
             elif typ == "t":
-                if res.strip() == "" and default != None: res = default
+                if res.strip() == "" and default is not None: res = default
                 try:
                     theta = float(res)
                 except ValueError:
@@ -365,38 +371,38 @@ class ThanTkGuiHighGet:
 
     def thanGudGetRoadR(self, c1, c2, c3, r2, stat, statonce="", options=()):
         "Gets a line/arc combination from user, with possible options."
-	while True:
+        while True:
             res, typres, cargo = self.__getPoint(stat, statonce, strict=False, options=options,
-	        state=THAN_STATE_ROADR, args=(c1, c2, c3, r2))
-	    if typres == "v":                  # coordinates
-	        from thanvar import calcRoadNodeR
-	        delta = hypot(res[1]-c2[1], res[0]-c2[0])
+                state=THAN_STATE_ROADR, args=(c1, c2, c3, r2))
+            if typres == "v":                  # coordinates
+                from thanvar import calcRoadNodeR
+                delta = hypot(res[1]-c2[1], res[0]-c2[0])
                 ro = calcRoadNodeR(c1[0], c1[1], c2[0], c2[1], c3[0], c3[1], delta)
-		return ro.R
-	    if typres == "o": return res       # Option or Cancel
-	    try:
-	        r = float(res)
-		if r > 0.0: return r
-	    except ValueError:
-	        pass
-	    if options: statonce = T["Invalid point, positive number or option. Try again.\n"]
-	    else:       statonce = T["Invalid point or positive number. Try again.\n"]
-	    self.thanCom.thanAppend(statonce, "can")
-	    statonce = ""
+                return ro.R
+            if typres == "o": return res       # Option or Cancel
+            try:
+                r = float(res)
+                if r > 0.0: return r
+            except ValueError:
+                pass
+            if options: statonce = T["Invalid point, positive number or option. Try again.\n"]
+            else:       statonce = T["Invalid point or positive number. Try again.\n"]
+            self.thanCom.thanAppend(statonce, "can")
+            statonce = ""
 
 
     def thanGudGetSplineP(self, c1, c2, stat, statonce="", options=()):
         "Gets next point of a spline curve from user, with possible options."
         res, typres, cargo = self.__getPoint(stat, statonce, strict=True, options=options,
-	    state=THAN_STATE_SPLINEP, args=(c1, c2))
-	return res, cargo
+            state=THAN_STATE_SPLINEP, args=(c1, c2))
+        return res, cargo
 
 
     def thanGudGetMovend(self, c1, stat, elems=None, dc=None, direction=None, statonce="", options=()):
         "Gets a vector distance from user, while dragging some elements."
-        if elems == None: self.thanGudSetSelClone()
+        if elems is None: self.thanGudSetSelClone()
         else:             self.thanGudSetDrag(elems)
-        if dc != None: self.thanGudMoveDrag(dc[0], dc[1])
+        if dc is not None: self.thanGudMoveDrag(dc[0], dc[1])
         return self.__getPoint(stat, statonce, strict=True, options=options,
             state=THAN_STATE_MOVE, args=(c1,direction))[0]
 
@@ -405,10 +411,10 @@ class ThanTkGuiHighGet:
         """Get a point which is in image, or any image; return image too.
 
         If image==None all active images are searched.
-	If ptol>0, (ptol is in local coordinates) then a rectangle +=dx, +=dy
-	where dx=dy=ptol in world coordinates is searched.
-	if threshold!=None then the point must be part of a curve in image.
-	"""
+        If ptol>0, (ptol is in local coordinates) then a rectangle +=dx, +=dy
+        where dx=dy=ptol in world coordinates is searched.
+        if threshold!=None then the point must be part of a curve in image.
+        """
         strict = True
         while True:
             cw = self.__getPoint(stat1, statonce, strict=True, options=options,
@@ -416,73 +422,73 @@ class ThanTkGuiHighGet:
             first = None, cw                               # cw may be None
             try: 0.0+cw[0]+cw[1]
             except (IndexError, TypeError): return first   # An option, or anything but point if strict==True
-            if image == None: images = self.thanImages
+            if image is None: images = self.thanImages
             else:             images = [image]
             rasterFound = False
-	    for image in images:
-	        for k in xrange(ptol+1):
-		    wk, _ = self.thanCt.local2GlobalRel(k, k)
-	            for dx in -wk,wk:
-	                for dy in -wk,wk:
-			    cw1 = list(cw)
-			    cw1[0] += dx
-			    cw1[1] += dy
+            for image in images:
+                for k in xrange(ptol+1):
+                    wk, _ = self.thanCt.local2GlobalRel(k, k)
+                    for dx in -wk,wk:
+                        for dy in -wk,wk:
+                            cw1 = list(cw)
+                            cw1[0] += dx
+                            cw1[1] += dy
                             try: jx, iy = image.thanGetPixCoor(cw1)
-	                    except IndexError: continue
-			    if threshold == None: return image, cw1
-			    if image[jx, iy]: return image, cw1
-			    if not rasterFound:
-			        rasterFound = True
-				first = image, cw1    # Nearest raster to thepoint the user clicked
-			    if rasterFound: continue
-			    rasterFound = True
-	    if not strict: return first  # We didn't find any curve; return the nearest point with image
-	    if rasterFound: statonce = T["No curve was found at point. Try Again.\n"]
-	    else: statonce = T["No raster image found at point. Try again.\n"]
-	    self.thanCom.thanAppend(statonce, "can")
-	    statonce = ""
+                            except IndexError: continue
+                            if threshold is None: return image, cw1
+                            if image[jx, iy]: return image, cw1
+                            if not rasterFound:
+                                rasterFound = True
+                                first = image, cw1    # Nearest raster to thepoint the user clicked
+                            if rasterFound: continue
+                            rasterFound = True
+            if not strict: return first  # We didn't find any curve; return the nearest point with image
+            if rasterFound: statonce = T["No curve was found at point. Try Again.\n"]
+            else: statonce = T["No raster image found at point. Try again.\n"]
+            self.thanCom.thanAppend(statonce, "can")
+            statonce = ""
 
     def thanGudGetPolar(self, cc, r, stat, statonce="", options=()):
         "Gets the angle between x-axis and a dragged line of length r beginning at cc."
         while True:
-	    res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-	        options=options, args=(cc,None,None,r), state=THAN_STATE_POLAR)
-	    if typres == "v":              # coordinates
-	        th = atan2(res[1]-cc[1], res[0]-cc[0])
-		return th
-	    if typres == "o": return res   # Option or Cancel
-	    try: th = float(res)
-	    except ValueError: pass
-	    else: return self.thanProj[1].thanUnits.unit2rad(th)
-	    if options: statonce = T["Invalid point, angle or option. Try again.\n"]
-	    else:       statonce = T["Invalid point or angle. Try again.\n"]
-	    self.thanCom.thanAppend(statonce, "can")
-	    statonce = ""
+            res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
+                options=options, args=(cc,None,None,r), state=THAN_STATE_POLAR)
+            if typres == "v":              # coordinates
+                th = atan2(res[1]-cc[1], res[0]-cc[0])
+                return th
+            if typres == "o": return res   # Option or Cancel
+            try: th = float(res)
+            except ValueError: pass
+            else: return self.thanProj[1].thanUnits.unit2rad(th)
+            if options: statonce = T["Invalid point, angle or option. Try again.\n"]
+            else:       statonce = T["Invalid point or angle. Try again.\n"]
+            self.thanCom.thanAppend(statonce, "can")
+            statonce = ""
 
     def thanGudGetCircle(self, cc, stat, statonce="", options=()):
         "Gets a circle from user, centered at cc."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-	        options=options, args=(cc,), state=THAN_STATE_CIRCLE)
-	    if typres == "v":              # coordinates
-	        print "GUI answered"
-	        r = hypot(res[1]-cc[1], res[0]-cc[0])
-	        print "GUI answered: r=", r
-		return r
-	    if typres == "o": return res   # Option or Cancel
-	    try:
-	        r = float(res)
-	        print "CMD answered: r=", r
-		if r > 0.0: return r
-	    except ValueError:
-	        pass
-	    if options: statonce = T["Invalid point, positive number or option. Try again.\n"]
-	    else:       statonce = T["Invalid point or positive number. Try again.\n"]
-	    self.thanCom.thanAppend(statonce, "can")
-	    statonce = ""
+                options=options, args=(cc,), state=THAN_STATE_CIRCLE)
+            if typres == "v":              # coordinates
+#                print "GUI answered"
+                r = hypot(res[1]-cc[1], res[0]-cc[0])
+#                print "GUI answered: r=", r
+                return r
+            if typres == "o": return res   # Option or Cancel
+            try:
+                r = float(res)
+                print "CMD answered: r=", r
+                if r > 0.0: return r
+            except ValueError:
+                pass
+            if options: statonce = T["Invalid point, positive number or option. Try again.\n"]
+            else:       statonce = T["Invalid point or positive number. Try again.\n"]
+            self.thanCom.thanAppend(statonce, "can")
+            statonce = ""
 
     def thanGudGetArc(self, cc, r, theta1, stat, statonce="", direction=True, options=()):
-        """Gets a circlular arc from user, centered at cc, radius r and beginning at theta1.
+        """Gets a circular arc from user, centered at cc, radius r and beginning at theta1.
 
         If direction is True then it returns the direction angle theta2 of the point the user selected.
         If direction is False it returns the difference of the direction angles: theta2-theta1
@@ -505,14 +511,14 @@ class ThanTkGuiHighGet:
             statonce = ""
 
     def thanGudGetEllipseB(self, cc, a, theta, stat, statonce="", options=()):
-        "Gets the semi-minor axis of a (possible tilted) ellipse from user, centered at cc."
+        "Gets the semi-minor axis of a (possibly tilted) ellipse from user, centered at cc."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
                 options=options, args=(cc,None,None,a,theta,None), state=THAN_STATE_ELLIPSEB)
             if typres == "v":              # coordinates
-                print "GUI answered"
+#                print "GUI answered"
                 r = hypot(res[1]-cc[1], res[0]-cc[0])
-                print "GUI answered: r=", r
+#                print "GUI answered: r=", r
                 return r
             if typres == "o": return res   # Option or Cancel
             try:
@@ -535,70 +541,70 @@ class ThanTkGuiHighGet:
         "Gets a rectangle from user, beginning at c1 with given ratio height/width."
         while True:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
-	        options=options, args=(c1,None,None,None,ratio), state=THAN_STATE_RECTRATIO)
-	    if typres == "v": return res   # coordinates
-	    if typres == "o": return res   # Option or Cancel
-	    try:
-	        r = float(res)
-		if r != 0.0:
-	            cc = list(c1)
-	            cc[0] += r
-	            cc[1] += r*ratio
-		    return cc
-	    except ValueError:
-	        pass
-	    if options: statonce = T["Invalid point, nonzero number or option. Try again.\n"]
-	    else:       statonce = T["Invalid point or nonzero number. Try again.\n"]
-	    self.thanCom.thanAppend(statonce, "can")
-	    statonce = ""
+                options=options, args=(c1,None,None,None,ratio), state=THAN_STATE_RECTRATIO)
+            if typres == "v": return res   # coordinates
+            if typres == "o": return res   # Option or Cancel
+            try:
+                r = float(res)
+                if r != 0.0:
+                    cc = list(c1)
+                    cc[0] += r
+                    cc[1] += r*ratio
+                    return cc
+            except ValueError:
+                pass
+            if options: statonce = T["Invalid point, nonzero number or option. Try again.\n"]
+            else:       statonce = T["Invalid point or nonzero number. Try again.\n"]
+            self.thanCom.thanAppend(statonce, "can")
+            statonce = ""
 
     def __getText(self, stat1, default=None, validate=None, statonce="",
         strict=True, options=(), fullopt=False, state=THAN_STATE_TEXT, args=()):
         """Gets a point but allows for options which are returned with the first letter (in lower case).
 
-	1. Read user response.
-	2. If user cancelled, return Canc
-	3. If it is blank and blank is an option, then return blank.
-	4. Otherwise if it is blank and there is a default value
-	   set the response equal to this default value.
-	5. If the response (the real or the default) is equal to an option
-	   return the option.
-	6. If we reached here we have a nontrivial response from the user
-	   which must be checked if it is legal.
-	6. If there is not a validate function, the response is legal and return it.
-	7. Otherwise call the validate function and if validation is ok,
-	   return the validated value.
-	8. if validation is NOT ok, but strict==False, we dont't mind and so
-	   return the (illegal) response.
-	9. Otherwise print error message, and go to step 1.
-	10.statonce is a message that is printed only the first time that this
-	   function asks for input. If the function asks again for input (in
-	   case of error, statonce is not printed).
-	"""
-	stat = statonce+stat1
-	opts = [opt.strip().lower() for opt in options]
-	while True:
+        1. Read user response.
+        2. If user cancelled, return Canc
+        3. If it is blank and blank is an option, then return blank.
+        4. Otherwise if it is blank and there is a default value
+           set the response equal to this default value.
+        5. If the response (the real or the default) is equal to an option
+           return the option.
+        6. If we reached here we have a nontrivial response from the user
+           which must be checked if it is legal.
+        6. If there is not a validate function, the response is legal and return it.
+        7. Otherwise call the validate function and if validation is ok,
+           return the validated value.
+        8. if validation is NOT ok, but strict==False, we dont't mind and so
+           return the (illegal) response.
+        9. Otherwise print error message, and go to step 1.
+        10.statonce is a message that is printed only the first time that this
+           function asks for input. If the function asks again for input (in
+           case of error, statonce is not printed).
+        """
+        stat = statonce+stat1
+        opts = [opt.strip().lower() for opt in options]
+        while True:
             res, cargo = self.thanWaitFor(stat, state, *args)
-	    if res == Canc: return Canc, "o", None             # The user cancelled
-	    res1 = str(res).strip().lower()
-	    if res1 == "" and "" in opts: return "", "o", None # Response blank, and blank is an option
-	    if res1 == "" and default != None:
-	        res = default                                  # Use default value
-	        res1 = str(res).strip().lower()
-	    n = len(res1)
-	    if n == 0:                                         # Check for options
-	        if "" in opts: return "", "o", None
-	    else:
-	        for opt in opts:
-	            if res1 == opt[:n]:
-	                if fullopt:  return opt,    "o", None
-	                else:        return opt[0], "o", None
-	    if validate == None: return res, "t", cargo        # No validation
+            if res == Canc: return Canc, "o", None             # The user cancelled
+            res1 = str(res).strip().lower()
+            if res1 == "" and "" in opts: return "", "o", None # Response blank, and blank is an option
+            if res1 == "" and default is not None:
+                res = default                                  # Use default value
+                res1 = str(res).strip().lower()
+            n = len(res1)
+            if n == 0:                                         # Check for options
+                if "" in opts: return "", "o", None
+            else:
+                for opt in opts:
+                    if res1 == opt[:n]:
+                        if fullopt:  return opt,    "o", None
+                        else:        return opt[0], "o", None
+            if validate is None: return res, "t", cargo        # No validation
             val, stat = validate(res, stat1)
-	    if val != None: return val, "v", cargo             # Validation ok
-	    if not strict: return res, "t", cargo              # We don't mind failed validation
-	    self.thanCom.thanAppend(stat, "can")
-	    stat = stat1
+            if val is not None: return val, "v", cargo             # Validation ok
+            if not strict: return res, "t", cargo              # We don't mind failed validation
+            self.thanCom.thanAppend(stat, "can")
+            stat = stat1
 
 
     def thanGudGetText(self, stat1, default=None, statonce="", strict=True):
@@ -621,10 +627,10 @@ class ThanTkGuiHighGet:
 
     def thanGudGetYesno(self, stat1, default=None, statonce="", strict=True):
         "Gets yes/no text from user."
-        if default != None:
-          if not p_ggen.isString(default):
-            if default: default = "yes"
-            else:       default = "no"
+        if default is not None:
+            if not p_ggen.isString(default):
+                if default: default = "yes"
+                else:       default = "no"
         def validate(res, stat1):
             res = res.strip().lower()
             if res[:2] == "ye": return True, None
@@ -635,10 +641,10 @@ class ThanTkGuiHighGet:
 
     def thanGudGetOnoff(self, stat1, default=None, statonce="", strict=True):
         "Gets on/off text from user."
-        if default != None:
-          if not p_ggen.isString(default):
-            if default: default = "on"
-            else:       default = "off"
+        if default is not None:
+            if not p_ggen.isString(default):
+                if default: default = "on"
+                else:       default = "off"
         def validate(res, stat1):
             res = res.strip().lower()
             if res[:2] == "on": return True, None
@@ -651,25 +657,25 @@ class ThanTkGuiHighGet:
         options=(), state=THAN_STATE_TEXT, args=()):
         "Gets a float number from user."
         def validate(res, stat1):
-	    try:
-	        val = float(res)
+            try:
+                val = float(res)
                 return val, None
-	    except ValueError:
-	        pass
-	    return None, T["A real number is required. Try again.\n"]
+            except ValueError:
+                pass
+            return None, T["A real number is required. Try again.\n"]
         return self.__getText(stat1, default, validate, statonce=statonce,
-	    strict=strict, options=options, state=state, args=args)[0]
+            strict=strict, options=options, state=state, args=args)[0]
 
     def thanGudGetPosFloat(self, stat1, default=None, statonce="", strict=True,
         options=(), state=THAN_STATE_TEXT, args=()):
         "Gets a positive float number from user."
-	def validate(res, stat1):
-	    try:
-	        val = float(res)
-		if val > 0.0: return val, None
-	    except ValueError:
-	        pass
-	    return None, T["A positive real number is required. Try again.\n"]
+        def validate(res, stat1):
+            try:
+                val = float(res)
+                if val > 0.0: return val, None
+            except ValueError:
+                pass
+            return None, T["A positive real number is required. Try again.\n"]
         return self.__getText(stat1, default, validate, statonce=statonce,
             strict=strict, options=options, state=state, args=args)[0]
 
@@ -679,10 +685,10 @@ class ThanTkGuiHighGet:
         def validate(res, stat1):
             try:               val = float(res)
             except ValueError: return None, T["A real number is required. Try again.\n"]
-            if limits[0] == None:
-                if limits[1] == None: return val, None
+            if limits[0] is None:
+                if limits[1] is None: return val, None
                 if val <= limits[1]: return val, None
-            elif limits[1] == None:
+            elif limits[1] is None:
                 if val >= limits[0]: return val, None
             else:
                 if limits[0] <= val <= limits[1]: return val, None
@@ -696,7 +702,7 @@ class ThanTkGuiHighGet:
             res = self.thanGudGetText(stat)
             if res == Canc: return res
             try:
-                if res.strip() == "" and default != None: cz = map(float, default)
+                if res.strip() == "" and default is not None: cz = map(float, default)
                 else:                                     cz = map(float, res.split(","))
             except (ValueError, TypeError), e:
                 self.thanPrter(T["Syntax error. Try again."])
@@ -710,11 +716,11 @@ class ThanTkGuiHighGet:
         def validate(res, stat1):
             try:
                 val = int(res)
-                if limits[0] == None and limits[1] == None:
+                if limits[0] is None and limits[1] is None:
                     return val, None
-                elif limits[0] != None and limits[1] != None:
+                elif limits[0] is not None and limits[1] is not None:
                     if limits[0] <= val <= limits[1]: return val, None
-                elif limits[0] != None:
+                elif limits[0] is not None:
                     if val >= limits[0]: return val, None
                 else:
                     if val <= limits[1]: return val, None
@@ -726,42 +732,42 @@ class ThanTkGuiHighGet:
 
     def thanGudGetSnapElem(self, stat1, default=None, statonce="", strict=True, options=()):
         "Gets a point from user with possible options."
-	def validate(res, stat1):
-	    "Do not validate anything."
-	    try: res.thanTkGet
-	    except: pass
-	    else: return res, None
-	    return None, T["Invalid selection or option. Try again.\n"]
-	otypes = thancadconf.thanOsnapModes
-	otypes1 = otypes.copy()
-	otypes.clear()
-	otypes["ena"] = otypes["ele"] = True
+        def validate(res, stat1):
+            "Do not validate anything."
+            try: res.thanTkGet
+            except: pass
+            else: return res, None
+            return None, T["Invalid selection or option. Try again.\n"]
+        otypes = thancadconf.thanOsnapModes
+        otypes1 = otypes.copy()
+        otypes.clear()
+        otypes["ena"] = otypes["ele"] = True
         self.thanCanvas.thanChs.thanPush(-2)                  # Save previous croshair; set rectangle croshair
         res = self.__getText(stat1, default, validate, statonce, strict, options,
-	    state=THAN_STATE_SNAPELEM)[0]
-	otypes.clear()
-	otypes.update(otypes1)
-	self.thanCanvas.thanChs.thanPop()                     # Restore previous croshair
-	return res
+            state=THAN_STATE_SNAPELEM)[0]
+        otypes.clear()
+        otypes.update(otypes1)
+        self.thanCanvas.thanChs.thanPop()                     # Restore previous croshair
+        return res
 
 #===========================================================================
 
     def thanGudGetLayerleaf(self, mes, proj=None):
         "Let the user select a single layer (only leaf layers)."
-        if proj == None: proj = self.thanProj
+        if proj is None: proj = self.thanProj
         lt = proj[1].thanLayerTree
         lays = dict((lay.thanGetPathname(), lay) for lay in lt.dilay.itervalues())
         names = lays.keys()
         names.sort()
         win = p_gtkwid.ThanPoplist(self, names, width=50, title=mes)
         self.thanTkSetFocus()
-        if win.result == None: return Canc
+        if win.result is None: return Canc
         return lays[win.result]
 
 
     def thanGudGetLayerleafs(self, mes, proj=None):
         "Let the user select multiple layers (only leaf layers)."
-        if proj == None: proj = self.thanProj
+        if proj is None: proj = self.thanProj
         lt = proj[1].thanLayerTree
         lays = dict((lay.thanGetPathname(), lay) for lay in lt.dilay.itervalues())
         names = lays.keys()
@@ -769,7 +775,7 @@ class ThanTkGuiHighGet:
         import Tkinter
         win = p_gtkwid.ThanPoplist(self, names, width=50, selectmode=Tkinter.EXTENDED, title=mes)
         self.thanTkSetFocus()
-        if win.result == None: return Canc
+        if win.result is None: return Canc
         return [lays[n] for n in win.result]
 
 
@@ -780,7 +786,7 @@ class ThanTkGuiHighGet:
         names.sort()
         win = p_gtkwid.ThanPoplist(self, names, width=50, title=mes)
         self.thanTkSetFocus()
-        if win.result == None: return Canc
+        if win.result is None: return Canc
         return lays[win.result]
 
 
@@ -796,7 +802,7 @@ class ThanTkGuiHighGet:
         names.sort()
         win = p_gtkwid.ThanPoplist(self, names, width=60, title=mes)
         self.thanTkSetFocus()
-        if win.result == None: return Canc, Canc
+        if win.result is None: return Canc, Canc
         return projlays[win.result]
 
 
@@ -808,7 +814,7 @@ class ThanTkGuiHighGet:
         while True:
             ans = tkSimpleDialog.askstring("Please enter text", mes,
                 initialvalue=p_ggen.thanUnicode(textDefault), parent=self)
-            if ans == None: return Canc
+            if ans is None: return Canc
             if ans != "": return p_ggen.thanUnunicode(ans)
             self.bell()
 
@@ -823,10 +829,10 @@ class ThanTkGuiHighGet:
         return ans
 
     def thanGudGetPosFloat1(self, mes, textDefault):
-        "Accepts a poistive real number via a modal window."
-	ans = tkSimpleDialog.askfloat("Please enter a positive number", mes,
-	    initialvalue=str(textDefault), minvalue=0.00000001, parent=self)
-	return ans
+        "Accepts a positive real number via a modal window."
+        ans = tkSimpleDialog.askfloat("Please enter a positive number", mes,
+            initialvalue=str(textDefault), minvalue=0.00000001, parent=self)
+        return ans
 
 
 #============================================================================
@@ -844,7 +850,7 @@ class ThanTkGuiHighGet:
         try: elems.remove(tagel["e0"])            #Remove temporary elements for the selection
         except KeyError: pass
         ft = self.__externalFilterFunc
-        if ft == None: return elems
+        if ft is None: return elems
         return {e for e in elems if ft(e)} # If element satisfies the external filter OK
 
 
@@ -856,15 +862,15 @@ class ThanTkGuiHighGet:
         bpix, hpix =  thancadconf.thanBSEL/2, thancadconf.thanBSEL/2
         self.thanProj[2].thanCanvas.thanCh.thanDisable()
         items = list(dc.find_overlapping(xa-bpix, ya-hpix, xa+bpix, ya+hpix))
-        items.reverse()    # Tkinter places the most recently drawn element to the end of the list
-                           # and the last element is probably the one we want to edit. It is also above the
-                           # previous elements if they coincide
+        items.reverse()     # Tkinter places the most recently drawn element to the end of the list
+                            # and the last element is probably the one we want to edit. It is also above the
+                            # previous elements if they coincide
         tagel = self.thanProj[1].thanTagel
         for item in items:
             if dc.type(item) == "image": continue
 #            if dc.type(item) == "polygon": continue
             print "thanGudGetSel1: type=", dc.type(item)
-            if self.__externalFilterFunc == None: break
+            if self.__externalFilterFunc is None: break
             titem = dc.gettags(item)[0]
             e = tagel[titem]
             if self.__externalFilterFunc(e): break  # If element satisfies the external filter OK
@@ -889,22 +895,22 @@ class ThanTkGuiHighGet:
         self.thanProj[2].thanCanvas.thanCh.thanDisable()
         items = dc.addtag_enclosed("sel", xa, ya, xb, yb)
 #       No need to avoid selecting the raster of ThanImage, because all the raster must be enclosed, in order to be selected
-	print "filterwin started"; t1 = time.time()
-	self.__filterwin()
-	print "filterwin ended:", time.time()-t1
-	return self.__selCount()
+        print "filterwin started"; t1 = time.time()
+        self.__filterwin()
+        print "filterwin ended:", time.time()-t1
+        return self.__selCount()
 
     def __selCount(self):
         "Updates and counts the selected ThanCad elements."
 #        cget = self.thanCanvas.itemcget
         cget = self.thanCanvas.gettags
-	tagel = self.thanProj[1].thanTagel
-	self.thanSel = set(tagel[cget(item)[0]] for item in self.thanCanvas.find_withtag("sel"))
+        tagel = self.thanProj[1].thanTagel
+        self.thanSel = set(tagel[cget(item)[0]] for item in self.thanCanvas.find_withtag("sel"))
         nselect = len(self.thanSel)
-	nduplic = nselect - len(self.thanSel - self.thanSelall)
-	self.thanSelall |= self.thanSel
-	self.thanProj[2].thanCanvas.thanCh.thanEnable()
-	return nselect, nduplic
+        nduplic = nselect - len(self.thanSel - self.thanSelall)
+        self.thanSelall |= self.thanSel
+        self.thanProj[2].thanCanvas.thanCh.thanEnable()
+        return nselect, nduplic
 
     def thanGudGetSelOld(self):
         "Updates and counts the selected ThanCad elements."
@@ -945,7 +951,7 @@ class ThanTkGuiHighGet:
             items -= items1
 #            items.difference_update(items1)
         dc.dtag("all", "sel1")
-        if self.__externalFilterFunc != None: self.__filterexternal()
+        if self.__externalFilterFunc is not None: self.__filterexternal()
         dc.addtag_withtag("selall", "sel")  # Add selall to all selected items
 
 
@@ -977,7 +983,7 @@ class ThanTkGuiHighGet:
                 dc.dtag(titem, "sel")        # .. is removed from selection
             items -= items2
         dc.dtag("all", "sel1")
-        if self.__externalFilterFunc != None: self.__filterexternal()
+        if self.__externalFilterFunc is not None: self.__filterexternal()
         dc.addtag_withtag("selall", "sel")   # Add selall to all selected items
 
 
@@ -1040,7 +1046,7 @@ class ThanTkGuiHighGet:
             tagseen.add(titem)
             dc.addtag_withtag("sel", titem)
         dc.dtag("all", "sel1")
-        if self.__externalFilterFunc != None: self.__filterexternal()
+        if self.__externalFilterFunc is not None: self.__filterexternal()
         dc.addtag_withtag("selall", "sel")  # Add selall to all selected items
 
 
@@ -1078,7 +1084,7 @@ class ThanTkGuiHighGet:
         for item in items2add: dc.addtag_withtag("sel", item)
 #        dc.addtag_withtag("sel", items2add)   # A single addtag_withtag is 30 times faster than many
         dc.dtag("all", "sel1")
-        if self.__externalFilterFunc != None: self.__filterexternal()
+        if self.__externalFilterFunc is not None: self.__filterexternal()
         dc.addtag_withtag("selall", "sel")  # Add selall to all selected items
 
 
@@ -1089,7 +1095,7 @@ class ThanTkGuiHighGet:
         for lay in lays:
             dc.addtag_withtag("sel", lay.thanTag)
         dc.addtag_withtag("selall", "sel")  # Add selall to all selected items
-        if self.__externalFilterFunc != None: self.__filterexternal()
+        if self.__externalFilterFunc is not None: self.__filterexternal()
         return self.__selCount()
 
 

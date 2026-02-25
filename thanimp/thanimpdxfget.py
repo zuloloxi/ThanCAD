@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,27 +21,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines an object which reads a .dxf file and it creates
 ThanCad's elements to represent it in ThanCad.
 """
 
-import Image
-import sys, time
-from types import *
+import time
+from types import NoneType, IntType
 from math import pi
 from p_gimdxf import ThanImportDxf, ThanDrWarn
-from thandefs import ThanImageMissing, ThanLtype
+from thandefs import imageOpen, ThanLtype
 from thandefs.thanatt import ThanAttCol
 from thanlayer import THANNAME
 from thanvar import ThanLayerError
-from thandr import *
+from thandr import (ThanLine, ThanCircle, ThanArc, ThanText, ThanPoint, ThanPointNamed,
+    ThanEllipse, ThanImage)
 from thantrans import T
 
-COLSENT = ThanAttCol("0 222 255", inherit=False)  # This color does not exist in dxf and it is used as sentinel
-                                                  # If one of already defined layers has this color, it will
-                                                  # probably lose it
+COLSENT = ThanAttCol("0 222 255", inherit=False)    # This color does not exist in dxf and it is used as sentinel
+                                                    # If one of already defined layers has this color, it will
+                                                    # probably lose it
 
 class ThanCadDrSave(ThanDrWarn):
     """A class which stores the elements read by p_gimdxf.ThanImportDxf into a ThanCad drawing.
@@ -71,9 +71,9 @@ class ThanCadDrSave(ThanDrWarn):
 
     def addElem(self, e, handle=None):
         "Add the element to ThanCad's database."
-        if handle != None and handle > 0:
+        if handle is not None and handle > 0:
             e1 = self._dr.thanTagel(handle)
-            if e1 == None: elem.handle = handle   #It is safe to keep the handle of the dxf
+            if e1 is None: e.handle = handle   #It is safe to keep the handle of the dxf
         self._dr.thanElementAdd(e)
         self.newelems.append(e)
 
@@ -94,11 +94,10 @@ class ThanCadDrSave(ThanDrWarn):
 
     def thanAfterImport(self):
         "Post initialisation."
-        try:
-            lt.thanRoot.tempCol    # This means that setLay has been called at least once
-            self._delTempCol(self._dr.thanLayerTree.thanRoot)
-        except:
-            pass                   # This means that setLay has NEVER been called (no elements at all)
+        lt = self._dr.thanLayerTree
+        try:    lt.thanRoot.tempCol    # This means that setLay has been called at least once
+        except: pass
+        else:   self._delTempCol(lt.thanRoot)
         self._count(force=True)
 #-------Add here code to put default color to layers with COLSENT
 
@@ -148,8 +147,8 @@ class ThanCadDrSave(ThanDrWarn):
 
     def dxfLtype(self, name, desc, elems):    # Let ThanWarn base class inform the user
         "Saves a line type; name is in lower letters and free of preceding and trailing blanks."
-        ltypes1 = {"continuous", "bylayer", "byblock"} #bylayer, byblock are not real linetypes, just sentinels..
-                                                       #..and continuous is automatically inside ThanCad
+        ltypes1 = {"continuous", "bylayer", "byblock"}  #bylayer, byblock are not real linetypes, just sentinels..
+                                                        #..and continuous is automatically inside ThanCad
         name = name.strip().lower()
         if name in ltypes1: return
         lt = ThanLtype()
@@ -200,11 +199,11 @@ class ThanCadDrSave(ThanDrWarn):
         cc[0] = xx
         cc[1] = yy
         cc[2] = zz
-        if name == None:
+        if name is None:
             e = ThanPoint()
             e.thanSet(cc)
         else:
-            if validc == None: validc = [True, True, True]
+            if validc is None: validc = [True, True, True]
             e = ThanPointNamed()
             e.thanSet(cc, name, validc)
         if e.thanIsNormal():
@@ -267,6 +266,11 @@ class ThanCadDrSave(ThanDrWarn):
 
     def dxfThanImage(self, xx, yy, zz, lay, handle, col, filnam, size, scale, theta):
         "Saves an ThanImage."
+        im, terr = imageOpen(filnam)
+        if terr != "":
+            self.prt(T["Error loading image from file %s\n    %s"] % (filnam, terr))
+            im.size=size
+        width, height = im.size
         cc1 = list(self._elev)
         cc1[0] = xx
         cc1[1] = yy
@@ -275,12 +279,6 @@ class ThanCadDrSave(ThanDrWarn):
         cc2[0] = xx+width*scale
         cc2[1] = yy+height*scale
         cc2[2] = zz
-        try:
-            im = Image.open(filnam)
-        except IOError, why:
-            self.prt(T["Error loading image from file %s\n    %s"] % (filnam, why))
-            im = ThanImageMissing(size=size)
-        width, height = im.size
 
         e = ThanImage()
         e.thanSet(filnam, im, cc1, cc2, theta*pi/180.0)
@@ -321,8 +319,8 @@ class ThanCadDrSave(ThanDrWarn):
         assert named.strip() != "__root", "__root layer should not be accessed here :("  # Shortcircuit to childlayer "0"
 
         lay = self._createHierarchyLayer(named, lt)    # Create layer if it doesn't exist (child of root)
-        if col == None: col = lay.tempCol
-        if lay.tempCol == None: self._setCol(lay, col)
+        if col is None: col = lay.tempCol
+        if lay.tempCol is None: self._setCol(lay, col)
         if col == lay.tempCol and len(lay.thanChildren) == 0: # If colours match return the created layer
             lt.thanCur = self.dxfLayers[named, col] = self.dxfLayers[named, None] = lay
             assert lt.thanCur != None
@@ -361,9 +359,9 @@ class ThanCadDrSave(ThanDrWarn):
         except ThanLayerError, why:
             pass
         name = "unknown"                               # Layer is invalid; create default
-        self.prt(["Dxf layer '%s' can not be created and it is ignored:"] % named)
+        self.prt(T["Dxf layer '%s' can not be created and it is ignored:"] % named)
         self.prt("    %s" % why)
-        self.prt(t["    Layer '%s' is used instead."] % name)
+        self.prt(T["    Layer '%s' is used instead."] % name)
         for lay in laypar.thanChildren:
             if name == str(lay.thanAtts[THANNAME]): return lay # Return existing default layer
         lay = laypar.thanChildNew(name)                # No error is expected here
@@ -393,7 +391,7 @@ class ThanCadDrSave(ThanDrWarn):
 
     def _setCol(self, lay, col):
         "Set the colour of the layer to col."
-        if col == None: tc = COLSENT
+        if col is None: tc = COLSENT
         else:           tc = ThanAttCol(str(col), inherit=False)
         lay.thanAtts["moncolor"]  = lay.thanAtts["plotcolor"] = tc
         lay.tempCol = col
@@ -417,7 +415,7 @@ class ThanCadDrSave(ThanDrWarn):
 
 if 0:
     print __doc__
-    from thandr import ThanDrawing
+    from thandwg import ThanDrawing
     dr = ThanDrawing()
     f = file("mhk.dxf", "r")
 

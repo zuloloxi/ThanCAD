@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This package emulates the dxf library in ThanCad.
 """
@@ -89,47 +89,47 @@ class ThanDxfDra:
     def thanDxfPlotSolid4 (self, xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4):
         "Plots a solid 4node polygon."
         (px, py) = self.thanDxfTop(xx1, yy1)
-	self.thanDxfPlotPolyVertex(px, py, 3)
+        self.thanDxfPlotPolyVertex(px, py, 3)
         (px, py) = self.thanDxfTop(xx2, yy2)
-	self.thanDxfPlotPolyVertex(px, py, 2)
+        self.thanDxfPlotPolyVertex(px, py, 2)
         (px, py) = self.thanDxfTop(xx3, yy3)
-	self.thanDxfPlotPolyVertex(px, py, 2)
+        self.thanDxfPlotPolyVertex(px, py, 2)
         (px, py) = self.thanDxfTop(xx4, yy4)
-	self.thanDxfPlotPolyVertex(px, py, 2)
+        self.thanDxfPlotPolyVertex(px, py, 2)
         (px, py) = self.thanDxfTop(xx1, yy1)
-	self.thanDxfPlotPolyVertex(px, py, 2)
-	self.thanDxfPlotPolyVertex(0, 0, 999)
+        self.thanDxfPlotPolyVertex(px, py, 2)
+        self.thanDxfPlotPolyVertex(0, 0, 999)
 
     def thanDxfPlotSolid3 (self, xx1, yy1, xx2, yy2, xx3, yy3):
         "Plots a solid triangle."
         (px, py) = self.thanDxfTop(xx1, yy1)
-	self.thanDxfPlotPolyVertex(px, py, 3)
+        self.thanDxfPlotPolyVertex(px, py, 3)
         (px, py) = self.thanDxfTop(xx2, yy2)
-	self.thanDxfPlotPolyVertex(px, py, 2)
+        self.thanDxfPlotPolyVertex(px, py, 2)
         (px, py) = self.thanDxfTop(xx3, yy3)
-	self.thanDxfPlotPolyVertex(px, py, 2)
+        self.thanDxfPlotPolyVertex(px, py, 2)
         (px, py) = self.thanDxfTop(xx1, yy1)
-	self.thanDxfPlotPolyVertex(px, py, 2)
-	self.thanDxfPlotPolyVertex(0, 0, 999)
+        self.thanDxfPlotPolyVertex(px, py, 2)
+        self.thanDxfPlotPolyVertex(0, 0, 999)
 
     def thanDxfPlot3dface3(self, xx1, yy1, zz1, xx2, yy2, zz2, xx3, yy3, zz3):
         "Plots 3dface triangle."
         (px, py, pz) = self.thanDxfTop3(xx1, yy1, zz1)
-	self.thanDxfPlotPolyVertex3(px, py, pz, 3)
+        self.thanDxfPlotPolyVertex3(px, py, pz, 3)
         (px, py, pz) = self.thanDxfTop3(xx2, yy2, zz2)
-	self.thanDxfPlotPolyVertex3(px, py, pz, 3)
+        self.thanDxfPlotPolyVertex3(px, py, pz, 3)
         (px, py, pz) = self.thanDxfTop3(xx3, yy3, zz3)
-	self.thanDxfPlotPolyVertex3(px, py, pz, 3)
+        self.thanDxfPlotPolyVertex3(px, py, pz, 3)
         (px, py, pz) = self.thanDxfTop3(xx1, yy1, zz1)
-	self.thanDxfPlotPolyVertex3(px, py, pz, 3)
-	self.thanDxfPlotPolyVertex3(0, 0, 999)
+        self.thanDxfPlotPolyVertex3(px, py, pz, 3)
+        self.thanDxfPlotPolyVertex3(0, 0, 999)
 
     def thanDxfPlotSolidCircle8(self, x, y, r, i1, i2):
         """Plots integer number of eighths of a solid circle using solid polygons.
 
-	It splits the circle in eightths, and approximates one eightth
-	with a 4node polygon. It begins with the i1-th eightth and stops
-	at i2-th eightth:    1 <= i1 <= i2 <= 8."""
+        It splits the circle in eighths, and approximates one eighth
+        with a 4node polygon. It begins with the i1-th eighth and stops
+        at i2-th eighth:    1 <= i1 <= i2 <= 8."""
 
         for ri in xrange(i1-1, i2):
             self.thanDxfPlotSolid4 (x, y,

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines various croshairs for ThanCad's canvas.
 """
@@ -70,7 +70,7 @@ class ThanCrosHairs:
         "Set the croshair."
         dc = self.thanProj[2].thanCanvas
         i %= len(self.thanCrosHairs)
-        if x1 == None:
+        if x1 is None:
             x1 = dc.thanCh.thanX1p
             y1 = dc.thanCh.thanY1p
         clas = self.thanCrosHairs[i][0]
@@ -126,7 +126,7 @@ class CrosHair(object):
                 dc.delete(it)
             self.thanExists = 0
 
-        if x1 == None: x1 = self.thanX1p; y1 = self.thanY1p
+        if x1 is None: x1 = self.thanX1p; y1 = self.thanY1p
         if x1 < self.thanMinx or x1 > self.thanMaxx or \
            y1 < self.thanMiny or y1 > self.thanMaxy:
             x1 = self.thanMinx + (self.thanMaxx - self.thanMinx) / 2

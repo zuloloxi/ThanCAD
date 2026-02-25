@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,15 +22,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which creates a bioclimatic city plan.
 This module defines Hippodamus urban plan system.
 """
 from math import cos, sin, pi
 import itertools
-import Image, ImageDraw
-import p_ggen, p_gimdxf, p_gdxf, p_gchart, p_gmath, p_gtri, p_ggeom
+import p_gimage
+import p_ggen, p_gcol, p_gdxf, p_gchart, p_gmath, p_gtri, p_ggeom
 import roadut, hippocache, roadem
 
 
@@ -211,7 +211,7 @@ class HippoUrban:
     def tochart(self, ch, hulls=(), iso=(), ot=(), roads=(), colot="blue"):
         "Draw the hippodamus urban plan system into a ThanChart."
         for lines, col, _ in self.itlines(hulls, iso, ot, roads, colot):
-            if lines == None: continue
+            if lines is None: continue
             for line1 in lines:
                 xx = [c[0] for c in line1]
                 yy = [c[1] for c in line1]
@@ -230,16 +230,16 @@ class HippoUrban:
         "Draw the hippodamus urban plan system into a PIL image."
         g2li = ct.global2Locali
         for lines, col, _ in self.itlines(hulls, iso, ot, roads, colot):
-            if lines == None: continue
+            if lines is None: continue
             for line1 in lines:
                 cc = [g2li(c[0], c[1]) for c in line1]
                 imd.line(cc, fill=col)
 
     def todxf(self, dxf, title="", hulls=(), iso=(), ot=(), roads=(), colot="blue", xor=0.0, yor=0.0):
         "Draw the hippodamus urban plan system into a dxf file."
-        from p_gimdxf.thancolors import thanDxfColName2Rgb, thanRgb2DxfColCodeApprox
+        from p_gcol import thanDxfColName2Rgb, thanRgb2DxfColCodeApprox
         for lines, col, laynam in self.itlines(hulls, iso, ot, roads, colot):
-            if lines == None: continue
+            if lines is None: continue
             for line1 in lines:
                 xx = [xor+c[0] for c in line1]
                 yy = [yor+c[1] for c in line1]
@@ -253,14 +253,14 @@ class HippoUrban:
         "Draw the hippodamus urban plan system into a ThanChart and show it on screen."
         ch = p_gchart.ThanChart(title)
         self.tochart(ch, (self.hull,), iso, ot, roads, colot)
-        if winmain == None: p_gchart.vis(ch, bg="white")
+        if winmain is None: p_gchart.vis(ch, bg="white")
         else:               p_gchart.viswin(winmain, ch, bg="white")
 
     def pilout(self, title="", width=600, height=400, iso=(), ot=(), roads=(), colot="blue"):
         "Create an image and draw the hippodamus urban plan system into this image."
         ct = self._pilct(width, height, (self.hull,), iso, ot, roads, colot)
-        im = Image.new("RGB", (width, height), (255,255,255))
-        imd = ImageDraw.Draw(im)
+        im = p_gimage.new("RGB", (width, height), (255,255,255))
+        imd = p_gimage.Draw(im)
         self.topil(imd, ct, (self.hull,), iso, ot, roads)
         imd.text((5,1), text=title, fill=colot)
         return im, ct
@@ -270,7 +270,7 @@ class HippoUrban:
         xmin = ymin = 1.0e100
         xmax = ymax = -ymin
         for lines, _, _ in self.itlines(hulls, iso, ot, roads, colot):
-            if lines == None: continue
+            if lines is None: continue
             for line1 in lines:
                 for c in line1:
                     if c[0] < xmin: xmin = c[0]

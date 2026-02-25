@@ -49,10 +49,28 @@ class ThanDTMDEM(object):
         return ni, cn
 
 
+    def thanCentroidCompute(self):
+        "Compute the centroid of all lines."
+        self.thanCena = ((self.xymma[0]+self.xymma[2])*0.5,
+                         (self.xymma[1]+self.xymma[3])*0.5,
+                         0.0)                               #This is to aid ThanCad
+
     def thanCen(self):
         "Return the coordinates of the centroid."
         return self.thanCena
 
+
+    def thanPointZ(self, cp, native=False):
+        "Calculate the z coordinate of a point."
+        raise AttributeError, "Please override this method: thanPointZ"
+
+    def thanIntersegZ(self, ca, cb, native=False):
+        "Compute intersections of segment with DEM lines; don't sort intersections from ca to cb."
+        raise AttributeError, "Please override this method: thanIntersegZ"
+
+    def thanXymm(self, native=False):
+        "Return the min and max x and y coordinates."
+        raise AttributeError, "Please override this method: thanXymm"
 
 
 def thanPolygonLine(cpol, pn, n):
@@ -129,7 +147,6 @@ def __interp2(cp):
         j = len(cp) - 1
         for k in xrange(1, j+1):
             d.append(d[-1] + hypot(cp[k][1]-cp[k-1][1], cp[k][0]-cp[k-1][0]))
-        dij = d[-1]
         zj = cp[j][2]        # We access list in order, so we are fast
         zi = cp[0][2]
         fact = (zj - zi)/d[j]
@@ -138,7 +155,7 @@ def __interp2(cp):
 
 
 def thanPointZ(dtms, cp):
-    "Calculate the z coordinate of a point when multimple DTMs/DEMs are available."
+    "Calculate the z coordinate of a point when multiple DTMs/DEMs are available."
     z = None    #In case that dtms is empty
     for dtm in dtms:
         z = dtm.thanPointZ(cp)

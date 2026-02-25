@@ -1,36 +1,5 @@
-import sys
 from p_gfil import Datlin
 
-def openFiles():
-    "Opens the files for reading and writing."
-    print
-    print
-    print " BDIAG 1.0 (April, 14, 2004) - ..."
-    print "------------------------------------------------------------------------"
-    print "ASPAITE - Department of Construction Engineering"
-    print "Diploma Thesis: Mega Maria"
-    print "                Xenakis Mathaios"
-    print "Professor A.A. Stamos"
-    print
-    print
-    print 'The program reads a data file with suffix ".dat" and writes the results'
-    print 'into a file with suffix ".dxf". The prefix is given by the user.'
-    print 'For example if the user gives prefix "road" the program opens the'
-    print 'following files:'
-    print
-    print 'road.dat    : Input file'
-    print 'road.dxf    : Output file'
-    print
-    while 1:
-        print
-        pr = raw_input("Enter prefix : ")
-	pr = pr.strip()
-	if pr == "": sys.exit()
-
-        try:                 fr = file(pr+".dat")
-	except IOError, why: print pr+".dat:", why; continue
-        return fr
-    
 def datAll(fr):
     "Reads the loads."
     fr = Datlin(fr)

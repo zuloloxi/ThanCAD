@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the circle element.
 """
@@ -29,15 +29,14 @@ This module defines the circle element.
 from math import fabs, pi, cos, sin, tan, hypot, atan2
 from itertools import izip
 import bisect
-from p_gmath import PI2, thanintersect, thanNearx, thanThresholdx
+from p_gmath import PI2, thanintersect, thanNearx
 from p_ggen import prg, xfrange, thanUnicode
-import thanintall
-from thanelem import ThanElement
 from thanvar import Canc
 from thantrans import T
+import thanintall
+from thanelem import ThanElement
+import thanarc
 
-############################################################################
-############################################################################
 
 class ThanCircle(ThanElement):
     "A Basic circle."
@@ -91,18 +90,18 @@ class ThanCircle(ThanElement):
         self.setBoundBox([self.cc[0]-self.r, self.cc[1]-self.r, self.cc[0]+self.r, self.cc[1]+self.r])
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
-        "Return a point of type otype nearest to point ccu."
+        "Return a point of type in otypes nearest to point ccu."
         if "ena" not in otypes: return None            # Object snap is disabled
         ps = []
         if "nea" in otypes:
             cn, rn, thet = self.thanPntNearest2(ccu)
-            if thet != None:
+            if thet is not None:
                 if "cen" not in otypes or rn > self.r:  # If we are getting near from the outside then "nea"
                     self.thanOsnapAdd(ccu, ps, thet, "nea")
                     ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "nea", cn))
         if "cen" in otypes:
             cn, rn, thet = self.thanPntNearest2(ccu)
-            if thet != None:
+            if thet is not None:
                 if "nea" not in otypes or rn < self.r:  # If we are getting near from the inside then "cen"
                     ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "cen", self.cc))
 ##           Snap to center only with these points on the periphery to let quad have a chance
@@ -112,28 +111,28 @@ class ThanCircle(ThanElement):
         if "qua" in otypes:
             for thet in 0, 0.5*pi, pi, 1.5*pi:    # If both "nea" and "cen" are active, "qua" does not have a chance
                 self.thanOsnapAdd(ccu, ps, thet, "qua")
-	if cori != None and "tan" in otypes:
-	    dx = (self.cc[0] - cori[0])*0.5
-	    dy = (self.cc[1] - cori[1])*0.5
-	    r = hypot(dx, dy)
-	    c = cori[0]+dx, cori[1]+dy
+        if cori is not None and "tan" in otypes:
+            dx = (self.cc[0] - cori[0])*0.5
+            dy = (self.cc[1] - cori[1])*0.5
+            r = hypot(dx, dy)
+            c = cori[0]+dx, cori[1]+dy
             for cp in thanintersect.thanCirCir(self.cc, self.r, c, r):
                 thet = atan2(cp[1]-self.cc[1], cp[0]-self.cc[0]) % PI2
-	        self.thanOsnapAdd(ccu, ps, thet, "tan")
-        if cori != None and "per" in otypes:
+                self.thanOsnapAdd(ccu, ps, thet, "tan")
+        if cori is not None and "per" in otypes:
             for cn in self.thanPerpPoints(cori):
                 ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "per", cn))
-        if eother != None and "int" in otypes:
-	    ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
-	if len(ps) > 0: return min(ps)
-	return None
+        if eother is not None and "int" in otypes:
+            ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+        if len(ps) > 0: return min(ps)
+        return None
 
     def thanOsnapAdd(self, ccu, ps, thet, snaptyp):
-        "Add a new point to onap points."
-	cc = list(self.cc)
-	cc[0] += self.r*cos(thet)
-	cc[1] += self.r*sin(thet)
-	ps.append((fabs(cc[0]-ccu[0])+fabs(cc[1]-ccu[1]), snaptyp, cc))
+        "Add a new point to osnap points."
+        cc = list(self.cc)
+        cc[0] += self.r*cos(thet)
+        cc[1] += self.r*sin(thet)
+        ps.append((fabs(cc[0]-ccu[0])+fabs(cc[1]-ccu[1]), snaptyp, cc))
 
     def thanPntNearest(self, ccu):
         "Finds the nearest point of this circle to a point."
@@ -141,14 +140,14 @@ class ThanCircle(ThanElement):
 
     def thanPntNearest2(self, ccu):
         "Finds the nearest point of this circle to a point and its angle."
-	a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
-	aa = hypot(a[0], a[1])
-	if thanNearx(aa, 0.0): thet = 0.0
-	else:                  thet = atan2(a[1], a[0]) % PI2
-	c = list(self.cc)
-	c[0] += self.r*cos(thet)
-	c[1] += self.r*sin(thet)
-	return c, aa, thet
+        a = ccu[0]-self.cc[0], ccu[1]-self.cc[1]
+        aa = hypot(a[0], a[1])
+        if thanNearx(aa, 0.0): thet = 0.0
+        else:                  thet = atan2(a[1], a[0]) % PI2
+        c = list(self.cc)
+        c[0] += self.r*cos(thet)
+        c[1] += self.r*sin(thet)
+        return c, aa, thet
 
 
     def thanPerpPoints(self, ccu):
@@ -196,20 +195,19 @@ class ThanCircle(ThanElement):
 
     def thanBreak(self, c1=None, c2=None):
         "Breaks a circle and produces an arc."
-        if c1 == None: return True          # Break IS implemented
+        if c1 is None: return True          # Break IS implemented
         cp1, r1, theta1 = self.thanPntNearest2(c1)
         assert cp1 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
         cp2, r2, theta2 = self.thanPntNearest2(c2)
         assert cp2 != None, "pntNearest should succeed (as in thancommod.__getNearPnt()"
-        from thanarc import ThanArc
-        e1 = ThanArc()
+        e1 = thanarc.ThanArc()
         e1.thanSet(self.cc, self.r, theta2, theta1)
         if not e1.thanIsNormal(): e1 = None
         return e1, None
 
 
     def thanOffset(self, through=None, distance=None, sidepoint=None):
-        "Offset circle by distance dis pr through point."
+        "Offset circle by distance or through point."
         if through==None and distance==None: return True  # Offset is implemented
         roff = hypot(sidepoint[0]-self.cc[0], sidepoint[1]-self.cc[1])
         if not through:
@@ -257,7 +255,7 @@ class ThanCircle(ThanElement):
     def thanTkDrawAsPolygon(self, than):
         """Draws the circle on a window as a polyline.
 
-        Here we want to work around tk bug which doen not show a circle (or
+        Here we want to work around tk bug which does not show a circle (or
         an arc) if the magnification is too big, so that the visible segment of
         the arc or circle is virtually a straight line.
         For this, when regen, an element must have the ability to tell ThanDwg
@@ -268,7 +266,6 @@ class ThanCircle(ThanElement):
         xc, yc = than.ct.global2Local(self.cc[0], self.cc[1])
         r, _ = than.ct.global2LocalRel(self.r, self.r)
         n = 32
-        th = 0.0
         dth = 2*pi/n
         th2 = 2*pi-dth*0.1
         xy = [(xc+r*cos(th), yc+r*sin(th)) for th in xfrange(0.0, th2, dth)]
@@ -318,7 +315,6 @@ class ThanCircle(ThanElement):
         r = hypot(cr[1]-cc[1], cr[0]-cc[0])
 
         self.thanSet(cc, r, self.spin)
-
 
 
     def thanList(self, than):

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which provides for ThanCad customisation.
 This module keeps a central repository of the options and variables common to all
 all drawings of ThanCad. It also gets/saves options to configuration files.
 """
 
-import sys, ConfigParser
+import ConfigParser
 import p_ggen
 from thandefs.thanatt import thanAttCol, ThanAttCol
 
@@ -65,7 +65,7 @@ thanTranslateTo = "en"
 
 thanFiledir = ""                 #Directory where previous drawings were found
 thanFilerecent = []              #Recently opened files
-thanCameradir = ""               #Directory where photgrammetric camera files are stored
+thanCameradir = ""               #Directory where photogrammetric camera files are stored
 thanTempPrefix = "untitled"      #Prefix for the names of new drawings
 thanUndefPrefix = "<undefined>"  #Prefix for the undefined names (files, dirs etc)
 
@@ -85,7 +85,7 @@ def thanOptColorsGet(c):
         rc = thanColUser
         for thc in rc1.split(";"):
             thc = thanAttCol(thc)
-            if thc == None: continue
+            if thc is None: continue
             if str(thc) not in rc: rc.append(str(thc))
         while len(rc) < 17: rc.append(None)
         while len(rc) > 17: del rc[-1]
@@ -101,7 +101,7 @@ def __colget(c, key, coldef):
     "Get a named color from config parser; return default if error."
     try: return ThanAttCol(c.get("colors", key))
     except: pass      #This may happen if key is not in c or if it c[key] is invalid color
-    return ThanAttCol(coldef)  #Thsis will raise an exception if coldef is invalid color
+    return ThanAttCol(coldef)  #This will raise an exception if coldef is invalid color
 
 
 def thanOptOsnapGet(c):
@@ -240,7 +240,7 @@ def thanOptsGet():
     c.read(fc)
     thanOptColorsGet(c)
     thanOptOsnapGet(c)
-    enc = thanOptInterGet(c)
+    thanOptInterGet(c)
     thanOptFilesGet(c)
     thanOptGeometryGet(c)
 

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes image related commands.
 """
 import re
-import Image
-import p_gtkuti, p_ggen
+import p_gtkwid, p_ggen, p_gimgeo
 import thandr
 from thanvar import Canc, thanfiles
 from thantrans import T
@@ -54,9 +53,9 @@ def thanTkGetPos(proj, com, methodname, ext, stat):
     "Imports many raster images whose positions are stored in some format."
     tit = T["Image file open failed"]
     fildir = thanfiles.getFiledir()
-    fns = p_gtkuti.thanGudGetReadFile(proj[2], ext, stat,
+    fns = p_gtkwid.thanGudGetReadFile(proj[2], ext, stat,
                                           initialdir=fildir, multiple=True)
-    if fns == None: return proj[2].thanGudCommandCan()   # Image canceled
+    if fns is None: return proj[2].thanGudCommandCan()   # Image canceled
     newelems = []
     for fi in fns:
         elem = thandr.ThanImage()
@@ -65,11 +64,53 @@ def thanTkGetPos(proj, com, methodname, ext, stat):
             method = getattr(elem, methodname)
             method(proj, fi)
         except (IOError, ValueError), why:
-            p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
+            p_gtkwid.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
         else:
-            proj[1].thanElementAdd(elem)     # thanTouch is implicitely called
+            proj[1].thanElementAdd(elem)     # thanTouch is implicitly called
             elem.thanTkDraw(proj[2].than)    # This also sets thanImages
             newelems.append(elem)
+    proj[2].thanRedraw()                 # Images regen probably violated draworder
+    proj[1].thanDoundo.thanAdd(com, thanundo.thanReplaceRedo, ((), newelems),
+                                    thanundo.thanReplaceUndo, ((), newelems))
+    return proj[2].thanGudCommandEnd()
+
+
+def thanTkGetTerrasar(proj, com="imageterrasar", methodname="thanTkGet", ext=".cos", stat="Choose TerraSAR .cos files"):
+    "Imports one TerraSAR image (.cos) with pixel values as complex numbers."
+    ok, terr = p_gimgeo.isOsgeoLoaded()
+    if not ok: return proj[2].thanGudCommandCan(terr)   # Image was cancelled
+    tit = T["TerraSAR image file open failed"]
+    fildir = thanfiles.getFiledir()
+    fn = p_gtkwid.thanGudGetReadFile(proj[2], ext, stat,
+                                          initialdir=fildir, multiple=False)
+    if fn is None: return proj[2].thanGudCommandCan()   # Image was cancelled
+    fildir = fn.parent
+    fnt = fn.namebase +"_8.tif"
+    fnt = p_gtkwid.thanGudGetSaveFile(proj[2], ".tif", "Choose GeoTiff file to convert and save to",
+        initialfile=fnt, initialdir=fildir)
+    if fnt is None: return proj[2].thanGudCommandCan()   # Image was cancelled
+
+    fnt1, terr = p_gimgeo.convertTerrasar2Tif(fn, fnt, color16=False, manually=True, parent=proj[2], prt=proj[2].thanPrt)
+    if fnt1 is None:
+        p_gtkwid.thanGudModalMessage(proj[2], terr, "TerraSAR conversion to GeoTiff failed")   # (Gu)i (d)ependent
+        return proj[2].thanGudCommandCan()
+    im, terr = imageOpen(fnt)
+    if terr != "":
+        p_gtkwid.thanGudModalMessage(proj[2], terr, tit)   # (Gu)i (d)ependent
+        return proj[2].thanGudCommandCan()
+
+    newelems = []
+    elem = thandr.ThanImage()
+    try:
+        method = getattr(elem, methodname)
+        if method(proj, im, fnt) == Canc: return proj[2].thanGudCommandCan()   # Image was cancelled
+    except (IOError, ValueError), why:
+        p_gtkwid.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
+        return proj[2].thanGudCommandCan()
+    else:
+        proj[1].thanElementAdd(elem)     # thanTouch is implicitly called
+        elem.thanTkDraw(proj[2].than)    # This also sets thanImages
+        newelems.append(elem)
     proj[2].thanRedraw()                 # Images regen probably violated draworder
     proj[1].thanDoundo.thanAdd(com, thanundo.thanReplaceRedo, ((), newelems),
                                     thanundo.thanReplaceUndo, ((), newelems))
@@ -84,19 +125,17 @@ def thanTkGetTiles(proj):
     load = True                           #Load images
     tit = T["Image file open failed"]
     fildir = thanfiles.getFiledir()
-    fns = p_gtkuti.thanGudGetReadFile(proj[2], "*", T["Choose image tiles"],
+    fns = p_gtkwid.thanGudGetReadFile(proj[2], "*", T["Choose image tiles"],
                                           initialdir=fildir, multiple=True)
-    if fns == None: return proj[2].thanGudCommandCan()   # Image canceled
+    if fns is None: return proj[2].thanGudCommandCan()   # Image canceled
     newelems = []
-    bcol = {}
-    hrow = {}
     imps = []
     _splitter = re.compile(r""".*[rR](\d+)[cC](\d+).*""")
     for fi in fns:
         dl = _splitter.findall(fi)
         print "fi=", fi, "dl=", dl
         if len(dl) != 1 or len(dl[0]) != 2:
-            p_gtkuti.thanGudModalMessage(proj[2],
+            p_gtkwid.thanGudModalMessage(proj[2],
             "The 'r<n>c<n>' pattern was not found in the filename: %s" % (fi,),
             T["Not an image tile"])   # (Gu)i (d)ependent
             continue
@@ -105,9 +144,9 @@ def thanTkGetTiles(proj):
         imp.icol = int(dl[0][1])-1
         imp.im, terr = imageOpen(fi, load=load)    #This also checks if dxp>=2 and dyp>=2
         if terr != "":
-            p_gtkuti.thanGudModalMessage(proj[2], terr, tit)     # (Gu)i (d)ependent
+            p_gtkwid.thanGudModalMessage(proj[2], terr, tit)     # (Gu)i (d)ependent
             continue
-        if not load: imp.im = ThanImageMissing(size=(b, h))
+        if not load: imp.im = ThanImageMissing(size=imp.im.size)
         imp.b, imp.h = imp.im.size
         imp.fi = fi
         imp.x = imp.y = 0
@@ -120,7 +159,7 @@ def thanTkGetTiles(proj):
         imp = imps[0]
         ret = elem.thanTkGet(proj, imori=imp.im, imfilnamori=imp.fi, insertmode="p")
         if ret == Canc: return proj[2].thanGudCommandCan()
-        proj[1].thanElementAdd(elem)     # thanTouch is implicitely called
+        proj[1].thanElementAdd(elem)     # thanTouch is implicitly called
         elem.thanTkDraw(proj[2].than)    # This also sets thanImages
         newelems = [elem]
         proj[2].thanRedraw()             # Images regen probably violated draworder
@@ -213,7 +252,7 @@ def thanTkImageLoad(proj):
 
 
 def thanImageLoadunloadDo(proj, tounload, toload, selelems):
-    "Unloads and loads images and sets selectiom."
+    "Unloads and loads images and sets selection."
     processed = set()
     for elem in tounload:
         proj[2].thanTkSet(elem)                #set the attributes of element's layer
@@ -225,7 +264,7 @@ def thanImageLoadunloadDo(proj, tounload, toload, selelems):
         icod, terr = elem.thanLoad(proj[2].than)
         if icod == 0: processed.add(elem)
         else:         proj[2].thanPrter1(terr)
-    if selelems != None: proj[2].thanGudSetSelElem(selelems)
+    if selelems is not None: proj[2].thanGudSetSelElem(selelems)
     proj[2].thanTkSet()                        #set the attributes of default layer
     return processed
 
@@ -244,12 +283,12 @@ def thanTkImageEmbed(proj):
 
 
 def thanImageEmbedDo(proj, tounload, toload, selelems):
-    "Unloads and loads images and sets selectiom."
+    "Unloads and loads images and sets selection."
     for elem in tounload:
         elem.embedded = False
     for elem in toload:
         elem.embedded = True
-    if selelems != None: proj[2].thanGudSetSelElem(selelems)
+    if selelems is not None: proj[2].thanGudSetSelElem(selelems)
     proj[1].thanTouch()
 
 
@@ -264,7 +303,7 @@ def thanTkImageLocate(proj):
     selold = proj[2].thanSelold
     delelems = (elem,)
     newelems = set((newelem,))
-    thanundo.thanReplaceRedo(proj, delelems, newelems, newelems) # thanTouch is implicitely called
+    thanundo.thanReplaceRedo(proj, delelems, newelems, newelems) # thanTouch is implicitly called
     proj[2].thanRedraw()                # Image redraw probably violated draworder
 
     proj[1].thanDoundo.thanAdd("imagelocate", thanundo.thanReplaceRedo, (delelems, newelems, newelems),
@@ -281,8 +320,8 @@ def thanTkImageDir(proj):
     tit = T["Select directory for missing image files"]
     fildir = thanfiles.getFiledir()
     while True:
-        dn = p_gtkuti.thanGudGetDir(proj[2], tit, initialdir=fildir)
-        if dn == None: return proj[2].thanGudCommandCan()        # location canceled
+        dn = p_gtkwid.thanGudGetDir(proj[2], tit, initialdir=fildir)
+        if dn is None: return proj[2].thanGudCommandCan()        # location canceled
         dn = p_ggen.path(dn)
         nmiss = 0
         delelems = []
@@ -308,7 +347,7 @@ def thanTkImageDir(proj):
                 delelems.append(elem)
         assert not (len(newelems) == 0 and nmiss == 0), "It should have been found!!"
         if len(newelems) > 0: break
-        p_gtkuti.thanGudModalMessage(proj[2], T["No image files were found. Try again."], tit)
+        p_gtkwid.thanGudModalMessage(proj[2], T["No image files were found. Try again."], tit)
 
     thanundo.thanReplaceRedo(proj, delelems, newelems)    # thanTouch is implicitely called
     proj[2].thanRedraw()      # Image draw (replaceredo(): thanelementrestore()) probably violated draworder

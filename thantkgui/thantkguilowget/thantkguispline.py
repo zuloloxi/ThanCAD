@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines line states, i.e. as the user moves the mouse, a spline
 curve (cubic functions) is drawn from a given point to mouse
 cursor, continuously.
 thanasis2009_11_12: This took ridiculously short time! Hooray!
 """
-from math import hypot
-import Tkinter
 from p_gmath import ThanSpline
 from p_ggen import xfrangec
-from thantkconst import *
-from thanvar import thanLogTk, calcRoadNode, calcRoadNodeR, tkRoadNode, tkRoadNodeR
-
+from thantkconst import THAN_STATE_NONE
 from thantkguigeneric import ThanStateGeneric
 
 
@@ -86,7 +82,7 @@ class ThanStateSplinep(ThanStateGeneric):
 
 
     def thanZoomXyr(self, x, y, fact):
-        "Change internal coordinates according to zoom; this fuction should be in the state objects."
+        "Change internal coordinates according to zoom; this function should be in the state objects."
         self.__x1 = x + (self.__x1-x)*fact
         self.__y1 = y + (self.__y1-y)*fact
         self.__x2 = x + (self.__x2-x)*fact

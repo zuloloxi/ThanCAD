@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This package includes dialogs (forms to get user input) implemented with Tkinter.
 """
 from thandialogcol   import ThanColor
 from thandialogdro   import ThanDro
-from thandialoglay   import ThanDialogLay
-from thandialogltype import ThanDialogLtype
-from thandialogosn   import ThanTkOsnap
 from thandialogpen   import ThanPen
+from thandialogltype import ThanDialogLtype
+
+from thandialoglay   import ThanDialogLay
+from thandialogosn   import ThanTkOsnap
 from thandialogsty   import ThanTkStyle
 from thandiaexppil   import ThanTkExppil
 from thandialogtext  import ThanElemtext
@@ -40,6 +41,7 @@ from thandialogprint import ThanDiaPlot
 from thandialogunits import ThanDialogUnits
 from thandialogsimpl import ThanSimplificationSettings
 
+from thanarch.thandiaarch import ThanArchCom
 from thanarch.thandiafplan import ThanFplan
-from thanarch.thandiabcplan import ThanBcplan
+#from thanarch.thandiabcplan import ThanBcplan
 import transf

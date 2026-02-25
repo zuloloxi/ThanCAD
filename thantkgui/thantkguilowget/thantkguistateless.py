@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines stateless functionality, i.e. for events (mouse wheel events) which
 are (almost) independent to state. It is used as a mixin to ThanCad's canvas.
 """
 import Tkinter
 from p_ggen import Struct
-from thantkconst import *
+from thantkconst import THAN_STATE_ZOOMDYNAMIC, THAN_STATE_NONE
 from thanvar import thanLogTk, Canc
 from thantkguigeneric import ThanStateGeneric
 
@@ -114,10 +114,10 @@ class ThanStateLess:
         "Page up,down,left,right."
         dx, dy = self.thanProj[2].thanPanPage(ix, iy)
         if dx != 0.0 and dy != 0.0: return "break"
-#       if self.__x1 != None:
+#       if self.__x1 is not None:
 #           self.__x1 += dx
 #           self.__y1 += dy
-#       if self.__x2 != None:
+#       if self.__x2 is not None:
 #           self.__x2 += dx
 #           self.__y2 += dy
         return "break"
@@ -140,7 +140,7 @@ class ThanStateLess:
         dc.thanOsnap.thanCleanup()
         dc.thanOrtho.disable()
 
-        if self.thanFloatMenu != None and self.thanFloatMenu.winfo_ismapped():
+        if self.thanFloatMenu is not None and self.thanFloatMenu.winfo_ismapped():
             self.thanFloatMenu.unpost()
 
         self.thanState = THAN_STATE_NONE

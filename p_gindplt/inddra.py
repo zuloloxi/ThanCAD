@@ -1,5 +1,4 @@
 # -*- coding: iso-8859-7 -*-
-
 from math import pi, cos, sin, atan2, log10, fabs
 from p_gmath import dpt
 
@@ -7,28 +6,28 @@ MET = pi/180.0
 
 
 def rnumber(dxf, x,y,h,dn,t,nn):
-      "Writes the number so that its last char is at position x, y."
-      if nn < 0:
-          ipack = "%d" % int(dn+0.5)
-      else:
-          f = ".%df" % nn
-          ipack = f % dn
-      tt = t * pi / 180.0
-      cc = cos(tt)
-      ss = sin(tt)
-      n=len(ipack)
-      tt=n*h
-      dxf.thanDxfPlotSymbol(x-tt*cc,y-tt*ss,h,ipack,t)
+    "Writes the number so that its last char is at position x, y."
+    if nn < 0:
+        ipack = "%d" % int(dn+0.5)
+    else:
+        f = ".%df" % nn
+        ipack = f % dn
+    tt = t * pi / 180.0
+    cc = cos(tt)
+    ss = sin(tt)
+    n=len(ipack)
+    tt=n*h
+    dxf.thanDxfPlotSymbol(x-tt*cc,y-tt*ss,h,ipack,t)
 
 #==========================================================================
 
 def cross (dxf, xx, yy, h):
-      "Plots a cross."
-      hh = h * 0.5
-      dxf.thanDxfPlot(xx-hh, yy,    3)
-      dxf.thanDxfPlot(xx+hh, yy,    2)
-      dxf.thanDxfPlot(xx,    yy-hh, 3)
-      dxf.thanDxfPlot(xx,    yy+hh, 2)
+    "Plots a cross."
+    hh = h * 0.5
+    dxf.thanDxfPlot(xx-hh, yy,    3)
+    dxf.thanDxfPlot(xx+hh, yy,    2)
+    dxf.thanDxfPlot(xx,    yy-hh, 3)
+    dxf.thanDxfPlot(xx,    yy+hh, 2)
 
 
 def rectangle(dxf, x1, y1, x3, y3):
@@ -40,7 +39,7 @@ def rectangle(dxf, x1, y1, x3, y3):
 #===========================================================================
 
 def elips1 (dxf, x, y, xf, yf, xc, yc, a, b, theta, idr, ic):
-      """Draw an elipse approximating it with a polyline.
+    """Draw an elipse approximating it with a polyline.
       implicit none
       real*8 x, y, xf, yf, xc, yc, a, b, theta             ! arguments
       integer*4 idr, ic                                    ! arguments     ! could be integer*2
@@ -108,178 +107,181 @@ c     μπορεί να μην περνάει από τα σημεία x,y και xf,yf. Σε αυτήν την
 c     περίπτωση τα σημεία x,y και xf,yf χρησιμοποιούνται για τον ορισμό
 c     της γωνίας διευθύνσεως του αρχικού και τελικού σημείου αντίστοιχα.
       """
-#-----ΒΡΕΣ ΑΡΧΙΚΗ ΓΩΝΙΑ
 
-      t = (theta - 180.0) * MET
-      cost = cos(t)
-      sint = sin(t)
+#---ΒΡΕΣ ΑΡΧΙΚΗ ΓΩΝΙΑ
 
-      x1 = x - xc
-      y1 = y - yc
-      xa = cost * x1 + sint * y1
-      ya = cost * y1 - sint * x1
-      tha = atan2(ya/b, xa/a)
+    t = (theta - 180.0) * MET
+    cost = cos(t)
+    sint = sin(t)
 
-#-----ΒΡΕΣ ΤΕΛΙΚΗ ΓΩΝΙΑ
+    x1 = x - xc
+    y1 = y - yc
+    xa = cost * x1 + sint * y1
+    ya = cost * y1 - sint * x1
+    tha = atan2(ya/b, xa/a)
 
-      x1 = xf - xc
-      y1 = yf - yc
-      xa = cost * x1 + sint * y1
-      ya = cost * y1 - sint * x1
-      thb = atan2(ya/b, xa/a)
+#---ΒΡΕΣ ΤΕΛΙΚΗ ΓΩΝΙΑ
 
-#-----ΒΡΕΣ ΒΗΜΑ ΓΩΝΙΑΣ: default 20 ΜΟΙΡες, ΑΛΛΑ ΤΟΥΛΑΧΙΣΤΟΝ 4 ΒΗΜΑΤΑ
+    x1 = xf - xc
+    y1 = yf - yc
+    xa = cost * x1 + sint * y1
+    ya = cost * y1 - sint * x1
+    thb = atan2(ya/b, xa/a)
 
-      dthab = thb - tha
-      if idr != 0: dthab = 2.0 * pi - dthab
-      dthab = dpt(dthab)
+#---ΒΡΕΣ ΒΗΜΑ ΓΩΝΙΑΣ: default 20 ΜΟΙΡες, ΑΛΛΑ ΤΟΥΛΑΧΙΣΤΟΝ 4 ΒΗΜΑΤΑ
 
-      dth = 20.0 * MET
-      n = int(dthab/dth)
-      if n < 4: n = 4
-      n = n + 1                # Το πρώτο είναι για θ=tha
+    dthab = thb - tha
+    if idr != 0: dthab = 2.0 * pi - dthab
+    dthab = dpt(dthab)
 
-      dth = dthab / n
-      if idr != 0: dth = -dth
-      cosd = cos(dth)
-      sind = sin(dth)
+    dth = 20.0 * MET
+    n = int(dthab/dth)
+    if n < 4: n = 4
+    n = n + 1                # Το πρώτο είναι για θ=tha
 
-#-----ΑΛΛΑΓΗ ΣΤΟ ΠΡΟΣΗΜΟ ΓΩΝΙΑΣ t
+    dth = dthab / n
+    if idr != 0: dth = -dth
+    cosd = cos(dth)
+    sind = sin(dth)
 
-      sint = -sint
+#---ΑΛΛΑΓΗ ΣΤΟ ΠΡΟΣΗΜΟ ΓΩΝΙΑΣ t
 
-#-----ΠΗΓΑΙΝΕ ΣΤΗΝ ΠΡΩΤΗ ΘΕΣΗ ΜΕ ic
+    sint = -sint
 
-      cosx = cos(tha)
-      sinx = sin(tha)
+#---ΠΗΓΑΙΝΕ ΣΤΗΝ ΠΡΩΤΗ ΘΕΣΗ ΜΕ ic
 
-      x1 = a * cosx
-      y1 = b * sinx
-      xa = xc + cost * x1 + sint * y1
-      ya = yc + cost * y1 - sint * x1
-      dxf.thanDxfPlot (xa, ya, ic)
-      dxf.thanDxfPlotPolyVertex (xa, ya, 2)
+    cosx = cos(tha)
+    sinx = sin(tha)
 
-#-----ΕΠΟΜΕΝΑ ΒΗΜΑΤΑ
+    x1 = a * cosx
+    y1 = b * sinx
+    xa = xc + cost * x1 + sint * y1
+    ya = yc + cost * y1 - sint * x1
+    dxf.thanDxfPlot (xa, ya, ic)
+    dxf.thanDxfPlotPolyVertex (xa, ya, 2)
 
-      for i in xrange(n):
-          x1 = cosx * cosd - sinx * sind
-          y1 = sinx * cosd + cosx * sind
-          cosx = x1
-          sinx = y1
+#---ΕΠΟΜΕΝΑ ΒΗΜΑΤΑ
 
-          x1 = a * cosx
-          y1 = b * sinx
-          xa = xc + cost * x1 + sint * y1
-          ya = yc + cost * y1 - sint * x1
-          dxf.thanDxfPlotPolyVertex (xa, ya, 2)
-      dxf.thanDxfPlotPolyVertex (0.0, 0.0, 999)
+    for i in xrange(n):
+        x1 = cosx * cosd - sinx * sind
+        y1 = sinx * cosd + cosx * sind
+        cosx = x1
+        sinx = y1
+
+        x1 = a * cosx
+        y1 = b * sinx
+        xa = xc + cost * x1 + sint * y1
+        ya = yc + cost * y1 - sint * x1
+        dxf.thanDxfPlotPolyVertex (xa, ya, 2)
+    dxf.thanDxfPlotPolyVertex (0.0, 0.0, 999)
 
 #====================================================================
 
 def logax (dxf, xa,ya,pw,th,emin,emax,legend,escale):
-      """Plots a logarithmic axis.
+    """Plots a logarithmic axis.
 
 c      pw: paper width in cm. if negative, legend goes to the left
 c     dpw: minimum distance in cm between two numbers on the axis
 c      dx: the "distance" between logs of emin and emax, in log[user units]
 c     ddx: minimum distance in log[user units] between two numbers on the axis
 c
-      """
-      HS=0.20; HSL=0.30; DPW=1.0
+    """
+    HS=0.20; HSL=0.30; DPW=1.0
 
-      dx  = log10(emax/emin)
-      ddx = DPW * dx/fabs(pw)
-      escale = fabs(pw)/dx
+    dx  = log10(emax/emin)
+    ddx = DPW * dx/fabs(pw)
+    escale = fabs(pw)/dx
 
-      t = th * pi/180.0
-      cost = cos(t)
-      sint = sin(t)
+    t = th * pi/180.0
+    cost = cos(t)
+    sint = sin(t)
 
-      thn = th - 90.0
-      t = thn * pi/180.0
-      costn = cos(t)
-      sintn = sin(t)
+    thn = th - 90.0
+    t = thn * pi/180.0
+    costn = cos(t)
+    sintn = sin(t)
 
-#-----initial values
+#---initial values
 
-      al = log10(emax)
-      k = int(al + 0.9999)
-      if al < 0.0: k=k-1
-      fct = 10.0 ** k
+    al = log10(emax)
+    k = int(al + 0.9999)
+    if al < 0.0: k=k-1
+    fct = 10.0 ** k
 
-      xx = 10.0 ** (1.001 * ddx)
-      anump = emin / xx
-      n = 0
-      an = [emax * xx]
+    xx = 10.0 ** (1.001 * ddx)
+    anump = emin / xx
+    n = 0
+    an = [emax * xx]
 
-#-----first number (anump) for new fct
-      endn = False
-      while True:
-          anum = anump/fct
-          anum = int(anum) * fct
-          while True:
-              anum = anum + fct
-              ddxn = log10(anum/anump)
-              if (ddxn < ddx): continue   # go to 20
+#---first number (anump) for new fct
 
-#-------------if too big gap between anump-anum try smaller fct.
+    endn = False
+    while True:
+        anum = anump/fct
+        anum = int(anum) * fct
+        while True:
+            anum = anum + fct
+            ddxn = log10(anum/anump)
+            if (ddxn < ddx): continue   # go to 20
 
-              if ddxn >= 2.0*ddx:
-                  n=n+1
-		  if n >= len(an): an.append(anum)
-		  else:            an[n] = anum
-                  fct = fct * 0.1
-                  k = k - 1
-                  break       #go to 10
+#-----------if too big gap between anump-anum try smaller fct.
 
-#-------------if numbers for current fct finished, get new fct or end.
+            if ddxn >= 2.0*ddx:
+                n=n+1
+                if n >= len(an): an.append(anum)
+                else:            an[n] = anum
+                fct = fct * 0.1
+                k = k - 1
+                break       #go to 10
 
-              while log10(an[n]/anum) < ddx:
-                  if n <= 0: endn = True; break # go to 21
-                  anum = an[n]
-                  n = n - 1
-                  fct = fct * 10.0
-                  k = k + 1
-                  ddxn = log10(anum/anump)
+#-----------if numbers for current fct finished, get new fct or end.
 
-#-------------plot the number
+            while log10(an[n]/anum) < ddx:
+                if n <= 0: endn = True; break # go to 21
+                anum = an[n]
+                n = n - 1
+                fct = fct * 10.0
+                k = k + 1
+                ddxn = log10(anum/anump)
 
-              if anum <= emax:  # go to 31
-                  dis = log10(anum/emin) * fabs(pw)/dx
-#                  disn = dsign(1.5 * HS, pw)
-                  disn = 1.5 * HS
-		  if pw < 0: disn = -disn
+#-----------plot the number
 
-                  xx = xa + (dis-0.5*HS)*cost + disn*costn
-                  yy = ya + (dis-0.5*HS)*sint + disn*sintn
-                  k1=-k
-                  if k == 0: k1=-1
-                  if pw > 0.0:
-                      dxf.thanDxfPlotNumber(xx, yy, HS, anum, thn, k1)
-                  else:
-                      rnumber(dxf, xx, yy, HS, anum, thn, k1)
+            if anum <= emax:  # go to 31
+                dis = log10(anum/emin) * fabs(pw)/dx
+#                disn = dsign(1.5 * HS, pw)
+                disn = 1.5 * HS
+                if pw < 0: disn = -disn
 
-#-----------------plot line
+                xx = xa + (dis-0.5*HS)*cost + disn*costn
+                yy = ya + (dis-0.5*HS)*sint + disn*sintn
+                k1=-k
+                if k == 0: k1=-1
+                if pw > 0.0:
+                    dxf.thanDxfPlotNumber(xx, yy, HS, anum, thn, k1)
+                else:
+                    rnumber(dxf, xx, yy, HS, anum, thn, k1)
 
-                  disn=HS
-                  if pw < 0: disn = -HS
-                  xx = xa + dis*cost
-                  yy = ya + dis*sint
-                  dxf.thanDxfPlot (xx, yy, 3)
-                  dxf.thanDxfPlot (xx+disn*costn, yy+disn*sintn, 2)
-              anump = anum
-          if endn: break    #go to 21
+#---------------plot line
 
-#-----plot line - legend
+                disn=HS
+                if pw < 0: disn = -HS
+                xx = xa + dis*cost
+                yy = ya + dis*sint
+                dxf.thanDxfPlot (xx, yy, 3)
+                dxf.thanDxfPlot (xx+disn*costn, yy+disn*sintn, 2)
+            anump = anum
+        if endn: break    #go to 21
 
-      dxf.thanDxfPlot(xa, ya, 3)
-      dxf.thanDxfPlot(xa+fabs(pw)*cost, ya+fabs(pw)*sint, 2)
+#---plot line - legend
 
-      k = len(legend)
-      dis = (fabs(pw) - k*HSL) * 0.5
-      disn = 6.0*HS + 2.0*HSL
-      if pw < 0.0: disn=-(disn-HSL)
-      xx = xa + dis*cost + disn*costn
-      yy = ya + dis*sint + disn*sintn
-      dxf.thanDxfPlotSymbol(xx, yy, HSL, legend, th)
+    dxf.thanDxfPlot(xa, ya, 3)
+    dxf.thanDxfPlot(xa+fabs(pw)*cost, ya+fabs(pw)*sint, 2)
+
+    k = len(legend)
+    dis = (fabs(pw) - k*HSL) * 0.5
+    disn = 6.0*HS + 2.0*HSL
+    if pw < 0.0: disn=-(disn-HSL)
+    xx = xa + dis*cost + disn*costn
+    yy = ya + dis*sint + disn*sintn
+    dxf.thanDxfPlotSymbol(xx, yy, HSL, legend, th)
+    return escale

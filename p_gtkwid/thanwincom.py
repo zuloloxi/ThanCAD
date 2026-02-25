@@ -1,12 +1,13 @@
 # -*- coding: iso-8859-7 -*-
 encoding = "iso-8859-7"
-import sys
-from Tkinter import *
-from p_ggen import thanUnicode, Null
-from p_gtkuti import *
+from Tkinter import (Tk, Toplevel, Frame, Text, Label, GROOVE, END,
+    StringVar)
+from thanfontresize import ThanFontResize
+from thantkutila import (thanGudOpenReadFile, thanGudModalMessage, thanGudAskOkCancel,
+    thanGudOpenSaveFile)
 from thanwidstrans import T
 from thanfiles import ThanFiles
-from thanwids import ThanText, ThanMenu, ThanToolButton
+from thanwids import ThanMenu, ThanToolButton
 import thanicon
 
 
@@ -110,17 +111,17 @@ class ThanWinComCom(ThanFontResize):
         "Common toolbar an application needs."
         self.thanToolbar = t = Frame(self, relief=GROOVE, bd=2)
         buttons = \
-	( ("new",  self.thanMnuFileNew, "Creates a new file"),
-	  ("open", self.thanMnuFileOpen, "Opens an existing fil"),
-	  ("save", self.thanMnuFileSave, "Saves current file")
-	)
+        ( ("new",  self.thanMnuFileNew, "Creates a new file"),
+          ("open", self.thanMnuFileOpen, "Opens an existing fil"),
+          ("save", self.thanMnuFileSave, "Saves current file")
+        )
         c = 0
-	for i in iicons:
+        for i in iicons:
             icon, callback, h = buttons[i]
-	    but = ThanToolButton(t, image=thanicon.get(icon), command=callback, help=h)
-	    but.grid(row=0, column=c)
-	    c += 1
-    	t.grid(row=0, sticky="wn")
+            but = ThanToolButton(t, image=thanicon.get(icon), command=callback, help=h)
+            but.grid(row=0, column=c)
+            c += 1
+        t.grid(row=0, sticky="wn")
 
 
     def thanToolbarCom(self):     self.thanToolbarComAll((0,1,2))
@@ -148,7 +149,7 @@ class ThanWinComCom(ThanFontResize):
     def thanMnuFileOpen(self, evt=None):
         "Opens an existing file and corresponding window."
         filnam, fr = thanGudOpenReadFile(self, self.thanFh.thanSuf, "Open Existing File")
-        if fr == None: return
+        if fr is None: return
         if filnam.strip() == "": return
         win = self.factoryWin(self.thanFh, filnam)
         win.thanFileDefined = 1
@@ -161,10 +162,10 @@ class ThanWinComCom(ThanFontResize):
         except IOError, why:
             thanGudModalMessage(self, why, T["Error opening file"])
             return
-	win = self.factoryWin(self.thanFh, filnam)
-	win.thanFileDefined = 1
-	if not win.thanMerge(fr): self.thanMnuFileClose(); self.thanfocus(); return
-	win.thanFocus()
+        win = self.factoryWin(self.thanFh, filnam)
+        win.thanFileDefined = 1
+        if not win.thanMerge(fr): self.thanMnuFileClose(); self.thanfocus(); return
+        win.thanFocus()
 
 
     def thanMnuFileClose(self, evt=None):
@@ -179,7 +180,7 @@ class ThanWinComCom(ThanFontResize):
 
     def thanMnuFileSave(self, evt=None):
         if not self.thanFileDefined: return self.thanMnuFileSaveas()
-        if self.thanValidate() == None: return
+        if self.thanValidate() is None: return
         try: fw = file(self.thanFilnam, "w")
         except IOError, why: thanGudModalMessage(self, why, T["Error opening file"])
         else:
@@ -188,17 +189,17 @@ class ThanWinComCom(ThanFontResize):
 
 
     def thanMnuFileSaveas(self, evt=None):
-        if self.thanValidate() == None: return
+        if self.thanValidate() is None: return
         filnam, fw = thanGudOpenSaveFile(self, self.thanFh.thanSuf, "Saves to a File") 
-	self.thanFocus()
-	if filnam.strip() == "": return
-	if not self.thanSave(fw): return
-	if self.thanFileDefined: self.thanFh.thanRecentAdd(self.thanFilnam)
-	self.thanFh.thanOpenedDel(self)
-	self.thanFilnam = filnam
-	self.thanFh.thanOpenedAdd(self, self.thanFilnam)
+        self.thanFocus()
+        if filnam.strip() == "": return
+        if not self.thanSave(fw): return
+        if self.thanFileDefined: self.thanFh.thanRecentAdd(self.thanFilnam)
+        self.thanFh.thanOpenedDel(self)
+        self.thanFilnam = filnam
+        self.thanFh.thanOpenedAdd(self, self.thanFilnam)
         self.title(self.thanTitlePrefix+self.thanFilnam)
-	self.thanFileDefined = 1
+        self.thanFileDefined = 1
 
 
     def thanMnuFileExit(self, evt=None):

@@ -2,6 +2,7 @@
 
 from os.path import splitext
 from math import fabs
+from p_ggen import path
 
 from thandxflin import ThanDxfLin
 from thandxfsym import ThanDxfSym
@@ -24,17 +25,15 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
     def __init__(self, extensions=0):
         "Initialisation of class."
-
-	ThanDxfLin.__init__(self)
-	ThanDxfSym.__init__(self)
-	ThanDxfDra.__init__(self)
-	ThanDxfGeo.__init__(self)
-	ThanDxfAtt.__init__(self)
-
-	self.__tabExist = 0
+        ThanDxfLin.__init__(self)
+        ThanDxfSym.__init__(self)
+        ThanDxfDra.__init__(self)
+        ThanDxfGeo.__init__(self)
+        ThanDxfAtt.__init__(self)
+        self.__tabExist = 0
         self.__blocks   = 0
         self.__entities = 0
-	self.thanExt = extensions
+        self.thanExt = extensions
 
 #===========================================================================
 
@@ -58,7 +57,7 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 #-------ENTITIES follow--------------------------------------------
 
         self.thanDxfTableDef ('ENTITIES', 1)
-	self.thanDxfSetTstyle("GRSTYLE")
+        self.thanDxfSetTstyle("GRSTYLE")
 
 #===========================================================================
 
@@ -92,12 +91,12 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 #-------versions of dxf have an unneeded complexity which is beyond
 #-------imagination (for example the raster image could be described as
 #-------easily as (dxf version 10) standard text. Now it is described
-#-------with entries to at least 3 totaly unrelated SECTIONS or TABLES).
+#-------with entries to at least 3 totally unrelated SECTIONS or TABLES).
 #-------
 #-------It seems to me, that even via the clumsy dxf, the free sharing
 #-------of drawing files (with freedom meant as in GPL) has flourished.
 #-------The earlier versions of dxf made it possible for many other,
-#-------special purpose, drawing programs to interoperate (clumsily) 
+#-------special purpose, drawing programs to interoperate (clumsily)
 #-------with thAtCAD. This was good for thAtCAD. The special purpose
 #-------programs attracted more clients to thAtCAD.
 #-------But then, thAtCAD started to get into the
@@ -106,13 +105,13 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 #-------to competition. More important, the other programs,
 #-------via the dxf format, were able to interoperate between
 #-------THEMSELVES, with no need for thAtCAD at all.
-#-------So it seems that 
+#-------So it seems that
 #-------thAtCAD has adopted methods of another, monopolistic, software
-#-------company, and it has polluted the originally simple dxf format 
+#-------company, and it has polluted the originally simple dxf format
 #-------with incompatible features. For example dxf version 14 is
-#-------incompatible with version 12. thAtCad 14 would not read dxf 
+#-------incompatible with version 12. thAtCad 14 would not read dxf
 #-------version 12, unless a special header was included in the
-#-------file. I remember in 1998 when my coleagues were frustrated
+#-------file. I remember in 1998 when my colleagues were frustrated
 #-------because they had a vast amount of drawing files in dxf 12,
 #-------created by special purpose programs. It took the efforts
 #-------of 2 geeks to find out the solution and provide for a suitable
@@ -129,15 +128,15 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
 #-------A solution to this problem would be to create a free library
 #-------that reads directly the .dwg files. This of course would be
-#-------a lengthy and tortuous deed. But it has been done. 
-#-------There is a library which reads directly the .dwg files. The 
+#-------a lengthy and tortuous deed. But it has been done.
+#-------There is a library which reads directly the .dwg files. The
 #-------library is not entirely free, but it is free enough. The people
 #-------who managed to decipher the .dwg format, have asked thAtCad
 #-------to participate in their effort, but the answer was no.
 #-------Moreover, thAtCad was never commented favourably or unfavourably
 #-------about the library. I wonder why. ThAtCad boasts that there
-#-------are milions of drawings all over the world with the .dwg format.
-#-------Since, essentiallly, the library spreads the use of .dwg, which
+#-------are millions of drawings all over the world with the .dwg format.
+#-------Since, essentially, the library spreads the use of .dwg, which
 #-------is their format, thAtCad has done nothing against the library.
 #-------But I wonder. If thAtCad feels threatened, wouldn't they
 #-------make it illegal for other programs to read/write .dwg? And thus
@@ -176,8 +175,8 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         self.thanDotycm = 180.0 / 2.539970
 
         self.thanDotmin = 1.0 / self.thanDotxcm
-	
-	self.thanDxfSetPlineWidth(0.0, 0.0)
+
+        self.thanDxfSetPlineWidth(0.0, 0.0)
 #        self.thanDxfPlot(1/dotxcm, 0, -3)
 #        self.thanDxfCls()
 
@@ -233,9 +232,9 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         name  :  layer name
         color :  layer color
         linetype :  layer Linetype
-	lineweight: The thickness of the "pen" that the layer is
-	            plotted with (mm)
-	
+        lineweight: The thickness of the "pen" that the layer is
+                    plotted with (mm)
+
         TABLE LAYER
          62:  5 (or positive) : layer on
              -5 (or negative) : layer off
@@ -243,28 +242,28 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
                             if flags & 1: it is frozen
                      bit 2: if set layer is locked (its elements can not be altered)
                             if flags & 4: it is locked
-	      4  : layer locked
+              4  : layer locked
         370: 106 :  lineweight 1.06 mm
               60 :             0.60 mm
               -3 :             Autocad's default lineweight (who knows what this means!)
         290: 0   : no plot is on (the layer is NOT plotted)
                    If code 290 is absent, then no plot is off (the layer is plotted)
         Any other attribute not defined above are ignored.
-	"""
+        """
 
         self.thanDxfWrEntry(0,  'LAYER')
         self.thanDxfWrEntry(2,  name)
         self.thanDxfWrEntry(6,  linetype)
 
-	if off: color = -color
+        if off: color = -color
         self.thanDxfWrEntry(62, color)
 
         self.thanDxfWrEntry(70, frozen | locked<<2)
 
-#	if noplot: self.thanDxfWrEntry(290, 0)    # Can't use it, because dxf 12 did not have it
-	
-	if lineweight <= 0.0: lineweight = -3
-	else:                 lineweight = int(lineweight*100)
+#       if noplot: self.thanDxfWrEntry(290, 0)    # Can't use it, because dxf 12 did not have it
+
+        if lineweight <= 0.0: lineweight = -3
+        else:                 lineweight = int(lineweight*100)
 #        self.thanDxfWrEntry(370, lineweight)     # Can't use it, because dxf 12 did not have it
 
 #==========================================================================
@@ -272,22 +271,22 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
     def thanDxfCrThanLayer(self, name, **kw):
         """Creates a layer entry in the dxf file.
-	
-	It writes only the absolute necessary information and lets the cad
-	to provide for default values. In case of ThanCad, the absent
-	attributes mean inheritance from parent.
-	In the case of ThanCad many more attributes may be defined.
-	"""
+
+        It writes only the absolute necessary information and lets the cad
+        to provide for default values. In case of ThanCad, the absent
+        attributes mean inheritance from parent.
+        In the case of ThanCad many more attributes may be defined.
+        """
         self.thanDxfWrEntry(0, 'LAYER')
         self.thanDxfWrEntry(2, name)
-	for att,val in kw.iteritems():
-	    try: code=thanCadCodes[att]
-	    except KeyError:
-	        print "dxflib: unknown layer attribute:", att
-		continue
+        for att,val in kw.iteritems():
+            try: code=thanCadCodes[att]
+            except KeyError:
+                print "dxflib: unknown layer attribute:", att
+                continue
             if val == None: continue
-	    if isinstance(val, bool): val = int(val)
-	    self.thanDxfWrEntry(code, val)
+            if isinstance(val, bool): val = int(val)
+            self.thanDxfWrEntry(code, val)
 
 #======================================================================
 
@@ -315,14 +314,14 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 
         fName        : Text Style name
         fFontFileName: Font filename. If it has ".shx" extension, then it is
-	               defined as complex linestyle.
-	"""
+                       defined as complex linestyle.
+        """
 
         self.thanDxfWrEntry(0, 'STYLE')
         self.thanDxfWrEntry(2, fName)
 
         (filnam, ext) = splitext(fName)
-	if ext.lower() == ".shx":
+        if ext.lower() == ".shx":
             self.thanDxfWrEntry(70, 1)
         else:
             self.thanDxfWrEntry(70, 0)
@@ -343,9 +342,8 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         code 5 (handle), because Intellicad has trouble with it
         (it may be either Intellicad's dxfin bug, or Autocad's
         dxfout bug.
-        ThanCad is indifferent (it does not support bocks yet ;) )."""
+        ThanCad is indifferent (it does not support blocks yet ;) )."""
 
-        from p_ggen import path
 #        fpath = '\\50SAMBA\RUNPROGS\EXE\PHUT\'
 #        fpath = '\\\\50SAMBA\\RUNPROGS\\EXE\\PHUT\\'
         fpath = path("//50samba") / "runprogs" / "exe" / "phut"
@@ -366,38 +364,38 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         return ierr
 
 
-    def thanDxfDef(dxf, linetypes=None, textstyles=None, layers=None, blocks=None):
+    def thanDxfDef(self, linetypes=None, textstyles=None, layers=None, blocks=None):
         "Create definitions headers."
-        dxf.thanDxfTableDef (' ', 0)
+        self.thanDxfTableDef (' ', 0)
 
         if linetypes == None: linetypes = {}
         linetypes.setdefault('CONTINUOUS', ('Solid Line',        ()            ))
         linetypes.setdefault('DOTR',       ('.................', (0, -0.06)    ))
         linetypes.setdefault('DASHED2',    ('- - - - - - - - -', (0.25, -0.125)))
-        dxf.thanDxfTableDef('LTYPE', len(linetypes))
+        self.thanDxfTableDef('LTYPE', len(linetypes))
         for nam, args in linetypes.iteritems():
-            dxf.thanDxfCrLtype(nam, *args)
+            self.thanDxfCrLtype(nam, *args)
 
         if textstyles == None: textstyles = {}
         textstyles.setdefault('GRSTYLE', ('GRSIMPW',))
-        dxf.thanDxfTableDef ('STYLE', len(textstyles))
+        self.thanDxfTableDef ('STYLE', len(textstyles))
         for nam, args in textstyles.iteritems():
-            dxf.thanDxfCrTstyle(nam, *args)
+            self.thanDxfCrTstyle(nam, *args)
 
         if layers == None: layers = {}
         layers.setdefault('0', (7, 'CONTINUOUS'))
-        dxf.thanDxfTableDef('LAYER', len(layers))
+        self.thanDxfTableDef('LAYER', len(layers))
         for nam, args in layers.iteritems():
-            dxf.thanDxfCrLayer(nam, *args)
+            self.thanDxfCrLayer(nam, *args)
 
         if blocks == None: blocks = {}
         blocks.setdefault('MODEL', ())
-        dxf.thanDxfTableDef('BLOCKS', len(blocks))
+        self.thanDxfTableDef('BLOCKS', len(blocks))
         for nam, args in blocks.iteritems():
-            ierr = dxf.thanDxfCrBlock(nam, *args)
+            ierr = self.thanDxfCrBlock(nam, *args)
             if ierr != 0: print ' Block "%s" not defined.' % nam
 
-        dxf.thanDxfTableDef ('ENTITIES', 1)
+        self.thanDxfTableDef ('ENTITIES', 1)
 
 
 def defDxf(dxf):

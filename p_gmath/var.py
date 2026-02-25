@@ -1,5 +1,6 @@
 # -*- coding: iso-8859-7 -*-
-from math import fabs, pi
+"Various math functions."
+from math import fabs, pi, log10
 from varcon import PI2, thanThresholdx
 
 def dpt (gon):                    # Python guarantees that result has 
@@ -76,40 +77,64 @@ def fsign(x, xsign):
     elif xsign < 0.0: return -fabs(x)
     else:             return  float(x)
 
+
+def roundlog(dh):
+    "Round to 1, 2, 5 multiplied by anb integer power of 10."
+    lo = log10(dh)
+#    print "log=", lo
+    n = int(lo)
+    if dh > 1.0: n += 1
+#    print "n=", n
+    dh1 = dh/10.0**n
+#    print "dh1=", dh1
+    dh1 = min((fabs(dh1-1.0), 1.0), (fabs(dh1-0.5), 0.5), (fabs(dh1-0.2), 0.2), (fabs(dh1-0.1), 0.1))[1]
+#    print dh1
+    dh1 *= 10.0**n
+    return dh1
+
+
+def roundStep(hmin, hmax, n=20):
+    """Compute rounded step so that between hmin and hmax there about n steps.
+
+    hmin and hmax are probably not integer pollaplasia of the step."""
+    dh = (hmax-hmin) / float(n)
+    dh = roundlog(dh)
+    return dh
+
+
 def linEq2 (a, b, c, d, e, f):
-      """Solve a system of 2 linear equations.
+    """Solve a system of 2 linear equations.
 
                                  | c   b |                | a   c |
                                  | f   e |                | d   f |
       ax + by = c    =>     x = -----------   ,      y = -----------
       dx + ey = f                | a   b |                | a   b |
                                  | d   e |                | d   e |
-      """
-      delta = a*e - d*b
-      if delta == 0.0: return None, None
-      x = (c*e - f*b) / delta
-      y = (a*f - d*c) / delta
-      return (x, y)
+    """
+    delta = a*e - d*b
+    if delta == 0.0: return None, None
+    x = (c*e - f*b) / delta
+    y = (a*f - d*c) / delta
+    return (x, y)
 
 
 def linintc(x1, y1, x2, y2, x):
-      """Stable linear interpolation.
+    """Stable linear interpolation.
 
       x1, y1: known point 1
       x2, y2: known point 2
       x     : x coordinate where the function is to be computed
       If x1=x2=x then the rsult is the mean of y1, y2
-      """
-      if x2 < x1: x1, y1, x2, y2 = x2, y2, x1, y1
-      xmax = max((fabs(x1), fabs(x2)))
-      if xmax > thanThresholdx:
-          dx = x2 - x1
-          if dx/xmax > thanThresholdx:
-              return y1 + (y2-y1)/(x2-x1) * (x-x1)   #Linear interpolation is safe
+    """
+    if x2 < x1: x1, y1, x2, y2 = x2, y2, x1, y1
+    xmax = max((fabs(x1), fabs(x2)))
+    if xmax > thanThresholdx:
+        dx = x2 - x1
+        if dx/xmax > thanThresholdx:
+            return y1 + (y2-y1)/(x2-x1) * (x-x1)   #Linear interpolation is safe
 #-----Case of x1=x2
-      if x < x1-thanThresholdx or x > x2+thanThresholdx: return None
-      return y1*0.5 + y2*0.5          # Case of x1=x2=x
-
+    if x < x1-thanThresholdx or x > x2+thanThresholdx: return None
+    return y1*0.5 + y2*0.5          # Case of x1=x2=x
 
 
 def thanErNear2(a, b):
@@ -157,6 +182,16 @@ def isZero(x, xmax=1000.0, fact=1.0e-6):
     return fabs(x) < fact*xmax
 
 
+def pollap(hh, dhx, dhm):
+    """Η Fn pollap επιστρέφει true αν το hh είναι ακέραιο πολλαπλάσιο του dhx.
+
+    Η ακρίβεια dhm, σημαίνει ότι το hh είναι ακέραιο πολλαπλάσιο του dhx
+    συν ή πλην dhm. Η dhm είναι για παράδειγμα dhx/10."""
+    h1 = round(hh/dhx)
+    pollap1 = fabs(hh-h1*dhx) < dhm
+    return pollap1
+
+
 def ICPconverged(er, erp, erpp, threshold, icp, prter):
     "Test if the ICP method converged and print warnings."
     if fabs(erp-er) < threshold and fabs(erpp-erp) < threshold:
@@ -164,7 +199,7 @@ def ICPconverged(er, erp, erpp, threshold, icp, prter):
     elif erp < erpp and fabs(erp-er) < threshold:
         return True  #Perhaps er > erp but it is too small -> convergence
     elif er > erp and erp > erpp:
-        prter(Tmatch["WARNING: ICP STOPPED DUE TO INSTABILITY AFTER %d STEPS!"] % icp)
+        prter("WARNING: ICP STOPPED DUE TO INSTABILITY AFTER %d STEPS!" % icp)
         return True
     return False
 
@@ -183,27 +218,27 @@ def converged3(er, erp, erpp, threshold=thanThresholdx):
 from p_gnum import zeros, Float
 
 def dfridr(func,x,h):
-      "Numerical computation of derivative of function."
-      CON=1.4; CON2=CON*CON; BIG=1.0e100; NTAB=10; SAFE=2.0
-      a = zeros((NTAB+1, NTAB+1), Float)
-      assert h > 0.0, 'h must be nonzero in dfridr'
-      hh=h
-      a[1,1] = (func(x+hh)-func(x-hh))/(2.0*hh)
-      err=BIG
-      for i in xrange(1, NTAB+1):
-          hh=hh/CON
-          a[1,i]=(func(x+hh)-func(x-hh))/(2.0*hh)
-          fac=CON2
-          for j in xrange(2, i+1):
-              a[j,i]=(a[j-1,i]*fac-a[j-1,i-1])/(fac-1.0)
-              fac=CON2*fac
-              errt=max((fabs(a[j,i]-a[j-1,i]), fabs(a[j,i]-a[j-1,i-1])))
-              if errt <= err:
-                  err=errt
-                  dfridr1=a[j,i]
-          if fabs(a[i,i]-a[i-1,i-1]) >= SAFE*err: return dfridr1, err
+    "Numerical computation of derivative of function."
+    CON=1.4; CON2=CON*CON; BIG=1.0e100; NTAB=10; SAFE=2.0
+    a = zeros((NTAB+1, NTAB+1), Float)
+    assert h > 0.0, 'h must be nonzero in dfridr'
+    hh=h
+    a[1,1] = (func(x+hh)-func(x-hh))/(2.0*hh)
+    err=BIG
+    for i in xrange(1, NTAB+1):
+        hh=hh/CON
+        a[1,i]=(func(x+hh)-func(x-hh))/(2.0*hh)
+        fac=CON2
+        for j in xrange(2, i+1):
+            a[j,i]=(a[j-1,i]*fac-a[j-1,i-1])/(fac-1.0)
+            fac=CON2*fac
+            errt=max((fabs(a[j,i]-a[j-1,i]), fabs(a[j,i]-a[j-1,i-1])))
+            if errt <= err:
+                err=errt
+                dfridr1=a[j,i]
+        if fabs(a[i,i]-a[i-1,i-1]) >= SAFE*err: return dfridr1, err
 
-      return dfridr1, err
+    return dfridr1, err
 
 
 def partialder(f, j, *param):
@@ -215,36 +250,30 @@ def partialder(f, j, *param):
     return dfridr(ff, param[j], 0.1)
 
 
-def testder():
-      from math import exp
-      while True:
-          x = float(raw_input("x: "))
-          df = exp(x)
-          dfn, er = dfridr(exp, x, 0.2*fabs(x))
-          print df, dfn, er
-
-
-def testpartialder():
-      from math import exp, cos, sin
-      def g(x, y): return exp(x)*sin(x+y)
-      while True:
-          x, y = map(float, raw_input("x, y: ").split())
-          dx, err = partialder(g, 0, x, y)
-          dy, err = partialder(g, 1, x, y)
-          print "x, y=", x, y
-          print "dg/dx analytic:", exp(x)*sin(x+y)+exp(x)*cos(x+y), "numerical:", dx
-          print "dg/dy analytic:", exp(x)*cos(x+y), "numerical:", dy
-
-
-from p_gnum import transpose, matrixmultiply, solve_linear_equations, LinAlgError
+from p_gnum import transpose, matrixmultiply, solve_linear_equations, LinAlgError, lstsq
 
 def lsmsolve(A, B):
-    "Solev the Least square method problem defined by matrixes A and B."
+    "Solve the Least square method problem defined by matrixes A and B."
+    try:
+        x, residual, rank, s = lstsq(A, B, rcond=-1.0)
+    except LinAlgError, why:
+        print why
+        return None, why
+    return x, ""
+
     AT = transpose(A)
     AA = matrixmultiply(AT, A)
     BB = matrixmultiply(AT, B)
-    try: BB = solve_linear_equations(AA, BB)
-    except LinAlgError, why: return None, why
+    try:
+        BB = solve_linear_equations(AA, BB)
+    except LinAlgError, why:
+        import p_gnum
+        print "det(AA)=", p_gnum.det(AA)
+        print "AA=", AA
+        print "BB=", BB
+        return None, why
     return BB, ""
 
-if __name__ == "__main__": testpartialder()
+
+if __name__ == "__main__":
+    print __doc__

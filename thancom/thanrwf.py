@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,13 +22,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module implements read/write mechanism for ThanCad files..
 """
 
 
-class ThanRfile:
+class ThanRfile(object):
     "A wrapper of a read file with unread and count lines capability."
 
     def __init__(self, fr, proj):
@@ -85,7 +85,7 @@ class ThanRfile:
         if self.next().strip() != footer: raise ValueError, "%sFooter %s not found" % (er, footer)
 
     def readNode(self):
-        "Read a node from thc format; allow any number of dimensions but at least 2."
+        "Read a node from thcx format; allow any number of dimensions but at least 2."
         dl = self.next().split()
         if dl[0]  != "<NODE>":  raise ValueError, "Header <NODE> not found"   #May raise IndexError
         if dl[-1] != "</NODE>": raise ValueError, "Footer </NODE> not found"  #May raise IndexError
@@ -95,7 +95,7 @@ class ThanRfile:
         return map(float, dl[1:1+nt]) + self.elev[nt:]
 
     def readValid(self):
-        "Read valid attribute of node from thc format; allow any number of dimensions but at least 2."
+        "Read valid attribute of node from thcx format; allow any number of dimensions but at least 2."
         dl = self.next().split()
         if dl[0]  != "<valid>":  raise ValueError, "Header <valid> not found"   #May raise IndexError
         if dl[-1] != "</valid>": raise ValueError, "Footer </valid> not found"  #May raise IndexError
@@ -130,7 +130,7 @@ class ThanRfile:
             yield cc
 
     def readSnode(self, nam, ndim):
-        "Read a special node from thc format; allow only exactly ndim dimensions."
+        "Read a special node from thcx format; allow only exactly ndim dimensions."
         dl = self.next().split()
         header = "<%s" % nam
         if dl[0]  != header: raise ValueError, "Header %s not found" % (header,)  #May raise IndexError
@@ -169,9 +169,9 @@ class ThanRfile:
         "Read an attribute which may contain blanks inside it and an attribute which does not."
         self.readBeg(name)
         s = self.readTextln()
-        if s2 != None: s2 = self.next().strip()
+        if s2 is not None: s2 = self.next().strip()
         self.readEnd(name)
-        if s2 == None: return s
+        if s2 is None: return s
         return s, s2
 
 
@@ -232,12 +232,12 @@ class ThanWfile:
         self.fw.write("%s</%s>\n" % (self.ind, s))
 
     def writeNode (self, cc):
-        "Convert node in a string of thc format."
+        "Convert node in a string of thcx format."
         f = self.formFloat
         self.fw.write("%s<NODE> %s </NODE>\n" % (self.ind, "".join(f%c for c in cc)))
 
     def writeNodes (self, cs):
-        "Convert node in a string of thc format."
+        "Convert node in a string of thcx format."
         f = self.formFloat
         self.writeBeg("NODES")
         self.pushInd()
@@ -247,13 +247,13 @@ class ThanWfile:
         self.writeEnd("NODES")
 
     def writeSnode (self, nam, ndim, cc):
-        "Convert a special node in a string of thc format."
+        "Convert a special node in a string of thcx format."
         if len(cc) != ndim: raise ValueError, "Exactly %d coordinates were expected for special node" % ndim
         f = self.formFloat
         self.fw.write("%s<%s %s />\n" % (self.ind, nam, "".join(f%c for c in cc)))
 
     def writeSnodes (self, nam, ndim, cs):
-        "Convert node in a string of thc format."
+        "Convert node in a string of thcx format."
         f = self.formFloat
         self.writeBeg(nam)
         self.pushInd()
@@ -264,7 +264,7 @@ class ThanWfile:
         self.writeEnd(nam)
 
     def writeValid (self, validc):
-        "Convert valid attribute of node in a string of thc format."
+        "Convert valid attribute of node in a string of thcx format."
         f = " %d"
         self.fw.write("%s<valid> %s </valid>\n" % (self.ind, "".join(f%c for c in validc)))
 
@@ -278,7 +278,7 @@ class ThanWfile:
         self.writeBeg(name)
         self.pushInd()
         self.writeTextln(s)
-        if s2 != None: self.writeln(s2)
+        if s2 is not None: self.writeln(s2)
         self.popInd()
         self.writeEnd(name)
 

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,23 +21,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module defines the generic ThanCad element. It can be also used as a null
 element - this is NOT an asbtract class.
 The class defines functionality to speed up the rotate operation.
 """
 
-from math import pi, cos, sin
+from math import cos, sin
 import copy
 from thantrans import T
+import p_ggen
+
 
 
 class ThanElement:
     """Base class for thancad's objects.
 
-    This class of elements may ne used whenever a dummy, or Null element
-    (see python recipies), is needed. The element accepts usual commands through
+    This class of elements may be used whenever a dummy, or Null element
+    (see python recipes), is needed. The element accepts usual commands through
     the routine but does nothing.
     """
     thanTkCompound = 1         # The number of Tkinter objects that make the element. 1=No compound object
@@ -54,7 +56,7 @@ class ThanElement:
         pass
 
 
-    def thanIsNormal():
+    def thanIsNormal(self):
         "Checks if element shape is OK (i.e. it is not degenerate."
         return False
 
@@ -85,7 +87,7 @@ class ThanElement:
 
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
-        "Return a point of type otype nearest to xcu, ycu."
+        "Return a point of type in otypes nearest to xcu, ycu."
         return None
 
 
@@ -171,19 +173,19 @@ class ThanElement:
     def thanList(self, than):
         "Shows information about the generic element."
         than.writecom("%s: %s" % (T["Element"], self.thanElementName))
-        than.write("    %s %s\n" % (T["Layer:"], thanUnicode(than.laypath)))
+        than.write("    %s %s\n" % (T["Layer:"], p_ggen.thanUnicode(than.laypath)))
         than.write("%s: %s    %s: %s\n" % (T["Length"], than.strdis(self.thanLength()), T["Area"], than.strdis(self.thanArea())))
         than.write("%s: %s" % (T["Insertion point"], than.strcoo(self.getInspnt())))
 
 
     def thanExpThc1 (self, fw):
         "Save the element in thc format; attributes other than the common."
-        raise ValueError, "Method thanExpThc1 must be overriden"
+        raise ValueError, "Method thanExpThc1 must be overridden"
 
 
     def thanImpThc1 (self, fw):
         "Read the element from thc format; attributes other than the common."
-        raise ValueError, "Method thanExpThc1 must be overriden"
+        raise ValueError, "Method thanExpThc1 must be overridden"
 
 
     def thanTransform(self, fun):
@@ -222,7 +224,7 @@ class ThanElement:
 
 
     def thanInbox(self, xymm):
-        "Checks if element may (partialy) be in box xymm."
+        "Checks if element may (partially) be in box xymm."
         if self.thanXymm[0] > xymm[2]: return False
         if self.thanXymm[1] > xymm[3]: return False
         if self.thanXymm[2] < xymm[0]: return False
@@ -231,11 +233,11 @@ class ThanElement:
 
 
     def thanInarea(self, xymm):
-        "Checks if element may (partialy) be in area xymm (which may have None)."
-        if xymm[2] == None or self.thanXymm[0] > xymm[2]: return False
-        if xymm[1] == None or self.thanXymm[1] > xymm[3]: return False
-        if xymm[2] == None or self.thanXymm[2] < xymm[0]: return False
-        if xymm[3] == None or self.thanXymm[3] < xymm[1]: return False
+        "Checks if element may (partially) be in area xymm (which may have None)."
+        if xymm[2] is None or self.thanXymm[0] > xymm[2]: return False
+        if xymm[1] is None or self.thanXymm[1] > xymm[3]: return False
+        if xymm[2] is None or self.thanXymm[2] < xymm[0]: return False
+        if xymm[3] is None or self.thanXymm[3] < xymm[1]: return False
         return True
 
 

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 This module implements an information status bar.
 """
@@ -103,11 +103,11 @@ class ThanStatusBar(Frame):
             px, py = im.thanGetPixCoorori(cp)                 #Full image coordinates
             self.thanCoor.config(text="%d %d" % (px, py))
             if True:             #Force redrawing of the type (because the image may have changed)
-                 s = T["Pixel xy"]+":"
-                 self.thanTypeCoor.config(text=s, width=len(s), fg="blue")
-                 self.thanCoor.config(fg="blue")
-                 self.thanInfo.config(text=im.filnam)
-                 self.__curType = "p"
+                s = T["Pixel xy"]+":"
+                self.thanTypeCoor.config(text=s, width=len(s), fg="blue")
+                self.thanCoor.config(fg="blue")
+                self.thanInfo.config(text=im.filnam)
+                self.__curType = "p"
             self.thanCoor.update_idletasks()
             return
         self.__coorWorld(cp)         #No image was found: display world coordinates
@@ -119,8 +119,8 @@ class ThanStatusBar(Frame):
         typ may be:   world, image, or pixel
         every may be: click, or move (that is the coors are updated for every move or click of the mouse)
         """
-        if typ   != None: self.__typ = typ[0]
-        if every != None: self.__every = every[0]
+        if typ   is not None: self.__typ = typ[0]
+        if every is not None: self.__every = every[0]
 
         self.__curType = None
         if self.__typ == "w":
@@ -145,7 +145,7 @@ class ThanStatusBar(Frame):
         if typ1[0] == "i" and len(self.__proj[1].thanObjects["COSYS"]) == 0:
             typ1 = "pixel" #Ignore internal orientation if it does not exist
         self.thanConfig(typ1)
-        if self.__cp != None: self.thanCoorClick(self.__cp)
+        if self.__cp is not None: self.thanCoorClick(self.__cp)
         return typ1
 
 

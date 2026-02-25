@@ -43,7 +43,7 @@ class Pin:
 
 
     def fromPolygon(self, polygon):
-        """Finds the perigegrammeno rectangle which perigrafei polygon.
+        """Finds the circumscribed rectangle which includes the polygon.
 
            The direction of the rectangle coincide with the first line of the polygon."
         """
@@ -146,7 +146,7 @@ class Pin:
 def poly2pin(thanPolylines, thanTexts=(), prt=p_ggen.prg):
     """Discovers frames in a set of polylines and the frames names in a set of texts.
 
-    Typically read from a dxf file. The polylines are supposed to be orthogons.
+    Typically read from a dxf file. The polylines are supposed to be rectangles.
     if the texts are empty the program does not complain if it does not find names.
     """
     iFrame=99900
@@ -163,7 +163,7 @@ def poly2pin(thanPolylines, thanTexts=(), prt=p_ggen.prg):
         pin = Pin()
         pin.fromPolygon(zip(xx, yy))
         if pin.am < pin.ap: pin.invertsides()    #Make the first side the biggest side
-        if pin.th >= pi: pin.invert()            #Make the angle 0<=anlge<pi
+        if pin.th >= pi: pin.invert()            #Make the angle 0<=angle<pi
 #-------Find frame's name
         for xt, yt, lay, col, name, h, theta in thanTexts:
             if pin.mesa(xt, yt):
@@ -175,20 +175,3 @@ def poly2pin(thanPolylines, thanTexts=(), prt=p_ggen.prg):
             iFrame += 1
         frames.append((pin, lay))
     return frames
-
-
-def dokinv():
-    "Test the invert operation."
-    import p_gdxf
-    dxf = p_gdxf.ThanDxfPlot()
-    dxf.thanDxfPlots()
-    p = Pin("A", 1000.0, 5000.0, 200.0, 80.0, 30.0)
-    p.dxfout(dxf)
-    p.invert()
-    p.aa = "Arev"
-    p.dxfout(dxf)
-    dxf.thanDxfPlot(0.0, 0.0, 999)
-
-
-if __name__ == "__main__":
-    dokinv()

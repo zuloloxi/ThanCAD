@@ -1,0 +1,326 @@
+import sys, os
+from Tkinter import TclError
+import tkMessageBox, tkFileDialog
+from tkMessageBox import ERROR, INFO, QUESTION, WARNING
+from p_ggen import floate, isString, thanUnunicode, thanUnicode, path, Pyos
+
+
+#============================================================================
+
+def thanGudGetReadFile(self, ext, tit, initialfile="", initialdir="", multiple=False):
+    "Gets a filename that exists, from user."
+    ext = thanExtExpand(ext)
+    while True:
+        opendialog = tkFileDialog.Open(parent=self, initialfile=initialfile,
+          #initialdir=initialdir, defaultextension=ext[0][1][1:],    # For Windows?
+          initialdir=initialdir, defaultextension=ext[0][1], multiple=multiple,
+          title=thanUnicode(tit), filetypes=ext)  #Here defaultextension works ok: When the users types something
+        #                           #It gets the extension specified as the first element of ext
+        try:
+            filnam = opendialog.show()
+        except TclError, why:
+            w = str(why)
+            if "invalid" in w and "filename" in w: #If the initialfile is invalid then..
+                initialfile = ""                   #..work around tcl/tk bug
+                continue
+            raise                                  #Something else happened; raise error
+        break
+    if multiple:
+#        print "thangudgetreadfile: multiple=", multiple, ":", filnam
+#        print "thangudgetreadfile: type(filnam)=", type(filnam)
+        if not filnam: return None
+        try: filnam+"x"     #Work around Windows bug: Yeah, Windows "just" works!!
+        except: pass
+        else: return __winfiles(filnam)
+        return [thanAbsrelPath(f1) for f1 in filnam]
+    return thanAbsrelPath(filnam)
+
+import re
+_splitter = re.compile(r"""{[^}]+}|[^ ]+""")
+def __winfiles(filnam):
+    """If files have blanks in their names they are surrounded by {}. Example below.
+
+    "   thanasis stamos dimitra {stella  ss} andreas {stella stamoy}   "
+    """
+    dl = _splitter.findall(filnam)
+    for i,f1 in enumerate(dl):
+        if f1[0] == "{" and f1[-1] ==  "}": f1 = f1[1:-1]
+        dl[i] = thanAbsrelPath(f1)
+    return dl
+
+#============================================================================
+
+def thanAbsrelPath(f, cdir=None):
+    "Returns the absolute path of f, or, if f is in current dir, the relative path to f."
+    if not f: return None
+    f = thanUnunicode(f)
+    if cdir is None: cdir = os.getcwd()
+    cdir = os.path.abspath(cdir)
+    f = thanUnunicode(os.path.abspath(f))
+    if os.path.commonprefix((cdir, f)) == cdir: f = f[len(cdir)+1:]
+    return path(f)
+
+#============================================================================
+
+def thanExtExpand(ext):
+    """Extension ext can be one of the following:
+
+    string with no blanks: the string contains one extension and it is transformed to:
+        [ (<NULL explanation>, string),
+          ("All files", "*"),
+        ]
+    string with blanks: the string contains multiple extensions separated by
+        blanks, and it is transformed to:
+        [ (<NULL explanation>, ext1),
+          (<NULL explanation>, ext2),
+          (<NULL explanation>, ext3),
+          ...
+          ("All files", "*"),
+        ]
+    tuple of strings: The first string of the tuple is the explanation and the other
+        string is the extension. It is transformed to:
+        [ tuple,
+          ("All files", "*"),
+        ]
+    list of tuples: Each tuple is a tuple of strings. The first string of the tuple is
+         the explanation and the other string is the extension. No transformation.
+    thanasis2011_09_25: It seems than (at least in Linux) if the extension is
+    something like "xx.asc" the the open dialog does not consider it as an
+    extension. In this case it should begin with *, like: "*xx.asc"
+    """
+#   Windoze 7 open file dialog: how does Windows7 show multiple extensions:
+#   1. If ext is a list of tuples and each tuple contains a description text
+#      and an extension, the  Windows7 show the first tuple (and relevant files)
+#      when opening the dialog. The user may choose another tuple.
+#   2. If in some (or all) tuples the description is "":
+#      a. If all tuples which contain nonblank descriptions are first (before
+#         the blank descriptions) in the list of tuples, then all blank tuples
+#         are shown and all the files whose extension is one of the blank tuples.
+#         The user may choose one of the nonblank tuples.
+#      b. If the blank tuples are first (before the non blank tuples) then
+#         the last of the non blank tuples is shown. The user may choose another
+#         nonblank tuple or all blank tuples.
+#    Linux openfile dialog:
+#    1. Linux always shows the first entry either blanmk or nonblank tuple.
+#    2. All the blank tuples are shown as one entry.
+    if ext is None:
+        exts = [("All files", "*")]
+    elif isString(ext):
+        if ext.strip() == "":
+            exts = [("All files", "*")]
+        elif " " in ext.strip():
+            exts = []
+            for exta in ext.split():
+                if exta[0] not in ".*": exta = "*" + exta
+                exts.append(("", exta))
+            if Pyos.Windows: exts.insert(0, ("All files", "*"))
+            else:            exts.append(("All files", "*"))
+        else:
+            desc, exta = "", ext
+            if exta[0] not in "*.": exta = "*" + exta
+            exts = [(desc, exta), ("All files", "*")]
+    elif isString(ext[0]):
+        desc, exta = ext
+        if exta.strip() == "":
+            exts = [(desc, "*")]
+        else:
+            if exta[0] not in ".*": exta = "*" + exta
+            exts = [(desc, exta), ("All files", "*")]
+    else:
+        exts = []
+        for desc, exta in ext:
+            if exta[0] not in ".*": exta = "*" + exta
+            exts.append((desc, exta))
+    return exts
+#    return [(thanUnicode(desc), thanUnicode(exta)) for desc, exta in exts]
+
+
+def thanGudGetSaveFile(self, ext, tit, initialfile="", initialdir=""):
+    "Gets a filename that may exists, from user."
+    ext = thanExtExpand(ext)
+    kw = {}
+    if Pyos.Windows: kw["defaultextension"]=ext[0][1]
+    while True:
+        opendialog = tkFileDialog.SaveAs(parent=self, initialfile=initialfile,
+          initialdir=initialdir, title=thanUnicode(tit), filetypes=ext,
+          **kw)       #Thanasis2011_08_28:Here defaultextension does not work ok in Linux: When the user types something
+        #             #It gets the extension ext[0], even if the user has selected another one with the widget
+        try:
+            filnam = opendialog.show()
+        except TclError, why:
+            w = str(why)
+            if "invalid" in w:
+                if "filename" in w:
+                    initialfile = ""
+                    continue
+            raise
+        break
+    return thanAbsrelPath(filnam)
+
+
+def thanGudOpenReadFile(self, ext, tit, mode="r", initialfile="", initialdir=""):
+    "Gets a filename that exists, from user."
+    while 1:
+        filnam = thanGudGetReadFile(self, ext, tit, initialfile, initialdir)
+        if not filnam: return filnam, filnam
+        try: fw = file(filnam, mode)
+        except IOError, why: thanGudModalMessage(self, why, "Error opening file")
+        else: return filnam, fw
+
+
+def thanGudOpenSaveFile(self, ext, tit, mode="w", initialfile="", initialdir=""):
+    "Gets a filename that exists, from user."
+    while True:
+        filnam = thanGudGetSaveFile(self, ext, tit, initialfile, initialdir)
+        if not filnam: return filnam, filnam
+        try: fw = file(filnam, mode)
+        except IOError, why: thanGudModalMessage(self, why, "Error opening file")
+        else: return filnam, fw
+
+
+def thanGudGetDir(self, tit, initialdir="", mustexist=False):
+    "Gets a filename that exists, from user."
+    opendialog = tkFileDialog.Directory(parent=self,
+                 title=thanUnicode(tit), initialdir=initialdir, mustexist=mustexist)
+    filnam = opendialog.show()
+    return thanAbsrelPath(filnam)
+
+#============================================================================
+
+def thanGudAskOkCancel(self, message, title, default="cancel"):
+        "Shows message and returns true if user pressed OK; there is no default answer."
+        return tkMessageBox.askokcancel(thanUnicode(title), thanUnicode(message),
+            default=default, parent=self)
+
+def thanGudAskYesNo(self, message, title, default="yes"):
+        "Shows message and returns true if user pressed OK; there is no default answer; returns boolean True or False."
+        return tkMessageBox.askyesno(thanUnicode(title), thanUnicode(message),
+            default=default, parent=self)
+
+
+#icons
+#ERROR = "error"
+#INFO = "info"
+#QUESTION = "question"
+#WARNING = "warning"
+def thanGudModalMessage(self, message, title, icon=None, **kw):
+        "Show a message and wait until user discards it."
+        tkMessageBox.showinfo(thanUnicode(title), thanUnicode(message), parent=self, icon=icon, **kw)
+
+#===========================================================================
+
+
+def thanDeficon(win, iconxbm=None):
+    "Decorates the window with an icon stored in filename iconxbm."
+#    When the script is run via py2exe or Freeze, sys.path[0] has an additional
+#    subdirectory at its end, and thus the its parent must be used.
+    if iconxbm is not None:
+        if _tryIconbitmap(win, iconxbm): return  #Try in current dir (or in path if iconxbm is a pathname)
+        iconxbm = path(iconxbm).basename()
+        if _tryIconbitmap(win, path(sys.path[0])/iconxbm): return   #Try in the dir where the program is
+        if _tryIconbitmap(win, path(sys.path[0]).parent/iconxbm): return   #py2exe or Freeze: we hope iconxbm was copied by the toexe script:)
+    if _tryIconbitmap(win, path(sys.path[0]).parent/"thanapps.dir"/"than05.xbm"): return   #Try standard icon
+    if _tryIconbitmap(win, path(sys.path[0]).parent/"than05.xbm"): return  #py2exe or Freeze: we hope than05.xbm was copied by the toexe script:)
+
+def _tryIconbitmap(win, iconxbm):
+    "Try to open iconxbm."
+    b = "@"+iconxbm
+#    print "thanDeficon:", b
+    try:
+        win.iconbitmap(b)
+    except Exception, e:
+#        print e
+        return False
+    else:
+        return True
+
+
+def thanGudPosition(self, master="parent", dx=20, dy=15):
+    "Position self with respect to parent window (master='parent'), to another window/widget (master=widget) or top left of the screen (master=None)."
+    if master == "parent":             #Try to find parent window
+        try:    master = self.master
+        except: master = None
+
+    if master is None:                 #With respect to top left of the screen
+        x = y = 0
+    else:                              #With respect to parent window
+        master.update()
+        x = master.winfo_rootx()
+        y = master.winfo_rooty()
+    self.geometry("%+d%+d" % (x+dx, y+dy))
+
+#===========================================================================
+
+def thanValidateDouble(parentwin, controls, except_=()):
+    """Validates the real values of specified (Entry) controls.
+
+    controls is a sequence of the following format:
+            Description           control          min value  max value
+        ( ("Manning coefficient", self.thanTxtMan, 0.0000001, 0.1),
+          ("slope",               self.thanTxtSlo, 0, 1000),
+          ("discharge",           self.thanTxtDis, 0, 100000),
+          ("Hydraulic depth",     self.thanTxtDep, 0, 1000)
+        )
+    except_ is a sequence of controls which should be not validated.
+    """
+    res = []
+    for c in controls:
+        desc, control, vmin, vmax = c[:4]
+        if control in except_: res.append(None); continue
+        v = floate(control.get())
+        if v is None or v < vmin or v > vmax:
+            thanGudModalMessage(parentwin, "Illegal "+desc, "Bad data")
+            control.focus_set()
+            return
+        res.append(v)
+    return res 
+
+
+from Tkinter import Tk, Frame
+def testmenus2():
+    "Tests menus with statusbar."
+    import p_gtkwid
+    def __op(): print "open"
+    def __cl(): print "close"
+    def __ii(): print "insert image"
+    def __ca(): print "load camera"
+    def __re(): print "replace"
+    def __hi(): print "history"
+    def __ex(): root.destroy()
+    def cond(): return True
+
+    root = Tk()
+    mm = [ ["menu", "&File", "Open file  menu", "magenta"],
+           [__op, "&Open", "Open a file", "cyan"],
+           [__cl, "&Close", "Closes current file", "cyan"],
+           ["menu", "O&rientation", "Orientation submenu", "blue"],
+           [__ii, "&Insert Image", "Asks the user to provide image file.", "cyan"],
+           [__ca, "&Load Camera file", "Asks the user to provide camera file.", "cyan"],
+           ["endmenu"],
+           ["-"],
+           [__ex, "E&xit", "Terminate program", "red"],
+           ["endmenu"],
+           ["menu", "&Edit", "Edit menu", "magenta"],
+           [__re, "R&eplace", "Search and replace", "cyan"],
+           ["endmenu"],
+           ["menu", "&Help", "Help menu", "magenta", "help"],
+           [__hi, "Histor&y", "History of menus", "cyan"],
+           ["endmenu"],
+         ]
+    fr = Frame(root, height=200)
+    fr.grid()
+    sb = p_gtkwid.ThanStatusBar(root)
+    sb.grid()
+    p_gtkwid.thanTkCreateThanMenus2(root, mm, statcommand=sb.sett, condition=cond)
+    root.mainloop()
+
+if __name__ == "__main__":
+#    root = Tk()
+#    t = ThanScrolledText(root)
+#    t.grid()
+#    t = "Thanasis\nDimitra\nAndreas\n=love\n"*20
+#    thanGudHelpWin(root, t, "well...")
+#    t = thanGudGetDir(root, "get dir", "/tmp")
+#    print t
+#    root.mainloop()
+    testmenus2()

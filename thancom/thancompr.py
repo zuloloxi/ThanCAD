@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,21 +23,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
+ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes print and scan commands.
 """
-import os, tempfile
+import tempfile
 from p_ggen import path
 from thandefs import thanplotcups
 import thantkdia
-from thantrans import T
 from thanvar import Canc
 
 
 #def doprint(self):
-#   "Experimental tests for printng."
+#   "Experimental tests for printing."
 #   atts = self.ccups.getPrinterAttributes(nam)
 #   for key,val in atts.iteritems():
 #       print "%-20s: %s" % (key, val)
@@ -70,7 +69,7 @@ def thanPrPlot(proj):
     if mes != "":
         proj[2].thanCom.thanAppend(mes, "can1")
     win = thantkdia.ThanDiaPlot(proj[2], ccups, printers, proj[1].thanPlotDef, proj)
-    if win.result == None: return proj[2].thanGudCommandCan()
+    if win.result is None: return proj[2].thanGudCommandCan()
     res, act = win.result
     if proj[1].thanPlotDef != res: proj[1].thanTouch()
     proj[1].thanPlotDef = res
@@ -108,7 +107,6 @@ def thanPrPlot(proj):
     dc.thanCh.thanEnable()
     if res.choPr == thanplotcups.TOFILE:
         return proj[2].thanGudCommandEnd("Plot file %s was created." % fn, "info")
-    nam = None
     job = ccups.printFile(res.choPr, fn, "ThanCad job "+fn, {})
     path(fn).remove()
     return proj[2].thanGudCommandEnd("Plot file %s was sent to %s (job %d)." % (fn, res.choPr, job), "info")
@@ -116,11 +114,11 @@ def thanPrPlot(proj):
 
 def thanImageScan(proj):
     "Scan an image and insert it to ThanCad."
-    from thandr.thanimpil import ThanImage
+    from thandr import ThanImage
     can, dpis = thantkdia.getScanDpi()
-    if can == None: return proj[2].thanGudCommandCan(dpis)          #Here 'dpis' is an error message
+    if can is None: return proj[2].thanGudCommandCan(dpis)          #Here 'dpis' is an error message
     win = thantkdia.ThanScan(proj[2], can, dpis, proj)
-    if win.result == None: return proj[2].thanGudCommandCan()
+    if win.result is None: return proj[2].thanGudCommandCan()
     im, imfilnam = win.result
     elem = ThanImage()
     if elem.thanTkGet(proj, im, imfilnam) == Canc: return proj[2].thanGudCommandCan()

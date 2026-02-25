@@ -1,9 +1,7 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -23,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the base for the dialogs related to arhitectural algorithms.
 """
@@ -66,12 +64,12 @@ class ThanArchCom(p_gtkwid.ThanComDialog):
         wid = tkinter.Frame(fra)
         wid.grid(row=0, column=1, rowspan=3, sticky="we")
 
-        lab = tkinter.Label(fra, text=theme, font=self.fo1, fg="blue")
+        lab = tkinter.Label(fra, text=theme, font=self.fo1, fg=self.colfra)
         lab.grid(row=0, column=2, sticky="we")
-        lab = tkinter.Label(fra, text=Tarch["Thanasis Stamos, Research/Teaching Personnel"], font=self.fo1, fg="blue",
+        lab = tkinter.Label(fra, text=Tarch["Thanasis Stamos, Research/Teaching Personnel"], font=self.fo1, fg=self.colfra,
               anchor="center", justify="center")
         lab.grid(row=1, column=2, sticky="w")
-        lab = tkinter.Label(fra, text=Tarch["School of Civil Engineering, NTUA, "]+str(year), font=self.fo1, fg="blue")
+        lab = tkinter.Label(fra, text=Tarch["School of Civil Engineering, NTUA, "]+str(year), font=self.fo1, fg=self.colfra)
         lab.grid(row=2, column=2, sticky="w")
 
         wid = tkinter.Frame(fra)
@@ -111,7 +109,7 @@ class ThanArchCom(p_gtkwid.ThanComDialog):
         wid = tkinter.Frame(fra)
         wid.grid(row=0, column=1, sticky="we")
 
-        lab = tkinter.Label(fra, text=theme, font=self.fo1, fg="blue")
+        lab = tkinter.Label(fra, text=theme, font=self.fo1, fg=self.colfra)
         lab.grid(row=0, column=1, sticky="we")
 
 

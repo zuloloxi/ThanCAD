@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the menus.
 """
@@ -154,7 +154,7 @@ def thanStandardMenus2():
           (("list"), T["&List"],      "Displays information about an element"),
           (("elev"), T["&Elevation"], "Displays and sets default elevation"),
           (("elevn"),T["Elevation (higher dimensions)"], "Displays and sets default elevations of z and higher dimensions"),
-          (("highlightzero"),T["&Highlight zero elevation"], "Temporarily highlights lines and points the elevation of which is zero"),
+          (("highlightzero"),T["&Highlight elevation"], "Temporarily highlights lines and points with elevation equal to current elevation"),
           ("-",),
           (("dsettings"), T["Drafting &Settings"],  "Chooses the drafting modes end, mid etc."),
           (("find"),      T["&Find text"], "Zooms to a text containing user defined text string"),
@@ -181,6 +181,7 @@ def thanStandardMenus2():
           (("point"),     T["&Point"],     "Draws a point"),
           (("dtext"),     T["&Text"],      "Draws text"),
           (("spline"),    T["Spl&ine"],    "Draws a cubic spline curve"),
+          (("solid"),     T["Solid"],      T["Draws a filled qaudrilateral or triangle"]),
           ("-",),
           (("pnamed"),    T["&Named Point"],"Draws a point with name"),
           (("pointdistance"), T["Point from dist"], T["Draws a point whose distance from 2 reference points is known"]),

@@ -1,5 +1,5 @@
-from math import pi, cos, sin, atan2, log10, fabs
-from p_gmath import dpt
+from math import pi, cos, sin, atan2, log10, fabs, radians
+from p_gmath import dpt,  Rotator2d
 
 MET = pi/180.0
 
@@ -33,6 +33,20 @@ def rectangle(dxf, x1, y1, x3, y3):
     "Plots a rectangle as a closed polyline."
     x = [x1, x3, x3, x1, x1]
     y = [y1, y1, y3, y3, y1]
+    dxf.thanDxfPlotPolyline(x, y)
+
+
+def trectangle(dxf, x1, y1, b, h, theta):
+    "Plots a tilted rectangle as a closed polyline; theta is in decimal degrees; center of rotation is x1,y1."
+    cc = [[x1,   y1  ],
+          [x1+b, y1  ],
+          [x1+b, y1+h],
+          [x1,   y1+h],
+          [x1,   y1  ],
+         ]
+    r = Rotator2d(cc[0], radians(theta))
+    r.rotateXyn(cc)
+    x, y = zip(*cc)
     dxf.thanDxfPlotPolyline(x, y)
 
 #===========================================================================
@@ -173,117 +187,6 @@ c     της γωνίας διευθύνσεως του αρχικού και τ
         ya = yc + cost * y1 - sint * x1
         dxf.thanDxfPlotPolyVertex (xa, ya, 2)
     dxf.thanDxfPlotPolyVertex (0.0, 0.0, 999)
-
-#====================================================================
-
-def logax (dxf, xa,ya,pw,th,emin,emax,legend,escale):
-    """Plots a logarithmic axis.
-
-c      pw: paper width in cm. if negative, legend goes to the left
-c     dpw: minimum distance in cm between two numbers on the axis
-c      dx: the "distance" between logs of emin and emax, in log[user units]
-c     ddx: minimum distance in log[user units] between two numbers on the axis
-c
-    """
-    HS=0.20; HSL=0.30; DPW=1.0
-
-    dx  = log10(emax/emin)
-    ddx = DPW * dx/fabs(pw)
-    escale = fabs(pw)/dx
-
-    t = th * pi/180.0
-    cost = cos(t)
-    sint = sin(t)
-
-    thn = th - 90.0
-    t = thn * pi/180.0
-    costn = cos(t)
-    sintn = sin(t)
-
-#---initial values
-
-    al = log10(emax)
-    k = int(al + 0.9999)
-    if al < 0.0: k=k-1
-    fct = 10.0 ** k
-
-    xx = 10.0 ** (1.001 * ddx)
-    anump = emin / xx
-    n = 0
-    an = [emax * xx]
-
-#---first number (anump) for new fct
-
-    endn = False
-    while True:
-        anum = anump/fct
-        anum = int(anum) * fct
-        while True:
-            anum = anum + fct
-            ddxn = log10(anum/anump)
-            if (ddxn < ddx): continue   # go to 20
-
-#-----------if too big gap between anump-anum try smaller fct.
-
-            if ddxn >= 2.0*ddx:
-                n=n+1
-                if n >= len(an): an.append(anum)
-                else:            an[n] = anum
-                fct = fct * 0.1
-                k = k - 1
-                break       #go to 10
-
-#-----------if numbers for current fct finished, get new fct or end.
-
-            while log10(an[n]/anum) < ddx:
-                if n <= 0: endn = True; break # go to 21
-                anum = an[n]
-                n = n - 1
-                fct = fct * 10.0
-                k = k + 1
-                ddxn = log10(anum/anump)
-
-#-----------plot the number
-
-            if anum <= emax:  # go to 31
-                dis = log10(anum/emin) * fabs(pw)/dx
-#                disn = dsign(1.5 * HS, pw)
-                disn = 1.5 * HS
-                if pw < 0: disn = -disn
-
-                xx = xa + (dis-0.5*HS)*cost + disn*costn
-                yy = ya + (dis-0.5*HS)*sint + disn*sintn
-                k1=-k
-                if k == 0: k1=-1
-                if pw > 0.0:
-                    dxf.thanDxfPlotNumber(xx, yy, HS, anum, thn, k1)
-                else:
-                    rnumber(dxf, xx, yy, HS, anum, thn, k1)
-
-#---------------plot line
-
-                disn=HS
-                if pw < 0: disn = -HS
-                xx = xa + dis*cost
-                yy = ya + dis*sint
-                dxf.thanDxfPlot (xx, yy, 3)
-                dxf.thanDxfPlot (xx+disn*costn, yy+disn*sintn, 2)
-            anump = anum
-        if endn: break    #go to 21
-
-#---plot line - legend
-
-    dxf.thanDxfPlot(xa, ya, 3)
-    dxf.thanDxfPlot(xa+fabs(pw)*cost, ya+fabs(pw)*sint, 2)
-
-    k = len(legend)
-    dis = (fabs(pw) - k*HSL) * 0.5
-    disn = 6.0*HS + 2.0*HSL
-    if pw < 0.0: disn=-(disn-HSL)
-    xx = xa + dis*cost + disn*costn
-    yy = ya + dis*sint + disn*sintn
-    dxf.thanDxfPlotSymbol(xx, yy, HSL, legend, th)
-    return escale
 
 
 def north(dxf, xc, yc, ssize, theta):

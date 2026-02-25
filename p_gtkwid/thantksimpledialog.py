@@ -155,6 +155,7 @@ class ThanDialog(tkinter.Toplevel):
         w.grid(row=0, column=1, padx=5, pady=5, sticky="e")     # Stamos Aug 12, 2004
 
         self.bind("<Return>", self.ok)
+        self.bind("<KP_Enter>", self.ok)   #Thanasis2025_10_24
         self.bind("<Escape>", self.cancel)
 
         box.grid(sticky="wesn")                      # Stamos Aug 12, 2004
@@ -232,6 +233,7 @@ class ThanDialog(tkinter.Toplevel):
         w.grid(row=0, column=2, padx=5, pady=5, sticky="e")     # Stamos Aug 12, 2004
 
         self.bind("<Return>", self.ok)
+        self.bind("<KP_Enter>", self.ok)   #Thanasis2025_10_24
         self.bind("<Escape>", self.cancel)
 
         box.grid(sticky="wesn")                      # Stamos Aug 12, 2004

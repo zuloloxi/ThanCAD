@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module computes the intersection of any pair of elements. It also computes
 the extension of lines and arc to intersect any other element.
@@ -37,16 +37,16 @@ class __Inv:
     "Calls a function with inverted arguments."
     def __init__(self, func):
         self.func = func
-    def __call__(self, e1, e2, ccu):
-        return self.func(e2, e1, ccu)
+    def __call__(self, e1, e2, ccu, ddu):
+        return self.func(e2, e1, ccu, ddu)
 
 
-def thanDummy(e1, e2, ccu):
+def thanDummy(e1, e2, ccu, ddu):
     "Returns no intersections."
     return []
 
 
-def thanArcArc(arc1, arc2, ccu):
+def thanArcArc(arc1, arc2, ccu, ddu):
     "Finds intersection of arc with arc."
     ps = []
     for cp in thanintersect.thanCirCir(arc1.cc, arc1.r, arc2.cc, arc2.r):
@@ -58,7 +58,7 @@ def thanArcArc(arc1, arc2, ccu):
     return ps
 
 
-def thanArcCircle(arc, circle, ccu):
+def thanArcCircle(arc, circle, ccu, ddu):
     "Finds intersection of arc with circle."
     ps = []
     for cp in thanintersect.thanCirCir(arc.cc, arc.r, circle.cc, circle.r):
@@ -68,7 +68,7 @@ def thanArcCircle(arc, circle, ccu):
     return ps
 
 
-def thanArcLine(arc, line, ccu):
+def thanArcLine(arc, line, ccu, ddu):
     "Finds intersection of self with line segment c1-c2."
     if ccu is None: coors = iterby2(line.cp)
     else:           coors = (line.thanSegNearest(ccu), )
@@ -80,12 +80,12 @@ def thanArcLine(arc, line, ccu):
     return ps
 
 
-def thanCircleCircle(circle1, circle2, ccu):
+def thanCircleCircle(circle1, circle2, ccu, ddu):
     "Finds intersection of circle with circle."
     return thanintersect.thanCirCir(circle1.cc, circle1.r, circle2.cc, circle2.r)
 
 
-def thanCircleLine(circle, line, ccu):
+def thanCircleLine(circle, line, ccu, ddu):
     "Finds intersection of self with line segment c1-c2."
     if ccu is None: coors = iterby2(line.cp)
     else:           coors = (line.thanSegNearest(ccu), )
@@ -95,33 +95,42 @@ def thanCircleLine(circle, line, ccu):
     return ps
 
 
-def thanLineLine(line1, line2, ccu):
+def thanLineLine(line1, line2, ccu, ddu):
     "Finds intersection of multi segment line1 with multi segment line2."
-    if ccu is None:
-        ps = []
+    def dojob():
+        "Finds interesction between segment c1-c2 and segment c3-c4."
+        cp = thanintersect.thanSegSeg(c1, c2, c3, c4)
+        if cp is not None:
+            for cp1 in ps:
+                if thanNear2(cp, cp1): break   #Ignore duplicate interesections
+            else:
+                ps.append(cp)
+
+    ps = []
+    if ccu is None:    #Find all intersections
         for c1, c2 in iterby2(line1.cp):
             for c3, c4 in iterby2(line2.cp):
-                cp = thanintersect.thanSegSeg(c1, c2, c3, c4)
-                if cp is not None: ps.append(cp)
-        return ps
-    c1, c2 = line1.thanSegNearest(ccu)
-    c3, c4 = line2.thanSegNearest(ccu)
-    cp = thanintersect.thanSegSeg(c1, c2, c3, c4)
-    if cp is None: return []
-    return [cp]
+                dojob()
+    else:    #Find all intersections near point ccu (distance <= ddu)
+        for cp1, iseg, tcp1 in line1.thanIterPntNear2(ccu, ddu):
+            c1, c2 = line1.cp[iseg-1:iseg+1]
+            for cp1, iseg, tcp1 in line2.thanIterPntNear2(ccu, ddu):
+                c3, c4 = line2.cp[iseg-1:iseg+1]
+                dojob()
+    return ps
 
 
-def thanCurveArc(curve, arc, ccu):
+def thanCurveArc(curve, arc, ccu, ddu):
     "Find the intersection of curve with a circle."
-    return thanCurveCa(curve, arc, ccu, thanArcLinet)
+    return thanCurveCa(curve, arc, ccu, ddu, thanArcLinet)
 
 
-def thanCurveCircle(curve, circle, ccu):
+def thanCurveCircle(curve, circle, ccu, ddu):
     "Find the intersection of curve with a circle."
-    return thanCurveCa(curve, circle, ccu, thanCircleLinet)
+    return thanCurveCa(curve, circle, ccu, ddu, thanCircleLinet)
 
 
-def thanCurveCa(curve, circle, ccu, caLinet):
+def thanCurveCa(curve, circle, ccu, ddu, caLinet):
     "Find the intersection of curve with a circle or arc."
     ntries = 16
     cp1 = curve.cp
@@ -175,7 +184,7 @@ def thanCurveCa(curve, circle, ccu, caLinet):
     return [ct]
 
 
-def thanCurveLine(curve, line, ccu):
+def thanCurveLine(curve, line, ccu, ddu):
     "Find the intersection of curve with a line."
     ntries = 16
     cp1 = curve.cp
@@ -235,7 +244,7 @@ def thanCurveLine(curve, line, ccu):
     return [ct]
 
 
-def thanCurveCurve(curve, eother, ccu):
+def thanCurveCurve(curve, eother, ccu, ddu):
     "Find the intersection of curve with another curve."
     ntries = 16
     cp1 = curve.cp
@@ -360,13 +369,15 @@ def bracketNearest(cp, iseg):
 
 def thanInit():
     "Initialises this module; no circular imports this way."
+    #FIXME: ThanSpline must be added here: thanIntPair, thanSelfIntersecting, thanExtPair
     from .thanline  import ThanLine, ThanCurve
     from .thancirc  import ThanCircle
     from .thanarc   import ThanArc
     from .thanimpil import ThanImage
     from .thanface3d import ThanFace3d
     from .thanclasses import thanElemClass
-    global thanIntPair, thanExtPair
+    global thanIntPair, thanExtPair, thanSelfIntersecting
+    thanSelfIntersecting = {ThanLine, ThanCurve, ThanImage, ThanFace3d}  #Thanasis2025_10_04
     thanIntPair = \
     { ThanArc:    { ThanArc    : thanArcArc,
                     ThanCircle : thanArcCircle,
@@ -460,11 +471,11 @@ def thanInit():
     }
 
 
-def thanIntsnap(e1, e2, ccu, proj):
+def thanIntsnap(e1, e2, ccu, ddu, proj):
     "Call the appropriate intersection function; find distance from mouse point."
     func = thanIntPair[e1.__class__].get(e2.__class__, thanDummy)
     ps = []
-    for cp in func(e1, e2, ccu):
+    for cp in func(e1, e2, ccu, ddu):
         cc = list(proj[1].thanVar["elevation"])
         cc[0] = cp[0]
         cc[1] = cp[1]
@@ -473,13 +484,13 @@ def thanIntsnap(e1, e2, ccu, proj):
 
 def thanInt(e1, e2, proj):
     "Call the appropriate intersection function."
-    if e1 is e2: return []
+    if e1 is e2 and e1.__class__ not in thanSelfIntersecting: return []   #Thanasis2025_10_04: allow self intesecting elements
     #print("tra01:", e1.__class__, e2.__class__)
     #print("tra02:", thanIntPair)
     func = thanIntPair[e1.__class__].get(e2.__class__, thanDummy)
     #print( "tra003:", func)
     ps = []
-    for cp in func(e1, e2, None):
+    for cp in func(e1, e2, None, None):
         cc = list(proj[1].thanVar["elevation"])
         cc[0] = cp[0]
         cc[1] = cp[1]

@@ -10,3 +10,5 @@ from .opguitrans import Tgui
 from .systemem import memTotal
 from .extracted import extracted
 from .genjson import getjson
+from . import parser
+from .tictoc import Tictoc

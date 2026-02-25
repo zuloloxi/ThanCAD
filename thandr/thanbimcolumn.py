@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the BIM column element. It is meant to be used in structural
 engineering, and for the moment it is made of reinforced concrete.
@@ -131,9 +131,9 @@ class ThanBimColumn(ThanLine):
         self.spin = -self.spin
 
 
-    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+    def thanOsnap(self, proj, otypes, ccu, ddu, eother, cori):
         "Return a point of type in otypes nearest to xcu, ycu."
-        ps1 = super().thanOsnap(proj, otypes, ccu, eother, cori) #calls ThanLine method: finds everything but center
+        ps1 = super().thanOsnap(proj, otypes, ccu, ddu, eother, cori) #calls ThanLine method: finds everything but center
         if ps1 is None: ps = []
         else:           ps = [ps1]
         if "cen" in otypes:

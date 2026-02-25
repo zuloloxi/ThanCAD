@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines various information for ThanCad: version, date,
 author, license etc.
@@ -330,7 +330,7 @@ projection. Then the .kml file is inserted to this drawing.
 
     tcver.setup(\
     name              = "ThanCad",
-    version           = '0.9.1 "Students2024"',
+    version           = '0.9.2 "Tartu"',
     author            = "Thanasis Stamos",
     author_email      = "cyberthanasis@gmx.net",
     url               = "http://thancad.sourceforge.net",
@@ -338,8 +338,8 @@ projection. Then the .kml file is inserted to this drawing.
     download_url      = "http://sourceforge.net/projects/thancad",
     long_description  = long_description,
 
-    date              = "May 20, 2025",
-    dates             = "2001-2025",
+    date              = "January 20, 2026",
+    dates             = "2001-2026",
     city              = "Athens",
     address1          = "Athens, Greece, Europe",
     license           = p_gvers.GPL(ilang),

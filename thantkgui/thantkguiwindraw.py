@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines a tkinter window to display a ThanCad drawing.
 """
@@ -164,7 +164,7 @@ class ThanTkGuiWinDraw(tkinter.Toplevel,
         self.thanCanvas.grid(row=1, column=0, sticky="swne")
 
         self.thanCom = thantkcmd.ThanTkCmd(self.thanProj, bd=1, relief=tkinter.SUNKEN, background="lightyellow",
-            height=5, maxlines=1000)  #Thanasis2024_08_30:do not specify foreground, so that correctForeground() is called
+            height=5, maxlines=1000, font="fixedspace")  #Thanasis2024_08_30:do not specify foreground, so that correctForeground() is called
         self.thanCom.grid(row=2, column=0, columnspan=2, sticky="swne")
 
         import andreas

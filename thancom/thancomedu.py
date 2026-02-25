@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes commands for educational/research purposes.
@@ -59,8 +59,9 @@ def thanEduRect(proj):
     if win.result is None:
         proj[2].thanCanvas.delete("e0")
         return proj[2].thanGudCommandCan()
-    try: elem.thanCargo
-    except: elem.thanCargo = {}
+    #try: elem.thanCargo             #Thanasis2025_10_24:commented out: thanGargo is now initialized to None ..
+    #except: elem.thanCargo = {}     #in base class (ThanElement): no need to check if it exists
+    if elem.thanCargo is None: elem.thanCargo = {}  #Thanasis2025_10_24: initialize to empty dictionary
     elem.thanCargo["edu"] = win.result[1]
     proj[2].thanCanvas.delete("e0")
     proj[1].thanElementAdd(elem)

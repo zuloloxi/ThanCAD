@@ -5,7 +5,7 @@ from p_gmath import thanNear2, thanLineSeg2, thanNearzero, thanNearx
 import p_gtri
 
 class HatchPolygon:
-    "A non convex polygon which is going to be filled with inclide lines or triangle solids."
+    "A non convex polygon which is going to be filled with oblique lines or triangle solids."
 
     def __init__(self, cpol):
         "Initialize polygon."

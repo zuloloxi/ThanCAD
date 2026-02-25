@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 The package creates automatically architectural things such as stairs.
 This module registers this package to ThanCad.
@@ -33,6 +33,7 @@ from thantrans import T, Tarch
 def thanRegisterCommands():
     "The commands of the package to be added to the commands of ThanCad."
     coms = ( ("archstairs", thancomarch.thanArchStairs),
+              ("archnorth", thancomarch.thanArchNorth),
            )
     abbrevs = ()
     return coms, abbrevs
@@ -45,16 +46,17 @@ def thanRegisterMenus():
     [ ("menu", T["&Engineering"], ""),        # Menu Title
       ("-",),
       ("archstairs", Tarch["&Stairs"], Tarch["Computes and draws the plan view of a simple staircase"]),
+      ("archnorth",  Tarch["&North"],  Tarch["Inserts the arcitectural north symbol - for plan views"]),
       ("endmenu",),
     ]
     #Sequence of menus: tuples of (menuname, aftermenu, afterentry)
     #menuname is the name of the new menu (or an existing one which will be extended)
-    #If menuname is a new menu, it is going to be added after existing sftermenu.
+    #If menuname is a new menu, it is going to be added after existing aftermenu.
     #If aftermenu does not exist, the it is inserted just before the last menu ("help" menu)
     #If menuname exists, then the entries of menuname are added after entry afterentry.
     #If afterentry does not exist then the entries are added at the end of existing menuname.
     #afterentry is the ThanCad command that corresponds to the menu entry (because it is unique).
-    seq = [("Engineering", "Draw", "urbanslope"),    #Sequnece of menus: new menu "Engineering" is next to menu "Draw"
+    seq = [("Engineering", "Draw", "urbanslope"),    #Sequence of menus: new menu "Engineering" is next to menu "Draw"
           ]
     return seq, m
 

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 The package creates automatically architectural things such as stairs.
 The subpackage contains the commands which handle architecture related
@@ -29,10 +29,10 @@ procedures.
 This module implements architecture related procedures.
 """
 from math import pi
+import p_gmath, p_gindplt
 from thantrans import Tarch
 import thansupport, thanimp
 from thanvar import Canc
-from .similar2 import Similar2D
 from .thandialogstairs import thanCompute, thanValsDef, ThanStairsSettings
 
 
@@ -43,10 +43,14 @@ def thanArchStairs(proj):
       from thancom.thancomvar import thanModDxfRedo, thanModDxfUndo
       v = __vstairs
       thanCompute(v)
+      tty = "Straight staircase", "U-shaped staircase"
+      tca = "Clockwise", "Counterclockwise"
       while True:
-          proj[2].thanPrt("%12s: %-8.3f    %17s: %.3f" % (Tarch["Step tread"],   v.entTread, Tarch["Step rise"], v.entRise))
-          proj[2].thanPrt("%12s: %-8.3f    %17s: %.3f" % (Tarch["Stairs width"], v.entWidth, Tarch["Stairs total rise"], v.entTotalrise))
-          proj[2].thanPrt("%12s: 1/%d" % (Tarch["Print scale"],  int(v.entScale)))
+          t = "clockwise"
+          proj[2].thanPrt("%17s: %s    %s: %s" % (Tarch["Staircase type"], Tarch[tty[v.radType]], Tarch["Draw flights"], Tarch[tca[v.radClockwise]]), "info1")
+          proj[2].thanPrt("%17s: %-8.3f %20s: %.3f" % (Tarch["Step tread"],   v.entTread, Tarch["Step rise"], v.entRise), "info1")
+          proj[2].thanPrt("%17s: %-8.3f %20s: %.3f" % (Tarch["Stairs width"], v.entWidth, Tarch["Stairs total rise"], v.entTotalrise), "info1")
+          proj[2].thanPrt("%17s: 1/%d" % (Tarch["Print scale"],  int(v.entScale)), "info1")
           ca = proj[2].thanGudGetPoint(Tarch["Staircase position - lowest axis point (s=change Settings): "], options=("settings",))
           if ca == Canc: return proj[2].thanGudCommandCan()
           if ca == "s":
@@ -56,21 +60,22 @@ def thanArchStairs(proj):
                   thanCompute(v)
               continue
 
-          than = proj[2].than
-          g2l = than.ct.global2Local
-          r = max((v.entTread*(v.labNrises-1), 0.1))
-          than.dc.create_line(g2l(ca[0], ca[1]), g2l(ca[0]+r, ca[1]), fill="blue", tags=("e0",))
-          f = proj[2].thanGudGetArc(ca, r*0.5, 0.0, Tarch["Staircase rotation angle (enter=0): "], direction=False, options=("",))
-          than.dc.delete("e0")
+          #than = proj[2].than
+          #g2l = than.ct.global2Local
+          #r = max((v.entTread*(v.labNrises-1), 0.1))
+          #than.dc.create_line(g2l(ca[0], ca[1]), g2l(ca[0]+r, ca[1]), fill="blue", tags=("e0",))
+          #f = proj[2].thanGudGetArc(ca, r*0.5, 0.0, Tarch["Staircase rotation angle (enter=0): "], direction=False, options=("",))
+          #than.dc.delete("e0")
+          adef = 0.0    #Default angle
+          mes = Tarch["Staircase rotation angle (enter={}): "].format(proj[2].than.strang(adef))
+          f = getAngle(proj, ca, baseSize=v.entTread*(v.labNrises-1), adef=adef, mes=mes)
           if f == Canc: continue
-          if f == "": f = 0.0
-          f -= pi*0.5    #__stairsdraw() thinks that zero angle is vertical
-          fdeg = f*180.0/pi
           break
 
       __vstairs.update(v)
       oldcl, oldroot = thanundo.thanLtClone(proj)
-      newelems = __stairsdraw(proj, v, ca, f, fdeg)
+      newelems = __drawstairs(proj, v, ca, f)
+
       lt = proj[1].thanLayerTree
       newroot = lt.thanRoot  #Please note that oldroot contains just a reference to the set of elements
       newcl = lt.thanCur     #..and thus we waste no memory here
@@ -79,105 +84,84 @@ def thanArchStairs(proj):
       proj[2].thanGudCommandEnd()
 
 
-def __stairsdraw(proj, v, ca, f, fdeg):
-      "Draw the stairs."
-      sim = Similar2D(ca, -f)           #Similar needs closkwise angle
-      tra = sim.calc2d
-      bpat = v.entTread
-      bskal = v.entWidth
-      nyps = int(v.labNrises)
-
-      ts = thanimp.ThanCadDrSave(proj[1], proj[2].thanPrt)
-      dxf = thansupport.ThanDxfEmu()
-      dxf.thanDxfPlots(ts)
-
-      dxf.thanDxfSetLayer('SKALA__SKALA')
-      dxf.thanDxfSetColor(7)
-
-      y = -bpat
-      for i in range(nyps):
-          y = y + bpat
-          xt, yt = tra((0.0, y))
-          dxf.thanDxfPlot (xt, yt, 3)
-          xt, yt = tra((bskal, y))
-          dxf.thanDxfPlot (xt, yt, 2)
-
-      xt, yt = tra((0.0, 0.0))
-      dxf.thanDxfPlot (xt, yt, 3)
-      xt, yt = tra((0.0, y))
-      dxf.thanDxfPlot (xt, yt, 2)
-      xt, yt = tra((bskal, 0.0))
-      dxf.thanDxfPlot (xt, yt, 3)
-      xt, yt = tra((bskal, y))
-      dxf.thanDxfPlot (xt, yt, 2)
-
-      dxf.thanDxfSetLayer ('SKALA__ARIT')
-      dxf.thanDxfSetColor(2)
-      hs = 0.15 * v.entScale / 100.0
-      y = -bpat
-      for i in range(nyps):
-          y = y + bpat
-          xa = bskal*0.5 + hs
-          ya = y + hs*0.5
-          xt, yt = tra((xa, ya))
-          dxf.thanDxfPlotNumber (xt, yt, hs, float(i+1), fdeg, -1)
-
-      __sxFora (dxf, bskal, bpat, v.entScale, nyps, tra)
-      __stairsbox(dxf, v, fdeg, tra)
-      dxf.thanDxfPlot (0.0, 0.0, 999)
-      ts.thanAfterImport()
-      proj[1].thanLayerTree.thanDictRebuild()
-      proj[2].thanRegen()
-      return ts.newelems
+def getAngle(proj, ca, baseSize, adef, mes):
+    "Get the angle from the user, either with the mouse or typing the angle."
+    than = proj[2].than
+    g2l = than.ct.global2Local
+    r = max((baseSize, 0.1))
+    than.dc.create_line(g2l(ca[0], ca[1]), g2l(ca[0]+r, ca[1]), fill="blue", tags=("e0",))
+    f = proj[2].thanGudGetArc(ca, r*0.5, 0.0, mes, direction=False, options=("",))
+    than.dc.delete("e0")
+    if f == "": f = adef
+    return f
 
 
-def __sxFora (dxf, bskal, bpat, scale, nyps, tra):
-      "Σχεδίαση φοράς σκάλας."
-      dxf.thanDxfSetLayer ('SKALA__FORA')
-      dxf.thanDxfSetColor(1)
-      hs = 0.15 * scale / 100.0
-      y = float(nyps-1) * bpat
-      b2 = bskal * 0.50
+def __drawstairs(proj, v, ca, f):
+    "Draw the staircase to a ThanCad drawing."
+    ts = thanimp.ThanCadDrSave(proj[1], proj[2].thanPrt)
+    dxf = thansupport.ThanDxfEmu()
+    dxf.thanDxfPlots(ts)
 
-      xt, yt = tra((b2, 0.0))
-      dxf.thanDxfPlotCircle(xt, yt, hs*0.25)
-      dxf.thanDxfPlot(xt, yt, 3)
-      xt, yt = tra((b2, y+hs*0.5))
-      dxf.thanDxfPlot (xt, yt, 2)
-      xt, yt = tra((b2-hs, y))
-      dxf.thanDxfPlot (xt, yt, 2)
-      xt, yt = tra((b2, y+hs*0.5))
-      dxf.thanDxfPlot (xt, yt, 3)
-      xt, yt = tra((b2+hs, y))
-      dxf.thanDxfPlot (xt, yt, 2)
+    if v.radType == 0:    #Straight Staircase
+        p_gindplt.staircaseS(dxf, ca, f, dscale=v.entScale, bpat=v.entTread,
+            hrise=v.entRise, bskal=v.entWidth, nyps=v.labNrises, trname=Tarch["TR"])
+    else:                 #U-shaped Staircase
+        p_gindplt.staircaseU(dxf, ca, f, dscale=v.entScale, clockwise=v.radClockwise==0, bpat=v.entTread,
+            hrise=v.entRise, bskal=v.entWidth, bwell=v.entWell, blanding=v.entLanding, nyps=v.labNrises, trname=Tarch["TR"])
+    dxf.thanDxfPlot(0, 0, 999)
 
-def __stairsbox(dxf, v, fdeg, tra):
-      "Draw a box with the tread and the rise."
-      dxf.thanDxfSetColor(None)
-      dxf.thanDxfSetLayer ('SKALA__FORA')
-      hs = 0.15 * v.entScale / 100.0
-      y = 0.0 - 10.0*hs
-      y2 = y + 6.0*hs
-      b2 = 8.0*hs
+    ts.thanAfterImport()
+    proj[1].thanLayerTree.thanDictRebuild()
+    proj[2].thanRegen()
+    return ts.newelems
 
-      xt, yt = tra((0.0, y))
-      dxf.thanDxfPlot(xt, yt, 3)
-      xt, yt = tra((b2, y))
-      dxf.thanDxfPlot(xt, yt, 2)
-      xt, yt = tra((b2, y2))
-      dxf.thanDxfPlot(xt, yt, 2)
-      xt, yt = tra((0.0, y2))
-      dxf.thanDxfPlot(xt, yt, 2)
-      xt, yt = tra((0.0, y))
-      dxf.thanDxfPlot(xt, yt, 2)
 
-      xt, yt = tra((0.0, (y+y2)/2.0))
-      dxf.thanDxfPlot(xt, yt, 3)
-      xt, yt = tra((b2, (y+y2)/2.0))
-      dxf.thanDxfPlot(xt, yt, 2)
+def thanArchNorth(proj):
+    "Draw the architectural north symbol - for plan views."
+    from thancom import thanundo
+    from thancom.thancomvar import thanModDxfRedo, thanModDxfUndo
+    v = __vstairs
+    thanCompute(v)
+    while True:
+        t = "clockwise"
+        proj[2].thanPrt("%17s: 1/%d" % (Tarch["Print scale"],  int(v.entScale)), "info1")
+        ca = proj[2].thanGudGetPoint(Tarch["North position - center (s=change Settings): "], options=("settings",))
+        if ca == Canc: return proj[2].thanGudCommandCan()
+        if ca == "s":
+            win = ThanStairsSettings(proj[2], vals=v, cargo=proj, translation=None)
+            if win.result is not None:
+                v = win.result
+                thanCompute(v)
+            continue
+        adef = pi/2.0    #Default angle
+        mes = Tarch["Staircase rotation angle (enter={}): "].format(proj[2].than.strang(adef))
+        f = getAngle(proj, ca, baseSize=v.entTread*(v.labNrises-1), adef=adef, mes=mes)
+        if f == Canc: continue
+        break
 
-      dxf.thanDxfSetLayer ('SKALA__ARIT')
-      xt, yt = tra((hs, y+hs))
-      dxf.thanDxfPlotSymbol (xt, yt, hs, Tarch["T=%.2f"] % (v.entTread,), fdeg)
-      xt, yt = tra((hs, y+4.0*hs))
-      dxf.thanDxfPlotSymbol (xt, yt, hs, Tarch["R=%.3f"] % (v.labRise,), fdeg)
+    __vstairs.update(v)
+    oldcl, oldroot = thanundo.thanLtClone(proj)
+    newelems = __drawnorth(proj, v, ca, f)
+
+    lt = proj[1].thanLayerTree
+    newroot = lt.thanRoot  #Please note that oldroot contains just a reference to the set of elements
+    newcl = lt.thanCur     #..and thus we waste no memory here
+    proj[1].thanDoundo.thanAdd("archnorth", thanModDxfRedo, (newelems, newcl, newroot, {}),
+                                            thanModDxfUndo, (newelems, oldcl, oldroot, {}))
+    proj[2].thanGudCommandEnd()
+
+
+def __drawnorth(proj, v, ca, f):
+    "Draw the north symbol to a ThanCad drawing."
+    ts = thanimp.ThanCadDrSave(proj[1], proj[2].thanPrt)
+    dxf = thansupport.ThanDxfEmu()
+    dxf.thanDxfPlots(ts)
+
+    ssize = 2.50 * v.entScale / 100.0    #2.5 cm στο χαρτί
+    p_gindplt.north(dxf, ca[0], ca[1], ssize, theta=f*180.0/pi-90.0)
+    dxf.thanDxfPlot(0, 0, 999)
+
+    ts.thanAfterImport()
+    proj[1].thanLayerTree.thanDictRebuild()
+    proj[2].thanRegen()
+    return ts.newelems

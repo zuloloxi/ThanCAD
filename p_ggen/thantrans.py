@@ -74,3 +74,15 @@ class Translation(object):
             n = max(0, 50-2-len(key))
             skey = thanUnunicode(key)
             fw.write('"%s"%s: "%s",\n' % (skey, " "*n, self.thanUnknown[key]))
+
+
+    @staticmethod
+    def new(from_="en", to="gr"):
+        "Make an empty English to Greek translation."
+        #English to greek translation table:
+        en2gr = \
+        { "__TRANSLATION__"     : (from_, "utf_8", to, "utf_8"),
+        }
+        Tarch = Translation(en2gr)
+        Tarch.thanLangSet("en", "gr")
+        return Tarch

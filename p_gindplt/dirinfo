@@ -1,0 +1,31 @@
+ok06
+differences form ok05
+Κυρ 03 Οκτ 2021 07:07:28 μμ EEST
+1. plotdashdot.py: New function plotdashdot()
+2. inddra.py: New function north.py, different than version ok05
+
+Παρ 29 Οκτ 2021 02:47:01 μμ EEST
+1. linehatch.py: new function  plothatchlines()
+2. linehatch.py: new function  plothatchsolids()
+3. linehatch.py: New class HatchPolygon which facilitated the previoyw functions.
+4. indfil.py: gfill is deprecated: gfill produces hatch lines for convex polygons
+   and is no longer needed.
+
+Κυρ 12 Δεκ 2021 03:42:17 μμ EET
+1. regularpolygon: create and plot regular polygons
+
+Δευ 02 Μαΐ 2022 07:29:10 μμ EEST
+2. bintree.py: plot binatry trees.
+
+
+ok06
+Differences from previous version ok06
+Παρ 16 Σεπ 2022 04:33:39 μμ EEST
+1. plotdashdot.py: Αλλαγή στην plotdashdot() έτσι ώστε να επιστρέφει πληροφορία για τη
+   συνέχιση της διακεκομμένης.
+2. plotdashdot.py: Δημιουργία plotdashdotarc1() για να τυπώνει διακεκομμένη σε κυκλικά τόξα.
+
+Δευ 27 Οκτ 2025 12:03:40 μμ EET
+1. logax() moved from indrra.py to axis.py
+2. inddra.py: new function trectangle(): plots a tilted rectangle.
+3. Προσθήκη module stairs.py που σχεδιάζει σκάλες.

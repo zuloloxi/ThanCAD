@@ -1629,15 +1629,28 @@ class ThanRef(Frame):
             self.thanSetText(text)
             self.thanReference = reference   #Bypass normal thanSet
 
-
-    def config(self, **kw):
+    def configure(self, **kw):
         "Adds labels and command support to standard config, and propagates some attributes to menu."
         if "command"     in kw: self.thanCommand = kw.pop("command")
         if "textcommand" in kw: self.thanTextCommand = kw.pop("textcommand")
         if "relief"      in kw: kw.setdefault("borderwidth", 1)
-        Frame.config(self, **rdict(kw, "relief", "borderwidth", "class_"))
+        super().config(            **rdict(kw, "relief", "borderwidth", "class_"))
         self.thanText.config(      **rdict(kw, "state", "font", "width", "bg", "background", "foreground", "fg", "class_"))
         self.thanMenubutton.config(**rdict(kw, "state", "font", "class_"))
+
+    config = configure   #Code from Base class of all widgets
+
+    def cget(self, key):
+        """Return the resource value for a KEY given as string."""
+        if key == "command": return self.thanCommand
+        if key == "textcommand": return self.thanTextCommand
+        if key in ("relief", "borderwidth", "class_"): return super().cget(key)
+        if key in ("state", "font", "width", "bg", "background", "foreground", "fg", "class_"): return self.thanText.cget(key)
+        return super().cget(key)  #Probably error
+
+    __getitem__ = cget   #Code from Base class of all widgets
+    #def __setitem__(self, key, value):  #Code from Base class of all widgets
+    #    self.configure({key: value})
 
 
     def thanSet(self, reference):

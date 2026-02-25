@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 The package creates automatically architectural things such as stairs.
 The subpackage contains the dialogs which handle architecture related
@@ -43,7 +43,7 @@ class ThanStairsSettings(p_gtkwid.ThanComDialog):
         proj = kw["cargo"]
         kw.setdefault("title", "%s - %s" % (proj[0].name, Tarch["Stair case settings"]))
         kw.setdefault("buttonlabels", (Twid["OK"], Tarch["Compute"], Twid["Cancel"]))
-        p_gtkwid.ThanComDialog.__init__(self, *args, **kw)
+        super().__init__(*args, **kw)
 
 
     def thanValsDef(self):
@@ -53,22 +53,82 @@ class ThanStairsSettings(p_gtkwid.ThanComDialog):
 
     def body(self, win):
         "Just add compute at the end."
-        p_gtkwid.ThanComDialog.body(self, win)
+        super().body(win)
         self.apply2()
 
 
     def body2(self, win):
         "Create the body of the dialog in steps."
         win.columnconfigure(1, weight=1)
-        self.fraSpec(win, 1)
-        self.fraGeom(win, 2)
-        self.fraScale(win, 3)
+        self.fraType(win, 1)
+        self.fraDrawing(win, 2)
+        self.fraSpec(win, 3)
+        self.fraGeom(win, 4)
+        self.fraScale(win, 5)
+
+
+    def fraType(self, win, ir):
+        "Widgets for type of staircase."
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
+        fra.grid(row=ir-1, column=0, pady=5, sticky="wesn")
+
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab.grid(row=0, column=0)
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["STAIRCASE TYPE:"])
+        lab.grid(row=0, column=1, columnspan=2, sticky="w")
+
+        key = "radType"
+        tit = "Staircase type"           #Tmatch["Projection type"]
+        rad = p_gtkwid.ThanRadio(fra)
+        rad.grid(row=1, column=1, sticky="wesn", pady=5)
+
+        #lab = tkinter.Label(rad, text=Tarch["Type"], fg=self.colfra)
+        #lab.grid(row=0, column=0, sticky="w")
+
+        wid = rad.add_button(text=Tarch["Straight staircase"])    #Ευθύγραμμη σκάλα
+        wid.grid(row=1, column=0, sticky="w")
+        wid = rad.add_button(text=Tarch["U-shaped staircase"])    #Σκάλα με ενδιάμεσο πλατύσκαλο 180ᵒ
+        wid.grid(row=2, column=0, sticky="w")
+
+        val = p_gtkwid.ThanValidator()
+        self.thanWids.append((key, Tarch[tit], rad, val))
+
+        fra.columnconfigure(1, weight=1)
+
+
+    def fraDrawing(self, win, ir):
+        "Widgets for drawing options for the staircase."
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
+        fra.grid(row=ir-2, column=1, pady=5, sticky="wesn")
+
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab.grid(row=0, column=0)
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["STAIRCASE DRAWING OPTIONS:"])
+        lab.grid(row=0, column=1, columnspan=2, sticky="w")
+
+        key = "radClockwise"
+        tit = "Staircase drawing options"
+        rad = p_gtkwid.ThanRadio(fra)
+        rad.grid(row=1, column=1, sticky="wesn", pady=5)
+
+        lab = tkinter.Label(rad, text=Tarch["Draw flights"]+":", fg=self.colfra)
+        lab.grid(row=0, column=0, sticky="w")
+
+        wid = rad.add_button(text=Tarch["Clockwise"])    #Ευθύγραμμη σκάλα
+        wid.grid(row=1, column=0, sticky="w")
+        wid = rad.add_button(text=Tarch["Counter-clockwise"])    #Σκάλα με ενδιάμεσο πλατύσκαλο 180ᵒ
+        wid.grid(row=2, column=0, sticky="w")
+
+        val = p_gtkwid.ThanValidator()
+        self.thanWids.append((key, Tarch[tit], rad, val))
+
+        fra.columnconfigure(1, weight=1)
 
 
     def fraSpec(self, win, ir):
         "Widgets for stairs settings."
         fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
-        fra.grid(row=ir-1, column=0, pady=5, sticky="wesn")
+        fra.grid(row=ir-2, column=0, pady=5, sticky="wesn")
 
         lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
@@ -103,8 +163,8 @@ class ThanStairsSettings(p_gtkwid.ThanComDialog):
         self.thanWids.append((key, Tarch[tit], wid, val))
         fra.columnconfigure(2, weight=1)
 
-        key = "entTotalrise"
-        tit = "Stairs total rise"
+        key = "entWell"
+        tit = "Well hole"
         lab = tkinter.Label(fra, text=Tarch[tit])
         lab.grid(row=4, column=1, sticky="e")
         wid = p_gtkwid.ThanEntry(fra, width=8)
@@ -113,11 +173,31 @@ class ThanStairsSettings(p_gtkwid.ThanComDialog):
         self.thanWids.append((key, Tarch[tit], wid, val))
         fra.columnconfigure(2, weight=1)
 
+        key = "entLanding"
+        tit = "Landing width"
+        lab = tkinter.Label(fra, text=Tarch[tit])
+        lab.grid(row=5, column=1, sticky="e")
+        wid = p_gtkwid.ThanEntry(fra, width=8)
+        wid.grid(row=5, column=2, sticky="we")
+        val = p_gtkwid.ThanValFloat(1.0e-6, 1.0e6)
+        self.thanWids.append((key, Tarch[tit], wid, val))
+        fra.columnconfigure(2, weight=1)
+
+        key = "entTotalrise"
+        tit = "Stairs total rise"
+        lab = tkinter.Label(fra, text=Tarch[tit])
+        lab.grid(row=6, column=1, sticky="e")
+        wid = p_gtkwid.ThanEntry(fra, width=8)
+        wid.grid(row=6, column=2, sticky="we")
+        val = p_gtkwid.ThanValFloat(1.0e-6, 1.0e6)
+        self.thanWids.append((key, Tarch[tit], wid, val))
+        fra.columnconfigure(2, weight=1)
+
 
     def fraGeom(self, win, ir):
         "Widgets for computed stairs settings."
         fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
-        fra.grid(row=ir-2, column=1, pady=5, sticky="wesn")
+        fra.grid(row=ir-3, column=1, pady=5, sticky="wesn")
 
         lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
@@ -167,7 +247,7 @@ class ThanStairsSettings(p_gtkwid.ThanComDialog):
     def fraScale(self, win, ir):
         "Widgets for print scale."
         fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
-        fra.grid(row=ir-2, column=0, pady=5, sticky="wesn")
+        fra.grid(row=ir-3, column=0, pady=5, sticky="wesn")
 
         lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
@@ -207,10 +287,14 @@ def thanCompute(r):
 def thanValsDef():
     "Build default values."
     s = p_ggen.Struct("Stair case settings")
+    s.radType = 1               #Είδος (ευθύγραμμη, με πλατύσκαλο 180ᵒ)
+    s.radClockwise = 0          #Σχεδίαση σκάλας με πλατύσκαλο
     s.entTread = 0.30           #Πάτημα
     s.entRise  = 0.17           #Ρίχτι
     s.entTotalrise  = 3.0       #Ύψος σκάλας
     s.entWidth = 1.20           #Πλάτος σκάλας
+    s.entWell = 0.10            #Φανάρι
+    s.entLanding = s.entWidth+s.entTread  #Πλατύσκαλο
     s.entScale = 100.0
 
     s.labRise = ""

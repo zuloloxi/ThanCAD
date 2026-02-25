@@ -126,7 +126,7 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
 
     @staticmethod
     def choosefg(win):
-        "Return blue or cyan, dependinf on the background color of Labels."
+        "Return blue or cyan, depending on the background color of Labels."
         #make a dummy label to find background color, and correct foreground color
         temp = tkinter.Label(win, text="xxx")
         temp.grid()

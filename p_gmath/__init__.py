@@ -13,7 +13,7 @@ from .spl import ThanSpline, EquidistantSpline
 from .proj import (DLTProjection, Rational1Projection, Rational2Projection,
                   Rational15Projection, Polynomial1Projection, Polynomial2Projection,
                   Polynomial1_2DProjection, DLT2Projection, Rational1_2DProjection,
-                  Polynomial2_2DProjection, NonCartesian,
+                  Polynomial2_2DProjection, Similar2DProjection, NonCartesian,
                  )
 from .projutil import Projection, readProj
 from .coor import ThanRectCoorTransf, thanRoundCenter
@@ -25,6 +25,7 @@ from .thanintersect import (thanSegSeg, thanSegSeguw, thanLineSeguw, thanSegSegG
 
 from .ellipse import (ellipse5Fit, ellipse4Fit, ellipse5Lsm, ellipse4Lsm,
                      ellipseLength, ellipseArea, ellipse2Line, circle3Lsm,
+                     circleChordAngle
                     )
 from .circle import (circle3, circle2Line, circletttlines, circletttlinesnear,
     circlettrlines, circlettrlinesnear)
@@ -37,3 +38,5 @@ from .histo import histogram, histogramAuto, histogramShow
 from . import statis
 
 from .rotator import Rotator2d
+
+import decimal

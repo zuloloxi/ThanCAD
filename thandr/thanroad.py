@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the road element. It is a polyline with its corners rounded
 with circular arcs of given radius.
@@ -95,7 +95,7 @@ class ThanRoad(ThanElement):
         for cc in self.cpr:
             cc[:-1] = [cc1+dd1 for (cc1,dd1) in zip(cc[:-1], dc)] #works for python2,3
 
-    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+    def thanOsnap(self, proj, otypes, ccu, ddu, eother, cori):
         "Return a point of type in otypes nearest to xcu, ycu."
         if "ena" not in otypes: return None            # Object snap is disabled
         ps = []
@@ -111,7 +111,7 @@ class ThanRoad(ThanElement):
             if c is not None:
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "nea", c))
         if eother is not None and "int" in otypes:
-            ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+            ps.extend(thanintall.thanIntsnap(self, eother, ccu, ddu, proj))
         if len(ps) < 1: return None
         return min(ps)
 

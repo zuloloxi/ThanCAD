@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes the line join command.
@@ -112,7 +112,7 @@ def thanJoinGapn(proj, elems, disx):
 
     disx is a function which find the distance of 2 points in 2
     or 3 dimensions. The running time grows as n**3. Thus it is
-    not practical for big n, for example n > 50"""
+    not practical for big n, for example n > 50."""
     elems = list(elems)
     while len(elems) > 1:
         d = []

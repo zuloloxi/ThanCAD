@@ -1,5 +1,6 @@
 "Ellipse related module."
 from math import pi, cos, sin, atan2, sqrt, fabs
+from math import hypot, tan
 from p_gnum import (array, matrixmultiply, transpose, inv, Float, eig, zeros,
                     LinAlgError, solve_linear_equations)
 from p_ggen import frangec
@@ -367,6 +368,29 @@ def circle3Lsm(x, y):
     r2 = c + a**2 + b**2
     if r2 < 0.0: return None, "Not a circle"
     return a, b, sqrt(r2)
+
+
+def circleChordAngle(A, B, theta, pr=1):
+    """Compute cirle/arc which passes through A,B and the epicenter angle of chord AB is theta.
+
+    Returns center, radius and angles of arc AB."""
+    th2 = theta/2
+    dba = B[0]-A[0], B[1]-A[1]
+    d2 = hypot(dba[1], dba[0]) / 2
+    h = d2 / tan(th2)
+    r = d2 / sin(th2)
+    ago = atan2(dba[1], dba[0]) + pi/2;
+    G = (B[0]+A[0])/2, (B[1]+A[1])/2
+    O = list(A)
+    O[0:2] = G[0] + pr*h*cos(ago), G[1] + pr*h*sin(ago)
+
+    pi2 = 2*pi
+    dba = A[0]-O[0], A[1]-O[1]
+    tha = atan2(dba[1], dba[0]) % pi2
+    dba = B[0]-O[0], B[1]-O[1]
+    thb = atan2(dba[1], dba[0]) % pi2
+    if thb < tha: thb += pi2
+    return O, r, tha, thb
 
 
 if __name__ == "__main__":

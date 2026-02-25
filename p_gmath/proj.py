@@ -1,5 +1,5 @@
 "Projection transformation functions module."
-from math import hypot
+from math import hypot, cos, sin
 from p_gnum import array, matrixmultiply, transpose, solve_linear_equations, LinAlgError
 from .var import thanNear2
 from .lineq import linEq2
@@ -725,7 +725,7 @@ class Rational15Projection(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:
@@ -935,7 +935,7 @@ Y =   ----------------- x + ---------------- y + -----------------
         If the constant terms L[2] and L[5] are large, then numerical error creeps in.
         Thus we set L[2]=L[5]=0, which means that x=0,y=0 corresponds to xp=0,yp=0
         instead of xp=L[2],yp=L[5].
-        We compute the invserse, and then we crorrect the inverse so that xp=L[2],yp=L[5]
+        We compute the inverse, and then we correct the inverse so that xp=L[2],yp=L[5]
         corresponds to x=0,y=0.
         """
         L = list(self.L)
@@ -1016,15 +1016,15 @@ Y =   ----------------- x + ---------------- y + -----------------
     def readtfw(self, fr):
         """Reads the coefficients of the affine (2d polynomial) projection from a .tfw/.j2w files.
 
-Does not raise exceptions; it retuenrs error message as text.
+Does not raise exceptions; it returns error message as text.
 
 Affine transformation for tfw/j2w files; taken from ThanCad::ThanImage::thanTfwGet()."
 Dimitra 2012_04_03
 The relationship between EGSA87 X, Y coordinates and the pixel coordinates
-of the othophotos is the affine transformation:
+of the orthophotos is the affine transformation:
 X = ax X + bx Y + cx
 Y = ay X + by Y + cy
-The coefficents are written in ascii form in the 6 lines of
+The coeffcients are written in ascii form in the 6 lines of
 the *.tfw files:
 Line   Coefficient
 1      ax
@@ -1034,7 +1034,7 @@ Line   Coefficient
 5      cx
 6      cy
 
-In all cases seen in orthophotos of LIDAR, the coefficents ay and bx are
+In all cases seen in orthophotos of LIDAR, the coeffcients ay and bx are
 zero, rendering the equation in simpler form:
 X = ax X + cx
 Y = by Y + cy
@@ -1373,18 +1373,121 @@ class Polynomial2_2DProjection(_Projection):
 ###############################################################################
 ###############################################################################
 
+class Similar2DProjection(_Projection):
+    "2D similarity transformation: rotation, scale, translation."
+    icodp = 22
+    name = "Similarity projection in 2D"
+    NL = 4
+
+    def __init__(self, L=None):
+        "Initialize the object with known coeffcients."
+        if (L == None):
+            self.L = [0.0, 0.0, 1.0, 0.0]      # Identity transformation
+        else:
+            assert len(L) == self.NL, "There should be exactly %d coefficients for the %s projection" % (self.NL, self.name)
+            self.L = L[:]
+
+    def setTraRotSca(self, cu=(0.0,0.0), gon=0.0, am=1.0, rotcenter=(0.0, 0.0)):
+        """Compute the cofiicients from translation, rotation and scale and optionally set rotation center to othjer than 0,0.
+
+        First counterclockwise rotation (gon) around (0,0), then scale (am) around (0,0), then translation (cu)."""
+        self.L = self.coefs(cu, gon, am)
+        self.setRotcenter(rotcenter)
+
+
+    def coefs(self, cu, gon, am):
+        "Find the coefficients of the polynomial that does the trsnformation."
+        a = [cu[0],
+             cu[1],
+             am*cos(gon),
+             am*sin(gon)
+            ]
+        return a
+
+
+    def setRotcenter(self, rotcenter):
+        """Arrange the coefficients so that the rotation happens with respect to rotcenter, not (0,0).
+
+        This means that we rotate and scale around rotcenter and then we translate.
+        Note that this is NOT the same transformation as before."""
+
+        #cc[0] = a[0] + a[2]*xr - a[3]*yr -> a[0] + a[2]*(xr-xc) - a[3]*(yr-yc) + xc=>
+        #cc[0] = a[0] + a[2]*xr - a[3]*yr - a[2]*xc +a[3]*yc + xc
+        #cc[1] = a[1] + a[2]*yr + a[3]*xr -> a[0] + a[2]*(yr-yc) + a[3]*(xr-xc) + yc=>
+        #cc[1] = a[0] + a[2]*yr + a[3]*xr - a[2]*yc -a[3]*xc + yc
+        xc = rotcenter[0]
+        yc = rotcenter[1]
+        self.L[0] += -self.L[2]*xc +self.L[3]*yc + xc
+        self.L[1] += -self.L[2]*yc -self.L[3]*xc + yc
+
+
+    def project(self, c3d):
+        "Projects 3d point with polynomial projection."
+        x, y, z = c3d[:3]
+        L = self.L
+        xp = L[0] + L[2]*x - L[3]*y
+        yp = L[1] + L[2]*y + L[3]*x
+        return xp, yp, z      # The last coordinate (z) is not used
+
+
+    def lsm23(self, fots):
+        "Find similarity coefficients using least square."
+        L = []
+        A, B = [], []
+        for xg,yg,zg,xr,yr,zr,xyok,zok in fots:
+            A.append([xyok, 0.0, xg*xyok, -yg*xyok])
+            B.append(xr*xyok)
+            A.append([0.0, xyok, yg*xyok,  xg*xyok])
+            B.append(yr*xyok)
+        A = array(A)
+        B = array(B)
+
+        AT = transpose(A)
+        A = matrixmultiply(AT, A)
+        B = matrixmultiply(AT, B)
+        try: a = solve_linear_equations(A, B)
+        except LinAlgError as why:
+#            print "Match2 Simimar2D solution failed: ", why
+            return None, None, None
+        self.L = L
+        return self.er(fots)
+
+
+    def read(self, fr, skipicod=False):
+        """Reads the coefficients from an opened text file.
+
+        It is the responsibility of the caller to catch any exceptions."""
+        if skipicod: ic = self.icodp
+        else:        ic = self.readIcod(fr)
+        assert ic == self.icodp, "Well it IS a Similar 2D projection!"
+        self.L = self.readCoefs(fr, self.NL)
+
+        xp = L[0] + L[2]*xr - L[3]*yr
+        xp = L[1] + L[2]*yr + L[3]*xr
+
+    def write(self, fw):
+        "Write the projection coefficients to a text file."
+        fw.write("#{}\n".format(self.name))
+        fw.write("# x = L0 + L2 X - L3 Y\n")
+        fw.write("# y = L1 + L4 Y + L5 X\n")
+        fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
+        for i in range(self.NL): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+
+
+###############################################################################
+###############################################################################
 
 class NonCartesian(_Projection):
     """This class provides the machinery for a 2d-2d transformation, useful
     for the internal orientation in photogrammetry.
-    It transforms x, y of the world coordinate system to a new non-cartesian
+    It transforms x, y of the world coordinate system to a new non-Cartesian
     coordinate system. The new system is defined by its origin in the world
     coordinate system, and 2 unit vectors, which show the direction of the
     2 axes (not necessarily orthogonal). The scale between the world coordinate
     system and this system is 1.
     """
     icodp = 21
-    name = "Transformation to non-cartesian system in 2 dimensions"
+    name = "Transformation to non-Cartesian system in 2 dimensions"
     NL = 6
 
     def __init__(self, L=None):
@@ -1395,12 +1498,12 @@ class NonCartesian(_Projection):
                       0.0, 1.0,     # Unit vector for "Y" axis
                      ]
         else:
-            assert len(L) == self.NL, "There should be exactly %d coefficients for the non-cartesian transfornmatin in 2 dimensions" % self.NL
+            assert len(L) == self.NL, "There should be exactly %d coefficients for the non-Cartesian transformation in 2 dimensions" % self.NL
             self.L = L[:]
 
 
     def project(self, c3d):
-        "Transforms 3d point to non-cartesian system."
+        "Transforms 3d point to non-Cartesian system."
         x, y, z = c3d[:3]
         L = self.L
         x -= L[0]
@@ -1415,7 +1518,7 @@ class NonCartesian(_Projection):
 
         The first 2 points define the x-axis and the last 2 points define
         the y-axis. The origin is the intersection of the points.
-        Returns False and error message if unsuccesful and True and blank text
+        Returns False and error message if unsuccessful and True and blank text
         if it is successful."""
         if thanNear2(ca, cb): return False, "The 2 x-axis definition points are identical"
         if thanNear2(cc, cd): return False, "The 2 y-axis definition points are identical"
@@ -1440,7 +1543,7 @@ class NonCartesian(_Projection):
 
         The first 2 points define the x-axis and the last 2 points define
         the y-axis. The origin is the intersection of the points.
-        Returns False and error message if unsuccesful and True and blank text
+        Returns False and error message if unsuccessful and True and blank text
         if it is successful."""
         #from p_gvec import Vector2
         import p_ggen
@@ -1461,7 +1564,7 @@ class NonCartesian(_Projection):
     def read(self, fr, skipicod=False):
         """Reads the coefficients from an opened text file.
 
-        It is the reponsibility of the caller to catch any exceptions."""
+        It is the responsibility of the caller to catch any exceptions."""
         if skipicod: ic = self.icodp
         else:        ic = self.readIcod(fr)
         if ic == self.icodp:

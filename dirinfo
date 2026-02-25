@@ -1,19 +1,24 @@
-Τρι 20 Μαΐ 2025 06:50:28 μμ EEST
-Version 0.9.1, May 20, 2025
+Τετ 25 Ιουν 2025 10:57:49 πμ EEST
+Version 0.9.2, January 20, 2026, 2026
 
-Bug fixes της προηγούμενης έκδοσης 0.9.0 και διάφορες προσθήκες:
-a. The optline commands was implemented. It computes and draws the optimum line that
-     passes through selected points, linesm splines.
-b. The simplify command can now use 3 methods of simplifying:
-   "Least deviation (Stamos-Vassilaki)", "Max distance (Ramer–Douglas–Peucker)", and
-   "First fit (Reumann–Witkam)".
-c. ThanCad opens spreadsheets (currenty xls/xlsx) with points, lines, texts and surfaces.
-   Now, if a cell of the first column begins with a #, the whole line is considered a comment.
-   The spreadshet with points, must now have x, y, z, name, in the first 4 columns of the
-   spreadsheet. If the cell of the 3rd column (z) is blank, then zero is assumed.
-   If the cell of the 4rd column (name) is blank, then a standard point is assumed. Otherwise
-   a named point is assumed.
+Bug fixes της προηγούμενης έκδοσης 0.9.1 και διάφορες προσθήκες:
 
-Είναι το ίδιο με το thancad091 (με διαφορά ότι έχει κάποιους περισσότερους υποφακέλους).
-Επίσης είναι αυτό που ανέβασα στο helios.ntua.gr για του μαθητές μου
+a. Now you can create a circle by specifying a chord and the corresponding central angle.
+b. It is now optional to define the cutting edges in the "trim" command. If they are not
+   defined by the user, all the visible elements are cutting edges. In this case,
+   no elements are selected and the selection of the previous command is retained.
+c. The key bindings Control-C, Control-X, Control-V, Control-F transformed to
+   Control-Shift-C, Control-Shift-X, Control-Shift-V, Control-Shift-F, so that the normal copy/cut/paste
+   and find commands work with the command window.
+d. grayplaus now leads to '+' and grayminus to '-' in the command window.
+   Shift-grayplaus now brightens images and Shift-grayminus darkens images
+   Control-grayplus remains the same: zooms in 2 times, with respect to the center of the window, and
+   Control-grayminus remains the same: zooms out 2 times, with respect to the center of the window
+e. Now ThanCad can compute and draw a U-shape staircase - for architectural plan views.
+   Command 'archstairs'.
+f  Now ThanCad can draw the North symbol - for architectural plan views.
+   Command 'archnorth'.
+
+Είναι το ίδιο με το thancad092.
+Επίσης είναι αυτό που ανέβασα στο helios.ntua.gr για τους μαθητές μου
 στο μάθημα "Σχεδίαση Τεχνικών Έργων με Η/Υ".

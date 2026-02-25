@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the circular arc element.
 """
@@ -148,7 +148,7 @@ class ThanArc(ThanElement):
         self.__boundBox()
 
 
-    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+    def thanOsnap(self, proj, otypes, ccu, ddu, eother, cori):
         "Return a point of type otype nearest to point xcu, ycu."
         if "ena" not in otypes: return None            # Object snap is disabled
         ps = []
@@ -183,7 +183,7 @@ class ThanArc(ThanElement):
                 if not self.thanThetain(thet)[0]: continue
                 self.thanOsnapAdd(ccu, ps, thet, "tan")
         if eother is not None and "int" in otypes:
-            ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+            ps.extend(thanintall.thanIntsnap(self, eother, ccu, ddu, proj))
 
         if len(ps) > 0: return min(ps)
         return None

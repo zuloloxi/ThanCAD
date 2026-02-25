@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,13 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for modification commands of lines.
 """
 
 from math import hypot
+from p_gmath import thanNear2
 from thandr import ThanLine
 from thantrans import T
 from thanvar import Canc
@@ -75,8 +76,12 @@ def thanModMoveLinepoint(proj):
         else:
             continue
         i = min((hypot(c1[0]-cp1[0], c1[1]-cp1[1]), i) for i,cp1 in enumerate(elem.cp))[1]
-        stat = ""
-        if i == 0:
+        stat = T["Move to: "]
+        closed = len(elem.cp) > 1 and thanNear2(elem.cp[0], elem.cp[-1])  #Thanasis2025_06_26:hello from Tartu,Estonia
+        if closed and (i==0 or i==len(elem.cp)-1):    #Thanasis2025_06_26
+            i = 0
+            cc = proj[2].thanGudGetLine2(elem.cp[-2], elem.cp[1], stat, statonce="", options=())
+        elif i == 0:
             cc = proj[2].thanGudGetLine(elem.cp[1], stat, statonce="", options=())
         elif i == len(elem.cp)-1:
             cc = proj[2].thanGudGetLine(elem.cp[-2], stat, statonce="", options=())  #Here it is guarnteed that at least 2 points are present in the line
@@ -87,6 +92,8 @@ def thanModMoveLinepoint(proj):
         en = elem.thanClone()
         if retainz: en.cp[i][:2] = cc[:2]
         else:       en.cp[i][:] = cc
+        if closed and i==0: en.cp[-1][:] = en.cp[0]  #Thanasis2025_06_26:
+
         newelems = [en]
         #lay = dilay[elem.thanTags[1]]
         #for e in newelems: proj[1].thanElementTag(e, lay)

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes various commands.
@@ -433,11 +433,13 @@ def thanDevHandle(proj):
     proj[2].thanGudCommandEnd()
 
 
-
-
 def thanHighlightZero(proj):
-    "Show briefely all (currently visible) lines and point with elevation 0."
-    elev2show = 0.0
+    "Show briefly all (currently visible) lines and point with elevation equal to current elevation (usually 0)."
+    #elev2show = 0.0
+    c = proj[1].thanVar["elevation"]          # Reference to the elevation list
+    elev2show = c[2]
+    if thanNearElev(0.0, elev2show): t = "zero"
+    else:                            t = proj[1].thanUnits.strdis(elev2show)
 
     ThanLine = thandr.ThanLine
     ThanPoint = thandr.ThanPoint
@@ -454,9 +456,10 @@ def thanHighlightZero(proj):
                 if not thanNearElev(c1[2], elev2show): break
             else:
                 elzer.append(e)
-    if len(elzer) == 0: return proj[2].thanGudCommandCan(T["No elements with zero elevation found."])
+    if len(elzer) == 0: return proj[2].thanGudCommandCan(T["No elements with elevation {} found."].format(t))
 
-    proj[2].thanGudSetSelExternalFilter(None)
+    proj[2].thanGudSetSelExternalFilter(None)            #Delete filter
+
     proj[2].thanGudGetSelElemx(elzer)
     proj[2].thanGudSetSelColorx()
     text = "z=" + proj[2].than.strdis(elev2show)
@@ -465,8 +468,8 @@ def thanHighlightZero(proj):
     n = len(elzer)
     nmax = 20
     if n > nmax:
-        proj[2].thanPrter1("Too many lines/points with zero elevations: only {} elevations are shown".format(nmax))
-        proj[2].thanPrter1("(zoom in, in oder to limit the search area)")
+        proj[2].thanPrter1("Too many lines/points with elevation {}: only {} elevations are shown".format(t, nmax))
+        proj[2].thanPrter1("(zoom in, in order to limit the search area)")
         n = nmax
     for i in range(n):
         e = elzer[i]

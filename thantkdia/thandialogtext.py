@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter some text associated with a
 ThanCad element.
@@ -43,7 +43,7 @@ class ThanElemtext(p_gtkwid.ThanDialog):
         self.__master = master
         kw.setdefault("title", T[u"ΣΗΜΕΙΩΣΕΙΣ - ΣΧΟΛΙΑ"])
 #       kw.setdefault("buttonlabels", ("Save and Exit", "Cancel", "Save and Run"))
-        p_gtkwid.ThanDialog.__init__(self, master, buttonlabels=3, *args, **kw)
+        super().__init__(master, buttonlabels=3, *args, **kw)
 
 
     def __position(self):
@@ -59,7 +59,7 @@ class ThanElemtext(p_gtkwid.ThanDialog):
     def destroy(self):
         "Break circular references."
         del self.thanHelp, self.thanValsInit, self.thanProj, self.thanValsSaved
-        p_gtkwid.ThanDialog.destroy(self)
+        super().destroy()
 
 
     def __del__(self):
@@ -70,20 +70,28 @@ class ThanElemtext(p_gtkwid.ThanDialog):
     def body(self, win):
         fra = Frame(win)
         fra.grid(row=0, column=0, sticky="we")
-        but = Button(fra, text="Do nothing", background="lightcyan", activebackground="cyan")
+        but = p_gtkwid.ThanButton(fra, text="Do nothing")
         but.grid(row=0, column=0, sticky="w")
         fra.columnconfigure(0, weight=1)
 
-        self.thanHelp = p_gtkwid.ThanScrolledText(win, hbar=False, vbar=True, font=None,
-            background="lightyellow", foreground="black", width=80, height=25)
+        self.thanHelp = p_gtkwid.ThanScrolledText(win, hbar=False, vbar=True, font=None, width=80, height=25)
         self.thanHelp.grid(row=1, column=0, sticky="wesn")
         self.thanSet(self.thanValsInit)
         win.columnconfigure(0, weight=1)
         win.rowconfigure(1, weight=1)
         self.thanValsSaved = self.thanValsInit[:]
         self.__position()
-        self.unbind("<Return>")
+        #self.unbind("<Return>")   #Thanasis2025_10_24:commented out: this does not work, because bind() is called after this function
+        #self.unbind("<KP_Enter>") #Thanasis2025_10_24:commented out: this does not work, because bind() is called after this function
         self.thanTkSetFocus()
+
+
+    def buttonbox3(self):  #Thanasis2025_10_24
+        "Intercept buttonbox3() where the bindings are done, and after buttonbox3(), unbind the bindings."
+        super().buttonbox3()
+        self.unbind("<Return>")
+        self.unbind("<KP_Enter>")
+
 
     def thanTkSetFocus(self):
         "Sets focus to the command window."
@@ -104,20 +112,17 @@ class ThanElemtext(p_gtkwid.ThanDialog):
     def cancel(self, *args):
         "Ask before cancel."
         if not self.validate(strict=False):   # If anything is wrong, then it must have been changed
-            print("cancel: not validated")
             a = p_gtkwid.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
         elif self.result != self.thanValsSaved: # If anything is wrong, then it must have been changed
-            print(self.thanValsSaved)
-            print(self.result)
             a = p_gtkwid.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
-        p_gtkwid.ThanDialog.cancel(self, *args)
+        super().cancel(*args)
 
 
     def apply2(self, *args):
         "Save the data given and run the program."
-        ret = p_gtkwid.ThanDialog.apply2(self)
+        ret = super().apply2()
         if not ret: return
         self.thanValsSaved = self.result
 

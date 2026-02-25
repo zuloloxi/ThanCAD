@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module contains a mixin for the various 3d-2d and 2d-2d transformations
 available to ThanCad.
@@ -44,9 +44,10 @@ class TransfMixin:
          ("Rational Polynomial Projection of second order",4),
          ("Rational Polynomial Projection of 2/1 order",   5),
          ("Direct Linear Transform",                      11),
-         ("Rational Polynomial Projection of first order",12),
+         ("Similarity Transformation",                    22),
          ("Polynomial Projection of first order",         10),
          ("Polynomial Projection of second order",        13),
+         ("Rational Polynomial Projection of first order",12),
         )
 
     def thanProjectFromlib(self, icodp):
@@ -96,7 +97,7 @@ class TransfMixin:
         for i in range(4, 6):
             wid = rad.add_button(text=Tmatch[pc[3+i][0]])
             wid.grid(row=i+2, column=0, sticky="w")
-        for i in range(4, 6):
+        for i in range(4, 7):
             wid = rad.add_button(text=Tmatch[pc[5+i][0]])
             wid.grid(row=i+2, column=2, sticky="w")
         wid = tkinter.Frame(rad)

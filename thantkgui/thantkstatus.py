@@ -1,9 +1,7 @@
-# -*- coding: iso-8859-7 -*-
-
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -23,12 +21,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module implements an information status bar.
 """
-from tkinter import Frame, Label, SUNKEN, W, E
+from tkinter import Frame, SUNKEN, W, E
 from p_ggen import prg
+import p_gtkwid
 from thantrans import T
 
 class ThanStatusBar(Frame):
@@ -38,11 +37,11 @@ class ThanStatusBar(Frame):
         "Initialise base classes and create status bar (as a label)."
         self.__proj = None
         Frame.__init__(self, master, **kw)
-        self.thanTypeCoor = Label(self, text=T["World xyz"]+":", anchor=E, width=10)
+        self.thanTypeCoor = p_gtkwid.ThanLabel(self, text=T["World xyz"]+":", anchor=E, width=10)
         self.thanTypeCoor.grid(row=0, column=0, sticky="e")
-        self.thanCoor = Label(self, text="", bd=1, relief=SUNKEN, anchor=W, width=30)
+        self.thanCoor =p_gtkwid.ThanLabel(self, text="", bd=1, relief=SUNKEN, anchor=W, width=30)
         self.thanCoor.grid(row=0, column=1, sticky="w")
-        self.thanInfo = Label(self, text="This is ThanCad", bd=1, relief=SUNKEN, anchor=W, width=20)
+        self.thanInfo = p_gtkwid.ThanLabel(self, text="This is ThanCad", bd=1, relief=SUNKEN, anchor=W, width=20)
         self.thanInfo.grid(row=0, column=2, sticky="we")
         self.columnconfigure(2, weight=1)
         self.rowconfigure(0, weight=1)
@@ -68,8 +67,9 @@ class ThanStatusBar(Frame):
         self.__cp = tuple(cp)
         self.thanCoor.config(text=self.strcoo(cp))
         if self.__curType != "w":
-            self.thanTypeCoor.config(text=T["World xyz"]+":", width=10, fg="black")
-            self.thanCoor.config(fg="black")
+            col = p_gtkwid.blackorwhite(self.thanCoor)
+            self.thanTypeCoor.config(text=T["World xyz"]+":", width=10, fg=col)
+            self.thanCoor.config(fg=col)
             self.thanInfo.config(text=self.__info[-1])
             self.__curType = "w"
         self.thanCoor.update_idletasks()
@@ -86,10 +86,12 @@ class ThanStatusBar(Frame):
             self.thanCoor.config(text="%.3f %.3f" % (px, py))
             if self.__curType != "i":
                 s = T["Image xy (mm)"]+":"
-                self.thanTypeCoor.config(text=s, width=len(s), fg="darkgreen")
-                self.thanCoor.config(fg="darkgreen")
+                col = p_gtwid.blueorcyan(self.thanCoor, "darkgreen", "green")
+                self.thanTypeCoor.config(text=s, width=len(s), fg=col)
+                self.thanCoor.config(fg=col)
                 self.thanInfo.config(text=self.__info[-1])
                 self.__curType = "i"
+                self.thanCoor.update_idletasks()
             return
         self.__coorWorld(cp)         #Non-cartesian system not defined: display world coordinates
 
@@ -104,11 +106,13 @@ class ThanStatusBar(Frame):
             self.thanCoor.config(text="%d %d" % (px, py))
             if True:             #Force redrawing of the type (because the image may have changed)
                 s = T["Pixel xy"]+":"
-                self.thanTypeCoor.config(text=s, width=len(s), fg="blue")
-                self.thanCoor.config(fg="blue")
+                col = p_gtkwid.blueorcyan(self.thanCoor)
+                self.thanTypeCoor.config(text=s, width=len(s), fg=col)
+                #print("__coorImage(): s=", s)
+                self.thanCoor.config(fg=col)
                 self.thanInfo.config(text=im.filnam)
                 self.__curType = "p"
-            self.thanCoor.update_idletasks()
+                self.thanCoor.update_idletasks()
             return
         self.__coorWorld(cp)         #No image was found: display world coordinates
 

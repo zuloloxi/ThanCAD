@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the circle element.
 """
@@ -29,7 +29,7 @@ This module defines the circle element.
 from math import fabs, pi, cos, sin, tan, hypot, atan2
 import bisect
 from p_gmath import (PI2, thanintersect, thanNearx, thanNear2, circle3,
-    circle2Line, circlettrlinesnear, circletttlinesnear)
+    circle2Line, circlettrlinesnear, circletttlinesnear, circleChordAngle)
 from p_ggen import prg, frange, thanUnicode, Canc
 from thanvar import thanExtendNodeDims, thanFilletCalc, thanPilCircle
 from thantrans import T
@@ -101,7 +101,7 @@ class ThanCircle(ThanElement):
         self.cc = [cc1+dd1 for (cc1,dd1) in zip(self.cc, dc)]   #works for python2,3
         self.setBoundBox([self.cc[0]-self.r, self.cc[1]-self.r, self.cc[0]+self.r, self.cc[1]+self.r])
 
-    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+    def thanOsnap(self, proj, otypes, ccu, ddu, eother, cori):
         "Return a point of type in otypes nearest to point ccu."
         if "ena" not in otypes: return None            # Object snap is disabled
         ps = []
@@ -135,7 +135,7 @@ class ThanCircle(ThanElement):
             for cn in self.thanPerpPoints(cori):
                 ps.append((fabs(cn[0]-ccu[0])+fabs(cn[1]-ccu[1]), "per", cn))
         if eother is not None and "int" in otypes:
-            ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+            ps.extend(thanintall.thanIntsnap(self, eother, ccu, ddu, proj))
         if len(ps) > 0: return min(ps)
         return None
 
@@ -257,8 +257,8 @@ class ThanCircle(ThanElement):
 
     def thanTkGet(self, proj):
         "Gets the attributes of the circle interactively from a window."
-        cc = proj[2].thanGudGetPoint(T["Center [3p=3 points/2p=2 points/Ttr (tan tan radius)/ttt (tan tan tan)]: "],
-            options=("3Points","2Points", "Ttr", "ttt"))
+        cc = proj[2].thanGudGetPoint(T["Center [3p=3 points/2p=2 points/Ttr (tan tan radius)/ttt (tan tan tan)/Chord and angle]: "],
+            options=("3Points","2Points", "Ttr", "ttt", "Chord"))
         if cc == Canc: return Canc               # Circle cancelled
         if cc == "3":
             cc1 = proj[2].thanGudGetPoint(T["First point on circle: "])
@@ -285,6 +285,9 @@ class ThanCircle(ThanElement):
             if cc == Canc: return Canc               # Circle cancelled
         elif cc == "ttt":
             cc, r = self.__ttt(proj)
+            if cc == Canc: return Canc               # Circle cancelled
+        elif cc == "c":
+            cc, r = self.__chord(proj)
             if cc == Canc: return Canc               # Circle cancelled
         else:
             r = proj[2].thanGudGetCircle(cc, 1.0, T["Radius (D=Diameter): "], options=("Diameter",))
@@ -387,6 +390,31 @@ class ThanCircle(ThanElement):
             return Canc, Canc
         cc = list(proj[1].thanVar["elevation"])
         cc[:2] = ce
+        return cc, r
+
+
+    def __chord(self, proj):
+        """Gets a circle interactively with geometry: chord and central angle corresponding to this chord.
+
+        The elevation of the circle is the elevation of the first point of the chord."""
+        c1 = proj[2].thanGudGetPoint(T["First point of chord: "])
+        if c1 == Canc: return Canc, Canc        # Circle cancelled
+        c2 = proj[2].thanGudGetLine(c1, T["Last point of chord: "])
+        if c2 == Canc: return Canc, Canc        # Circle cancelled
+        if thanNear2(c1, c2):
+            proj[2].thanPrter(T["Chord has zero length"])
+            return Canc, Canc
+
+        un = proj[1].thanUnits
+        st = "%s(%s): " % (T["Chord central angle"], un.anglunit)
+        while True:
+            theta = proj[2].thanGudGetPosFloat(st)
+            if theta == Canc: return Canc, Canc     # Circle cancelled
+            theta = un.unit2rad(theta) % PI2
+            if not thanNearx(theta+PI2, PI2) and not thanNearx(theta, PI2): break
+            proj[2].thanPrter(T["Invalid angle. Try again."])
+
+        cc, r, tha, thb = circleChordAngle(c1, c2, theta, pr=1)
         return cc, r
 
 

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 It implements ThanCad command line window.
 """
@@ -58,18 +58,19 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         self.bindte("<Control-Left>", proj[2].thanCanvas.thanPanpageleft)
         self.bindte("<Control-Right>",proj[2].thanCanvas.thanPanpageright)
 
-        self.bindte("<KP_Add>",      self.__onGrayplus)
-        self.bindte("<KP_Subtract>", self.__onGrayminus)
-        self.bindte("<Control-KP_Add>",      self.__onCtrlGrayplus)
-        self.bindte("<Control-KP_Subtract>", self.__onCtrlGrayminus)
-        self.bindte("<Control-C>", self.__copyclip)
-        self.bindte("<Control-c>", self.__copyclip)
-        self.bindte("<Control-X>", self.__cutclip)
-        self.bindte("<Control-x>", self.__cutclip)
-        self.bindte("<Control-V>", self.__pasteclip)
-        self.bindte("<Control-v>", self.__pasteclip)
-        self.bindte("<Control-F>", self.__find)
-        self.bindte("<Control-f>", self.__find)
+        self.bindte("<Shift-KP_Add>",      self.__onGrayplus)     #Thanasis2025-10-24: gray -> Shift-gray  (brightens images)
+        self.bindte("<Shift-KP_Subtract>", self.__onGrayminus)    #Thanasis2025-10-24: gray -> Shift-gray  (darkens images)
+        self.bindte("<Control-KP_Add>",      self.__onCtrlGrayplus)   #zooms in by a factor of 2
+        self.bindte("<Control-KP_Subtract>", self.__onCtrlGrayminus)  #zooms out by a factor of 2
+
+        self.bindte("<Control-Shift-C>", self.__copyclip)   #Thanasis2025-10-14: Control -> Control-Shift (and following commands)
+        self.bindte("<Control-Shift-c>", self.__copyclip)
+        self.bindte("<Control-Shift-X>", self.__cutclip)
+        self.bindte("<Control-Shift-x>", self.__cutclip)
+        self.bindte("<Control-Shift-V>", self.__pasteclip)
+        self.bindte("<Control-Shift-v>", self.__pasteclip)
+        self.bindte("<Control-Shift-F>", self.__find)
+        self.bindte("<Control-Shift-f>", self.__find)
 
         if p_ggen.Pyos.Windows:
             self.bindte("<MouseWheel>",       self._mouseWheelp)      #This ugly hack is for Windows

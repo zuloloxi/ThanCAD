@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides various high level selection routines.
@@ -171,7 +171,7 @@ def thanSelMultquads(proj, nsel, statonce1, strict=False, name="LINE"):
 
 
 def thanSelectCrosClear(proj, c1, c2, filter):
-    "Select and get elements in crossing widnow, and then clear selection without user intervention."
+    "Select and get elements in crossing window, and then clear selection without user intervention."
     proj[2].thanGudSetSelExternalFilter(filter)                 # Set filter
     proj[2].thanGudSetSelSave()                                 # Save old selection
     res = proj[2].thanGudGetSelCros(c1[0], c1[1], c2[0], c2[1]) # Select crossing
@@ -183,7 +183,7 @@ def thanSelectCrosClear(proj, c1, c2, filter):
 
 
 def thanSelMultLinsegs(proj, nsel, statonce, options=()):
-    "Selects nsel line segments; return line segents neareast to the cursor when clicked."
+    "Selects nsel line segments; return line segents nearest to the cursor when clicked."
     than = proj[2].than
     g2l = than.ct.global2Local
     elems = []

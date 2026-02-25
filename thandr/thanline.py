@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the polyline element.
 """
@@ -38,7 +38,7 @@ from thanvar.thanoffset import thanOffsetLine
 from thantrans import T
 from . import thanintall
 from .thanelem import ThanElement
-from .thanutil import thanPntNearest2, thanSegNearest, thanPerpPoints, thanPerpPointsC
+from .thanutil import thanPntNearest2, thanSegNearest, thanPerpPoints, thanPerpPointsC, thanIterPntNear2
 try: import pyx
 except ImportError: pass
 
@@ -131,7 +131,7 @@ class ThanLine(ThanElement):
         self.cp.reverse()
 
 
-    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+    def thanOsnap(self, proj, otypes, ccu, ddu, eother, cori):
         "Return a point of type otype nearest to ccu."
         if "ena" not in otypes: return None            # Object snap is disabled
         ps = []
@@ -150,7 +150,7 @@ class ThanLine(ThanElement):
             for c in self.thanPerpPoints(cori):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "per", c))
         if eother is not None and "int" in otypes:
-            ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+            ps.extend(thanintall.thanIntsnap(self, eother, ccu, ddu, proj))
         if len(ps) < 1: return None
         return min(ps)
 
@@ -167,6 +167,9 @@ class ThanLine(ThanElement):
     def thanSegNearest(self, ccu):
         """Finds the nearest segment of this line to a point."""
         return thanSegNearest(self.cp, ccu)
+    def thanIterPntNear2(self, ccu, ddu):      #Thanasis2021_11_26: Now it also checks distance from nodes
+        "Iterates through the segments of a polyline, whose diastances is <= ddu from point ccu."
+        return thanIterPntNear2(self.cp, ccu, ddu)      #Thanasis2021_11_26: Now it also checks distance from nodes
 
 
     def thanTrim(self, ct, cnear):
@@ -174,19 +177,37 @@ class ThanLine(ThanElement):
         cp = []
         for c in ct:
             cn, i, t = self.thanPntNearest2(c)
-            cp.append((t, i, c))
             assert cn is not None, "It should have been checked (that ct are indeed near line)!"
+            self.__expandInteresections(cp, cn)    #Point cn is exactly on the polyline
         cp.sort()
         cn, i, t = self.thanPntNearest2(cnear)
         cpnear = t, i, cn
         assert cpnear[2] is not None, "It should have been checked (that cnear are indeed near line)!"
         i = bisect.bisect_right(cp, cpnear)
-        if i == 0:
-            return self.thanBreak(self.cp[0], cp[0][2])  # User selected the segment before the first intesection (ct)
-        elif i == len(cp):
-            return self.thanBreak(cp[-1][2], self.cp[-1])# User selected the segment after the last intesection (ct)
-        else:
-            return self.thanBreak(cp[i-1][2], cp[i][2])  # User selected the segment between i-1 and i intesections (ct)
+        if i == 0:                       # User selected the segment before the first intesection (ct)
+            cp1, i1, tcp1 = self.cp[0], 1, 0.0
+            tcp2, i2, cp2 = cp[0]
+            #return self.thanBreak(self.cp[0], cp[0][2])  # User selected the segment before the first intesection (ct)
+        elif i == len(cp):               # User selected the segment after the last intesection (ct)
+            tcp1, i1, cp1 = cp[-1]
+            cp2, i2, tcp2 = self.thanPntNearest2(self.cp[-1])
+            #return self.thanBreak(cp[-1][2], self.cp[-1])# User selected the segment after the last intesection (ct)
+        else:                            # User selected the segment between i-1 and i intesections (ct)
+            tcp1, i1, cp1 = cp[i-1]
+            tcp2, i2, cp2 = cp[i]
+            #return self.thanBreak(cp[i-1][2], cp[i][2])  # User selected the segment between i-1 and i intesections (ct)
+        return self.thanBreak2(cp1, i1, tcp1, cp2, i2, tcp2)
+
+
+    def __expandInteresections(self, cp, ca):
+        """Find all the occurences of ca on the polyline with different distance from start; point c must lie exactly on the polyline.
+
+        This is needed if the polyline is self interesected, and point c is one of the intersections."""
+        for cn, i, t in self.thanIterPntNear2(ca, -1.0):
+            for t1, i1, cn1 in cp:
+                if thanNearx(t, t1): break    #Remove duplicate intersections (with same distance from start)
+            else:
+                cp.append((t, i, cn))
 
 
     def thanBreak(self, c1=None, c2=None):
@@ -196,9 +217,13 @@ class ThanLine(ThanElement):
         cp2, i2, tcp2 = self.thanPntNearest2(c2)
         #print("ThanLine.thanBreak: cp1, i1, tcp1=", cp1, i1, tcp1)
         #print("ThanLine.thanBreak: cp2, i2, tcp2=", cp2, i2, tcp2)
+        return self.thanBreak2(cp1, i1, tcp1, cp2, i2, tcp2)
+
+
+    def thanBreak2(self, cp1, i1, tcp1, cp2, i2, tcp2):
+        "Breaks a line to 2 pieces; cp1 and cp2 may be identical."
         if tcp2 < tcp1:
             cp1, i1, cp2, i2 = cp2, i2, cp1, i1
-        assert cp1 is not None and cp2 is not None, "It should have been checked (that c1 and c2 are indeed near line)!"
         cs1 = self.cp[:i1]
         if len(cs1) > 0:
             cs1.append(cp1)
@@ -275,7 +300,7 @@ class ThanLine(ThanElement):
         return p_ggeom.area(self.cp)
 
 
-    def thanStraighten(self, c1=None, c2=None):
+    def thanStraightenold(self, c1=None, c2=None):
         "Straighten the line between c1 and c2; c1 and c2 may not be identical."
         if c1 is None: return True                 # Report that Straighten IS implemented
         cp1, i1, tcp1 = self.thanPntNearest2(c1)
@@ -291,6 +316,26 @@ class ThanLine(ThanElement):
         cs1.extend(self.cp[i2:])
         e = ThanLine()         #A new line is created to aid undo/redo mechanism
         e.thanSet(cs1)         #This also clears zero length segments
+        return e
+
+
+    def thanStraighten(self, c1=None, c2=None):
+        "Straighten the line between c1 and c2; c1 and c2 may not be identical."
+        if c1 is None: return True                 # Report that Straighten IS implemented
+        e1, e2 = self.thanBreak(c1, c2)
+        if e1 is None and e2 is None:   #One line segment from start to end
+            cs1 = [self.cp[0], self.cp[-1]]
+            e = ThanLine()         #A new line is created to aid undo/redo mechanism
+            e.thanSet(cs1)         #This also clears zero length segments
+        elif e1 is None:
+            e2.cp.insert(0, self.cp[0])
+            e = e2
+        elif e2 is None:
+            e1.cp.append(self.cp[-1])
+            e = e1
+        else:
+            e1.cp.extend(e2.cp)
+            e = e1
         return e
 
 
@@ -800,7 +845,7 @@ class ThanCurve(ThanLine):
         self.thtol = tol*pi/180
 
 
-    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+    def thanOsnap(self, proj, otypes, ccu, ddu, eother, cori):
         "Return a point of type in otypes nearest to xcu, ycu."
         if "ena" not in otypes: return None            # Object snap is disabled
         ps = []
@@ -826,7 +871,7 @@ class ThanCurve(ThanLine):
             for c in self.thanPerpPoints(cori):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "per", c))
         if eother is not None and "int" in otypes:
-            ps.extend(thanintall.thanIntsnap(self, eother, ccu, proj))
+            ps.extend(thanintall.thanIntsnap(self, eother, ccu, ddu, proj))
         if len(ps) < 1: return None
         return min(ps)
 

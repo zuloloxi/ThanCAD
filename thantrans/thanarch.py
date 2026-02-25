@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -110,7 +110,7 @@ en2gr = \
 "&Stairs"                                         : u"Σκάλα",
 "Computes and draws the plan view of a simple staircase": u"Υπολογισμός και σχεδίαση κάτοψης απλής σκάλας",
 "Step tread"                                      : u"Πάτημα",
-"Step rise"                                       : u"Ύψος (ριχτι)",
+"Step rise"                                       : u"Ύψος (ρίχτι)",
 "Stairs width"                                    : u"Πλάτος σκάλας",
 "Stairs total rise"                               : u"Συνολικό ύψος σκάλας",
 "Print scale"                                     : u"Κλίμακα εκτύπωσης",
@@ -126,8 +126,19 @@ en2gr = \
 "PRINT SCALE:"                                    : u"ΚΛΙΜΑΚΑ ΕΚΤΥΠΩΣΗΣ:",
 "Print scale 1/"                                  : u"Κλίμακα εκτύπωσης 1/",
 "Staircase rotation angle (enter=0): "            : u"Γωνία περιστροφής σκάλας (enter=0): ",
-"T=%.2f"                                          : "π=%.2f",      #No unincode here
-"R=%.3f"                                          : "υ=%.3f",      #No unincode here
+"Staircase"                                       : u"Σκάλα",
+"U-shaped staircase"                              : u"Σκάλα με ενδιάμεσο πλατύσκαλο 180ᵒ",
+"Draw flights"                                    : u"Σχεδίαση βραχιόνων",
+"STAIRCASE TYPE:"                                 : u"ΕΙΔΟΣ ΣΚΑΛΑΣ:",
+"Straight staircase"                              : u"Ευθύγραμμη σκάλα",
+"Staircase type"                                  : u"Είδος σκάλας",
+"STAIRCASE DRAWING OPTIONS:"                      : u"ΕΠΙΛΟΓΕΣ ΣΧΕΔΙΑΣΗΣ ΣΚΑΛΑΣ:",
+"Counter-clockwise"                               : u"Ανθωρολογιακά",
+"Clockwise"                                       : "Ανθωρολογιακά",
+"Staircase drawing options"                       : u"Επιλογές σχδίασης σκάλας",
+"Well hole"                                       : u"Φανάρι",
+"Landing width"                                   : u"Πλάτος πλατύσκαλου",
+"TR"                                              : u"πυ",
 }
 Tarch = Translation(en2gr)
 #Tarch.thanLangSet("en", thancadconf.thanTranslateTo)

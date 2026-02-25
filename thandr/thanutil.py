@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines utilities for lines.
 """
@@ -65,7 +65,7 @@ def thanPntNearest2(cp, ccu):      #Thanasis2021_11_26: Now it also checks dista
         r"""Finds the nearest point of this line to a point.
 
             o         26/11/2021
-                      Note that the projection of point "o" to segment 1-3 (3 is the top node of the line)
+         3            Note that the projection of point "o" to segment 1-3 (3 is the top node of the line)
            /\         is not inside the segment 1-3. Also, the projection of point "o" to segment 2-3
           /  \        is not inside the segment 1-3.
          /    \ 2     However point "o" IS near the line, and particularly it is near node 3. Thus
@@ -105,6 +105,66 @@ def thanPntNearest2(cp, ccu):      #Thanasis2021_11_26: Now it also checks dista
                 iseg = i
                 tcp1 = tall - aa + dt
         return cp1, iseg, tcp1
+
+
+
+def thanIterPntNear2(cp, ccu, ddu):      #Thanasis2021_11_26: Now it also checks distance from nodes
+        r"""Iterates through the segments of a polyline, whose diastances is <= ddu from point ccu.
+
+        if ddu < 0, then point ccu must be exactly on the polyline.
+
+            o         26/11/2021
+         3            Note that the projection of point "o" to segment 1-3 (3 is the top node of the line)
+           /\         is not inside the segment 1-3. Also, the projection of point "o" to segment 2-3
+          /  \        is not inside the segment 1-3.
+         /    \ 2     However point "o" IS near the line, and particularly it is near node 3. Thus
+      1 /             all the nodes of the lines must be checked explicitely.
+        """
+        if len(cp) < 2: return
+        tall = 0.0
+        i = 0
+        dn = hypot(cp[i][0]-ccu[0], cp[i][1]-ccu[1])     #Distance of first polyline point to ccu
+        for i in range(1, len(cp)):
+            dp = dn
+            a = cp[i][0]-cp[i-1][0], cp[i][1]-cp[i-1][1]
+            aa = hypot(*a)
+            tall += aa
+            dn = hypot(cp[i][0]-ccu[0], cp[i][1]-ccu[1]) #Distance of next polyline point to ccu
+            if thanNearx(aa, 0.0): continue      # Segment has zero length
+
+            #Least distance of line segment i to ccu is the minmimum of:
+            #a. Distance of first line segment point to ccu
+            #b. Distance of last line segment point to ccu
+            #c. If the projection of ccu to the line segemnt, is within the line segment,
+            #   the distance from the projection to ccu
+            if True:                   #Distance from first point of line segment i to ccu
+                cp1 = list(cp[i-1])
+                dmin = dp
+                iseg = i
+                tcp1 = tall-aa
+            if dn < dp:                #Distance from last point of line segment i to ccu
+                cp1 = list(cp[i])
+                dmin = dn
+                iseg = i
+                tcp1 = tall
+
+            ta = a[0]/aa, a[1]/aa
+            b = ccu[0]-cp[i-1][0], ccu[1]-cp[i-1][1]
+            dt = ta[0]*b[0]+ta[1]*b[1]
+            if   thanNearx(aa+dt, aa+0.0): dt = 0.0
+            elif thanNearx(dt, aa)       : dt = aa
+            if 0.0 <= dt <= aa:
+                dn = fabs(-ta[1]*b[0]+ta[0]*b[1])   #Perpendicular distance of line segment i to ccu
+                if dn < dmin:
+                    cp1 = [e+(f-e)*dt/aa for (e,f) in zip(cp[i-1], cp[i])]
+                    dmin = dn
+                    iseg = i
+                    tcp1 = tall - aa + dt
+            if ddu < 0.0:        #In this case ccu must be exactly on the polyline
+                if thanNearx(aa+dmin, aa):
+                    yield cp1, iseg, tcp1
+            elif dmin <= ddu:    #In this case dmin should be <= ddu
+                yield cp1, iseg, tcp1
 
 
 def thanSegNearest(cp, ccu):

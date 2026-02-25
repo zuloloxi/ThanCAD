@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for a modification commands.
@@ -295,18 +295,17 @@ def thanModTrim(proj):
     The selections of 1 breakable element are not recorded.
     """
     from thandr import thanintall
-    proj[2].thanPrt(T["Select elements to be used as cutting edges:"])
-    res = thancomsel.thanSelectGen(proj, standalone=False, filter=thanFilterCut)
-    if res == Canc: return thanModCanc(proj)               # Rotation cancelled
-    elcut = proj[2].thanSelall
-    selold = proj[2].thanSelold
-    proj[2].thanUpdateLayerButton()                   # Show current layer again
+    selold = proj[2].thanSelall  #Before executing command trim, this is the selection of the previous command, and we save it as selold
+
     iel = 0
     dodo = []             # Undo/Redo list
     mes1 = T["Select an element to trim"]
     dilay = proj[1].thanLayerTree.dilay
+    first = True
+    dynamicedges = True   #if the user does not select the cutting edges, the edges are all the visble elements
     while True:
         opts = []
+        if first: opts.append("Select cutting edges")
         if iel > 0: opts.append("undo")
         if len(dodo) > iel: opts.append("redo")
         if len(opts) > 0: mes = "%s (%s): " % (mes1, "/".join(opts))
@@ -315,6 +314,25 @@ def thanModTrim(proj):
         res = thancomsel.thanSelect1Gen(proj, mes, filter=lambda e: e.thanBreak(), options=opts)
         if res == Canc: break                         # Trim was cancelled/ended
         if res == "": break                           # Trim was cancelled/ended
+        if first and res == "s": #select cutting edges
+            proj[2].thanPrt(T["Select elements to be used as cutting edges:"])
+            res = thancomsel.thanSelectGen(proj, standalone=False, filter=thanFilterCut)
+            if res == Canc: return thanModCanc(proj)               # Trim cancelled
+            selall = elcut = proj[2].thanSelall      #User has selected the cutting edges
+            #if len(selall) == 0: return thanModCanc(T["No cutting edges selected"])
+            proj[2].thanUpdateLayerButton()                   # Show current layer again
+            first = False
+            dynamicedges = False
+            continue
+        if first and res != "s":  #cutting edges are all visible elements
+            selall = selold     #The user did not make any selection, so we retain the selection of previous command
+            first = False
+            dynamicedges = True
+        if dynamicedges:   #Note the cutting edges must be updated after every trim (if the user did not select the cutting edges)
+            proj[2].thanGudSetSelExternalFilter(thanFilterCut)
+            elcut = proj[2].thanGudGetDisplayed()
+            proj[2].thanGudSetSelExternalFilter(None)   #Reset filter
+            #if len(elcut) == 0: return thanModCanc(T["No cutting edges found"])
         if res == "u":
             iel -= 1
             delelems, newelems = dodo[iel]
@@ -352,7 +370,7 @@ def thanModTrim(proj):
         dodo.append(((elem,), newelems))
         iel += 1
 
-    proj[2].thanGudSetSelElem(elcut)          # The current selection (cutting edges)
+    proj[2].thanGudSetSelElem(selall)         # The current selection (cutting edges if user made a selection)
     proj[2].thanGudSetSeloldElem(selold)      # The selection before the command trim started
     if iel == 0: return thanModCanc(proj)     # Trim was cancelled: unselect cutting edges
 #    delelems = []
@@ -372,12 +390,12 @@ def thanModTrim(proj):
             else:
                 #print(e, "is to be deleted")
                 delelems.append(e)
-        print(newelemsi, "are to be added")
+        #print(newelemsi, "are to be added")
         newelems.extend(newelemsi)
     #print("delelems=", delelems)
     #print("newelems=", newelems)
 
-    proj[1].thanDoundo.thanAdd("trim", thanundo.thanReplaceRedo, (delelems, newelems, elcut),
+    proj[1].thanDoundo.thanAdd("trim", thanundo.thanReplaceRedo, (delelems, newelems, selall),
                                        thanundo.thanReplaceUndo, (delelems, newelems, selold))
     thanModEnd(proj)
 
@@ -429,7 +447,7 @@ def thanModRotate(proj):
 
 
 def __modRotateDo(proj, cc, phi):
-    "Rotates selected elements; it actualy does the job."
+    "Rotates selected elements; it actually does the job."
     import time
     t1 = time.time()
     if cc == "i": proj[2].thanGudSetSelRotateins(phi)
@@ -473,7 +491,7 @@ def thanModMirror(proj):
 
 
 def __modMirrorCopyDo(proj, elems, c1, t):
-    "Copies selected elements; it actualy does the job."
+    "Copies selected elements; it actually does the job."
     import time
     t1 = time.time();
     dc = [0.0]*len(c1)
@@ -506,7 +524,7 @@ def thanModPointMir(proj):
     if c1 == Canc: return thanModCanc(proj)                # Mirror cancelled
     keeporig = proj[2].thanGudGetYesno(T["Keep original elements (<yes>/no): "], default="yes")
     if keeporig == Canc: return thanModCanc(proj)          # Mirror cancelled
-    assert keeporig, "Point mirror not implemented with keeporoig==False"
+    assert keeporig, "Point mirror not implemented with keeporig==False"
     if keeporig:
         dc = [0.0]*len(c1)
         newelems = __modPointMirCopyDo(proj, elems, c1)
@@ -520,7 +538,7 @@ def thanModPointMir(proj):
 
 
 def __modPointMirCopyDo(proj, elems, c1):
-    "Copies selected elements; it actualy does the job."
+    "Copies selected elements; it actually does the job."
     import time
     t1 = time.time();
     dc = [0.0]*len(c1)
@@ -1106,8 +1124,8 @@ def thanModErasenew(proj):  #THIS FUNCTIONALITY MUST BE ADDED AT thanSelectGen()
         res = thancomsel.thanSelectOr(proj, standalone=False, optionname="all", optiontext="a=All")
         if res == Canc: return thanModCanc(proj)               # Erase was cancelled
         if res == "a":
-            #1. Select all the elements in selall all the elemnts of the drawing
-            #2. change color of all elementes currently drawn and assign selxxx to them
+            #1. Select all the elements in selall all the elements of the drawing
+            #2. change color of all elements currently drawn and assign selxxx to them
             #3.   ....
             pass
         else:

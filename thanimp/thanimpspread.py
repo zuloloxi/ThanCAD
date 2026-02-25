@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines objects which read spreadsheet files (.xls, .xlsx, .ods)
 for points, lines, texts or surface and create the appropriate ThanCad's elements.
@@ -94,6 +94,7 @@ class ThanImportSpread(ThanImportBase):
         error or empty cell."""
         for i in range(sh.nrows):
             self._lindxf = i+1
+            if rd.toString(sh, i, 0).strip().startswith("#"): continue   #Ignore comments
             empty = rd.isEmpty(sh, i, 0) and rd.isEmpty(sh, i, 1) and rd.isEmpty(sh, i, 2) \
                 and rd.isEmpty(sh, i, 3) and rd.isEmpty(sh, i, 4)
             if empty:
@@ -116,6 +117,7 @@ class ThanImportSpread(ThanImportBase):
         ztoo = sh.ncols > 2
         for i in range(sh.nrows):
             self._lindxf = i+1
+            if rd.toString(sh, i, 0).strip().startswith("#"): continue   #Ignore comments
             empty = rd.isEmpty(sh, i, 0) and rd.isEmpty(sh, i, 1)
             if ztoo: empty = empty and rd.isEmpty(sh, i, 2)
             if empty:
@@ -135,6 +137,7 @@ class ThanImportSpread(ThanImportBase):
         2 if syntax error or empty cell."""
         for i in range(sh.nrows):
             self._lindxf = i+1
+            if rd.toString(sh, i, 0).strip().startswith("#"): continue   #Ignore comments
             if all(rd.isEmpty(sh, i, j) for j in range(sh.ncols)): yield 1, None
             vs = [rd.toFloat(sh, i, j) for j in range(sh.ncols)]
             if any(v is None for v in vs): yield 2, vs

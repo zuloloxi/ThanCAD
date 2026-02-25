@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the object snap functionality.
 """
@@ -30,8 +30,8 @@ from thanvar import thanLogTk
 from thanopt import thancadconf
 from thandefs.thanatt import ThanAttCol
 
-_AVOIDTAG = frozenset(("e0", "edrag", "enull"))
-
+_AVOIDTAG = frozenset(("e0", "edrag", "enull"))  #e0 is the element being created, edrag is the ones dragged in command move
+                                                 #and enull is obscure (searcjh all .py files for it)
 
 class ThanOsnap:
     "Object snap functionality class."
@@ -69,6 +69,7 @@ class ThanOsnap:
         dc = self.thanProj[2].thanCanvas
         tagel = self.thanProj[1].thanTagel
         ct = self.thanProj[2].thanCt
+        ddu, _ = ct.local2GlobalRel(10*self.BSEL, 10*self.BSEL)  #Thanasis2025_10_05: max distance of osnap points in world coordinates
         bpix, hpix = self.BSEL//2, self.BSEL//2
         x1, y1 = dc.thanXcu-bpix, dc.thanYcu-hpix
         x2, y2 = dc.thanXcu+bpix, dc.thanYcu+hpix
@@ -106,7 +107,7 @@ class ThanOsnap:
             self.preempt = False
             return
         elif "int" in otypes:
-            ps = self.__int(dc, tagel, otypes, items, ccu, self.cc1)
+            ps = self.__int(dc, tagel, otypes, items, ccu, ddu, self.cc1)
         else:
             ps = []
             for item in items:
@@ -116,7 +117,7 @@ class ThanOsnap:
                 if len(tags) < 2: continue      # We avoid current (rubber line)
                 if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
                 e = tagel[tags[0]]
-                p = e.thanOsnap(self.thanProj, otypes, ccu, None, self.cc1)
+                p = e.thanOsnap(self.thanProj, otypes, ccu, ddu, None, self.cc1)
                 if p is not None:
                     ps.append(p)
                     if len(ps) > 2: break
@@ -130,8 +131,9 @@ class ThanOsnap:
         except:
             print("ps=\n", ps)
             raise
-        b, h = ct.global2LocalRel(p[0], p[0])
-        if b > 10*self.BSEL:
+        #b, h = ct.global2LocalRel(p[0], p[0])
+        #if b > 10*self.BSEL:
+        if p[0] > ddu:
             self.items = ()
             self.preempt = False
             return
@@ -187,37 +189,43 @@ class ThanOsnap:
         self.preempt = False
 
 
-    def __int(self, dc, tagel, otypes, items, ccu, cc1):
-        "Finds int near the mouse cursor."
+    def __int(self, dc, tagel, otypes, items, ccu, ddu, cc1):    #Thanasis2025_10_04: Rewrite
+        """Finds all types of osnap including 'int' near the mouse cursor.
+
+        For each element find the osnap points without a second elementm and at the same time
+        it tries pairs of elements sequentially (not all posiible combination) to save time.
+        It also includes pairs of an element with itself."""
+
+        def iteritems(items):
+            "Iterate over items."
+            seen = set()
+            for item in items:                     # Search for first element of intersection
+                if item in seen: continue
+                seen.add(item)
+                if dc.type(item) == "image": continue # Ignore Tk images; only the bounding rectangle counts
+                tags = dc.gettags(item)
+                if len(tags) < 2:   continue    # We avoid current (rubber line)
+                if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
+                yield tagel[tags[0]]
+
         dc = self.thanProj[2].thanCanvas
         ps = []
-        it = iter(items)
-        for item in it:                     # Search for first element of intersection
-            if dc.type(item) == "image": continue # Ignore Tk images; only the bounding rectangle counts
-            tags = dc.gettags(item)
-            if len(tags) < 2:   continue    # We avoid current (rubber line)
-            if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
-            e = tagel[tags[0]]
-            p = e.thanOsnap(self.thanProj, otypes, ccu, None, self.cc1)
+        it = iteritems(items)
+        for e in it:                     # Search for first element of intersection
+            p = e.thanOsnap(self.thanProj, otypes, ccu, ddu, e, cc1)     #Check element e for all types of osnap, and 'int' with itself
             if p is not None: ps.append(p)
             break
-        else: return ps
-        etried = False
-        for item in it:                     # Search for second element of intersection
-            if dc.type(item) == "image": continue # Ignore Tk images; only the bounding rectangle counts
-            tags = dc.gettags(item)
-            if len(tags) < 2:   continue    # We avoid current (rubber line)
-            if tags[0] in _AVOIDTAG: continue    # We avoid current compound element (we shouldn't really)
-            etried = True
-            e2 = tagel[tags[0]]
-            p = e.thanOsnap(self.thanProj, otypes, ccu, e2, cc1)
-            if p is not None: ps.append(p); break
-            e = e2
-        if etried: return ps
-        p = e.thanOsnap(self.thanProj, otypes, ccu, None, cc1)
 
-        if p is not None: ps.append(p)
+        inttypes = {"int": True, "ena": True}
+        for e2 in it:                     # Search for second element of intersection (after the first one)
+            p = e2.thanOsnap(self.thanProj, otypes, ccu, ddu, e2, cc1)  #Check element e2 for all types of osnap, and 'int' with itself
+            if p is not None: ps.append(p)
+            p = e.thanOsnap(self.thanProj, inttypes, ccu, ddu, e2, cc1) #Check element e for 'int' with next element e2
+            if p is not None: ps.append(p)
+            if len(ps) > 2: break   # 3 or more osnap points are enough; skip other osnap points to save time
+            e = e2
         return ps
+
 
 
     def thanCleanup(self):

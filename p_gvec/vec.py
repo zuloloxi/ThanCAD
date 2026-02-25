@@ -17,25 +17,25 @@ class Vector2:
 
     def __add__ (self, other):  # type: (Vector2, Vector2) -> Vector2
         "Addition of vectors."
-        if isinstance(other, Vector2):
-            return Vector2(self.x+other.x, self.y+other.y)
+        if isinstance(other, Vector2):   #This checks the base class if self in an object of an inherited class
+            return self.__class__(self.x+other.x, self.y+other.y)
         else:
-            raise TypeError("Don't know how to add Vector2 by " + str(type(other)))
+            raise TypeError("Don't know how to add {} and {}".format(type(self), type(other)))
 
     def __sub__ (self, other):  # type: (Vector2, Vector2) -> Vector2
         "Subtraction of vectors."
         if isinstance(other, Vector2):
-            return Vector2(self.x-other.x, self.y-other.y)
+            return self.__class__(self.x-other.x, self.y-other.y)
         else:
-            raise TypeError("Don't know how to subtract Vector2 by " + str(type(other)))
+            raise TypeError("Don't know how to subtract {} from {}".format(type(self), type(other)))
 
     def __neg__ (self):  # type: (Vector2) -> Vector2 
         "Returns the 2d vector with inverse direction."
-        return Vector2(-self.x, -self.y)
+        return self.__class__(-self.x, -self.y)
 
     def __pos__ (self):  # type: (Vector2) -> Vector2
         "Returns the 3d vector with the same direction."
-        return Vector2(self.x, self.y)
+        return self.__class__(self.x, self.y)
 
     def __or__ (self, other):  # type: (Vector2, Vector2) -> float
         "Returns the scalar product of 2d vectors."
@@ -44,8 +44,8 @@ class Vector2:
     def __mul__ (self, other):  # type: (Vector2, float) -> Vector2
         "Returns the scalar product of 2d vectors, or the vector multiplied by a number."
         try: other+0.0      #Is it number like
-        except: raise TypeError("Don't know how to multiply Vector2 by " + str(type(other)))
-        return Vector2(self.x * other, self.y * other)
+        except: raise TypeError("Don't know how to multiply {} by {}".format(type(self), type(other)))
+        return self.__class__(self.x * other, self.y * other)
     def __rmul__ (self, other):  # type: (Vector2, float) -> Vector2
         return self.__mul__(other)
 
@@ -53,8 +53,8 @@ class Vector2:
         "Returns the vector divided by a number."
         #if isinstance(other, types.FloatType) or isinstance(other, types.IntType):
         try: other+0.0      #Is it number like
-        except: raise TypeError("Don't know how to divide Vector2 by " + str(type(other)))
-        return Vector2(self.x / other, self.y / other)
+        except: raise TypeError("Don't know how to divide {} by {}".format(type(self), type(other)))
+        return self.__class__(self.x / other, self.y / other)
     __div__ = __truediv__    #For python2 compatibility
 
     def __abs__ (self):   # type: (Vector2) -> float
@@ -65,13 +65,13 @@ class Vector2:
         "Computes the unit vector with the same direction."
         a = abs(self)
         if a == 0.0: return None
-        return Vector2(self.x / a, self.y / a)
+        return self.__class__(self.x / a, self.y / a)
 
     def normal (self):   # type: (Vector2) -> Optional[Vector2]
         "Compute the unit vector normal to the vector's direction; positive is the left side."
         a = abs(self)
         if a == 0.0: return None
-        return Vector2(-self.y / a, self.x / a)
+        return self.__class__(-self.y / a, self.x / a)
 
     def dircos(self) -> Tuple[float, float]:
         "Compute direction cosines."
@@ -95,11 +95,11 @@ class Vector2:
     def rot (self, f):  # type: (Vector2, float) -> Vector2
         "Rotates the vector to f counterclockwise radians."
         cosf = math.cos(f); sinf = math.sin(f)
-        return Vector2(self.x*cosf - self.y*sinf, self.x*sinf + self.y*cosf)
+        return self.__class__(self.x*cosf - self.y*sinf, self.x*sinf + self.y*cosf)
 
     def mirX(self):  # type (Vector2) -> Vector2
         "Returns the vector with the same x and opposite y: mirror with repsect to X axis."
-        return Vector2(self.x, -self.y)
+        return self.__class__(self.x, -self.y)
 
     def atan2 (self) -> float:
         "Computes the direction angle; positive=counterclockwise, zero at 3o'clock."
@@ -127,3 +127,17 @@ class Vector2:
         "Return an iterator to the vector."
         yield self.x
         yield self.y
+
+
+    def __getitem__(self, key):
+        "Get 1 or many elements."
+
+        def get1(i):
+            "Get 1 element."
+            if i == 0 or i == -2: return self.x
+            elif i == 1 or i == -1: return self.y
+            else: raise IndexError("Index {} is out of range: Vector has only 2 elements".format(i))
+
+        if isinstance(key, slice):   #return many elements as a list
+            return [get1(i) for i in range(key.start, key.stop, key.step)]
+        return get1(key)

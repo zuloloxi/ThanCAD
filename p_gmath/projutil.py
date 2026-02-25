@@ -2,7 +2,7 @@
 from .proj import (DLTProjection, Rational1Projection, Rational2Projection,
                   Rational15Projection, Polynomial1Projection, Polynomial2Projection,
                   Polynomial1_2DProjection, DLT2Projection, Rational1_2DProjection,
-                  Polynomial2_2DProjection, NonCartesian,
+                  Polynomial2_2DProjection, Similar2DProjection, NonCartesian,
                  )
 from .projcom import read1
 
@@ -26,11 +26,12 @@ def Projection(icod):
     elif icod == 13: return Polynomial2_2DProjection
 
     elif icod == 21: return NonCartesian
+    elif icod == 22: return Similar2DProjection
     raise ValueError("No projection with integer index %d" % (icod,))
 
 
 def readProj(fr):
-    "Reads a projection form file and return Projection object."
+    "Reads a projection from file and return Projection object."
     dl1 = read1(fr)
     ic = int(dl1)
     p = Projection(ic)()

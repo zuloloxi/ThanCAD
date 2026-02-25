@@ -44,7 +44,7 @@ def doversion(thanCadAbout, title, suf):
     global sourceDir
     prg("source path: %s" % (sourceDir,), "info")
     prg("excluded directories: %s" % (",".join(p_ggen.thancadrel.excluded),), "info")
-    p_ggen.thancadrel.excludedmatch.add("thanprofflf")
+    #p_ggen.thancadrel.excludedmatch.add("thanprofflf")
     prg("excluded matched directories: %s" % (",".join(p_ggen.thancadrel.excludedmatch),), "info")
     prg("excluded matched directories with numbers: %s" % (",".join(p_ggen.thancadrel.excludedmatchnumber),), "info")
     prg("-----------------------------------------------------------------------------")

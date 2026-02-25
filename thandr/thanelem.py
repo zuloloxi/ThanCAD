@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines the generic ThanCad element. It can be also used as a null
 element - this is NOT an asbtract class.
@@ -72,7 +72,7 @@ class ThanElement:
         choose a default size.
         Specifically if dt<1, elements which smooth out a polyline
         (for example spline, bezier, Bspline, NURB) return the nodes of the
-        original line (which is smoothed out).
+        original line (which is being smoothed out).
         For optimization reasons, than2line() may represent part of the element
         with line segments. The implementations are free to ignore ta and tb.
         ta is the parameter which corresponds to the beginning of the part,
@@ -81,7 +81,7 @@ class ThanElement:
         angle for circles, ellipses and arcs, and t is the distance along the
         curve from the beginning of the curve for splines.
         than2line() returns a list of points which is the line segment
-        representation of the lements and a list of parametes which correspond
+        representation of the element and a list of parameters which correspond
         to the points.
         """
         if dt is None: return False       #than2Line IS NOT implemented
@@ -116,7 +116,7 @@ class ThanElement:
         pass
 
 
-    def thanOsnap(self, proj, otypes, ccu, eother, cori):
+    def thanOsnap(self, proj, otypes, ccu, ddu, eother, cori):
         "Return a point of type in otypes nearest to xcu, ycu."
         return None
 

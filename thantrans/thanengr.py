@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+# ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 #
-# Copyright (C) 2001-2025 Thanasis Stamos, May 20, 2025
+# Copyright (C) 2001-2026 Thanasis Stamos, January 20, 2026
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@gmx.net
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.9.1 "Students2024": n-dimensional CAD with raster support for engineers
+ThanCad 0.9.2 "Tartu": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek.
 """
@@ -265,13 +265,20 @@ en2gr = \
 "Nothing to cancel."                              : u"Δεν υπάρχει τίποτα να ακυρωθεί.",
 "First line point (c=continue existing line): "   : u"Πρώτο σημείο της γραμμής (c=συνέχιση υφιστάμενης γραμμής): ",
 
-"Center (3p=3 points/2p=2 points): "             : u"Κέντρο: (3p=3 σημεία/2p=2 σημεία): ",
+"Center [3p=3 points/2p=2 points/Ttr (tan tan radius)/ttt (tan tan tan)/Chord and angle]: ":
+                                                   u"Κέντρο: (3p=3 σημεία/2p=2 σημεία, Ttr=εφαπτ εφαπτ ακτίνα/ttt=εφαπτ εφαπτ εφαπτ)/"
+                                                   u"Chord=χορδή και γωνία]: ",
 "Radius (D=Diameter): "                           : u"Ακτίνα: (D=Διάμετρος): ",
 "Diameter: "                                      : u"Διάμετρος: ",
 "First point on circle: "                         : u"Πρώτο σημείο κύκλου: ",
 "Second point on circle: "                        : u"Δεύτερο σημείο κύκλου: ",
 "Third point on circle: "                         : u"Τρίτο σημείο κύκλου: ",
 "Invalid circle: points are col-linear."          : u"Μη έγκυρος κύκλος: τα σημεία είναι συγγραμμικά.",
+"First point of chord: "                          : u"Πρώτο σημείο χορδής: ",
+"Last point of chord: "                           : u"Τελευταίο σημείο χορδής: ",
+"Chord central angle"                             : u"Επίκεντρη γωνία χορδής",
+"Chord has zero length"                           : u"Η χορδή έχει μηδενικό μήκος",
+"Invalid angle. Try again."                       : u"Μη έγκυρη γωνία. Προσπαθείστε πάλι.",
 
 "Command: "                                       : u"Εντολή: ",
 "Cancelled."                                      : u"Ακυρώθηκε.",
@@ -411,7 +418,7 @@ en2gr = \
     u"(A=όλα/C=κέντρο/D=δυναμική/E=όρια/P=προηγούμενη/S=συντελεστής μεγέθυνσης/W=παράθυρο/L=επιλογή) <πραγμ.χρόνος>:",
 "Invalid point, factor or option. Try again.\n"   : u"Μη έγκυρο σημείο, συντελεστής ή επιλογή. Προσπαθείστε πάλι.\n",
 "Select elements to zoom to\n"                    : u"Επιλέξτε αντικείμενα για προβολή\n",
-"Invalid or empty previous selection."            : u"Η προηγούμενη επιλογή ήταν άκυρη ή άδεια.",
+"Invalid or empty previous selection."            : u"Η προηγούμενη επιλογή δεν ήταν έγκυρη ή ήταν άδεια.",
 "<varies>"                                        : u"ποικίλει",
 "Regenerating drawing.."                          : u"Αναδημιουργία σχεδίου..",
 "end of regeneration.\n"                          : u"τέλος αναδημιουργίας.\n",
@@ -522,7 +529,7 @@ en2gr = \
 "Positive angle\ndirection"                       : u"Θετική φορά γωνίας",
 "&Elevation"                                      : u"Υψόμετρο",
 "Elevation (higher dimensions)"                   : u"Υψόμετρο (υψηλότερες διαστ)",
-"&Highlight zero elevation"                       : u"Επισήμανση μηδενικού υψομέτρου",
+"&Highlight elevation"                            : u"Επισήμανση υψομέτρου",
 "Joins 2 lines filling the gap between them."     : u"Ενώνει 2 γραμμές καλύπτοντας το ενδιάμεσο κενό",
 "C&hange elevation"                               : u"Αλλαγή υψομέτρου",
 "Change elevation (higher dim)"                   : u"Αλλαγή υψομέτρου (υψηλότερες διαστ)",

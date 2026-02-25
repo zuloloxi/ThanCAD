@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter object snap values.
 It also has the routine to get the osnap values from the config files.
 """
 
-from Tkinter import Tk, Frame, Button, Label, Canvas, Checkbutton, IntVar, NORMAL, ACTIVE, GROOVE
+from __future__ import print_function
+from tkinter import Tk, Frame, Button, Label, Canvas, Checkbutton, IntVar, NORMAL, ACTIVE, GROOVE
 import p_ggen, p_gtkwid
 from thanopt import thancadconf
 from thandefs.thanatt import ThanAttCol
@@ -93,8 +94,10 @@ class ThanTkOsnap(p_gtkwid.ThanDialog):
 #            url="www.ntua.gr/index_en.html", iconsize=(480,360))
 #        but = p_gtkwid.ThanButtonIm(f, image=thanimag.hannover_leibniz(), title=T["Leibniz Universitaet Hannover"],
 #            url="www.uni-hannover.de/en", iconsize=(480,360))
-        but = p_gtkwid.ThanButtonIm(f, image=thanimag.valencia_uni(), title=T["La Universitat de Valencia"],
-            url="www.uv.es/uvweb/college/en/university-valencia-1285845048380.html", iconsize=(480,360))
+#        but = p_gtkwid.ThanButtonIm(f, image=thanimag.valencia_uni(), title=T["La Universitat de Valencia"],
+#            url="www.uv.es/uvweb/college/en/university-valencia-1285845048380.html", iconsize=(480,360))
+        but = p_gtkwid.ThanButtonIm(f, image=thanimag.oberpfaffenhofen_esa(), title=T["Columbus-Kontrollzentrum, Oberpfaffenhofen"],
+            url="http://www.esa.int/ger/ESA_in_your_country/Germany/Columbus-Kontrollzentrum_Oberpfaffenhofen_Deutschland", iconsize=(480,360))
         but.grid(row=1, column=3, rowspan=modescol, padx=5, pady=5)
 
         w = Frame(f, width=5); w.grid(row=0, column=7)
@@ -202,13 +205,13 @@ class ThanTkOsnap(p_gtkwid.ThanDialog):
         p_gtkwid.ThanDialog.destroy(self)
 
     def __del__(self):
-        print "ThanOsnap ThanDialog", self, "dies.."
+        print("ThanOsnap ThanDialog", self, "dies..")
 
 
 if __name__ == "__main__":
     root = Tk()
     o = {"mid":1}
     a = ThanTkOsnap(root, o, title="Drafting Settings")
-    print a.result
+    print(a.result)
     del a
-    print "The End."
+    print("The End.")

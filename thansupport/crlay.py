@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines utility functions to create/edit layers from within
 an embedded program.
@@ -72,9 +72,9 @@ def thanToplayerCurrent(proj, pname, current=True, **atts):
             finally: lt.thanDictRebuild()
             newlayer = True
     if newlayer:                                 # Layer did not exist
-        for att, rawval in atts.iteritems():
-            if att not in thanLayAtts: raise ThanLayerError, "Attribute %s is not recognised" % att
-            if rawval == THANPERSONAL: raise ValueError, "New layer does not have PERSONAL attributes yet"
+        for att, rawval in atts.items():  #works for python2,3
+            if att not in thanLayAtts: raise ThanLayerError("Attribute %s is not recognised" % att)
+            if rawval == THANPERSONAL: raise ValueError("New layer does not have PERSONAL attributes yet")
             class_ = thanLayAtts[att][3]        # Get class of attribute 'moncolor'
             if rawval == THANBYPARENT:
                 val = class_(parent.thanAtts[att].thanVal, inherit=True)
@@ -87,7 +87,7 @@ def thanToplayerCurrent(proj, pname, current=True, **atts):
             proj[2].thanUpdateLayerButton()
         proj[1].thanTouch()                     # Drawing IS modified
     else:
-        if current and len(lay.thanChildren) > 0: raise ThanLayerError, "Only a leaflayer may be current layer"
+        if current and len(lay.thanChildren) > 0: raise ThanLayerError("Only a leaflayer may be current layer")
         __atts(proj, parent, lay, atts, check=True) # At first checks the attributes and raise exceptions if invalid
         __atts(proj, parent, lay, atts, check=False)
 
@@ -103,8 +103,8 @@ def __atts(proj, parent, lay, atts, check):
         "Check or set the attributes."
         if len(atts) == 0: return
         leaflayers = {}
-        for att, rawval in atts.iteritems():
-            if att not in thanLayAtts: raise ThanLayerError, "Attribute %s is not recognised" % att
+        for att, rawval in atts.items():  #works for python2,3
+            if att not in thanLayAtts: raise ThanLayerError("Attribute %s is not recognised" % att)
             class_ = thanLayAtts[att][3]        # Get class of attribute 'moncolor'
             if rawval == THANBYPARENT:
 #                val = class_(parent.thanAtts[att].thanVal, inherit=True)

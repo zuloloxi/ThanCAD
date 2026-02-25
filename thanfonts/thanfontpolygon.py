@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,30 +21,26 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 This module defines ThanCad fonts made by straight lines. The lines
 have thickness and the characters resemble the arial font.
 """
 
-from types import type, IntType
+from __future__ import print_function
 from math import cos, sin, pi
-from thanfont import ThanFontLine
+from .thanfont import ThanFontLine
 
 
-##############################################################################
-##############################################################################
 
 class ThanFontPolygon(ThanFontLine):
     "Font class made by filled polygons."
 
-#=============================================================================
 
     def __init__(self, name, dilines):
         "Initialisation."
 
         ThanFontLine.__init__(self, name, dilines)
 
-#=============================================================================
 
     def thanTkPaint(self, dc, xz, yz, h, a, theta):
         "Draws text using ThanCad's polygon fonts."
@@ -65,7 +61,7 @@ class ThanFontPolygon(ThanFontLine):
 
         for c in a:                               # Loop of all the characters in text
             k = ord(c)
-            if type(tfont[k]) is IntType: k = tfont[k]
+            if type(tfont[k]) is int: k = tfont[k]
             if k < 0 or k > 255:
                 print "Character with code:" + str(k)
                 return
@@ -77,11 +73,6 @@ class ThanFontPolygon(ThanFontLine):
             xz += hx2     # Advance character position
             yz -= hy2
 
-
-##############################################################################
-##############################################################################
-
-#MODULE LEVEL FUNCTIONS
 
 def makeArialPolygons():
     "Makes the polygons that define each character in thanFontPrime1."
@@ -180,21 +171,8 @@ def makeArialPolygons():
     return dilines
 
 
-##############################################################################
-##############################################################################
-
-#MODULE LEVEL CODE - FONT DEFINITIONS
-
 thanFontArial = ThanFontPolygon("thanarial", makeArialPolygons())
-
-
-##############################################################################
-##############################################################################
-
-#MODULE LEVEL CODE
-
-
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
     for k in thanFontArial.thanDilines:
-        print k, ':', thanFontArial.thanDilines[k]
+        print(k, ':', thanFontArial.thanDilines[k])

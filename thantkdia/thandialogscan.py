@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,12 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to scan and insert an image
 to ThanCad.
 """
-from Tkinter import Tk, Frame, Canvas
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+from tkinter import Tk, Frame, Canvas
 import p_gimage
 from p_gtkwid import (ThanDialog, thanGudModalMessage, thanGudAskOkCancel,
     thanGudGetSaveFile, ThanButton)
@@ -64,7 +67,7 @@ class ThanScan(ThanDialog):
             if not a: return        # Scan was stopped
         try:
             im1 = self.can.scan()
-        except Exception, why:
+        except Exception as why:
             er = "%s:\n%s" % (T["Scanner failed to scan"], why)
             thanGudModalMessage(self, er, T["Error while scanning"])
             return
@@ -90,13 +93,13 @@ class ThanScan(ThanDialog):
         rh = float(h) / hdc
         if rb > rh:
             if b > bdc:
-                h = (h*bdc)/b
-                b = bdc
+                h = int((h*bdc)/b)
+                b = int(bdc)
                 im1 = self.im.resize((b, h))
         else:
             if h > hdc:
-                b = (b*hdc)/h
-                h = hdc
+                b = int((b*hdc)/h)
+                h = int(hdc)
                 im1 = self.im.resize((b, h))
         self.imtk = p_gimage.PhotoImage(im1)
         self.dc.delete(self.tem2)
@@ -123,7 +126,7 @@ class ThanScan(ThanDialog):
             if not filnam: return        # User cancelled
             try:
                 self.im.save(filnam)
-            except Exception, why:
+            except Exception as why:
                 thanGudModalMessage(self, "%-30s" % why, T["Error saving image"])
             else:
                 self.imfilnam = filnam
@@ -202,61 +205,10 @@ class ThanScan(ThanDialog):
         ThanDialog.destroy(self, *args)
 
 
-def getScanDpi():
-    "Initialize sane system, get first scanner and the resolutions it supports."
-    try:
-        import sane
-    except ImportError:
-        return None, T["Python module 'sane' has not been installed\nPlease install module 'sane' and retry."]
-    try:
-        sane.init()
-        ss = sane.get_devices()
-    except Exception, why:
-        return None, "%s:\n%s" % (T["Module sane failed to initialize"], why)
-    if len(ss) <= 0:
-        return None, T["No scanners were found"]
-    ss1 = ss[0][0]
-    try:
-        can = sane.open(ss1)
-        resopt = can["resolution"]
-        dpis = resopt.constraint
-    except Exception, why:
-        return None, "%s %s %s:\n%s" % (T["Scanner"], ss1, T["can not be accessed properly:"], why)
-    if resopt.unit != sane.UNIT_DPI:
-        return None, T["The scanner does not support resolution in dpi"]
-    return can, dpis
-
-
-if False:
-    class FakeScanner:
-        dpis = [100, 200, 300]
-        def __init__(self):
-            self.resolution = self.dpis[0]
-        def scan(self):
-            import p_ggen, sys
-            fn = p_ggen.path(sys.path[0]) / "thantkdia" / "mars-frost.jpg"
-            return p_gimage.open(fn)
-        def close(self):
-            pass
-
-    def getScanDpi():
-        "Return fake scanner."
-        can = FakeScanner()
-        return can, can.dpis
-
-
 if __name__ == "__main__":
-    from p_ggen import Struct
-    class TT:
-        def __getitem__(self, key): return key
-    T = TT()
-    can, dpis = getScanDpi()
-    print can, dpis
-    if can is None:
-        dpis=[100, 200, 300]
-        can = Struct()
-        can.resolution = dpis[0]
-        can.close = lambda : None
-        can.scan = lambda : p_gimage.open("mars-frost.jpg")
+    from p_ggen import Struct, Tgui as T
+    can, dpis, ScanException = p_gimage.getScanDpi()
+    print(can, dpis, ScanException)
+    if can is None: can, dpis, _ = p_gimage.getScanDpiFake()
     root = Tk()
     d = ThanScan(root, can, dpis, cargo=None)

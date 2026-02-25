@@ -1,5 +1,5 @@
 import sys
-from gen import thanUnunicode
+from .gen import thanUnunicode
 
 class Translation(object):
     "Translation class."

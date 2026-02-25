@@ -1,4 +1,6 @@
 # -*- coding: iso-8859-7 -*-
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, cos, sin
 
 
@@ -22,7 +24,6 @@ class ThanDxfDra:
 
         (px, py) = self.thanDxfTop(xa, ya)
         self.thanDxfWrXy(px, py)
-
         self.thanDxfWrEntry(41, xsc)
         self.thanDxfWrEntry(42, ysc)
         self.thanDxfWrEntry(50, thet)
@@ -36,7 +37,6 @@ class ThanDxfDra:
 
         (px, py, pz) = self.thanDxfTop3(xa, ya, za)
         self.thanDxfWrXyz(px, py, pz)
-
         self.thanDxfWrEntry(41, xsc)
         self.thanDxfWrEntry(42, ysc)
         self.thanDxfWrEntry(43, zsc)
@@ -158,12 +158,10 @@ class ThanDxfDra:
         self.thanDxfWrXy1(px, py)
 
         (px, py) = self.thanDxfTop(xx4, yy4)
-        self.thanDxfWrEntry(12, px)
-        self.thanDxfWrEntry(22, py)
+        self.thanDxfWrXyc(2, px, py)
 
         (px, py) = self.thanDxfTop(xx3, yy3)
-        self.thanDxfWrEntry(13, px)
-        self.thanDxfWrEntry(23, py)
+        self.thanDxfWrXyc(3, px, py)
 
 
     def thanDxfPlotSolid3 (self, xx1, yy1, xx2, yy2, xx3, yy3):
@@ -179,11 +177,9 @@ class ThanDxfDra:
         self.thanDxfWrXy1(px, py)
 
         (px, py) = self.thanDxfTop(xx3, yy3)
-        self.thanDxfWrEntry(12, px)
-        self.thanDxfWrEntry(22, py)
+        self.thanDxfWrXyc(2, px, py)
 
-        self.thanDxfWrEntry(13, px)
-        self.thanDxfWrEntry(23, py)
+        self.thanDxfWrXyc(3, px, py)
 
 
     def thanDxfPlot3dface3(self, xx1, yy1, zz1, xx2, yy2, zz2, xx3, yy3, zz3):

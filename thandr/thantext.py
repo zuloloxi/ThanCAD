@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,19 +21,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the text element.
 """
 
+from __future__ import print_function
 from math import sin, cos, fabs, pi, atan2, hypot
-from itertools import izip, islice
+from itertools import islice
 from p_ggen import thanUnicode
 from p_gmath import PI2
-from thanelem import ThanElement
 from thanvar import Canc
 from thantrans import T
-from thanline import ThanLine
+from .thanelem import ThanElement
+from .thanline import ThanLine
 try: import pyx
 except ImportError: pass
 
@@ -88,22 +89,33 @@ class ThanText(ThanElement):
         self.setBoundBoxRect(self.cc[0], self.cc[1], self.w1, self.h1, self.theta)
 
 
+    def thanPointMir(self):
+        "Mirrors the element within XY-plane with respect to predefined point."
+        cbig = list(self.cc)
+        cbig[0] += self.w1*cos(self.theta)
+        cbig[1] += self.w1*sin(self.theta)
+        cbig = self.thanPointMirXy(cbig)
+        self.cc = self.thanPointMirXy(self.cc)
+
+        self.theta = atan2(cbig[1]-self.cc[1], cbig[0]-self.cc[0]) % PI2
+        self.setBoundBoxRect(self.cc[0], self.cc[1], self.w1, self.h1, self.theta)
+
 
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
-        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.cc, cs)]
+        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.cc, cs)]  #works for python2,3
         self.size *= scale
         self.w1 *= scale
         self.h1 *= scale
         cscs = [cs[0], cs[1], cs[0], cs[1]]
-        self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.thanXymm, cscs)]
+        self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.thanXymm, cscs)]  #works for python2,3
 
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
-        self.cc = [cc1+dd1 for (cc1,dd1) in izip(self.cc, dc)]
+        self.cc = [cc1+dd1 for (cc1,dd1) in zip(self.cc, dc)]  #works for python2,3
         dcdc = [dc[0], dc[1], dc[0], dc[1]]
-        self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in izip(self.thanXymm, dcdc)]
+        self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in zip(self.thanXymm, dcdc)]  #works for python2,3
 
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
@@ -188,9 +200,9 @@ class ThanText(ThanElement):
             than.dc.create_polygon(wpList, outline=than.outline, fill="", tags=tags)
         elif False and self.theta == 0.0:                                #Use canvas fonts for speed
             hp = int(h*1.38+0.5)        #Canvas bug?
-            print "text h=", h, "hp=", hp
+            print("text h=", h, "hp=", hp)
             if hp not in self._canvasfonts:
-                from tkFont import Font
+                from tkinter.font import Font
                 from thanopt import thancadconf
                 self._canvasfonts[hp] = Font(family=thancadconf.thanFontfamilymono, size=-hp)
             tags = self.thanTags + ("nocomp",)
@@ -217,9 +229,10 @@ class ThanText(ThanElement):
     def thanImpThc1(self, fr, ver):
         "Read the aligned dimension from thc format."
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
-        size  = float(fr.next())         #May raise ValueError, StopIteration
-        theta = float(fr.next())         #May raise ValueError, StopIteration
+        size  = float(next(fr))         #May raise ValueError, StopIteration
+        theta = float(next(fr))         #May raise ValueError, StopIteration
         text = fr.readTextln()           #May raise StopIteration
+        print("ThanText: text=", text)
         self.thanSet(text, c1, size, theta)
 
 
@@ -269,7 +282,7 @@ class ThanText(ThanElement):
                 xy1.insert(0, moveto(cp[0][0], cp[0][1]))
                 if cp[0] == cp[-1]: xy1[-1] = closepath()
                 p = pyx.path.path(*xy1)
-            print p
+            print(p)
             than.dc.stroke(p)
 
 
@@ -315,4 +328,4 @@ class ThanText(ThanElement):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

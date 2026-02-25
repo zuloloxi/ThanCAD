@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,11 +21,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines various information for ThanCad: version, date,
 author, license etc.
 """
+from __future__ import print_function
 import p_gvers
 
 thanCadRationale =\
@@ -310,7 +311,7 @@ long_description = "2dimensional CAD with raster support for engineers"
 tcver = p_gvers.ThanVersion()
 tcver.setup(\
 name              = "ThanCad",
-version           = '0.2.4 "Valencia"',
+version           = '0.3.0 "Oberpfaffenhofen"',
 author            = "Thanasis Stamos",
 author_email      = "cyberthanasis@excite.com",
 url               = "http://thancad.sourceforge.net",
@@ -318,8 +319,8 @@ description       = "n-dimensional CAD with raster support for engineers",
 download_url      = "http://sourceforge.net/projects/thancad",
 long_description  = long_description,
 
-date              = "November 15, 2014",
-dates             = "2001-2014",
+date              = "June 19, 2016",
+dates             = "2001-2016",
 city              = "Athens",
 address1          = "Athens, Greece, Europe",
 license           = p_gvers.GPL(),
@@ -348,4 +349,4 @@ history           = "See ThanCad's web page http://thancad.sourceforge.net for h
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

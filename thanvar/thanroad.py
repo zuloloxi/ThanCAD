@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,12 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module computes a road node with circular arc.
 """
 from math import pi, sin, cos, hypot
-import Tkinter
+import tkinter
 import p_ggen, p_gvec
 from p_gmath import dpt
 
@@ -142,7 +142,7 @@ def tkRoadNode(x1, y1, x2, y2, x3, y3, r2, dc, fill, dash, tags):
 
     item1 = dc.create_line(x1, y1, nod.pa.x, nod.pa.y, fill=fill, dash=dash, tags=tags)
     item2 = dc.create_arc(nod.pc.x-r2, nod.pc.y-r2, nod.pc.x+r2, nod.pc.y+r2,
-            start=th, extent=dth, style=Tkinter.ARC, outline=fill, dash=dash, tags=tags)
+            start=th, extent=dth, style=tkinter.ARC, outline=fill, dash=dash, tags=tags)
     item3 = dc.create_line(nod.pt.x, nod.pt.y, x3, y3, fill=fill, dash=dash, tags=tags)
     item4 = dc.create_line(nod.pa.x, nod.pa.y, x2, y2, nod.pt.x, nod.pt.y,
             fill=fill, tags=tags, stipple="gray25")
@@ -160,7 +160,7 @@ def tkRoadNodeR(x1, y1, x2, y2, x3, y3, xmouse, ymouse, dc, ct, fill, dash, tags
 
     item1 = dc.create_line(x1, y1, nod.pa.x, nod.pa.y, fill=fill, dash=dash, tags=tags)
     item2 = dc.create_arc(nod.pc.x-r2, nod.pc.y-r2, nod.pc.x+r2, nod.pc.y+r2,
-            start=th, extent=dth, style=Tkinter.ARC, outline=fill, dash=dash, tags=tags)
+            start=th, extent=dth, style=tkinter.ARC, outline=fill, dash=dash, tags=tags)
     item3 = dc.create_line(nod.pt.x, nod.pt.y, x3, y3, fill=fill, dash=dash, tags=tags)
     item4 = dc.create_line(nod.pa.x, nod.pa.y, x2, y2, nod.pt.x, nod.pt.y,
             fill=fill, tags=tags, stipple="gray25")

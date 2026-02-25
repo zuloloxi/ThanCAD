@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import datetime
 from p_ggen import thanUnicode
 
@@ -57,7 +58,7 @@ class ThanValBlank(ThanValidator):
         "Validate the value v and return the correct value."
         v = ThanValidator.thanValidate(self, v)
         try:
-            print "ThanValBlank: type(v)=", type(v)
+            print("ThanValBlank: type(v)=", type(v))
             v1 = v.strip()+""
 #            print "                      ", "stringlike"
         except:
@@ -78,8 +79,8 @@ class ThanValPIL(ThanValidator):
         try:
             im = Image.open(v)
             b,h = im.size
-            if b<3 or h<3: raise ValueError, "Image size too small"
-        except Exception, why:
+            if b<3 or h<3: raise ValueError("Image size too small")
+        except Exception as why:
             self.thanSetErr(1, "%s: %s" % (v, why))
             return None
         self.thanClearErr()
@@ -174,7 +175,7 @@ class ThanValDatepython(ThanValidator):
             return None
         try:
             d = datetime.date(iyear, imon, iday)
-        except ValueError, why:
+        except ValueError as why:
             self.thanSetErr(1, "Invalid date: %s." % (why,))
             return None
         return d
@@ -209,7 +210,7 @@ class ThanValFloat(ThanValidator):
         self.thanBounds = vmin, vmax
         if self.thanBounds != (None, None):
             try: self.thanBounds = [self.num(self.thanBounds[i]) for i in (0,1)]
-            except (ValueError, IndexError): raise ValueError, self.tnumbounds
+            except (ValueError, IndexError): raise ValueError(self.tnumbounds)
 
 
     def thanValidate(self, v):
@@ -245,14 +246,14 @@ class ThanValFloatFortran(ThanValFloat):
     def thanValidate(self, v):
         "Check if exponent is with D instead of E."
         v1 = ThanValFloat.thanValidate(self, v)
-        print "fortran:", v1
+        print("fortran:", v1)
         if v1 is not None: return v1
         try: v+""; v.replace
         except: return None     # Not stringlike enough
-        print "TRYING FORTRAN:'", v
+        print("TRYING FORTRAN:'", v)
         v = v.replace("d", "e")
         v = v.replace("D", "e")
-        print "after:", v
+        print("after:", v)
         return ThanValFloat.thanValidate(self, v)
 
 
@@ -282,10 +283,10 @@ class ThanValInt(ThanValFloat):
 
 
 if __name__ == "__main__" and 1:
-    from Tkinter import Tk, Button
+    from tkinter import Tk, Button
     def validates():
-        print "a=", b.thanValidate(a.thanGet()),
-        print b.thanGetErr(), b.thanGetIerr()
+        print("a=", b.thanValidate(a.thanGet()),)
+        print(b.thanGetErr(), b.thanGetIerr())
 
     root = Tk()
     from p_gtkwid import ThanEntry

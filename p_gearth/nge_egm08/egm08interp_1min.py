@@ -18,6 +18,8 @@ c     ONCE, AS THE FIRST VALUE IN THEIR RESPECTIVE RECORD AT ZERO
 c     LONGITUDE. THESE VALUES ARE NOT REPEATED AT THE END OF THEIR
 c     RESPECTIVE RECORDS AT LONGITUDE = 360 DEGREEES.
 """
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import struct
 from math import cos, radians, floor
 import p_ggen, p_gnum, p_gfil
@@ -34,12 +36,12 @@ nciw2    = ncols+2*iw
 dlat     = 1.0/60.0
 dlon     = 1.0/60.0
 path_gd = ('                                       ',
-           '../binwi/libs/p_gearth/nge_egm08/      ',
-           '../binwm/libs/p_gearth/nge_egm08/      ',
-           '/home2/x/binwi/libs/p_gearth/nge_egm08/',
-           '/home2/x/binwm/libs/p_gearth/nge_egm08/',
-           'x:/binwi/libs/p_gearth/nge_egm08/      ',
-           'x:/binwm/libs/p_gearth/nge_egm08/      ',
+           '../binwi/libs2/p_gearth/nge_egm08/      ',
+           '../binwm/libs2/p_gearth/nge_egm08/      ',
+           '/home2/x/binwi/libs2/p_gearth/nge_egm08/',
+           '/home2/x/binwm/libs2/p_gearth/nge_egm08/',
+           'x:/binwi/libs2/p_gearth/nge_egm08/      ',
+           'x:/binwm/libs2/p_gearth/nge_egm08/      ',
           )
 name_gd  = 'Und_min1x1_egm2008_isw=82_WGS84_TideFree_SE'    #Grid without edges
 name_gde = 'thanegm08.bin'                                  #Grid with edges
@@ -69,7 +71,7 @@ def openGrid (fn):
 def egm08ReadGridEdgesDyn(prt1=p_ggen.prg):
     "Reads dynamically the grid which was already the edges."
     global gridyn, prt, notinitialised
-    if prt1 == None: prt1 = p_ggen.prgnone
+    if prt1 is None: prt1 = p_ggen.prgnone
     prt = prt1
     openGrid(name_gde)
     prt('Preparing dynamic reading of EGM08 grid..', "info1")

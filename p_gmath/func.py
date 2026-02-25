@@ -1,7 +1,8 @@
 "Special functions module."
+from __future__ import print_function
 from math import sqrt, cos, sin, pi, exp, fabs, log
-from varcon import PI05, PIR
-from var import fsign
+from .varcon import PI05, PIR
+from .var import fsign
 
 
 def fresnel(x):
@@ -45,9 +46,7 @@ def fresnel(x):
 
             odd = not odd
             n += 2
-
-        print 'series failed in fresnel'
-        return None
+        raise ValueError('Series failed in fresnel()')
     else:
         pix2=pi*ax*ax
         b=complex(1.,-pix2)
@@ -71,8 +70,7 @@ def fresnel(x):
                 s=cs.imag
                 if x < 0.: c=-c; s=-s
                 return s, c
-        print 'cf failed in fresnel'
-        return None
+        raise ValueError('cf failed in fresnel')
 
 
 def klotXy(A, L, pr=1):
@@ -110,12 +108,12 @@ def erf(z):
 
 
 def phiNormalUnit(x):
-    "Cumulative unit normal distribution probability."
+    "Cumulative unit normal distribution probability (integral from -infinity to x)."
     return 0.5*(1.0+erf(x/sqrt(2.0)))
 
 
 def phiNormal(x, mu, sigma):
-    "Cumulative nonunit normal distribution probability = phi1((x-mu)/sigma))."
+    "Cumulative nonunit normal distribution probability = phi1((x-mu)/sigma));  (integral from -infinity to x)."
     return 0.5*(1.0+erf((x-mu)/(sigma*sqrt(2.0))))
 
 
@@ -134,4 +132,4 @@ def erfinvapprox(x):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

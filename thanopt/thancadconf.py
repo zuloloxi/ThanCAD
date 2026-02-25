@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which provides for ThanCad customisation.
 This module keeps a central repository of the options and variables common to all
 all drawings of ThanCad. It also gets/saves options to configuration files.
 """
 
-import ConfigParser
+from __future__ import print_function
+try:    from configparser import SafeConfigParser
+except: from ConfigParser import SafeConfigParser
 import p_ggen
 from thandefs.thanatt import thanAttCol, ThanAttCol
 
@@ -70,7 +72,7 @@ thanTempPrefix = "untitled"      #Prefix for the names of new drawings
 thanUndefPrefix = "<undefined>"  #Prefix for the undefined names (files, dirs etc)
 
 thanFontfamily = "Liberation serif"
-thanFontsize = 10
+thanFontsize = 12
 thanFontfamilymono = "Liberation mono"
 thanFontsizemono = thanFontsize - 1
 
@@ -122,8 +124,7 @@ def thanOptInterGet(c):
     except:
         pass
     else:
-        try: p_ggen.thanSetEncoding(val)
-        except: pass
+        p_ggen.thanSetEncoding(val)
     try:
         val = c.get("international", "translateto")
     except:
@@ -234,9 +235,9 @@ def thanOptsGet():
     "Reads the attributes from config files and store them as global variables."
     fc, terr = p_ggen.configFile("thancad.conf", "thancad")
     if terr != "":
-        print "thanOptsGet():", terr
+        print("thanOptsGet():", terr)
         return
-    c = ConfigParser.SafeConfigParser()
+    c = SafeConfigParser()
     c.read(fc)
     thanOptColorsGet(c)
     thanOptOsnapGet(c)
@@ -249,9 +250,9 @@ def thanOptsSave():
     "Writes the attributes to config files."
     fc, terr = p_ggen.configFile("thancad.conf", "thancad")
     if terr != "":
-        print "thanOptsSave():", terr
+        print("thanOptsSave():", terr)
         return
-    c = ConfigParser.SafeConfigParser()
+    c = SafeConfigParser()
     c.read(fc)
     thanOptColorsSave(c)
     thanOptOsnapSave(c)
@@ -260,7 +261,7 @@ def thanOptsSave():
     thanOptGeometrySave(c)
 
     try:
-        f = file(fc, "w")
+        f = open(fc, "w")
         c.write(f)
-    except IOError, why:
-        print "Could not save config file:", str(why)
+    except IOError as why:
+        print("Could not save config file:", str(why))

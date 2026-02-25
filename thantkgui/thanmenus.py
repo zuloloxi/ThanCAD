@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,10 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the menus and the mechanism to create and update them.
 """
+from __future__ import print_function
 import p_ggen, p_gtkwid
 import thanopt
 from thanvers import tcver
@@ -122,7 +123,7 @@ class ThanCadTkMenu(object):
         del self.__opened[i]
 
 
-    def __del__(self): print "ThanCadTkMenu", self, "dies."
+    def __del__(self): print("ThanCadTkMenu", self, "dies.")
 
 
 def thanStandardMenus(B):
@@ -503,7 +504,7 @@ if __name__ == "__main__":
     thanMenusSeq, thanMenus = thanStandardMenus()
     for m in thanMenusSeq: assert m in thanMenus
     for m in thanMenus: assert m in thanMenusSeq
-    print thanMenusSeq
+    print(thanMenusSeq)
     for m in thanMenusSeq:
-        print m
-        for mm in thanMenus[m]: print "      ", mm
+        print(m)
+        for mm in thanMenus[m]: print("      ", mm)

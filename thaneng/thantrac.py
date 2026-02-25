@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,17 +21,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module implements semiautomatic tracing of curves of a raster image.
 It is the link between ThanCad and the actual implementation.
 """
 
+from __future__ import print_function
 import thandr
 from thantrans import T
 from thanvar import Canc
 from thansupport import thanPan2Points
-import tr
+from . import tr
 
 def thanTrace(proj, jx, iy):
     "Trace a curve from pixel coordinates xp, yp."
@@ -42,8 +43,8 @@ def thanTrace(proj, jx, iy):
     celev = list(proj[1].thanVar["elevation"])
     while True:
         curvemain, fcs = tra.trace(iy, jx, curve=curvemain)
-        print "len curve:", len(curvemain), "number of possible directions=", len(fcs)
-        print "last pixel i,j:", curvemain[-1]
+        print("len curve:", len(curvemain), "number of possible directions=", len(fcs))
+        print("last pixel i,j:", curvemain[-1])
         emain = __crlines(proj, [curvemain])
         if len(fcs) < 1: return
         assert len(fcs) != 1, "It should have been found!"
@@ -113,4 +114,4 @@ def __crlines(proj, curves, col=None, ca=None):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

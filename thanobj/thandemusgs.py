@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines an object which contains a Digital Elevation Model (DEM)
 stored in USGS TIF file format.
@@ -31,8 +31,8 @@ import p_ggen, p_gtri
 try: import p_gearth
 except: pass
 from thantrans import T
-from thanobject import ThanObject
 import thandefs
+from .thanobject import ThanObject
 
 
 class ThanDEMusgs(ThanObject):
@@ -51,7 +51,7 @@ class ThanDEMusgs(ThanObject):
         than.write("%s %s\n" % (T["TIF filename:"], self.dtm.filnam))
         if self.dtm.im == "GDEM": return
         if self.thanIsNormal():
-            scen = " ".join(map(than.strdis, self.dtm.thanCen()))
+            scen = " ".join(map(than.strdis, self.dtm.thanCen()))   #works for python2,3
             than.write("%s %s\n" % (T["Centroid:"], scen))
             ca = list(than.elevation)
             ca[:2] = self.dtm.X0, self.dtm.Y0
@@ -84,8 +84,8 @@ class ThanDEMusgs(ThanObject):
             return
         try:
             im, terr = thandefs.imageOpen(self.filnam)
-            if terr != "": raise ValueError, terr
+            if terr != "": raise ValueError(terr)
             self.dtm.thanSet(self.filnam, im)  #This will raise ValueError is something is wrong
-        except (IOError, ValueError), why:
+        except (IOError, ValueError) as why:
             fr.prter("Invalid/missing TIF while reading %s: %s:\n%s" % (self.thanObjectName, self.filnam, why))
             self.dtm.im = None

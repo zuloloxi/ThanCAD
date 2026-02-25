@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the ellipse state, i.e. as the user moves the mouse, an ellipse
 is drawn from a given point to mouse cursor, continuously.
@@ -29,8 +29,8 @@ thanasis2012_12_19: This took ridiculously short time! Hooray!
 """
 from math import hypot
 from p_gmath import ellipse2Line, PI2
-from thantkconst import THAN_STATE_NONE
-from thantkguigeneric import ThanStateGeneric
+from .thantkconst import THAN_STATE_NONE
+from .thantkguigeneric import ThanStateGeneric
 
 
 class ThanStateEllipseb(ThanStateGeneric):

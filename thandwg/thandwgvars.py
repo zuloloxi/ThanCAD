@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,11 +21,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the variables and objects of a ThanCad drawing.
 """
 
+from __future__ import print_function
 from thanobj import thanObjClass
 from thantrans import T
 
@@ -57,15 +58,15 @@ def thanVarsImpThc(fr, ver):
     fr.readBeg(sec)                                    #May raise ValueError, StopIteration
     k = "dimensionality"; thanVar[k] = int(fr.readAtt(k)[0])   #May raise StopIteration, ValueError
     n = thanVar[k]
-    if n < 2: raise ValueError, "%s must be at least 2" % (k, n)
+    if n < 2: raise ValueError("%s must be at least 2" % (k, n))
     c = [0.0]*n
     for k in "elevation", "elevationstep", "thickness", "insbase":
         if k == "elevationstep" and ver <= (0,1,0):
             thanVar[k] = [1.0]*n
             continue
-        thanVar[k] = map(float, fr.readAtt(k))  #May raise StopIteration, ValueError
+        thanVar[k] = list(map(float, fr.readAtt(k)))  #May raise StopIteration, ValueError  #works for python2,3
         nt = len(thanVar[k])
-        if nt < 2: raise ValueError, "%s must have at least %d dimensions" % (k, n)
+        if nt < 2: raise ValueError("%s must have at least %d dimensions" % (k, n))
         if nt >= n: thanVar[k] = thanVar[k][:n]
         else:       thanVar[k] += c[nt:]
     fr.setElev(thanVar["elevation"])
@@ -117,9 +118,9 @@ def thanObjsExpThc(fw, thanObjects):
     sec = "OBJECTS"
     fw.writeBeg(sec)
     fw.pushInd()
-    for objs in thanObjects.itervalues():
+    for objs in thanObjects.values():   #works for python2,3
         for obj in objs:
-            print "object=", obj, "name=", obj.thanObjectName
+            #print "object=", obj, "name=", obj.thanObjectName
             obj.thanExpThc(fw)
     fw.popInd()
     fw.writeEnd(sec)
@@ -131,7 +132,7 @@ def thanObjsImpThc(fr, thanObjects):
     fr.readBeg(sec)                                    #May raise ValueError, StopIteration
     tend = "</" + sec + ">"
     while True:
-        dline = fr.next().strip()
+        dline = next(fr).strip()
         if dline == tend: return
         name = dline[1:-1]
         clas = thanObjClass.get(name, None)
@@ -139,7 +140,7 @@ def thanObjsImpThc(fr, thanObjects):
             fr.prter(T['Uknkown object "%s" is skipped'] % (name, ))
             te = "</" + name + ">"
             while True:
-                dline = fr.next().strip()
+                dline = next(fr).strip()
                 if dline == tend: return
                 if dline == te: break
             continue
@@ -148,13 +149,13 @@ def thanObjsImpThc(fr, thanObjects):
         ok = True
         try:
             obj.thanImpThc(fr)
-        except (ValueError, IndexError), why:
+        except (ValueError, IndexError) as why:
             ok = False
         if not ok:
             fr.prter(T['Error while reading object "%s":\n%s\nObject is skipped'] % (name, why))
             te = "</" + name + ">"
             while True:
-                dline = fr.next().strip()
+                dline = next(fr).strip()
                 if dline == tend: return
                 if dline == te: break
             continue
@@ -166,4 +167,4 @@ def thanObjsImpThc(fr, thanObjects):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

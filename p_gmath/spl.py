@@ -1,8 +1,11 @@
-"Splines and equidistant splines."
 # -*- coding: iso-8859-7 -*-
+"Splines and equidistant splines."
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, atan2, sqrt, floor
 import p_ggen
-from var import dpt
+from .var import dpt
 
 class ThanSpline:
     "A cubic Spline."
@@ -47,18 +50,18 @@ class ThanSpline:
         pr = 1.0
         if ic == 2: pr = -1.0
         x = tuple(xs); y = tuple(ys)
-        if zs == None: z = None
+        if zs is None: z = None
         else:          z = tuple(zs)
         t = [0.0]
         for i in xrange(1, len(x)):
             d = (x[i]-x[i-1])**2 + (y[i]-y[i-1])**2
-            if z != None: d += (z[i]-z[i-1])**2
+            if z is not None: d += (z[i]-z[i-1])**2
             t.append(sqrt(d))
         self.t = t; self.tmax = sum(t)
         self.x = x; self.xt = calc(x)
         self.y = y; self.yt = calc(y)
         self.z = z
-        if z != None: self.zt = calc(z)
+        if z is not None: self.zt = calc(z)
 
 
     def splfun(self, ts):
@@ -86,7 +89,7 @@ class ThanSpline:
         i = i-1
         xs, xts = calc(self.x, self.xt)
         ys, yts = calc(self.y, self.yt)
-        if self.z == None: return xs, ys
+        if self.z is None: return xs, ys
         zs, zts = calc(self.z, self.zt)
         return xs, ys, zs
 
@@ -117,14 +120,14 @@ class ThanSpline:
         xs, xts = calc(self.x, self.xt)
         ys, yts = calc(self.y, self.yt)
         theta = dpt(0.5*pi - atan2(xts,yts)) * 180.0 / pi
-        if self.z == None: return xts, yts, theta
+        if self.z is None: return xts, yts, theta
         zs, zts = calc(self.z, self.zt)
         return xts, yts, zts, theta
 
 
     def than2Line(self, dt=0.0, ta=None, tb=None):
         "Represent the spline with straight line segments."
-        if ta == None:
+        if ta is None:
             ta = 0.0
             tb = self.tmax
         if dt == 0.0:
@@ -276,4 +279,4 @@ class EquidistantSpline:
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

@@ -1,5 +1,10 @@
-import sys, os.path, ConfigParser, weakref
-from thantkutila import thanExtExpand, thanAbsrelPath
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+import sys, os.path, weakref
+try: from configparser import SafeConfigParser     #python3
+except: from ConfigParser import SafeConfigParser  #python2
+from .thantkutila import thanExtExpand, thanAbsrelPath
 
 #############################################################################
 #############################################################################
@@ -19,7 +24,7 @@ class ThanFiles:
         self.__openedFiles = []                    # Current drawings
         self.__recentFiles = []                    # Recent saved drawings
 
-        c = ConfigParser.SafeConfigParser()
+        c = SafeConfigParser()
         c.read(self.thanFilini)
         if c.has_option("files", "recent"):
             for f in c.get("files", "recent").split(","):
@@ -29,7 +34,7 @@ class ThanFiles:
 
     def thanConfigSave(self):
         "Write the recent files into configuration file."
-        c = ConfigParser.SafeConfigParser()
+        c = SafeConfigParser()
         c.read(self.thanFilini)
         if not c.has_section("files"): c.add_section("files")
         fs = [os.path.abspath(f) for f in self.__recentFiles]
@@ -37,7 +42,7 @@ class ThanFiles:
         if len(fs) > 0: fs = '"' + fs + '"'
         c.set("files", "recent", fs)
         try:
-            f = file(self.thanFilini, "w")
+            f = open(self.thanFilini, "w")
             c.write(f)
         except IOError: pass
 
@@ -120,16 +125,19 @@ class ThanFiles:
 
 if __name__ == "__main__":
     class St(str):
-        def thanFilRefresh(self): pass
+        def thanOpenedRefresh(self, a): pass
+        def thanRecentRefresh(self, a): pass
+    win1 = St("key1")    #The objects must be alive; only after we call thanOpenedDel can an object deleted
+    win2 = St("Key2")
     f = ThanFiles()
-    f.thanOpenedAdd(St("key1"), "file1")
-    f.thanOpenedAdd(St("key2"), f.thanTemp())
-    print f.thanOpenedGet()
-    f.thanOpenedDel(St("key1"))
-    print f.thanOpenedGet()
+    f.thanOpenedAdd(win1, "file1")
+    f.thanOpenedAdd(win2, f.thanTemp())
+    print(f.thanOpenedGet())
+    f.thanOpenedDel(win1)
+    print(f.thanOpenedGet())
     f.thanRecentAdd("filk1")
     f.thanRecentAdd(f.thanTemp())
     f.thanRecentAdd("filk2")
     f.thanRecentAdd("filk3")
     f.thanRecentAdd("filk1")
-    print f.thanRecentGet()
+    print(f.thanRecentGet())

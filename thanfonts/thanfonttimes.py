@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,12 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines ThanCad fonts made by straight lines.
 """
 
-from thanfont import ThanFontLine, thanFonts
+from __future__ import print_function
+from .thanfont import ThanFontLine, thanFonts
 
 def makeTimes1Lines():
     "Makes the lines that define each character in thanFontPrime1."
@@ -1195,6 +1196,6 @@ def makeTimes1Lines():
 thanFonts["thantimes1"] = ThanFontLine("thantimes1", (0,0), (100,100), (0,-20), False, makeTimes1Lines())
 
 if __name__ == "__main__":
-    print __doc__
-    for k,dilines in thanFonts["thantimes1"].thanDilines.iteritems():
-        print k, ':', dilines
+    print(__doc__)
+    for k,dilines in thanFonts["thantimes1"].thanDilines.items():  #works for python2,3
+        print(k, ':', dilines)

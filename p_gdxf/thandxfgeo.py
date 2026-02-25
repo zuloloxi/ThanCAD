@@ -3,27 +3,27 @@
 
 class ThanDxfGeo:
     "Mixin to geometry of .dxf file."
-	
+
 #===========================================================================
 
     def __init__(self):
         "No initialisation needed."
-	pass
+        pass
 
 #===========================================================================
 
     def thanDxfTop (self, xx, yy):
         "Transforms a 2d point to local coordinates."
         return (self.thanPXar + (xx-self.thanXar) * self.thanXfac,
-	        self.thanPYar + (yy-self.thanYar) * self.thanYfac)
+                self.thanPYar + (yy-self.thanYar) * self.thanYfac)
 
 #===========================================================================
 
     def thanDxfTop3 (self, xx, yy, zz):
         "Transforms a 3d point to local coordinates."
         return (self.thanPXar + (xx-self.thanXar) * self.thanXfac,
-	        self.thanPYar + (yy-self.thanYar) * self.thanYfac,
-	        self.thanPZar + (zz-self.thanZar) * self.thanZfac)
+                self.thanPYar + (yy-self.thanYar) * self.thanYfac,
+                self.thanPZar + (zz-self.thanZar) * self.thanZfac)
 
 #===========================================================================
 
@@ -73,19 +73,32 @@ class ThanDxfGeo:
     def thanWhere3(self):
         "Returns the current position of the 'pen'."
         return ((self.thanPXnow - self.thanPXar) / self.thanXfac + self.thanXar,
-                (self.thanPYnow - self.thanPYar) / self.thanYFac + self.thanYar,
-                (self.thanPZnow - self.thanPZar) / self.thanZFac + self.thanZar )
-
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL FUNCTIONS
+                (self.thanPYnow - self.thanPYar) / self.thanYfac + self.thanYar,
+                (self.thanPZnow - self.thanPZar) / self.thanZfac + self.thanZar )
 
 
-#############################################################################
-#############################################################################
+    def thanDxfGetNow(self):
+        "Returns the current position of the 'pen' in plot units (for example cm)."
+        return self.thanPXnow, self.thanPYnow
 
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
+
+    def thanDxfGetNow3(self):
+        "Returns the current position of the 'pen' in plot units (for example cm)."
+        return self.thanPXnow, self.thanPYnow, self.thanPZnow
+
+
+    def thanDxfSetNow(self, px, py):
+        "Sets the current position of the 'pen' in plot units (for example cm)."
+        self.thanPXnow = px
+        self.thanPYnow = py
+
+
+    def thanDxfSetNow3(self, px, py, pz):
+        "Sets the current position of the 'pen' in plot units (for example cm)."
+        self.thanPXnow = px
+        self.thanPYnow = py
+        self.thanPZnow = pz
+
 
 if __name__ == "__main__":
     dxf = ThanDxfGeo()

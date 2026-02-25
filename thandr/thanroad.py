@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,22 +21,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the road element. It is a polyline with its corners rounded
 with circular arcs of given radius.
 """
-from itertools import izip
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import fabs, hypot, sqrt, pi, cos, sin
 from p_ggen import iterby2, iterby3, thanUnicode
 from p_gmath import thanNearx, thanNear2
 import p_ggeom
 from thanvar import Canc, tkRoadNode, calcRoadNode, thanCleanLine2
 from thantrans import T
-import thanintall
-from thanelem import ThanElement
-from thanline import ThanLine
-from thanarc import ThanArc
+from . import thanintall
+from .thanelem import ThanElement
+from .thanline import ThanLine
+from .thanarc import ThanArc
 
 ############################################################################
 ############################################################################
@@ -67,7 +69,7 @@ class ThanRoad(ThanElement):
         "Returns False if the road is degenerate (only 1 node)."
         if len(self.cp) < 2: return False       # Return False if road is degenerate
         cp = iter(self.cp)
-        c1 = cp.next()
+        c1 = next(cp)
         for c2 in cp:
             if not thanNear2(c1, c2): return True
         return False      # All line points are close together
@@ -82,22 +84,24 @@ class ThanRoad(ThanElement):
         "Rotates the element within XY-plane with predefined angle and rotation angle."
         self.thanRotateXyn(self.cpr)
 
-
     def thanMirror(self):
         "Mirrors the element within XY-plane with predefined point and unit vector."
         self.thanMirrorXyn(self.cpr)
 
+    def thanMirror(self):
+        "Mirrors the element within XY-plane with respect to predefined point."
+        self.thanPointMirXyn(self.cpr)
 
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
         for cc in self.cpr:
-            cc[:-1] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(cc[:-1], cs)]
+            cc[:-1] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(cc[:-1], cs)]  #works for python2,3
             cc[-1] *= scale     # Radius
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
         for cc in self.cpr:
-            cc[:-1] = [cc1+dd1 for (cc1,dd1) in izip(cc[:-1], dc)]
+            cc[:-1] = [cc1+dd1 for (cc1,dd1) in zip(cc[:-1], dc)] #works for python2,3
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
         "Return a point of type in otypes nearest to xcu, ycu."
@@ -108,7 +112,7 @@ class ThanRoad(ThanElement):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "end", c[:-1]))
         if "mid" in otypes:
             for ca, cb in iterby2(self.cpr):
-                c = [(ca1+cb1)*0.5 for (ca1,cb1) in izip(ca, cb)]
+                c = [(ca1+cb1)*0.5 for (ca1,cb1) in zip(ca, cb)]  #works for python2,3
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "mid", c[:-1]))
         if "nea" in otypes:
             c = self.thanPntNearest(ccu)
@@ -138,7 +142,7 @@ class ThanRoad(ThanElement):
             elif dt < 0.0 or dt > aa: continue
             dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
             if dn < dmax:
-                cp1 = [e+(f-e)*dt/aa for (e,f) in izip(cp[i-1], cp[i])]
+                cp1 = [e+(f-e)*dt/aa for (e,f) in zip(cp[i-1], cp[i])]  #works for python2,3
                 del cp1[-1]
                 dmax = dn
                 iseg = i
@@ -220,7 +224,7 @@ class ThanRoad(ThanElement):
                 if c1 == Canc and len(cpr) < 2: return Canc         # Road was cancelled
                 if c1 == Canc or c1 == "" or c1 == "c": break       # Road was ended
                 if cargo == "r":
-                    print "r:", c1
+                    print("r:", c1)
                     res = proj[2].thanGudGetRoadR(ctr[-2], cpr[-1], c1, r1, T["New radius: "])
                     if res != Canc: cpr[-1][-1] = r1 = res
                 elif c1 == "r":                                     # Get new radius
@@ -243,8 +247,8 @@ class ThanRoad(ThanElement):
                     items, ct = tkRoadNode(xp1, yp1, xp2, yp2, xp3, yp3, rp2, dc, fi, (), tags)
                     dc.delete(items[2])
                     ctr[-2] = l2g(*ct)
-                    print "----------------------------------------------"
-                    for c1 in cpr: print c1
+                    print("----------------------------------------------")
+                    for c1 in cpr: print(c1)
                     c1 = None; r1 = rdef
                     proj[2].thanCom.thanAppend("%s%d\n" % (T["Radius="], r1), "info1")
             if c1 == "u":
@@ -455,4 +459,4 @@ class ThanRoad(ThanElement):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

@@ -28,17 +28,18 @@ This module defines a separate windows which shows active error messages. In the
 future, if the user doubleclicks an error message, appropriate action will be
 carried out, to correct the error (with the user's help).
 """
-import time, Tkinter
+from __future__ import print_function
+import time, tkinter
 import p_gtkwid, p_ggen
 
 
-class ThanTkWinError(Tkinter.Toplevel, p_gtkwid.ThanFontResize):
+class ThanTkWinError(tkinter.Toplevel, p_gtkwid.ThanFontResize):
     "A window with active error messages."
 
     def __init__(self, master, mes="", title="", modal=False, hbar=0, vbar=1, width=80, height=25,
         font=None, background="orange", foreground="black"):
         "Create the Information window."
-        Tkinter.Toplevel.__init__(self, master)
+        tkinter.Toplevel.__init__(self, master)
         self.thanResizeFont(font)
         if modal: p_gtkwid.thanGrabSet(self)
         self.title(p_ggen.thanUnicode(title))
@@ -109,12 +110,12 @@ class ThanTkWinError(Tkinter.Toplevel, p_gtkwid.ThanFontResize):
         "Erases circular dependencies."
         del self.thanTxtHelp
         p_gtkwid.ThanFontResize.thanDestroy(self)
-        Tkinter.Toplevel.destroy(self)
+        tkinter.Toplevel.destroy(self)
 
 
     def __del__(self):
         "For debugging reasons, inform that the window releases its memory."
-        print "ThanTkWinError", self, "dies.."
+        print("ThanTkWinError", self, "dies..")
 
 
 class ThanShellError:
@@ -127,7 +128,7 @@ class ThanShellError:
 
 
 def test(mes):
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     e = ThanTkWinError(root, mes, "Μήτσα")
     e.thanPrt("\n\nAndreas\tStella\n", "info1")
     e.thanPrt("\tChildren\n", "info")

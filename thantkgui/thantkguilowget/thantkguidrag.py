@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,17 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines dragging state, i.e. the generic way that ThanCad responds to
 dragging events like realtime zoom and realtime pan.
 """
-import Tkinter
-from thantkconst import (THAN_STATE_DRAG2BEGIN, THAN_STATE_DRAGFIRST,
+import tkinter
+from thanvar import thanLogTk
+from .thantkconst import (THAN_STATE_DRAG2BEGIN, THAN_STATE_DRAGFIRST,
     THAN_STATE_DRAGGING, THAN_STATE_PANDYNAMIC, THAN_STATE_ZOOMDYNAMIC,
     THAN_STATE_NONE)
-from thanvar import thanLogTk
-from thantkguigeneric import ThanStateGeneric
+from .thantkguigeneric import ThanStateGeneric
 
 class ThanStateDrag(ThanStateGeneric):
     "An object which interprets dragging events as events as ????."
@@ -78,8 +78,8 @@ class ThanStateDrag(ThanStateGeneric):
         if dc.thanState == THAN_STATE_PANDYNAMIC:
             dx = -int(x - dc.thanXcu)                    # pixels
             dy = -int(y - dc.thanYcu)                    # pixels
-            dc.xview(Tkinter.SCROLL, dx, Tkinter.UNITS)
-            dc.yview(Tkinter.SCROLL, dy, Tkinter.UNITS)
+            dc.xview(tkinter.SCROLL, dx, tkinter.UNITS)
+            dc.yview(tkinter.SCROLL, dy, tkinter.UNITS)
             x += dx     # Because the view window changed, local coords of elements (and croshair)
             y += dy     # did not change with these commands. Thus modify croshair coordinates,
                         # so that croshair remains at the same "view" position
@@ -87,7 +87,7 @@ class ThanStateDrag(ThanStateGeneric):
             dy = int(y - dc.thanYcu)                     # pixels
             fact = 1.03, 1.03
             if dy < 0: fact = 0.97, 0.97
-            args = (Tkinter.ALL,) + self.__zoomorigc + fact
+            args = (tkinter.ALL,) + self.__zoomorigc + fact
             dc.scale(*args)
 
 #-------Ending values

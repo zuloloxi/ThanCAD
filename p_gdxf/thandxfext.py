@@ -27,4 +27,4 @@ thanCadCodes = \
 }
 
 thanCadAtts = {}
-for code,att in thanCadCodes.iteritems(): thanCadAtts[att] = code
+for code,att in thanCadCodes.items(): thanCadAtts[att] = code   #OK for python 2,3

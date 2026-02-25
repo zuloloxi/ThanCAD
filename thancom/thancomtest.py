@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module contains tests that should eventually test every aspect of ThanCad
 and report errors.
 """
 from math import fabs
 from thanvar import Canc
-import thancomfile, thancomvar
+import thandr
+from . import thancomfile, thancomvar
 
 
 def thanTestLine1oldold(proj):
@@ -41,7 +42,7 @@ def thanTestLine1oldold(proj):
            )
     try:
         thancomvar.thanVarScriptDo(projt, coms)
-    except Exception, e:
+    except Exception as e:
         proj[2].thanPrter("Test failed: %s" % (e,))
         projt[2].thanPrter("Test failed: %s" % (e,))
         return projt[2].thanGudCommandEnd()
@@ -78,7 +79,7 @@ def thanTestLine1old(proj):
         projt[2].thanPrt("line: area=%s length=%s" % (lin.thanArea(), lin.thanLength()))
         projt[2].thanPrt("circle: area=%s length=%s" % (cir.thanArea(), cir.thanLength()))
         projt[2].thanGudCommandEnd()
-    except Exception, e:
+    except Exception as e:
         projt[2].thanGudCommandEnd("Test failed: %s" % (e,))
         return proj[2].thanGudCommandEnd("Test failed: %s" % (e,))
 #    projt[1].thanResetModified()           #Set as unmodified in order to close the temporary drawing
@@ -107,11 +108,11 @@ def thanTestLine1(proj):
 #        projt[2].thanPrt("line 2: area=%f length=%f" % (lin2.thanArea(), lin2.thanLength()))
         for lin, area, alen in lins:
             if fabs(area - lin.thanArea()) > eps:
-                raise ValueError, "Line area should be %f but is %f" % (area, lin.thanArea())
+                raise ValueError("Line area should be %f but is %f" % (area, lin.thanArea()))
             if fabs(alen - lin.thanLength()) > eps:
-                raise ValueError, "Line length should be %f but is %f" % (alen, lin.thanLength())
+                raise ValueError("Line length should be %f but is %f" % (alen, lin.thanLength()))
         projt[2].thanGudCommandEnd()
-    except Exception, e:
+    except Exception as e:
         projt[2].thanGudCommandEnd("Test failed: %s" % (e,))
         return proj[2].thanGudCommandEnd("Test failed: %s" % (e,))
 
@@ -119,3 +120,26 @@ def thanTestLine1(proj):
     r = thancomfile.thanFileCloseDo(projt)
     assert r != Canc, "file is unmodified, why did it fail to close?"
     return proj[2].thanGudCommandEnd("Test succeeded!")
+
+
+def thanCircle01(proj):
+    "Test the creation and mnipulation of a circle."
+    c = thandr.ThanCircle()
+    cc = list(proj[1].thanVar["elevation"])
+    cc[:3] = 100.0, 200.0, 10.0
+    c.thanSet(cc, 0.0)
+    assert not c.thanIsNormal()
+    c.thanSet(cc, 50.0, spin=1)
+    assert c.thanIsNormal()
+    assert c.cc == cc
+    assert c.r == 50.0
+    assert c.spin == 1
+    c.thanReverse()
+    assert c.spin == -1
+    c.thanMove([1.0, 1.0, 1.0])
+    assert c.cc[0] == 101.0
+    assert c.cc[1] == 51.0
+    assert c.cc[1] == 11.0
+    c.thanMove([-1.0, -1.0, -1.0])
+    assert c.cc == cc
+

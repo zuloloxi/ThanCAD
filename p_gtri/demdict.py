@@ -1,7 +1,10 @@
+from __future__ import print_function
+#from future.utils import iteritems
+from p_ggen.py23 import iteritems
 from math import hypot, cos, sin
 from p_gmath import linint, dpt
-import p_ggen, p_gcom
-import dtmvar, hulls
+import p_ggen, p_gvarcom
+from . import dtmvar, hulls
 
 class ThanDEMdict(dtmvar.ThanDTMDEM):
     "A DEM based on python dict."
@@ -14,7 +17,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
         self.GDAL_NODATA = None          #Special pixel value that means that the pixel has unknown elevation
         self.filnam = ""                 #Pathname of the tif file.
         self.im = None                   #Tif file which stores the DTM
-        self.xymma = p_gcom.Xymm()       #The coordinates of the lower left and the upper right nodes of the DEM in object coordinates
+        self.xymma = p_gvarcom.Xymm()    #The coordinates of the lower left and the upper right nodes of the DEM in object coordinates
         self.thanCena = (0.0, 0.0, 0.0)  #Centroid of the DEM in object coordinates
 
 
@@ -24,7 +27,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
         self.DX = dx
         self.DY = dy
         self.theta = dpt(theta)
-        if hull == None:
+        if hull is None:
             hull = []
             for cline1 in dtm.thanLines: hull.extend(cline1)
         self.hull = hulls.hull(hull)
@@ -47,7 +50,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
         for iy, pyaxis in enumerate(p_ggen.xfrange(self.xymma[1], self.xymma[3], self.DY)):
             c1, c2 = dtmvar.thanPolygonLine(self.hull, pyaxis, n)
 #            assert c1 != None, "There should be 2 intersections!"
-            if c1 == None: continue
+            if c1 is None: continue
             nc, cprof = dtm.thanLineZ((c1, c2))
             if nc == -1: continue
             i = 0
@@ -72,9 +75,9 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
         "Build a DEM using the point feature of the DTM made of lines."
         zgrid = self.zgrid
         for iy, pyaxis in enumerate(p_ggen.xfrange(self.xymma[1], self.xymma[3], self.DY)):
-            print iy, pyaxis, "/", self.xymma[3]
+            print(iy, pyaxis, "/", self.xymma[3])
             c1, c2 = dtmvar.thanPolygonLine(self.hull, pyaxis, n)
-            if c1 == None: continue
+            if c1 is None: continue
             pxa = t[0]*c1[0]+t[1]*c1[1]
             pxb = t[0]*c2[0]+t[1]*c2[1]
             assert pxa >= self.xymma[0]
@@ -85,7 +88,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
                 if pxaxis > pxb: break
                 cn = pxaxis*t[0]+pyaxis*n[0], pxaxis*t[1]+pyaxis*n[1], None
                 z = dtm.thanPointZ(cn)
-                if z == None: continue
+                if z is None: continue
                 zgrid[jx, iy] = z
 
 
@@ -102,7 +105,7 @@ class ThanDEMdict(dtmvar.ThanDTMDEM):
 
     def dxfout(self, dxf):
         "Plot the DEM in dxf file."
-        for (jx, iy), h in self.zgrid.iteritems():
+        for (jx, iy), h in iteritems(self.zgrid):
             x = jx*self.DX + self.xymma[0]
             y = iy*self.DY + self.xymma[1]
             dxf.thanDxfPlotPoint3(x, y, h)

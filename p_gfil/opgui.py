@@ -1,6 +1,9 @@
 # -*- coding: iso-8859-7 -*-
-import time, ConfigParser
-import Tkinter
+from __future__ import print_function
+import time
+try: from configparser import SafeConfigParser
+except: from ConfigParser import SafeConfigParser
+import tkinter
 import p_ggen, p_gtkwid
 Tgui = p_ggen.Tgui
 
@@ -12,13 +15,13 @@ iconxbm = None      #Icon to be shown near the title of the window
 tkclass = None
 
 
-class Root(Tkinter.Tk, p_gtkwid.ThanFontResize):
+class Root(tkinter.Tk, p_gtkwid.ThanFontResize):
     "A gui window for opening files and showing program status."
 
     def __init__(self, descp, *args, **kw):
         "Create widgets."
         if "className" not in kw: kw["className"] = "thanapps"
-        Tkinter.Tk.__init__(self, *args, **kw)
+        tkinter.Tk.__init__(self, *args, **kw)
         self.title(p_ggen.thanUnicode(descp))
         self.thanResizeFont()
         p_gtkwid.thanDeficon(self, iconxbm)
@@ -38,7 +41,7 @@ class Root(Tkinter.Tk, p_gtkwid.ThanFontResize):
         self.__crmenus()
 #        self.protocol("WM_DELETE_WINDOW", destroy) # In case user via window manager
         try: self.geometry(geom)
-        except: print "bad geometry:", geom; pass
+        except: print("bad geometry:", geom); pass
         self.timep = time.time()
         self.dtimep = 5.0
 
@@ -90,20 +93,20 @@ class Root(Tkinter.Tk, p_gtkwid.ThanFontResize):
         "Break circular references."
         del self.tinfo
         self.thanDestroy()
-        Tkinter.Tk.destroy(self)
+        tkinter.Tk.destroy(self)
 
 
 def thanTxtopen(win, mes, suf=".txt", mode="r", initialfile=None, initialdir=None):
     "Opens a text file for reading or writting something."
-    if initialdir == None: initialdir = prevdir
-    if initialfile == None: initialfile = prevpref.namebase
+    if initialdir is None: initialdir = prevdir
+    if initialfile is None: initialfile = prevpref.namebase
     if "w" in mode:
         fildxf, frw = p_gtkwid.thanGudOpenSaveFile(win, suf, mes, mode,
             initialfile, initialdir)
     else:
         fildxf, frw = p_gtkwid.thanGudOpenReadFile(win, suf, mes, mode,
             initialfile, initialdir)
-    if frw == None: return p_ggen.Canc, p_ggen.Canc     # File open cancelled
+    if frw is None: return p_ggen.Canc, p_ggen.Canc     # File open cancelled
     return p_ggen.path(fildxf), frw
 
 
@@ -117,8 +120,8 @@ def openfileWinmain(descp):
 
 def openfileWinget():
     "Return root and print function."
-    if root == None and prevdir == ".": thanOptsGet()        #In case we need prevdir without the gui mechanism
-    if root == None: return root, None,         prevdir
+    if root is None and prevdir == ".": thanOptsGet()        #In case we need prevdir without the gui mechanism
+    if root is None: return root, None,         prevdir
     else:            return root, root.thanPrt, prevdir
 
 def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
@@ -131,14 +134,14 @@ def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
        which have .asc as a suffix:  a.asc, thanasis.asc, 1.asc, ...
     2. The filenames are transformed to lower, to facilitate windows..
     """
-    if initialdir == None: _, _, initialdir = openfileWinget()
+    if initialdir is None: _, _, initialdir = openfileWinget()
     return p_gtkwid.xinpFiles(win, mes, suf, nest, initialdir)
 
 
 def openfileWindestroy():
     "Destroy gui."
     global root, geom
-    if root == None: return
+    if root is None: return
     geom = root.geometry()
     thanOptsSave()
     root.thanPrt("\n%s\n" % (Tgui["Close this window to finish.."],), "mes")
@@ -217,9 +220,9 @@ def thanOptsGet():
     "Reads the attributes from config files and store them as global variables."
     fc, terr = p_ggen.configFile("common.conf", "thanapps")
     if terr != "":
-        print "thanOptsGet():", terr
+        print("thanOptsGet():", terr)
         return
-    c = ConfigParser.SafeConfigParser()
+    c = SafeConfigParser()
     c.read(fc)
     thanOptGeometryGet(c)
     thanOptFilesGet(c)
@@ -229,14 +232,14 @@ def thanOptsSave():
     "Writes the attributes to config files."
     fc, terr = p_ggen.configFile("common.conf", "thanapps")
     if terr != "":
-        print "thanOptsSave():", terr
+        print("thanOptsSave():", terr)
         return
-    c = ConfigParser.SafeConfigParser()
+    c = SafeConfigParser()
     c.read(fc)
     thanOptGeometrySave(c)
     thanOptFilesSave(c)
     try:
-        f = file(fc, "w")
+        f = open(fc, "w")
         c.write(f)
-    except IOError, why:
-        print "Could not save config file:", str(why)
+    except IOError as why:
+        print("Could not save config file:", str(why))

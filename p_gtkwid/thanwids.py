@@ -1,24 +1,24 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import bisect
-from Tkinter import (Menu, Listbox, Menubutton, Scrollbar, Checkbutton,
+from tkinter import (Menu, Listbox, Menubutton, Scrollbar, Checkbutton,
     Frame, Radiobutton, Button, Text, Entry, Label,
     IntVar, Toplevel,
     END, SINGLE, EXTENDED, RAISED, GROOVE, SUNKEN, FLAT, HORIZONTAL, VERTICAL,
     BASELINE, SEL, ACTIVE, NORMAL, DISABLED,  W)
-from tkMessageBox import ERROR
+from tkinter.messagebox import ERROR
 from p_ggen import thanUnicode, thanUnunicode, prg, path, Struct, rdict
 import p_gcol
-from thantkutila import (thanGudGetSaveFile, thanGudGetReadFile,
+from .thantkutila import (thanGudGetSaveFile, thanGudGetReadFile,
     thanGudGetDir, thanGudOpenSaveFile, thanAbsrelPath, thanGudPosition,
     thanGudModalMessage as mm)
-from thantksimpledialog import ThanDialog
-from thantkutilb import thanFontRefSave
-from thanwidstrans import T
+from .thantksimpledialog import ThanDialog
+from .thantkutilb import thanFontRefSave
+from .thanwidstrans import T
 
-
-##############################################################################
-##############################################################################
 
 class ThanMenu(Menu):
     """A menu that shows status when a user interacts with it.
@@ -124,7 +124,7 @@ class ThanMenu(Menu):
         self.delete(0, END)
         Menu.destroy(self)
 
-    def __del__(self): print "ThanMenu", self, "is deleted"
+    def __del__(self): print("ThanMenu", self, "is deleted")
 
 
 def thanTkGuiCreateMenus(self, mlist):
@@ -230,7 +230,7 @@ def thanTkCreateThanMenus2(self, mlist, statcommand=None, condition=None):
         if mlist[i][0] == "menu":
             i = __menu(mlist, menuBar, i, statcommand, condition, submenus)
         else:
-            raise ValueError, "Element %s of mlist should mark the beginning of a menu" % i
+            raise ValueError("Element %s of mlist should mark the beginning of a menu" % i)
         i += 1
     self.config(menu=menuBar)
     return menuBar, submenus
@@ -256,7 +256,7 @@ def __menu(mlist, menuBar, i, statcommand, condition, submenus):
             i = __menu(mlist, menu, i, statcommand, condition, submenus)  # Create submenu entry
         else:
             if not callable(m[0]):
-                raise ValueError, "ThanMenu label: %s\nA callable was expected, but type %s was found: %s" % (m[1], type(m[0]), m[0])
+                raise ValueError("ThanMenu label: %s\nA callable was expected, but type %s was found: %s" % (m[1], type(m[0]), m[0]))
             if len(m) > 3: fg = m[3]    # Create normal menu entry
             else         : fg = None
             menu.add_command(label=m[1], command=m[0], help=m[2], foreground=fg)   # Create normal menu entry
@@ -365,7 +365,7 @@ class ThanChoice(Menubutton):
     def thanSetText(self, t):
         for i,key in enumerate(self.thanLabels):
             if key == t: break
-        else: raise IndexError, t
+        else: raise IndexError(t)
         self.thanChoice = i
         Menubutton.config(self, text=thanUnicode(key))
 
@@ -462,7 +462,7 @@ class ThanChoiceRef(Menubutton):
         del self.thanMenu, self.thanCommand, self.thanChoice, self.thanObjs
         Menubutton.destroy(self)
 
-    def __del__(self): print "ThanChoiceRef", self, "is deleted"
+    def __del__(self):print("ThanChoiceRef", self, "is deleted")
 
 
 ##############################################################################
@@ -646,7 +646,7 @@ class ThanPoplistCol(ThanDialog):
     def apply(self):
         "Gets the chosen value and returns it."
         indexes = self.__li.curselection()
-        print "ThanPopList: ACTIVE=", ACTIVE, "type=", type(ACTIVE)
+        print("ThanPopList: ACTIVE=", ACTIVE, "type=", type(ACTIVE))
         if len(indexes) < 1: self.result = [self.__val[self.__li.index(ACTIVE)]]
         else: self.result = [self.__val[int(i)] for i in indexes]
         if self.__selectmode == SINGLE: self.result = self.result[0]
@@ -829,7 +829,7 @@ class ThanCombo(Frame):
 
     def __del__(self):
         "For debugging."
-        print "ThanCombo", self, "is deleted"
+        print("ThanCombo", self, "is deleted")
 
 
 ##############################################################################
@@ -858,7 +858,7 @@ class ThanFile(Frame):
         self.initialdir = path(initialdir).abspath()
 #        print "ThanFile:initialdir=", self.initialdir
         try: self.initialdir.chdir()     #Try to change to this directory
-        except OSError, e: print str(e)
+        except OSError as e: print(str(e))
         Frame.__init__(self, master)
         if readonly: self.thanText = ThanLabel(self, justify="right")
         else:        self.thanText = ThanEntry(self, justify="right")
@@ -886,7 +886,7 @@ class ThanFile(Frame):
 
     def thanOpen(self):
         "Prompt the user to search for the filename; it may be overwritten."
-        print "thanwids: ThanFile: thanOpen(): extension=", self.thanExt
+        print("thanwids: ThanFile: thanOpen(): extension=", self.thanExt)
         filnam = self.thanGet()              #This absolute path
         if self.thanBeforeopen is not None and not self.thanBeforeopen(filnam): return
         if self.thanMode == "r":
@@ -959,7 +959,7 @@ class ThanFile(Frame):
 
     def __del__(self):
         "Print message when deleted, to aid debugging."
-        print "ThanFile", self, "is deleted"
+        print("ThanFile", self, "is deleted")
 
 
 ##############################################################################
@@ -1019,7 +1019,7 @@ class ThanText(Text):
             self.update()
             b = self.bbox(index)
             if b is None:
-                print "ThanText.set_insert() failed. No position has been set."
+                print("ThanText.set_insert() failed. No position has been set.")
                 return
 #       The following code makes the position of index the position of the next character from keyboardvisible
         self.event_generate("<Button-1>", x=b[0], y=b[1])        #Thanasis2011_07_10:this line was commented out
@@ -1111,13 +1111,13 @@ class ThanText(Text):
             elif key == "tagoff":
                 inda = tagon.pop(val, None)
                 if inda is None:
-                    print "thanInsertFtext: tagoff '%s' without previous tagon." % (val,)
+                    print("thanInsertFtext: tagoff '%s' without previous tagon." % (val,))
                     inda = ind1
                 pos1 = self._rel(fo.ind1, ind1, inda)
                 pos2 = self._rel(fo.ind1, ind1, ind)
                 self.tag_add(val, pos1, pos2)
-        for val, inda in tagon.iteritems():
-            print "thanInsertFtext: tagon '%s' without later tagoff." % (val,)
+        for val, inda in tagon.items():   #OK for python 2, 3
+            print("thanInsertFtext: tagon '%s' without later tagoff." % (val,))
 #            ind = len(fo.text)  ???!!!
 #            self.tag_add(val, self._rel(fo.ind1, ind1, inda), self._rel(fo.ind1, ind1, ind))
 
@@ -1331,7 +1331,7 @@ class ThanLabyesno(Label):
         t = self.cget("text")
         if t == self.__yes: return True
         elif t == self.__no: return False
-        raise ValueError, "Unexpected value: %s. Please use thanSet() to put values to the widget." % (t, )
+        raise ValueError("Unexpected value: %s. Please use thanSet() to put values to the widget." % (t, ))
 
     def __replacetext(self, kw):
         "Get the text value and convert to boolean."
@@ -1344,7 +1344,7 @@ class ThanLabyesno(Label):
         else:                        #String
             if t[:2] in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): t = True
             elif t[:2] in ('οχ', 'ΟΧ', 'ox', 'OX', 'no', 'NO', '0'): t = False
-            else: raise ValueError, "Invalid bool value: %s" % (t,)
+            else: raise ValueError("Invalid bool value: %s" % (t,))
         if t:
             kw["text"] = self.__yes
             kw.setdefault("bg", self.__bgyes)
@@ -1532,7 +1532,7 @@ class ThanButtonIm(Button):
         frw.close()
         try:
             im.save(filnam)
-        except Exception, why:
+        except Exception as why:
             mm(self, "%s\n%s" % (T["Photo was not saved:"], why),  "%s - %s" % (filnam, T["Save failed"]), ERROR)   # (Gu)i (d)ependent
 
 
@@ -1543,7 +1543,7 @@ class ThanButtonIm(Button):
         Button.destroy(self)
 
 
-    def __del__(self): print "ThanButtonIm", self, "is deleted"
+    def __del__(self): print("ThanButtonIm", self, "is deleted")
 
 
 class ThanRef(Frame):
@@ -1621,7 +1621,7 @@ class ThanRef(Frame):
 
     def __del__(self):
         "Print message when deleted, to aid debugging."
-        print "ThanReference", self, "is deleted"
+        print("ThanReference", self, "is deleted")
 
 
 class ThanStatusBar(Frame):
@@ -1657,7 +1657,7 @@ class ThanStatusBar(Frame):
 
     def __del__(self):
         "Report that object dies for debugging purposes."
-        print "ThanStatusBar", self, "dies.."
+        print("ThanStatusBar", self, "dies..")
 
 ##############################################################################
 ##############################################################################
@@ -1724,7 +1724,7 @@ def _disfg(master):
 ##############################################################################
 
 import sys
-from Tkinter import Tk
+from tkinter import Tk
 
 def dddd():
     global mb1
@@ -1735,12 +1735,12 @@ def dddd():
 def testPoplist():
     root = Tk()
     win = ThanPoplist(root, (20*"thanasis dimitra andreas stella").split(), width=30, height=50, title="Choose someone")
-    print win.result
+    print(win.result)
 
 def testPoplistextented():
     root = Tk()
     win = ThanPoplist(root, (20*"thanasis dimitra andreas stella").split(), width=30, height=50, selectmode=EXTENDED, title="Choose someone")
-    print win.result
+    print(win.result)
 
 
 
@@ -1752,20 +1752,20 @@ if __name__ == "__main__":
                                        ("andreas", (0,0,255)),
                                        ("stella",  (255,255,0)),
                                       ), width=30, height=50, title="Choose someone")
-        print "ThanPoplist result =", win.result
+        print("ThanPoplist result =", win.result)
 
     def testpopext(evt=None):
         win = ThanPoplist(mb31, (20*"thanasis dimitra ανδρέας stella").split(), width=30, height=50, selectmode=EXTENDED, title="Choose someone")
-        print "ThanPoplist result =", win.result
+        print("ThanPoplist result =", win.result)
 
-    def pr(a): print a
+    def pr(a): print(a)
 
     root = Tk()
     if sys.platform == "win32":
         root.option_add("*font", "Arial 10")
     else:
-        import tkFont
-        f=tkFont.Font(family="Thorndale AMT", size=12)
+        import tkinter
+        f=tkinter.font.Font(family="Thorndale AMT", size=12)
 #        f=tkFont.Font(family="monospace", size=12)
         root.option_add("*font", f)
 
@@ -1778,7 +1778,7 @@ if __name__ == "__main__":
     del m
 
     labs = ("Thanasis", "Δήμητρα", "Andreas")*10
-    print labs
+    print(labs)
     mb2 = ThanChoice(root, labels=labs, relief=RAISED)
     mb2.grid()
     mb3 = ThanYesno(root, relief=RAISED)

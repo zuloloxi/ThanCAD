@@ -1,3 +1,5 @@
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from p_gmath import thanNear2, thanNearx
 
 def areapn(cc):
@@ -28,7 +30,7 @@ def spin(cp):
         if a > 0.0: return -1                #Nodes are clockwise
         if a < 0.0: return  1                #Nodes are Counter-Clockwise
         cp = iter(cp)
-        c1 = cp.next()
+        c1 = next(cp)
         for c2 in cp:
             if not thanNear2(c1, c2): break  #Only x,y coordinate are taken into account for the spin
         else:

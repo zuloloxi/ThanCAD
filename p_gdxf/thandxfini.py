@@ -1,16 +1,16 @@
 # -*- coding: iso-8859-7 -*-
-
+from __future__ import print_function
 from os.path import splitext
 from math import fabs
 from p_ggen import path
 
-from thandxflin import ThanDxfLin
-from thandxfsym import ThanDxfSym
-from thandxfdra import ThanDxfDra
-from thandxfgeo import ThanDxfGeo
-from thandxfatt import ThanDxfAtt
+from .thandxflin import ThanDxfLin
+from .thandxfsym import ThanDxfSym
+from .thandxfdra import ThanDxfDra
+from .thandxfgeo import ThanDxfGeo
+from .thandxfatt import ThanDxfAtt
 
-from thandxfext import thanCadCodes
+from .thandxfext import thanCadCodes
 
 #############################################################################
 #############################################################################
@@ -65,11 +65,11 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
     def thanDxfPlots1 (self, uDxf1=None, vars=()):
         "Initialisation 2."
 
-        if uDxf1 == None:
+        if uDxf1 is None:
             global _idatFil
             _idatFil += 1
-            self.thanFdxf = file(("data%03d.dxf"%_idatFil), "w")
-#            self.thanFdxf = file("data"+str(_idatFil)+".dxf", "w")
+            self.thanFdxf = open(("data%03d.dxf"%_idatFil), "w")
+#            self.thanFdxf = open("data"+str(_idatFil)+".dxf", "w")
         else:
             self.thanFdxf = uDxf1
 
@@ -279,12 +279,12 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         """
         self.thanDxfWrEntry(0, 'LAYER')
         self.thanDxfWrEntry(2, name)
-        for att,val in kw.iteritems():
+        for att,val in kw.items():    #OK for python 2,3
             try: code=thanCadCodes[att]
             except KeyError:
-                print "dxflib: unknown layer attribute:", att
+                print("dxflib: unknown layer attribute:", att)
                 continue
-            if val == None: continue
+            if val is None: continue
             if isinstance(val, bool): val = int(val)
             self.thanDxfWrEntry(code, val)
 
@@ -297,7 +297,8 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         linDescr   : Line type description
         rElems     : Line elements
         """
-        rlinLength = reduce(lambda x,y: x+fabs(y), rElems, 0.0)  # Calculation of line length
+        #rlinLength = reduce(lambda x,y: x+fabs(y), rElems, 0.0)  # Calculation of line length
+        rlinLength = sum(fabs(r1) for r1 in rElems)  # Calculation of line length
         self.thanDxfWrEntry(0, 'LTYPE')
         self.thanDxfWrEntry(2, linName)
         self.thanDxfWrEntry(70, 0)
@@ -348,19 +349,23 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
 #        fpath = '\\\\50SAMBA\\RUNPROGS\\EXE\\PHUT\\'
         fpath = path("//50samba") / "runprogs" / "exe" / "phut"
 
-        try:            fBlo = file(fpath/(bFileName+".dxf"), "r")
+        try:            fBlo = open(fpath/(bFileName+".dxf"), "r")
         except IOError: fBlo = None
-        if fBlo == None:
-            try:            fBlo = file(bFileName+".dxf", "r")
+        if fBlo is None:
+            try:            fBlo = open(bFileName+".dxf", "r")
             except IOError: return 1
+        ierr = thanDxfCrBlock2(fBlo)
+        fBlo.close()
+        return ierr
 
+
+    def thanDxfCrBlock2(self, fBlo):
+        """Creates a block entry in the dxf file, from an opened file name or an iterable."""
         wr = self.thanFdxf.write
         try:
             for dline in fBlo: wr(dline)
         except IOError: ierr = 1
         else:           ierr = 0
-
-        fBlo.close()
         return ierr
 
 
@@ -368,32 +373,32 @@ class ThanDxfPlot(ThanDxfLin, ThanDxfSym, ThanDxfDra,
         "Create definitions headers."
         self.thanDxfTableDef (' ', 0)
 
-        if linetypes == None: linetypes = {}
+        if linetypes is None: linetypes = {}
         linetypes.setdefault('CONTINUOUS', ('Solid Line',        ()            ))
         linetypes.setdefault('DOTR',       ('.................', (0, -0.06)    ))
         linetypes.setdefault('DASHED2',    ('- - - - - - - - -', (0.25, -0.125)))
         self.thanDxfTableDef('LTYPE', len(linetypes))
-        for nam, args in linetypes.iteritems():
+        for nam, args in linetypes.items():  #OK for python 2,3
             self.thanDxfCrLtype(nam, *args)
 
-        if textstyles == None: textstyles = {}
+        if textstyles is None: textstyles = {}
         textstyles.setdefault('GRSTYLE', ('GRSIMPW',))
         self.thanDxfTableDef ('STYLE', len(textstyles))
-        for nam, args in textstyles.iteritems():
+        for nam, args in textstyles.items():  #OK for python 2,3
             self.thanDxfCrTstyle(nam, *args)
 
-        if layers == None: layers = {}
+        if layers is None: layers = {}
         layers.setdefault('0', (7, 'CONTINUOUS'))
         self.thanDxfTableDef('LAYER', len(layers))
-        for nam, args in layers.iteritems():
+        for nam, args in layers.items():  #OK for python 2,3
             self.thanDxfCrLayer(nam, *args)
 
-        if blocks == None: blocks = {}
+        if blocks is None: blocks = {}
         blocks.setdefault('MODEL', ())
         self.thanDxfTableDef('BLOCKS', len(blocks))
-        for nam, args in blocks.iteritems():
+        for nam, args in blocks.items():  #OK for python 2,3
             ierr = self.thanDxfCrBlock(nam, *args)
-            if ierr != 0: print ' Block "%s" not defined.' % nam
+            if ierr != 0: print(' Block "%s" not defined.' % nam)
 
         self.thanDxfTableDef ('ENTITIES', 1)
 
@@ -424,7 +429,7 @@ def defDxf(dxf):
 
     dxf.thanDxfTableDef('BLOCKS', 1)
     ierr = dxf.thanDxfCrBlock('MODEL')
-    if ierr != 0: print ' Block "MODEL" not defined.'
+    if ierr != 0: print(' Block "MODEL" not defined.')
 
     dxf.thanDxfTableDef ('ENTITIES', 1)
 

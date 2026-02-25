@@ -1,4 +1,5 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
 """
 21/5/2011
 This program reads a USGS DEM (which is stored as .tif file) and writes
@@ -20,12 +21,15 @@ THIS PROGRAM NEEDS MORE TESTING
 """
 docusgs = __doc__
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot, floor, ceil
 from PIL import Image
 from math import fabs
 from p_gmath import thanNear2, thanNearx, linint
-import p_ggen, p_gbmp, p_gnum, p_gcom
-from dtmvar import ThanDTMDEM
+import p_ggen, p_gbmp, p_gnum, p_gvarcom
+from .dtmvar import ThanDTMDEM
+from .deciphererdasdem import decipherErdasAscDem
 
 
 class ThanDEMusgs(ThanDTMDEM):
@@ -40,18 +44,34 @@ class ThanDEMusgs(ThanDTMDEM):
         self.GDAL_NODATA = nodatadef     #Special pixel value that means that the pixel has unknown elevation
         self.filnam = ""                 #Pathname of the tif file.
         self.im = None                   #Tif file which stores the DTM
-        self.xymma = p_gcom.Xymm()       #The coordinates of the lower left and the upper right nodes of the DEM in object coordinates
+        self.xymma = p_gvarcom.Xymm()    #The coordinates of the lower left and the upper right nodes of the DEM in object coordinates
         self.thanCena = (0.0, 0.0, 0.0)  #Centroid of the DEM in object coordinates
+
+
+    def clone(self):
+        "Make a distinct copy of self."
+        d = ThanDEMusgs(nodatadef=self.nodatadef)
+        d.X0, d.Y0 = self.X0, self.Y0    #Object coordinates of the upper left pixel of the tif
+        d.DX, d.DY = self.DX, self.DY    #Distance x and y between adjacent pixel in object coordinates
+        d.nxcols, d.nyrows = self.nxcols, self.nyrows  #Image size in pixels
+        d.GDAL_NODATA = self.GDAL_NODATA #Special pixel value that means that the pixel has unknown elevation
+        d.filnam = self.filnam           #Pathname of the tif file.
+        if self.im is None: d.im = None  #Tif file which stores the DTM
+        else:               d.im = self.im.copy()
+        d.xymma = p_gvarcom.Xymm()    #The coordinates of the lower left and the upper right nodes of the DEM in object coordinates
+        d.xymma.includeXymm(self.xymma)
+        d.thanCena = tuple(self.thanCena)  #Centroid of the DEM in object coordinates
+        return d
 
 
     def thanSet(self, filnam, im=None):
         "Set the tif image which contains the DEM."
-        if im == None:
+        if im is None:
             im, terr = p_gbmp.imageOpen(filnam)
-            if im == None: return False, terr
+            if im is None: return False, terr
         try:
             self.X0, self.Y0, self.DX, self.DY, self.nxcols, self.nyrows, self.GDAL_NODATA = prop(im, self.nodatadef)
-        except ValueError, why:
+        except ValueError as why:
             return False, why
         self.thanSetFilnam(filnam, force=True)
         self.im = im
@@ -189,6 +209,8 @@ class ThanDEMusgs(ThanDTMDEM):
             #print "demusgs.iterNodes(): xymm = ", xymm
             #print "    ", jx1, iy1
             #print "    ", jx2, iy2
+            #print "validnodes, invalidnodes", validnodes, invalidnodes
+            #print "GDAL_NODATA=", self.GDAL_NODATA
         for iy in xrange(iy1, iy2):
             for jx in xrange(jx1, jx2):
                 h = self.getpixel(jx, iy)      #getpixel:  im.getpixel(xy)
@@ -208,7 +230,7 @@ class ThanDEMusgs(ThanDTMDEM):
         fw = open(fn, "wb")
         nodata = self.GDAL_NODATA
         #print "nodata=", nodata
-        if nodata == None:
+        if nodata is None:
             if   form == "h": nodata = -32768
             elif form == "i": nodata = -2**31
             elif form == "l": nodata = -2**31
@@ -263,7 +285,7 @@ class ThanDEMusgs(ThanDTMDEM):
                 while c[i] <= cmax or thanNearx(c[i], cb[i]):
                     c[j] = linint(ca[i], ca[j], cb[i], cb[j], c[i])
                     c[2] = self.thanPointZ(c, native=True)
-                    if c[2] != None:
+                    if c[2] is not None:
                         u = ((c[0]-ca[0])*t[0] + (c[1]-ca[1])*t[1]) / tt
                         if rev: cint.append((1+u, list(c)))      #u is negative distance from cb
                         else:   cint.append((u,   list(c)))
@@ -286,13 +308,13 @@ class ThanDEMusgs(ThanDTMDEM):
         if p_ggen.isString(fn): fw.close()
 
 
-    def openText(self, fn="", mode="r"):
+    def openText(self, fn="", mode="r", suf=".demt"):
         "Open a dem saved in a text file;  fn may be a filename or an opened file object."
         if p_ggen.isString(fn):
             if fn.strip() == "":  #If blank name, put suffix .demt to the self.filnam
-                fn = p_ggen.putSufix(self.filnam, ".demt")
+                fn = p_ggen.putSufix(self.filnam, suf)
             else:
-                fn = p_ggen.putOptSufix(fn, ".demt")
+                fn = p_ggen.putOptSufix(fn, suf)
                 self.thanSetFilnam(fn, force=False)       #If self.filnam is blank, set it to fn with prefix .tif
             fw = open(fn, mode)
         else:
@@ -305,16 +327,16 @@ class ThanDEMusgs(ThanDTMDEM):
     def importText(self, fn=""):
         "Import dem from text file; fn may be a filename or an opened file object."
         fr = self.openText(fn, "r")
-        dline = fr.next()
+        dline = next(fr)
         dl = dline.split(":", 1)
         self.X0, self.Y0 = map(float, dl[1].split())
-        dline = fr.next()
+        dline = next(fr)
         dl = dline.split(":", 1)
         self.DX, self.DY = map(float, dl[1].split())
-        dline = fr.next()
+        dline = next(fr)
         dl = dline.split(":", 1)
         self.nxcols, self.nyrows = map(int, dl[1].split())
-        dline = fr.next()
+        dline = next(fr)
         dl = dline.split(":", 1)
         self.GDAL_NODATA, = map(float, dl[1].split())
         self.xymma[:] = self.X0, self.Y0-self.DY*(self.nyrows-1), self.X0+self.DX*(self.nxcols-1), self.Y0 #WARNING: xymma must be valid node coordinates
@@ -322,20 +344,46 @@ class ThanDEMusgs(ThanDTMDEM):
 
         self.im = Image.new("F", (self.nxcols, self.nyrows), self.GDAL_NODATA)   #Tif image which stores the DTM
         for iy in xrange(self.nyrows):
-            dline = fr.next()
+            dline = next(fr)
             dl = dline.split()
-            if len(dl) != self.nxcols: raise ValueError, "Line with exactly %d numbers was expected"
+            if len(dl) != self.nxcols: raise ValueError("Line with exactly %d numbers was expected")
             for jx in xrange(self.nxcols):
                 z = float(dl[jx])
                 self.putpixel(jx, iy, z)
 
 
+    def importErdasAsc(self, fn=""):
+        "Import dem from an ERDAS ascii file; fn may be a filename or an opened file object."
+        fr = self.openText(fn, "rb", ".asc")
+        ok, terr = decipherErdasAscDem(fr)
+        if not ok: return ok, terr
+        X0, Y0, DX, DY, ncols, nrows, GDAL_NODATA = terr
+        self.X0, self.Y0 = X0, Y0
+        self.DX, self.DY = DX, DY
+        self.nxcols, self.nyrows = ncols, nrows
+        self.GDAL_NODATA = GDAL_NODATA
+        self.xymma[:] = self.X0, self.Y0-self.DY*(self.nyrows-1), self.X0+self.DX*(self.nxcols-1), self.Y0 #WARNING: xymma must be valid node coordinates
+        self.thanCentroidCompute()
 
-    def subtract(self, gdem, dxTra=0.0, dyTra=0.0, prt=p_ggen.doNothing):
+        self.im = Image.new("F", (self.nxcols, self.nyrows), self.GDAL_NODATA)   #Tif image which stores the DTM
+        fr.seek(0)
+        it = iter(fr)
+        try:
+            for iy in xrange(nrows):
+                for jx in xrange(ncols):
+                    x1,y1,z = map(float, next(it).split())
+                    self.putpixel(jx, iy, z)
+        except (ValueError, IndexError, StopIteration) as e:
+            return False, "Unexpected error while reading ascii Erdas DEM for second time:\n%s" % (dline.rstrip,)
+        return True, ""
+
+
+    def subtract(self, gdem, dxTra=0.0, dyTra=0.0, absdif=True, hminthres=-1e100, prt=p_ggen.doNothing):
         """Subtract the value of gdem from the z-value of every grid point.
 
-        Current DEM is translate by dxTra, dyTra before the comparison. Practically
+        Current DEM is translated by dxTra, dyTra before the comparison. Practically
         we add dxTra and dyTra to all self's grid points."
+        hminthres is a threshold value; if any elevation is less than this it is ignored.
         """
         iy1, iy2 = 0, self.nyrows
         jx1, jx2 = 0, self.nxcols
@@ -344,16 +392,49 @@ class ThanDEMusgs(ThanDTMDEM):
             for jx in xrange(jx1, jx2):
                 h = self.getpixel(jx, iy)      #getpixel:  im.getpixel(xy)
                 if h == self.GDAL_NODATA: continue
+                if h < hminthres:
+                    self.putpixel(jx, iy, self.GDAL_NODATA)
+                    continue
                 x = self.X0 + jx*self.DX
                 y = self.Y0 - iy*self.DY
                 x += dxTra
                 y += dyTra
-                hg = gdem.thanPointZ((x, y))
-                if hg == None:
+                hg = gdem.thanPointZ((x, y, 0.0))
+                if hg is None or hg<hminthres:
                     self.putpixel(jx, iy, self.GDAL_NODATA)
                 else:
                     #prg("%15.3f%15.3f%15.3f%15.3f" % (x, y, h, h-hg))
-                    self.putpixel(jx, iy, fabs(h-hg))
+                    dh = h - hg
+                    if absdif: dh = fabs(dh)
+                    self.putpixel(jx, iy, dh)
+
+
+    def keepInsidePolygons(self, polygIn=[], polygOut=[], native=False, prt=p_ggen.doNothing):
+        """Keep points that are inside polygons polygIn AND outside polygons polygOut.
+
+        For the 2015 conferecnce in Cyprus:
+            Exploitation of satellite optical and SAR data for public work studies
+        Basically, some regions had clouds, while regions near the coast was unreliable
+        and we had to exclude them.
+        """
+        def inside(cp):
+            "Return True if point cp is inside polyGin AND outside polygOut."
+            for pol in polygOut:
+                if pol.inPol(cp): return False
+            for pol in polygIn:
+                if pol.inPol(cp): return True
+            return False
+        iy1, iy2 = 0, self.nyrows
+        jx1, jx2 = 0, self.nxcols
+        for iy in xrange(iy1, iy2):
+            prt("%d/%d" % (iy, iy2))
+            for jx in xrange(jx1, jx2):
+                h = self.getpixel(jx, iy)      #getpixel:  im.getpixel(xy)
+                if h == self.GDAL_NODATA: continue
+                cp = self.X0 + jx*self.DX, self.Y0 - iy*self.DY, 0.0
+                #cp = self.geodetGRS802User(cp)
+                if inside(cp): continue
+                self.putpixel(jx, iy, self.GDAL_NODATA)
 
 
     def createFromDem(self, dem, prt=p_ggen.doNothing):
@@ -365,8 +446,8 @@ class ThanDEMusgs(ThanDTMDEM):
             for jx in xrange(jx1, jx2):
                 x = self.X0 + jx*self.DX
                 y = self.Y0 - iy*self.DY
-                hg = dem.thanPointZ((x, y))
-                if hg == None:
+                hg = dem.thanPointZ((x, y, 0.0))
+                if hg is None:
                     self.putpixel(jx, iy, self.GDAL_NODATA)
                 else:
                     self.putpixel(jx, iy, hg)
@@ -381,26 +462,26 @@ def prop(im, nodatadef=None):
         ijkXYZ = im.tag.get(33922)       #TIFF tag: ModelTiepointTag: *I,J,K,X,Y,Z) * K, K=number of tie points, I,J=pixel location, K=pixel value, X,Y,Z=the coordinates in object space
         DX, DY, DZ = im.tag.get(33550)   #TIFF tag: ModelPixelScaleTag: DX, DY: pixel spacing  DZ: should be zero
         DX+=0.0; DY+=0.0; DZ+=0.0
-    except AttributeError, why:
-        raise ValueError, "Image is probably not tif:\n%s" % (why,)
-    except (IndexError, ValueError, TypeError), why:
-        raise ValueError, "Probably not a (USGS) DEM or geotiff image:\n%s" % (why,)
+    except AttributeError as why:
+        raise ValueError("Image is probably not tif:\n%s" % (why,))
+    except (IndexError, ValueError, TypeError) as why:
+        raise ValueError("Probably not a (USGS) DEM or geotiff image:\n%s" % (why,))
     try:
         iy, jx, kz, X0, Y0, Z0 = ijkXYZ
         X0+=0.0; Y0+=0.0; Z0+=0.0
-    except (IndexError, ValueError), why:
-        raise ValueError, "Only one tie point (6 values which contain the origin) should be defined: %s\n%s" % (ijkXYZ, why)
+    except (IndexError, ValueError) as why:
+        raise ValueError("Only one tie point (6 values which contain the origin) should be defined: %s\n%s" % (ijkXYZ, why))
     if iy != 0.0 or jx != 0.0 or kz != 0.0:
-        raise ValueError, "Origin in pixels should be 0.0, 0.0, 0.0: iy=%s jx=%s kz=%s" % (iy, jx, kz)
+        raise ValueError("Origin in pixels should be 0.0, 0.0, 0.0: iy=%s jx=%s kz=%s" % (iy, jx, kz))
     if DZ != 0.0 or Z0 != 0.0:
         #raise ValueError, "Can not handle nonzero DZ or Z0: %s %s" % (DZ, Z0)
         p_ggen.prg("Can not handle nonzero DZ or Z0: %s %s" % (DZ, Z0), "can1")
     try:
         GDAL_NODATA = im.tag.get(42113)
         #print "demusgs prop(): GDAL_NODATA=", GDAL_NODATA
-        if GDAL_NODATA != None: GDAL_NODATA = float(im.tag.get(42113))
+        if GDAL_NODATA is not None: GDAL_NODATA = float(im.tag.get(42113))
         else:                   GDAL_NODATA = nodatadef  #Use default value supplied by user
-    except (IndexError, ValueError), why:
+    except (IndexError, ValueError) as why:
         GDAL_NODATA = nodatadef   #if nodatadef==None then ALL pixel values are full (all contain valid values) ...
                                   #... else nodatadef is a NODATA value supplied by the user, because it is not supplied by the TIFF file
     nxcols, nyrows = im.size

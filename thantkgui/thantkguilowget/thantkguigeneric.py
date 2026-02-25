@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,11 +21,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines generic state, i.e. how ThanCad reacts to events for a
 defined job. This generic state which does nothing
 """
+
+from __future__ import print_function
 
 class ThanStateGeneric:
     "Default state object; does nothing."
@@ -46,7 +48,7 @@ class ThanStateGeneric:
     def thanOnClick(self, event, x, y, cc):
         "Shows the elevation of the line or point as shortlived small infowindow."
         from thandr import ThanLine, ThanPoint
-        from hw import InfoWin
+        from .hw import InfoWin
         proj = self.thanProj
         filter = lambda e: isinstance(e, ThanLine) or isinstance(e, ThanPoint)
         proj[2].thanGudSetSelExternalFilter(filter)
@@ -63,7 +65,7 @@ class ThanStateGeneric:
         else:
             c1 = e.thanPntNearest(cc)
             if c1 is None:
-                print "ThanStateGeneric.thanOnClick(): Nearest not found! It should!"
+                print("ThanStateGeneric.thanOnClick(): Nearest not found! It should!")
                 return
             zpol = e.cp[0][2]
             text = "z=" + proj[2].than.strdis(zpol)

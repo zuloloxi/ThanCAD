@@ -1,4 +1,4 @@
-from var import thanNearx
+from .var import thanNearx
 
 class ThanRectCoorTransf:
     """Class to transform rectangular coordinates.
@@ -18,8 +18,8 @@ class ThanRectCoorTransf:
 
     def __init__(self, globalr=None, localr=None, samescale=True):
         "Initialise transformation."
-        if globalr == None: return
-        if localr == None: return
+        if globalr is None: return
+        if localr is None: return
         if samescale:
             globalr = thanRoundCenter(globalr, localr)
         self.set(globalr, localr)

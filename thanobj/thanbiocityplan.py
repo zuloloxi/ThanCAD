@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the biolimatic City Plan object.
 """
 import p_ggen
+from p_gpoleod import HippoAnneal, simpol
 from thantrans import T, Tarch
 import thanimp, thansupport
 import thanpackages.biocityplan
-from thanobject import ThanObject
+from .thanobject import ThanObject
 
 
 class ThanBiocityplan(ThanObject):
@@ -41,7 +42,7 @@ class ThanBiocityplan(ThanObject):
         "Set initial values to the city plan and paraphernalia."
         self.xor = self.yor = 0.0
         self.dxor = self.dyor = None
-        self.pc = thanpackages.biocityplan.HippoAnneal()
+        self.pc = HippoAnneal()
 
     def toDialog(self, proj):
         "Return the data in a form needed by ThanBcplan dialog."
@@ -99,13 +100,13 @@ class ThanBiocityplan(ThanObject):
 
     def run(self, proj):
         "Run the bioclimatic city plan algorithm."
-        thanpackages.biocityplan.simpol.runOnce(self.pc, prt=proj[2].thanPrt)
+        simpol.runOnce(self.pc, prt=proj[2].thanPrt)
 
 
     def wrState(self, proj):
         "Save the state of the solution."
         pref = proj[0].parent / proj[0].namebase
-        thanpackages.biocityplan.simpol.wrState(self.pc, pref, prter=proj[2].thanPrter)
+        simpol.wrState(self.pc, pref, prter=proj[2].thanPrter)
 
     def thanList(self, than):
         "Shows information about the FloorPlan object."
@@ -153,16 +154,16 @@ class ThanBiocityplan(ThanObject):
         pc = self.pc
 
         fr.readBeg("location")
-        self.xor, self.yor =  map(float, fr.readAtt("current"))
+        self.xor, self.yor =  map(float, fr.readAtt("current"))  #works for python2,3
         self.dxor, self.dyor =  fr.readAtt("delta")
         if self.dxor == "_NONE_": self.dxor = self.dyor = None
         else:                     self.dxor, self.dyor = float(self.dxor), float(self.dyor)
         fr.readEnd("location")
 
         fr.readBeg("parameters")
-        boik1, boik2 = map(float, fr.readAtt("city_block_width"))
-        hoik1, hoik2 = map(float, fr.readAtt("city_block_height"))
-        bod1, bod2 = map(float, fr.readAtt("road_width"))
+        boik1, boik2 = map(float, fr.readAtt("city_block_width"))  #works for python2,3
+        hoik1, hoik2 = map(float, fr.readAtt("city_block_height"))  #works for python2,3
+        bod1, bod2 = map(float, fr.readAtt("road_width"))  #works for python2,3
         biochange = bool(int(fr.readAtt("bioclimatic")[0]))
         fr.readEnd("parameters")
         pc.setPar(boik1, boik2, hoik1, hoik2, bod1, bod2, biochange)

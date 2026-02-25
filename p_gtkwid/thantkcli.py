@@ -27,15 +27,16 @@ This module implements various types of compound list, based on the generic
 compound list.
 """
 
+from __future__ import print_function
 import types
-from Tkinter import Frame, Button
+from tkinter import Frame, Button
 import p_ggen
-import thanwids, xinp
 from p_ggen import ThanLayerError, Canc
-from thantkclist import (ThantkClistBare, ThanMixinUtil, ThantkClistHierBare, ThanMixinHierUtil,
+from . import thanwids, xinp
+from .thantkclist import (ThantkClistBare, ThanMixinUtil, ThantkClistHierBare, ThanMixinHierUtil,
     ThanMixinPartial, ThanMixinHierUtil1, _EXPAND)
-from thantkutila import thanGudModalMessage, thanGudAskOkCancel
-from thanwidstrans import T
+from .thantkutila import thanGudModalMessage, thanGudAskOkCancel
+from .thanwidstrans import T
 
 
 #############################################################################
@@ -178,7 +179,7 @@ class ThantkClist5(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         ThantkClistHierBare.__init__(self, master, **kw)
         ThanMixinPartial.__init__(self)
         self.thanCur = current
-        print "cur1=", self.thanCur
+        print("cur1=", self.thanCur)
 
         self.thanCreateButtonsup(self, 0, 0)
         (nr, nc) = self.thanListsPlace(1, 0)
@@ -316,7 +317,7 @@ class ThantkClist5(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         if self.thanClipMovePending(): return
         self.__result = self.thanLeaflayers, self.thanCur
         self.__state = 0                       # window is dead
-        print "***tra1"
+        print("***tra1")
 
 #============================================================================
 
@@ -324,19 +325,19 @@ class ThantkClist5(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         "Waits until user finishes."
         while self.__state:
             self.update_idletasks()
-        print "***tra2"
+        print("***tra2")
 #        self.destroy()
         del self.thanCargo
         return self.__result
 
     def destroy(self):
         "Break circular references."
-        print "cur2=", self.thanCur
+        print("cur2=", self.thanCur)
         del self.thanCur, self.__cl
         ThantkClistHierBare.destroy(self)
 
     def __del__(self):
-        print "clist5 recycled."
+        print("clist5 recycled.")
 
 
 #############################################################################
@@ -353,7 +354,7 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
         ThantkClistHierBare.__init__(self, master, **kw)
         ThanMixinPartial.__init__(self)
         self.thanCur = current
-        print "cur1=", self.thanCur
+        print("cur1=", self.thanCur)
 
         self.thanCreateButtonsup(self, 0, 0)
         (nr, nc) = self.thanListsPlace(1, 0)
@@ -475,7 +476,7 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
             name1 = xinp.xinpStrB(self, T["Create New '%s' Child Layer"]%laypar.thanGetPathname(), name1)
             if name1 is None: return Canc
             lay1 = self.thanLayerChildNewHouse(name1)
-            if type(lay1) not in types.StringTypes: break        # Check if name is valid
+            if not p_ggen.isString(lay1): break        # Check if name is valid
             thanGudModalMessage(self, lay1, T["Child Layer can not be created"])
 
 
@@ -498,7 +499,7 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
 
     def destroy(self):
         "Break circular references."
-        print "ThanTkClist destroy: cur2=", self.thanCur
+        print("ThanTkClist destroy: cur2=", self.thanCur)
         del self.thanCur, self.__cl
         ThantkClistHierBare.destroy(self)
         ThanMixinHierUtil1.destroy(self)
@@ -506,4 +507,4 @@ class ThantkClist6(ThantkClistHierBare, ThanMixinHierUtil1, ThanMixinPartial):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

@@ -1,5 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 "Solution of system o linear equations module."
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import fabs
 
 
@@ -14,7 +17,7 @@ def lineq(A, B):
                 vmax = fabs( A[i][j] )
                 imax = i
         if vmax == 0:
-            raise ZeroDivisionError, 'Linear system of equations is not soluble'
+            raise ZeroDivisionError('Linear system of equations is not soluble')
 #-----H ΕΞΙΣΩΣΗ ΒΡΕΘΗΚΕ. ΑΝΤΙΚΑΤΕΣΤΗΣΕ ΤΗΝ ΕΞΙΣΩΣΗ ΙΜΑΧ ΜΕ ΤΗΝ ΕΞΙΣΩΣΗ J
         if imax != j:           # ΧΡΕΙΑΖΕΤΑΙ ΑΝΤΙΚΑΤΑΣΤΑΣΗ;
             for k in xrange(j, n):
@@ -35,5 +38,21 @@ def lineq(A, B):
         B[i] /= A[i][i]
 
 
+def linEq2 (a, b, c, d, e, f):
+    """Solve a system of 2 linear equations.
+
+                                 | c   b |                | a   c |
+                                 | f   e |                | d   f |
+      ax + by = c    =>     x = -----------   ,      y = -----------
+      dx + ey = f                | a   b |                | a   b |
+                                 | d   e |                | d   e |
+    """
+    delta = a*e - d*b
+    if delta == 0.0: return None, None
+    x = (c*e - f*b) / delta
+    y = (a*f - d*c) / delta
+    return (x, y)
+
+
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

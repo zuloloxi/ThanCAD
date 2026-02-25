@@ -1,8 +1,12 @@
+from __future__ import print_function
+#from past.builtins import xrange
+#from builtins import input
+from p_ggen.py23 import xrange, input
 import collections
 from p_ggen import ThanStub
 import p_gtkwid
-import thanlic
-from thanverstrans import T
+from . import thanlic
+from .thanverstrans import T
 
 NA = T["(Not available)"]
 SENTCOM = 78*("#")
@@ -16,7 +20,7 @@ def commentize(s, encoding=None):   #encoding="iso-8859-7"):
     for i in (0, -1):
         if dlines[i].strip() == "#": dlines[i] = SENTCOM
         else:                        dlines.insert(i, SENTCOM)
-    if encoding != None:
+    if encoding is not None:
         dlines.insert(0, "# -*- coding: %s -*-" % (encoding,))
     return "\n".join(dlines)
 
@@ -37,7 +41,7 @@ class ThanVersion:
             v = kw.pop(att, NA)
             setattr(self, att, v)
         if len(kw) > 0:
-            raise TypeError, "Unexpected keyword item '"+kw.popitem()[0]+"'"
+            raise TypeError("Unexpected keyword item '"+kw.popitem()[0]+"'")
 
         if self.company == NA:
             authorx = self.author
@@ -115,7 +119,7 @@ class ThanVersion:
         return s, m
 
 
-    def toexeDetails(self, iconwin=None):
+    def toexeDetails(self, iconwin=None, icon=None):
         "Return details in the format of toexe program."
         details = collections.defaultdict(str,
             name        = self.name,
@@ -125,7 +129,8 @@ class ThanVersion:
             author      = self.author,
             author_email= self.author_email,
             url         = self.url,
-            iconwin     = iconwin)
+            iconwin     = iconwin,
+            icon        = icon)
         return details
 
 
@@ -289,11 +294,11 @@ You can find information about GPL in:  http://www.gnu.org/licenses/gpl.html
     history           = NA)
 
     for att in ver.fields:
-        print
-        print "====================================================================================="
-        print
-        print att, "=",
+        print()
+        print("=====================================================================================")
+        print()
+        print(att, "=",)
         v = getattr(ver, att)
-        if "\n" in v: print
-        print v
-        raw_input("Press enter..")
+        if "\n" in v: print()
+        print(v)
+        input("Press enter..")

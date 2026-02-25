@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,10 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module computes the offset of a line.
 """
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import copy
 from itertools import islice
 from p_gvec import Vector2
@@ -86,14 +88,14 @@ def minicadDriver(c):
         typ = c.type(item)
         if typ == "line":
             cs1 = c.coords(item)
-            cs1 = zip(islice(cs1, 0, None, 2), islice(cs1, 1, None, 2))
+            cs1 = list(zip(islice(cs1, 0, None, 2), islice(cs1, 1, None, 2)))  #works for python2,3
             if cs:
                 if   cs[-1] == cs1[0]: cs.append(cs1[1])
                 elif cs[-1] == cs1[1]: cs.append(cs1[0])
             else:
                 cs = cs1
     if not cs:
-        print "no line found"
+        print("no line found")
         return
     dis = 50.0
     cs1 = thanOffsetLine(cs, dis)

@@ -1,4 +1,8 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange, iteritems
+#from future.utils import iteritems
 from math import cos, sin, pi
 from fnmatch import fnmatch
 import p_ggen
@@ -139,6 +143,7 @@ class ThanDrLine(ThanDrWarn):
 
     def dxfPolyline (self, xx, yy, zz, lay, handle, col):
         "Get polyline if it is in known layers."
+        lay = lay.lower()
         if self.isLayerKnown(lay):
             self.processLine(xx, yy, zz, lay, handle, col)
         else:
@@ -147,6 +152,7 @@ class ThanDrLine(ThanDrWarn):
 
     def dxfLine     (self, xx, yy, zz, lay, handle, col):
         "Get line if it is in known layers."
+        lay = lay.lower()
         if self.isLayerKnown(lay):
             self.processLine(xx, yy, zz, lay, handle, col)
         else:
@@ -161,9 +167,9 @@ class ThanDrLine(ThanDrWarn):
 class ThanDrSave(ThanDrIgnore):
     "A class which stores the elements read by ThanImportDxf."
 
-    def __init__(self, **kw):
+    def __init__(self, *args, **kw):
         "Creates an instance of the class."
-        ThanDrIgnore.__init__(self, **kw)
+        ThanDrIgnore.__init__(self, *args, **kw)
         self.thanVars = {}
         self.thanVports = [ ]
         self.thanLayers = [ ]
@@ -245,7 +251,7 @@ class ThanDrSave(ThanDrIgnore):
         "Saves a text."
         self.prt("Contents of dxf file:", "info")
         n = ""
-        if self.thanXymm == None: n = "NOT"
+        if self.thanXymm is None: n = "NOT"
         self.prt("Max, min of x,y     : %s defined in dxf file" % n, "info1")
 
         self.prt("Number of variables : %d" % len(self.thanVars), "info1")
@@ -322,9 +328,9 @@ class ThanDxfDrawing(ThanDrSave):
         cur = list(self.thanTexts[i])
         if   justify == "left":   cur[4] = newtext.ljust(len(cur[4]))
         elif justify == "center":
-            print cur[4]
+            print(cur[4])
             cur[4] = newtext.center(len(cur[4]))
-            print cur[4]
+            print(cur[4])
         elif justify == "right":  cur[4] = newtext.rjust(len(cur[4]))
         else: cur[4] = newtext
         self.thanTexts[i] = tuple(cur)
@@ -335,8 +341,8 @@ class ThanDxfDrawing(ThanDrSave):
         cs = cos(phi*pi/180)*scale
         ss = sin(phi*pi/180)*scale
         xref = self.xref; yref = self.yref
-        if layer != None: dxf.thanDxfSetLayer(layer)   # Override layer
-        if color != None: dxf.thanDxfSetColor(color)   # Override color
+        if layer is not None: dxf.thanDxfSetLayer(layer)   # Override layer
+        if color is not None: dxf.thanDxfSetColor(color)   # Override color
 
         def af(xx, yy):
             "Perform translation rotation and scale in set of coordinates."
@@ -357,10 +363,10 @@ class ThanDxfDrawing(ThanDrSave):
 
         def atts(lay=None, col=None):
             "Override layer, color if necessary."
-            if layer == None:
-                if lay != None: dxf.thanDxfSetLayer(lay)
-            if color == None:
-                if col != None: dxf.thanDxfSetColor(col)
+            if layer is None:
+                if lay is not None: dxf.thanDxfSetLayer(lay)
+            if color is None:
+                if col is not None: dxf.thanDxfSetColor(col)
                 dxf.thanDxfSetColor(0)                    # By layer
 
         for xx, yy, zz, lay, col in self.thanPolylines:
@@ -514,9 +520,9 @@ class ThanDxfDrawing2(ThanDrIgnore):
     def dif(self, other):
         "Find the differences of this drawing and another."
         indother = other.ind.copy()
-        for handle, elem in self.ind.iteritems():
+        for handle, elem in iteritems(self.ind):
             elemother = indother.get(handle)
-            if elemother == None:
+            if elemother is None:
                 self.prt("Element handle '%s' (%s) was deleted in B." % (handle, elem[-1]))   #elem[-1] is the type of element
                 self.deleted.append(elem)
                 continue
@@ -530,7 +536,7 @@ class ThanDxfDrawing2(ThanDrIgnore):
             if elem[6:] != elemother[6:]:
                 self.prt("Element handle '%s' (%s) has changed geometry/text in B." % (handle, elem[-1]))   #elem[-1] is the type of element
                 continue
-        for handle, elem in indother.iteritems():
+        for handle, elem in iteritems(indother):
             self.prt("Element handle '%s' (%s) was added to B." % (handle, elem[-1]))   #elem[-1] is the type of element
             self.added.append(elem)
             continue
@@ -553,8 +559,8 @@ class ThanDxfDrawing2(ThanDrIgnore):
         cs = cos(phi*pi/180)*scale
         ss = sin(phi*pi/180)*scale
         xref = self.xref; yref = self.yref
-        if layer != None: dxf.thanDxfSetLayer(layer)   # Override layer
-        if color != None: dxf.thanDxfSetColor(color)   # Override color
+        if layer is not None: dxf.thanDxfSetLayer(layer)   # Override layer
+        if color is not None: dxf.thanDxfSetColor(color)   # Override color
 
         def af(xx, yy):
             "Perform translation rotation and scale in set of coordinates."
@@ -575,10 +581,10 @@ class ThanDxfDrawing2(ThanDrIgnore):
 
         def atts(lay=None, col=None):
             "Override layer, color if necessary."
-            if layer == None:
-                if lay != None: dxf.thanDxfSetLayer(lay)
-            if color == None:
-                if col != None: dxf.thanDxfSetColor(col)
+            if layer is None:
+                if lay is not None: dxf.thanDxfSetLayer(lay)
+            if color is None:
+                if col is not None: dxf.thanDxfSetColor(col)
                 dxf.thanDxfSetColor(0)                    # By layer
 
         for elem in elems:

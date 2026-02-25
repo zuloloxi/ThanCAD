@@ -1,6 +1,6 @@
 from p_gdxf import ThanDxfPlot
 from p_gcol import thanTk2Rgb, thanRgb2DxfColCodeApprox
-from emuinter import EmuInter, EmuCanvas, Toplevel, ALL
+from .emuinter import EmuInter, EmuCanvas, Toplevel, ALL
 
 
 class Tk(EmuInter):
@@ -63,7 +63,7 @@ class Canvas(EmuCanvas):
 
     def create_rectangle(self, x1, y1, x2, y2, fill=None, outline="white", width=1):
         "Plot a possibly filled rectangle."
-        if fill != None:
+        if fill is not None:
             self.__setColor(fill)
             self.dxf.thanDxfPlotSolid4(x1, self.height-y1,
                                        x2, self.height-y1,

@@ -1,7 +1,8 @@
+from __future__ import print_function
 from math import fabs
 from p_ggen import iterby2
-import p_gmath, p_gcom
-from area import area
+import p_gmath, p_gvarcom
+from .area import area
 
 
 class MesaHull:
@@ -120,7 +121,7 @@ class MesaTriLocal:
         l1, l2, l3 = self.triloc.glob2loc(cp[0], cp[1])
         if l1 < self.lmin or l1 > self.lmax or l2 < self.lmin or l2 > self.lmax or \
            l3 < self.lmin or l3 > self.lmax: return False, l1, l2, l3
-        if lmin < 0.0: print "Point FOUND on EDGES: %d %d %d" % (l1, l2, l3)
+        if lmin < 0.0: print("Point FOUND on EDGES: %d %d %d" % (l1, l2, l3))
         return True, l1, l2, l3
 
 
@@ -134,7 +135,7 @@ class MesaTriLocal:
         return self.triloc.interp(a1, a2, a3, l1, l2, l3)
 
 
-class MesaXymm(p_gcom.Xymm):
+class MesaXymm(p_gvarcom.Xymm):
     "A rectangular region; decorate Xymm class with mesa function."
     __slots__ = ()
     def mesa(self, p):

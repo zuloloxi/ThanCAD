@@ -1,3 +1,6 @@
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
 from p_ggen import iterby2
 from p_gmath import thanLineSeg3, thanNear2
@@ -40,7 +43,7 @@ class ThanDTMDEM(object):
                 if d > 1.001: break                   # Avoid points outside ca-cb
                 if d > 0.999: zb = c[2]; continue     # Avoid points near cb
                 cn.append(c)
-            if can[2] == None: can[2] = za
+            if can[2] is None: can[2] = za
         c = list(cb)
         c[2] = self.thanPointZ(cb, native=True)         # May be None
         cn.append(c)
@@ -62,15 +65,24 @@ class ThanDTMDEM(object):
 
     def thanPointZ(self, cp, native=False):
         "Calculate the z coordinate of a point."
-        raise AttributeError, "Please override this method: thanPointZ"
+        raise AttributeError("Please override this method: thanPointZ")
 
     def thanIntersegZ(self, ca, cb, native=False):
         "Compute intersections of segment with DEM lines; don't sort intersections from ca to cb."
-        raise AttributeError, "Please override this method: thanIntersegZ"
+        raise AttributeError("Please override this method: thanIntersegZ")
 
     def thanXymm(self, native=False):
         "Return the min and max x and y coordinates."
-        raise AttributeError, "Please override this method: thanXymm"
+        raise AttributeError("Please override this method: thanXymm")
+
+    def thanGetWin(self, xymm):
+        """Load the frames of the DEM inside xymm.
+
+        Global DEMs should oveeride this function and load their fra,mes which are
+        inside or intersect xymm.
+        For local DEMs (without frames) this function has no meaning and does nothing.
+        """
+        pass
 
 
 def thanPolygonLine(cpol, pn, n):
@@ -78,7 +90,7 @@ def thanPolygonLine(cpol, pn, n):
     cts = []
     for i in xrange(len(cpol)):
         ct = thanLineSeg3(pn, n, cpol[i-1], cpol[i])
-        if ct != None: cts.append(ct)
+        if ct is not None: cts.append(ct)
     if len(cts) == 0: return None, None
     cts.sort()
     j = 1
@@ -89,12 +101,12 @@ def thanPolygonLine(cpol, pn, n):
         else:
             j += 1
     if len(cts) != 2:
-        print "cts="
+        print("cts=")
         for cp in cts:
-            print "%15.3f%15.3f" % (cp[0], cp[1])
-        print "cpol="
+            print("%15.3f%15.3f" % (cp[0], cp[1]))
+        print("cpol=")
         for cp in cpol:
-            print "%15.3f%15.3f" % (cp[0], cp[1])
+            print("%15.3f%15.3f" % (cp[0], cp[1]))
         import p_gfil, p_gchart
         ch = p_gchart.ThanChart("xexexe")
         xx = [cp[0] for cp in cpol]
@@ -104,7 +116,7 @@ def thanPolygonLine(cpol, pn, n):
         yy = [cp[1] for cp in cts]
         ch.curveAdd(xx, yy, color="red")
         winmain, _, _ = p_gfil.openfileWinget()
-        if winmain == None: p_gchart.vis(ch, bg="yellow")
+        if winmain is None: p_gchart.vis(ch, bg="yellow")
         else:               p_gchart.viswin(winmain, ch, bg="yellow")
         assert len(cts) == 2, "There should be exactly 2 intersections"
     return cts[0], cts[1]
@@ -114,7 +126,7 @@ def interpolatez(cp):
     "Interpolate the z coordinate to the points which have none; return number of interpolations."
     n = len(cp)
     for j in xrange(n):
-        if cp[j][2] != None: break
+        if cp[j][2] is not None: break
     else:
         return -1            # No z at all!
     zj = cp[j][2]
@@ -124,11 +136,11 @@ def interpolatez(cp):
 
     while True:
         for i in xrange(j+1, n):
-            if cp[i][2] == None: break
+            if cp[i][2] is None: break
         else:
             return ni        # All points, from j to end, have valid z
         for j in xrange(i+1, n):
-            if cp[j][2] != None: break
+            if cp[j][2] is not None: break
         else:
             break            # No point, from j to end, has valid z
         __interp2(cp[i-1:j+1])
@@ -159,7 +171,7 @@ def thanPointZ(dtms, cp):
     z = None    #In case that dtms is empty
     for dtm in dtms:
         z = dtm.thanPointZ(cp)
-        if z != None: break
+        if z is not None: break
     return z
 
 
@@ -179,7 +191,7 @@ def thanLineZ(dtms, cp):
                 if d > 1.001: break                   # Avoid points outside ca-cb
                 if d > 0.999: zb = c[2]; continue     # Avoid points near cb
                 cn.append(c)
-            if can[2] == None: can[2] = za
+            if can[2] is None: can[2] = za
         c = list(cb)
         c[2] = thanPointZ(dtms, cb)         # May be None
         cn.append(c)

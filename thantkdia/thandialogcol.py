@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog fro the user to enter a color.
 It also has the routine to get the user defined colors from the config files.
 """
 
-from Tkinter import Frame, Label, Button, Entry, BitmapImage, END, GROOVE
-from tkColorChooser import askcolor
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+from tkinter import Frame, Label, Button, Entry, BitmapImage, END, GROOVE
+from tkinter.colorchooser import askcolor
 from p_ggen import ThanStub as S, Pyos
 import p_gtkwid, p_gcol
 import thanvar
@@ -94,7 +97,7 @@ class ThanColor(p_gtkwid.ThanDialog):
 
     def __grayShades(self, fra, ir, ic, buwi):
         "Shows shades of gray."
-        grays = [rgb for rgb in p_gcol.thanDxfColCode2Rgb.itervalues()  if rgb[0] == rgb[1] == rgb[2]]
+        grays = [rgb for rgb in p_gcol.thanDxfColCode2Rgb.values()  if rgb[0] == rgb[1] == rgb[2]]   #works for python2,3
         grays.sort()
         n = len(grays)
 
@@ -179,7 +182,7 @@ class ThanColor(p_gtkwid.ThanDialog):
         w.grid(row=ir1, column=0, columnspan=25, sticky="w")
 
         ir1 += 1; blankim1 = self.thanAttsTk[2]
-        for i in range(18, 9, -2)+range(11, 20, 2):
+        for i in list(xrange(18, 9, -2))+list(xrange(11, 20, 2)):
             ic1 = 0
             for jcol in xrange(i, 230+i+1, 10):
                 thc = thanatt.thanAttCol(p_gcol.thanDxfColCode2Rgb.get(jcol, (255,255,255)))
@@ -250,7 +253,7 @@ class ThanColor(p_gtkwid.ThanDialog):
             but.destroy()
             butfont1.config(size=6)
             self.__class__.thanAttsTk = butfont1, butcol1, \
-                                       BitmapImage(data=chr(0)*2) # A blank b/w image of size 2x2 pixels
+                                       BitmapImage(data=b'\0'*2) # A blank b/w image of size 2x2 pixels
 
     def __choosecol(self, *args):
         "Lets the user define a new TGB color."
@@ -290,4 +293,4 @@ class ThanColor(p_gtkwid.ThanDialog):
 
 
     def __del__(self):
-        print "ThanColor ThanDialog", self, "dies.."
+        print("ThanColor ThanDialog", self, "dies..")

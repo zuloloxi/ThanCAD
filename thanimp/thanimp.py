@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines an object which reads a .syk, .brk, .syn, .lin  file and it
 creates the appropriate ThanCad's elements to represent it in ThanCad.
 """
 
-import cPickle
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+try:    import pickle
+except: import cPickle as pickle
 from math import fabs
 from p_gimdxf import ThanImportBase
 import p_gimgeo
@@ -53,7 +57,7 @@ class ThanImportSyk(ThanImportBase):
             else:
                 try:
                     z1 = float(s[:15])
-                except (ValueError, IndexError), why:
+                except (ValueError, IndexError) as why:
                     self.thanEr1s(why)
             lay = s[17:].strip()
             if lay != "" and lay[0] != ".": self.defLay = lay.replace(" ", "_")
@@ -71,7 +75,7 @@ class ThanImportSyk(ThanImportBase):
                     sl = s.split()
                     x1 = float(sl[0])
                     y1 = float(sl[1])
-                except (ValueError, IndexError), why:
+                except (ValueError, IndexError) as why:
                     self.thanEr1s(why)
                 else:
                     xx.append(x1)
@@ -107,7 +111,7 @@ class ThanImportBrk(ThanImportBase):
                     sl = s[40:55].strip()
                     if sl != "": z1 = float(sl)
                     else:        z1 = self.thanDr._elev[2]
-                except (ValueError, IndexError), why:
+                except (ValueError, IndexError) as why:
                     self.thanEr1s(why)
                 else:
                     xx.append(x1)
@@ -146,7 +150,7 @@ class ThanImportSyn(ThanImportBase):
                 else:        zz = 0.0             #Consistency with other programs
                 t1 = s[55:57].strip()
                 validc[2] = t1 == ""
-            except (ValueError, IndexError), why:
+            except (ValueError, IndexError) as why:
                 self.thanEr1s(why)
             if validc[2]:
                 self.thanDr.dxfPoint(xx, yy, zz, self.defLay, handle, None, aa, validc)
@@ -171,9 +175,9 @@ class ThanImportLin(ThanImportBase):
         handle = ""
         while True:
             try:
-                try: typ = cPickle.load(self.fDxf)
+                try: typ = pickle.load(self.fDxf)
                 except EOFError: break
-                coords = cPickle.load(self.fDxf)
+                coords = pickle.load(self.fDxf)
                 n = len(coords)
                 if n % 2 != 0: n -= 1
                 xx = []
@@ -193,11 +197,11 @@ class ThanImportLin(ThanImportBase):
                     yc = (yy[0]+yy[1])*0.5
                     self.thanDr.dxfCircle(xc, yc, 0.0, "circles", handle, 1, r)
                 elif typ == "text":
-                    ttext, stext = cPickle.load(self.fDxf)
+                    ttext, stext = pickle.load(self.fDxf)
                     self.thanDr.dxfText(xx[0], yy[0], zz[0], "texts", handle, 2, ttext, stext, 0.0)
                 else:
                     nzn += 1
-            except Exception, why:
+            except Exception as why:
                 self.thanEr1s(why)
         if nzn > 0:
             self.thanWarn(T["%d unknown elements were not imported"] % nzn)
@@ -243,8 +247,8 @@ class ThanImportXyzIntermap(ThanImportBase):
 
                 if s.strip() == "": break
                 try:
-                    x1, y1, z1 = map(float, s.split(",")[:3])
-                except (ValueError, IndexError), why:
+                    x1, y1, z1 = map(float, s.split(",")[:3])   #works for python2,3
+                except (ValueError, IndexError) as why:
                     self.thanEr1s(why)
                 else:
                     xx.append(x1)
@@ -286,4 +290,4 @@ class ThanImportKmz(ThanImportKml):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

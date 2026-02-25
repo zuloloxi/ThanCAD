@@ -1,12 +1,12 @@
+from __future__ import print_function
 from math import sin, cos, pi
-from types import IntType
-from thanfonts import thanFontPrime1
+from .thanfonts import thanFontPrime1
 
 
 def dashed_star(x, y, r, color, fill, size, chart):
     r *= 0.5
     th = 0.0
-    for i in range(8):
+    for i in range(8):     #OK for python 2,3
         x1 = x + r*cos(th)
         y1 = y + r*sin(th)
         chart.curveAdd((x, x1),  (y, y1), color=color, fill=fill, style="dashedsym", size=size)
@@ -31,9 +31,9 @@ def thanSymbolLine7f(xz, yz, h, a, theta, tfont=thanFontPrime1, linefun=None):
 
         for c in a:                               # Loop of all the characters in text
             k = ord(c)
-            if type(tfont[k]) is IntType: k = tfont[k]
+            if type(tfont[k]) is int: k = tfont[k]
             if k < 0 or k > 255:
-                print ("Character with code:" + str(k))
+                print("Character with code:" + str(k))
                 return
 
             for pl in tfont[k]:                   # Loop of all polylines of a char

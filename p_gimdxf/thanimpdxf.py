@@ -1,9 +1,9 @@
 import p_ggen
 from math import isnan
-import thanimpdxfget
-from thanimpdxfent import ThanEntities
-from thanimpdxfhead import ThanHeader
-from thanimpdxftab import ThanTables
+from . import thanimpdxfget
+from .thanimpdxfent import ThanEntities
+from .thanimpdxfhead import ThanHeader
+from .thanimpdxftab import ThanTables
 
 
 class ThanImportBase:
@@ -58,13 +58,13 @@ class ThanImportBase:
         "Raises import error with message."
         s1 = "Error at line %d of file %s: \n%s" % (self._lindxf, self.fDxf.name, s)
         self.thanDr.prt(s1, "can")
-        raise p_ggen.ThanImportError, s1
+        raise p_ggen.ThanImportError(s1)
 
 
     def thanEr2s(self, s):
         "Raises import error with message (no lines are reported)."
         self.thanDr.prt(s, "can")
-        raise p_ggen.ThanImportError, s
+        raise p_ggen.ThanImportError(s)
 
 
 
@@ -75,6 +75,7 @@ class ThanImportDxf(ThanImportBase, ThanHeader, ThanEntities, ThanTables):
         "Creates an instance of the class."
         ThanImportBase.__init__(self, fDxf, dr, defaultLayer)
         self._prevline = -1, ""
+        self.thanDxfVer = 12   #If 2000, then TEXT are imported with the insertion point, not left point
 
 
     def thanGetDxf(self):
@@ -98,6 +99,13 @@ class ThanImportDxf(ThanImportBase, ThanHeader, ThanEntities, ThanTables):
             self._lindxf += 2
         return self._prevline
 
+
+    def thanSetDxfVersion(self, iver):
+        "Set version of the dxf; currenty 12 or 2000."
+        assert iver in (12, 2000), "Version can be 12 or 2000"
+        self.thanDxfVer = iver
+
+
 #===========================================================================
 
     def thanImport(self):
@@ -117,7 +125,7 @@ class ThanImportDxf(ThanImportBase, ThanHeader, ThanEntities, ThanTables):
                 self.thanWarn("Section name not found: probably corrupted file.")
                 continue
             sect = self.__sections.get(text)
-            if sect == None: continue      # We don't need this section
+            if sect is None: continue      # We don't need this section
 
             if sect[1] > 1:
                 self.thanWarn("Probably corrupted dxf file: "

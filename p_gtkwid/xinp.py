@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
-import Tkinter
+from __future__ import print_function
+import tkinter
 import p_ggen
-import thanwids
-import thantkutila, thantksimpledialog
+from . import thanwids, thantkutila, thantksimpledialog
 
 
 def xinpStr(win, mes, douDef=None, width=80):
@@ -13,6 +13,18 @@ def xinpStr(win, mes, douDef=None, width=80):
     if douDef is None: iv = ""
     else:              iv = p_ggen.thanUnicode(douDef)
     dline = thantksimpledialog.askstring(tit, mes, initialvalue=iv, parent=win, width=width)
+    if dline is None: return None   #User cancelled
+    return p_ggen.thanUnunicode(dline)   #If user pressed enter, the default value is returned (because of the initial value)
+
+
+def xinpPass(win, mes, douDef=None, width=80):
+    "Inputs a password without showing the characters."
+    win.update()     # Experience showed that there should be no pending Tk jobs when we show a modal window
+    tit = "Please enter password"
+    mes = p_ggen.thanUnicode(mes)
+    if douDef is None: iv = ""
+    else:              iv = p_ggen.thanUnicode(douDef)
+    dline = thantksimpledialog.askstring(tit, mes, initialvalue=iv, parent=win, width=width, show="*")
     if dline is None: return None   #User cancelled
     return p_ggen.thanUnunicode(dline)   #If user pressed enter, the default value is returned (because of the initial value)
 
@@ -119,7 +131,7 @@ class XinpFiles(thantksimpledialog.ThanDialog):
 
     def __init__(self, parent, mes, suf="", nest=False, initialdir=".", title=None, buttonlabels=None, **kw):
         self.thanCargo = mes, suf, nest, initialdir
-        print "suf=", self.thanCargo[1]
+        print("suf=", self.thanCargo[1])
         thantksimpledialog.ThanDialog.__init__(self, parent, title, buttonlabels, **kw)
 
     def body(self, win):
@@ -129,7 +141,7 @@ class XinpFiles(thantksimpledialog.ThanDialog):
         This method should be overridden, and is called
         by the __init__ method.
         '''
-        lab = Tkinter.Label(win, text=self.thanCargo[0])
+        lab = tkinter.Label(win, text=self.thanCargo[0])
         lab.grid(row=0, column=0, sticky="w")
         #If text= is not defined, then it default to the current directory, which we do not want
         self.thanFil = thanwids.ThanFile(win, text="", initialdir=self.thanCargo[3], extension=self.thanCargo[1], width=40)
@@ -167,18 +179,18 @@ def xinpFiles(win, mes, suf="", nest=False, initialdir=None):
     tit = "Please enter filename prefixes and/or *"
     mes = p_ggen.thanUnicode(mes)
     suf = suf.lower()
-    print "suf=", suf
+    print("suf=", suf)
     if initialdir is None: initialdir = ""
     initialdir = p_ggen.path(initialdir)
     while True:
         x = XinpFiles(win, mes, suf, nest, initialdir, title=tit)
         fentries = x.result
-        print "fentries=", fentries
+        print("fentries=", fentries)
         del x
         if fentries is None: return None
         fentries = fentries.strip()
         if fentries == "" or p_ggen.path(fentries)/"q1" == initialdir/"q1": fentries = initialdir / "*"+suf   #Work around missing last "/"
-        print "fentries=", fentries
+        print("fentries=", fentries)
         fildats = []
         for fentry in fentries.split():
             fentry = p_ggen.path(fentry)
@@ -219,7 +231,7 @@ def xinpDir(win, mes, mustexist=False, mustnotexist=False, default=None):
             ter="Ο φάκελλος %s δεν είναι φάκελλος (είναι αρχείο). Προσπαθείστε πάλι." % f
             thantkutila.thanGudModalMessage(win, ter, "Not a directory", icon=thantkutila.ERROR)
             continue
-        return p_ggen.thanUnunicode(f)
+        return p_ggen.path(p_ggen.thanUnunicode(f))
 
 
 def xinpMchoice(win, mes, coms, douDef=1):
@@ -246,23 +258,23 @@ def xinpNo(win, mes, douDef=True):
 
 def testxinpFiles():
     "Test the xinpFiles() function."
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     x = xinpFiles(root, mes="Δώστε αρχεία που καταλήγουν σε xx.asc (με ή χωρίς την κατάληξη).\nΓια να επιλεγούν όλα δώστε *", suf="xx.asc", nest=False)
-    print "files found=", x
+    print("files found=", x)
 
 
 def testxinpMchoice():
     "Test the xinpFiles() function."
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     x = xinpMchoice(root, "Διάλεξε γλυκό:", "Δήμητρα Ανδρέας Στέλλα", 3)
-    print "answer=", x
+    print("answer=", x)
 
 
 def testxinpDir():
     "Test the xinpDir() function."
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     x = xinpDir(root, "Διάλεξε φάκελλο:", mustexist=False, mustnotexist=False, default=".")
-    print "answer=", x
+    print("answer=", x)
 
 
 if __name__ == "__main__":

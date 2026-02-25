@@ -1,8 +1,9 @@
 "See p_gmath/developer/paraboloid for documentation - this is untested code."
+from __future__ import print_function
 from math import sqrt
-from var import lsmsolve
+from .var import lsmsolve
 import p_gnum
-from projcom import _Projection
+from .projcom import _Projection
 
 
 class ParaboloidProjection(_Projection):
@@ -40,7 +41,7 @@ class ParaboloidProjection(_Projection):
             A.append([xg**2, yg**2, xg, yg, 1.0])
             B.append(zg)
         a, terr = lsmsolve(p_gnum.array(A), p_gnum.array(B))
-        if a == None: return None, None, None
+        if a is None: return None, None, None
         self.L[:] =  a
         return 0.0, self.erz(fots), 1.0
 
@@ -88,4 +89,4 @@ class ParaboloidProjection(_Projection):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

@@ -5,7 +5,7 @@ and other languages. This module is specific to the modules which implement the
 GUI of p_gfil.
 """
 
-from thantrans import Translation
+from .thantrans import Translation
 
 
 #English to greek translation table

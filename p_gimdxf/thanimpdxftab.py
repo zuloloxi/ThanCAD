@@ -1,5 +1,5 @@
 from math import fabs
-import thandxfext
+from . import thandxfext
 
 
 class ThanTables:
@@ -180,7 +180,8 @@ class ThanTables:
                 continue
 
             name = atts[2].strip().lower()
-            dltype = reduce(lambda x, y: x+fabs(y), elems, 0.0)
+            #dltype = reduce(lambda x, y: x+fabs(y), elems, 0.0)
+            dltype = sum(fabs(y) for y in elems)
             if (dltype <= 0.0 or len(elems) == 0) and name not in ltypes1:
                 self.thanWarn('Linetype "'+name+'" contains no segments: probably corrupted file.')
                 continue

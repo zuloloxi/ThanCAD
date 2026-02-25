@@ -1,5 +1,5 @@
 from PIL import Image
-import numnum
+from . import numnum
 
 #When the PIL image mode is I;16S it means that the (TIFF) file has the pixels
 #as 16 bits Signed integers. Although PIL reads the TIFF tags, its does not
@@ -37,7 +37,7 @@ def im2num(im):
             r = numnum.fromstring(im.tostring(), numnum.Int32)
             im.mode = "I;16S"
         else:
-            raise ValueError, "im2num() does not support image mode '%s'" % (im.mode,)
+            raise ValueError("im2num() does not support image mode '%s'" % (im.mode,))
         r = numnum.reshape(r, (h, w))       #reshape needs: a) number of rows. b) number of columns.
 #        print "array shape=", g.shape
 #        print "image pixel=", im.getpixel((5, 6)) #getpixel needs: a) column b) row
@@ -51,7 +51,7 @@ def num2im(r, castint256=True):
     n = len(r.shape)
     if n == 3:
         w, h, n = r.shape
-        if n != 3: raise ValueError, "Array's third dimension should be exactly 3 (for RGB images)"
+        if n != 3: raise ValueError("Array's third dimension should be exactly 3 (for RGB images)")
         typ = numnum.typecode(r)
         if r != numnum.UnsignedInt8: r = r.astype(numnum.UnsignedInt8)
         data = r.tostring()
@@ -76,5 +76,5 @@ def num2im(r, castint256=True):
             data = r.tostring()
             im = Image.fromstring("F", (h, w), data)
     else:
-        raise ValueError, "num2nim() does not support array type '%r'" % (typ,)
+        raise ValueError("num2nim() does not support array type '%r'" % (typ,))
     return im

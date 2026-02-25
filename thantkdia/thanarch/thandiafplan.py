@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,17 +23,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to define the necessary elements
 and options for automated floor plan architectural design.
 """
 
-import sys, copy, ConfigParser, Tkinter
-
-import p_gtkuti, p_gtkwid, p_ggen
+import sys, copy
+import tkinter
+import p_gtkwid, p_ggen
 from thantrans import Tarch, T
-from thandiaarch import ThanArchCom
+from .thandiaarch import ThanArchCom
 
 
 class ThanFplan(ThanArchCom):
@@ -100,7 +100,7 @@ class ThanFplan(ThanArchCom):
     def body2(self, win):
         "Create the body of the dialog in steps."
 #        self.fraLogo(win, 0, theme=Tarch["Automated Floor Plan Design Algorithms"], year=2013)
-        self.fraLogo2(win, 0, year="2010-2013")
+        self.fraLogo2(win, 0, year="2010-2016")
         self.fraGeom(win, 1)
         self.fraConstraints(win, 2)
         self.fraPenalties(win, 3)
@@ -108,21 +108,21 @@ class ThanFplan(ThanArchCom):
 
     def fraConstraints(self, win, ir):
         "Select the room dimensions constraints."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["ROOM CONSTRAINTS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["ROOM CONSTRAINTS:"])
         lab.grid(row=0, column=1, sticky="w", columnspan=4)
 
         keys = "entMintolWidth",            "entMinWidth",               "entMaxWidth",                "entMaxtolWidth"
         tits = "Min room length - hard (m)", "Min room length - soft (m)", "Max room length - soft (m)",  "Max room length - hard (m)"
             #Tarch["Min room length - hard (m)"], Tarch["Min room length - soft (m)"], Tarch["Max room length - soft (m)"], Tarch["Max room length - hard (m)"]
         ir = 1
-        for key, tit in zip(keys, tits):
+        for key, tit in zip(keys, tits):  #works for python2,3
             val = p_gtkwid.ThanValFloat(0.10, 1000.0)
-            lab = Tkinter.Label(fra, text=Tarch[tit])
+            lab = tkinter.Label(fra, text=Tarch[tit])
             lab.grid(row=ir, column=1, sticky="e")
             wid = p_gtkwid.ThanEntry(fra, width=5)
             wid.grid(row=ir, column=2, sticky="we")
@@ -133,16 +133,16 @@ class ThanFplan(ThanArchCom):
         tits = "Min room width - hard (m)", "Min room width - soft (m)", "Max room width - soft (m)",  "Max room width - hard (m)"
             #Tarch["Min room width - hard (m)"], Tarch["Min room width - soft (m)"], Tarch["Max room width - soft (m)"], Tarch["Max room width - hard (m)"]
         ir = 1
-        for key, tit in zip(keys, tits):
+        for key, tit in zip(keys, tits):  #works for python2,3
             val = p_gtkwid.ThanValFloat(0.10, 1000.0)
-            lab = Tkinter.Label(fra, text=Tarch[tit])
+            lab = tkinter.Label(fra, text=Tarch[tit])
             lab.grid(row=ir, column=4, sticky="e")
             wid = p_gtkwid.ThanEntry(fra, width=5)
             wid.grid(row=ir, column=5, sticky="we")
             self.thanWids.append((key, tit, wid, val))
             ir += 1
 
-        wid = Tkinter.Frame(fra)
+        wid = tkinter.Frame(fra)
         wid.grid(row=2, column=3, sticky="we")
 
         fra.columnconfigure(3, weight=1)
@@ -150,12 +150,12 @@ class ThanFplan(ThanArchCom):
 
     def fraPenalties(self, win, ir):
         "Select the room and roomconfiguration penalties."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["PENALTY (ADVANCED):"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["PENALTY (ADVANCED):"])
         lab.grid(row=0, column=1, sticky="w", columnspan=4)
 
         keys = "entPenaltmore", "entPenalt1", "entPenalty"
@@ -165,18 +165,18 @@ class ThanFplan(ThanArchCom):
                )
         expls = "(absolute)", "(normalised)", "(normalised)"                #Tarch["(absolute)"], Tarch["(normalised)"]
         ir = 1
-        for key, tit, expl in zip(keys, tits, expls):
+        for key, tit, expl in zip(keys, tits, expls):  #works for python2,3
             val = p_gtkwid.ThanValFloat(0.10, 1000.0)
-            lab = Tkinter.Label(fra, text=Tarch[tit])
+            lab = tkinter.Label(fra, text=Tarch[tit])
             lab.grid(row=ir, column=1, sticky="e")
             wid = p_gtkwid.ThanEntry(fra, width=5)
             wid.grid(row=ir, column=2, sticky="we")
-            lab = Tkinter.Label(fra, text=Tarch[expl])
+            lab = tkinter.Label(fra, text=Tarch[expl])
             lab.grid(row=ir, column=3, sticky="w")
             self.thanWids.append((key, tit, wid, val))
             ir += 1
 
-        wid = Tkinter.Frame(fra)
+        wid = tkinter.Frame(fra)
         wid.grid(row=2, column=4, sticky="we")
 
         fra.columnconfigure(4, weight=1)
@@ -190,7 +190,7 @@ class ThanFplan(ThanArchCom):
         if vs.entMaxRooms < vs.entMinRooms:
             ret = False
             if strict:
-                p_gtkuti.thanGudModalMessage(self, Tarch["Number of rooms: max < min !"], T["Error in data"])
+                p_gtkwid.thanGudModalMessage(self, Tarch["Number of rooms: max < min !"], T["Error in data"])
                 return ret
 
         self.result = vs

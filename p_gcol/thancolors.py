@@ -26,6 +26,7 @@ ThanCad 0.0.8 "DoSomething": 2dimensional CAD with raster support for engineers.
 This module defines the (limited) colour range of a popular CAD system.
 """
 
+from __future__ import print_function
 import p_ggen
 
 
@@ -1046,7 +1047,8 @@ thanNamedCols = """\
 
 def __tra():
     "Transforms the data to a dictionary."
-    import sys, colrnames
+    import sys
+    from . import colrnames
     cols = {}
     names = {}
     invnames = {}
@@ -1055,7 +1057,7 @@ def __tra():
         col = tuple(map(int, dl[:3]))
         names[dl[3].lower()] = col
         invnames[col] = dl[3].lower()
-    for dl, col in colrnames.THECOLORS.iteritems(): #Python Game Library
+    for dl, col in colrnames.THECOLORS.items(): #Python Game Library   #OK for python 2, 3
         names[dl.lower()] = col[:3]
         invnames[col[:3]] = dl.lower()
     for dline in thanPartialCols.split("\n"):       #thAtCad dxf partial colours
@@ -1092,7 +1094,7 @@ del __tra, thanPartialCols, thanNamedCols
 def thanRgb2DxfColCodeApprox(rgb):
     "Returns a dxf colour code that resembles the rgb colour."
     r,g,b = rgb; difmin = 1e30
-    for partial, (r1,g1,b1) in thanDxfColCode2Rgb.iteritems():
+    for partial, (r1,g1,b1) in thanDxfColCode2Rgb.items():   #OK for python 2, 3
         dif = abs(r-r1)*max(r,128) + \
               abs(g-g1)*max(g,128) + \
               abs(b-b1)*max(b,128)
@@ -1104,7 +1106,7 @@ def thanRgb2DxfGrayCodeApprox(rgb):
     "Returns a dxf gray code that resembles the gray shade of the rgb colour."
     igray = thanRgb2Gray(rgb)
     return min( (abs(igray-r), cod) 
-                for cod,(r,g,b) in thanDxfColCode2Rgb.iteritems()
+                for cod,(r,g,b) in thanDxfColCode2Rgb.items()   #OK for python 2, 3
                 if r == g == b
               )[1]
 
@@ -1114,7 +1116,7 @@ def thanDxfColCode2DxfGrayCodeApprox(cod):
     r,g,b = thanDxfColCode2Rgb[cod]
     igray = int(0.299*r + 0.587*g + 0.114*b + 0.5)
     return min( (abs(igray-r), cod) 
-                for cod,(r,g,b) in thanDxfColCode2Rgb.iteritems()
+                for cod,(r,g,b) in thanDxfColCode2Rgb.items()  #OK for python 2, 3
                 if r == g == b
               )[1]
 
@@ -1140,12 +1142,12 @@ def thanTk2Rgb(bcol):
 
 def __prgray():
     "Find the gray colours in the dxf codes; for debugging only."
-    print "gray dxf colours:"
-    for partial, (r1,g1,b1) in thanDxfColCode2Rgb.iteritems():
+    print("gray dxf colours:")
+    for partial, (r1,g1,b1) in thanDxfColCode2Rgb.items():  #OK for python 2, 3
         if r1==g1==b1:
-            print partial,":",r1,g1,b1
+            print(partial,":",r1,g1,b1)
 
 
 if __name__ == "__main__": 
-    print __doc__
+    print(__doc__)
     __prgray()

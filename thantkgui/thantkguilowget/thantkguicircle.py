@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines circle states, i.e. as the user moves the mouse, a circle or
 an arc are drawn, continuously.
 """
 from math import hypot, atan2, pi
-import Tkinter
-from thantkconst import THAN_STATE_NONE
-from thantkguigeneric import ThanStateGeneric
+import tkinter
+from .thantkconst import THAN_STATE_NONE
+from .thantkguigeneric import ThanStateGeneric
 
 
 class ThanStateCircle(ThanStateGeneric):
@@ -104,8 +104,8 @@ class ThanStateArc(ThanStateGeneric):
         draggedp = self.__dragged
         self.__dragged = (dc.create_arc(self.__x1-self.__r1, self.__y1+self.__r1,
                                         self.__x1+self.__r1, self.__y1-self.__r1,
-#                                        start=theta1, extent=(theta2-theta1)%360.0, style=Tkinter.ARC,
-                                        start=theta1, extent=dth, style=Tkinter.ARC,
+#                                        start=theta1, extent=(theta2-theta1)%360.0, style=tkinter.ARC,
+                                        start=theta1, extent=dth, style=tkinter.ARC,
                                         outline = "blue"),
                           dc.create_line(self.__x1, self.__y1, x, y, fill="blue"),
                          )

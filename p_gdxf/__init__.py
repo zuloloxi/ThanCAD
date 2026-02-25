@@ -1,1 +1,1 @@
-from thandxfini import ThanDxfPlot
+from .thandxfini import ThanDxfPlot

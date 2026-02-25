@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for a clipboard memory, shared among all ThanCad's
 drawings."
 """
 
+from __future__ import print_function
 import copy
-from itertools import izip
 import p_ggen
 from thanvar import Canc
 from thantrans import T
-from thancomsel import thanSelectGen
-from thancommod import thanModCanc, thanModEnd
+from .thancomsel import thanSelectGen
+from .thancommod import thanModCanc, thanModEnd
 
 
 thanClip = p_ggen.Struct("ThanCad global clipboard")
@@ -70,11 +70,11 @@ def thanClipCopybase(proj):
 def thanClipCopy(proj, c1=None):
     "Copies selected elements to clipboard."
     res = thanSelectGen(proj, standalone=False)
-    if res == Canc: return thanModCanc(proj)              # clipboard copy was cancelled
+    if res == Canc: return thanModCanc(proj)            # clipboard copy was cancelled
     elems = proj[2].thanSelall
     if len(elems) == 0: return thanModCanc(proj, T["No elements found"])  # No elements selected
     if c1 is None:
-        c1 = iter(elems).next().getInspnt()
+        c1 = next(iter(elems)).getInspnt()
         c1[2] = proj[1].thanVar["elevation"][2] #So that z is taken from the elevation command
     selold = proj[2].thanSelold
     __clipCopyDo(proj, c1)
@@ -91,7 +91,7 @@ def __clipCopyDo(proj, c1):
     thanClip.elems = [dcop(e) for e in proj[2].thanSelall]
     thanClip.ref = c1
     t2 = time.time()
-    print "Copied to clipboard in", t2-t1, "secs"
+    #print "Copied to clipboard in", t2-t1, "secs"
 
 
 def thanClipCopyRedo(proj, elems):
@@ -115,7 +115,9 @@ def thanClipCut(proj, c1=None):
     if res == Canc: return thanModCanc(proj)               # clipboard cut was cancelled
     elems = proj[2].thanSelall
     if len(elems) == 0: return thanModCanc(proj, T["No elements found"])  # No elemements selected
-    if c1 is None: c1 = iter(elems).next().getInspnt()
+    if c1 is None:
+        c1 = next(iter(elems)).getInspnt()
+        c1[2] = proj[1].thanVar["elevation"][2] #So that z is taken from the elevation command
     selold = proj[2].thanSelold
     __clipCutDo(proj, c1)
     proj[1].thanDoundo.thanAdd("cutclip", thanClipCutRedo, (elems,),
@@ -137,7 +139,7 @@ def __modEraseDo(proj):
     proj[2].thanImages.difference_update(proj[2].thanSelall)  #Delete deleted images from thanImages
     t2 = time.time(); proj[1].thanDelSel(proj[2].thanSelall)  #thanTouch is implicitly called
     t3 = time.time()
-    print "Erase time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    #print "Erase time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
     proj[2].thanGudSetSelClear()
 
 def thanClipCutRedo(proj, elems):
@@ -166,7 +168,7 @@ def thanClipPaste(proj):
 
     ccu = list(proj[1].thanVar["elevation"])
     ccu[:2] = proj[2].thanCt.local2Global(proj[2].thanCanvas.thanXcu, proj[2].thanCanvas.thanYcu)
-    dc = [b-a for a,b in izip(thanClip.ref, ccu)]
+    dc = [b-a for a,b in zip(thanClip.ref, ccu)]   #works for python2,3
     c2 = proj[2].thanGudGetMovend(ccu, T["Insertion point"]+": ", thanClip.elems, dc)
 
     if c2 == Canc: return proj[2].thanGudCommandCan()           # Paste command was cancelled
@@ -188,7 +190,7 @@ def thanClipPasteorig(proj):
 
 def __clipPasteDo(proj, c1, c2):
     "Pastes the clipboard elements to the drawing, current layer."
-    dc = [b-a for a,b in izip(c1, c2)]
+    dc = [b-a for a,b in zip(c1, c2)]  #works for python2,3
     dcop = copy.deepcopy
     copelems = []
     dr = proj[1]

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,27 +23,29 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines a Tkinter window to display ThanCad's main window.
 """
 
-import sys, weakref, Tkinter, tkFont
+from __future__ import print_function
+import sys, weakref
+import tkinter
 import p_gtkwid, p_ggen
 import thanvar, thancom
 from thanvers import tcver
 import thantk
 from thanopt import thancadconf
-import thanmenus
+from . import thanmenus
 thanfiles = thanvar.thanfiles
 
 
-class ThanTkGuiWinMain(Tkinter.Tk):
-    "Main window of Tkinter GUI."
+class ThanTkGuiWinMain(tkinter.Tk):
+    "Main window of tkinter GUI."
 
     def __init__ (self):
         "Initialise base classes and mixins and then this class."
-        Tkinter.Tk.__init__(self, className="ThanCad")
+        tkinter.Tk.__init__(self, className="ThanCad")
 
         self.__fonts()
         self.__position()
@@ -87,9 +89,9 @@ class ThanTkGuiWinMain(Tkinter.Tk):
     def __fonts(self):
         "Use fonts that support Greek encodings."
 #       save thanFo reference. Note that p_gtkwid.thanFontRefSave() will not work well here (see source)
-#       self.thanFo = tkFont.Font(family="Arial", size=10)          # Negative size means size in pixels; else in points
-        self.thanFo = tkFont.Font(family=thancadconf.thanFontfamily,
-                                      size=thancadconf.thanFontsize)          # Negative size means size in pixels; else in points
+#       self.thanFo = tkinter.font.Font(family="Arial", size=10)          # Negative size means size in pixels; else in points
+        self.thanFo = tkinter.font.Font(family=thancadconf.thanFontfamily,
+                                        size=thancadconf.thanFontsize)          # Negative size means size in pixels; else in points
         self.option_add("*Font", self.thanFo)
 
 
@@ -156,10 +158,10 @@ class ThanTkGuiWinMain(Tkinter.Tk):
     def destroy(self):
         "Deletes circular references."
         del self.thanFo, self.thanMenu, self.thanTkPos
-        Tkinter.Tk.destroy(self)
+        tkinter.Tk.destroy(self)
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
     tw = ThanTkGuiWinMain()
     tw.mainloop()

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,12 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the menus.
 """
 import p_ggen
-from thancon import thanFrape
+from .thancon import thanFrape
 from thantrans import T, Tphot, Tarch, Turban, Tmatch, Tcivil
 from thanvers import tcver
 
@@ -101,7 +101,7 @@ def thanStandardMenus2():
         [ ("menu", T["&Image"], ""), # Menu Title
           (("imageattach"),  T["Insert Raster &Image"], T["Inserts a new image to the current drawing"]),
           (("imagegeo"),     T["Import &GeoTIFF"],   T["Inserts TIFF images whose georeference is inside the TIFF"]),
-          (("imagetfw"),     T["Import &tfw Image"], T["Inserts TIFF images whose georeference is defined in .tfw files"]),
+          (("imagetfw"),     T["Import &tfw/j2w Image"], T["Inserts TIFF images whose georeference is defined in .tfw/.j2w files"]),
           (("imagelog"),     T["Import &log Image"], T["Inserts BMP images whose georeference is defined in .log files"]),
           (("imagecadastre"),T["Import &Cadastre"],T["Inserts Greek cadastre map image to its correct position using standardised file naming conventions"]),
           (("imagetiles"),   T["Import tiled Image"],T["Inserts a Digital Globe image split into multiple tiles"]),
@@ -188,6 +188,7 @@ def thanStandardMenus2():
         [ (("EngTrace"),  T["&Trace"],           T["Traces a curve in a bitmap raster image"]),
           (("greeceperimeter"), T["Draw &Greece"], T["Draws the perimeter of Greece in EGSA87 coordinates"]),
           ("-",),
+          ("geodeticprojection", T["Geo&detic Projection"], T["Displays and changes the geodetic projection of the drawing"]),
           (("demload"),   T["Load DE&Ms"],       T["Loads DEMs (USGS format) stored in .tif files"]),
           (("dem"),       T["Manage DE&Ms"],     T["Manages DEMs (USGS format) stored in .tif files"]),
           (("demdirectory"), T["Locate DEM directory"], T["Locates the directory for missing files of DEMs"]),
@@ -209,11 +210,6 @@ def thanStandardMenus2():
             [ ("-",),
               (("urbanbioazimuth"), Tarch["Bio a&zimuth"], Tarch["Computes the azimuth of a road network to test bioclimatic design of city plan"]),
               (("urbanslope"),      Turban["&Locate roads of slope"], Turban["Locates roads (lines) whose slope is less than arbitrary threshold"]),
-            ])
-        if thanFrape.architect:
-            m1.extend(\
-            [ ("-",),
-              ("archstairs", Tarch["&Stairs"], Tarch["Computes and draws the plan view of a simple staircase"]),
             ])
         m1.append(("endmenu",))
 
@@ -269,11 +265,12 @@ def thanStandardMenus2():
           (("scale"),      T["Sc&ale"],        T["Scales selected elements"]),
           (("move"),       T["&Move"],         T["Moves selected elements"]),
           (("copy"),       T["&Copy"],         T["Copies selected elements"]),
-          (("mirror"),     T["M&irror"],       T["Mirrors selected elements with repect to 2d axis"]),
+          (("mirror"),     T["M&irror"],       T["Mirrors selected elements with respect to 2d axis"]),
+          (("pmirror"),    T["Point Mirror"],  T["Mirrors selected elements with respect to a point"]),
           ("-",),
 
           ("menu", T["&Line"], ""),             # Sub Menu Title
-          ("movelinepoint", T["&Move node"],   T["Moves an arbitrary node of a line."]),
+          ("movelinepoint", T["&Move node"],   T["Moves an arbitrary node of a line the segments which lead to it."]),
           ("join",          T["&Join"],        T["Joins 2 or more adjacent lines"]),
           ("join2d",        T["Join &2D"],     T["Joins 2 or more adjacent lines"]),
           ("joingap",       T["Join &gap"],    T["Joins 2 lines filling the gap between them."]),

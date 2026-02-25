@@ -1,9 +1,13 @@
 "Projection transformation functions module."
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
 from p_gnum import array, matrixmultiply, transpose, solve_linear_equations, LinAlgError
-from var import linEq2, thanNear2
-from thanintersect import thanSegSeg
-from projcom import _Projection
+from .var import thanNear2
+from .lineq import linEq2
+from .thanintersect import thanSegSeg
+from .projcom import _Projection
 
 
 ###############################################################################
@@ -59,7 +63,7 @@ class DLTProjection(_Projection):
         A = matrixmultiply(AT, A)
         B = matrixmultiply(AT, B)
         try: a = solve_linear_equations(A, B)
-        except LinAlgError, why:
+        except LinAlgError as why:
     #       print "Match2 DLT solution failed: ", why
             return None, None, None
         self.L = list(a)
@@ -181,7 +185,7 @@ class DLT2Projection(_Projection):
         A = matrixmultiply(AT, A)
         B = matrixmultiply(AT, B)
         try: a = solve_linear_equations(A, B)
-        except LinAlgError, why:
+        except LinAlgError as why:
     #       print "Match2 DLT solution failed: ", why
             return None, None, None
         self.L = list(a)
@@ -342,7 +346,7 @@ class Rational1Projection(_Projection):
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #               print "Match2 Rational 1 solution failed: ", why
                 return None, None, None
             self.L.extend(list(a))
@@ -465,7 +469,7 @@ class Rational1_2DProjection(_Projection):
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #               print "Match2 Rational 1 solution failed: ", why
                 return None, None, None
             self.L.extend(list(a))
@@ -588,7 +592,7 @@ class Rational2Projection(_Projection):
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #               print "Match2 Rational 1 solution failed: ", why
                 return None, None, None
             self.L.extend(list(a))
@@ -711,7 +715,7 @@ class Rational15Projection(_Projection):
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #               print "Match2 Rational 1 solution failed: ", why
                 return None, None, None
             self.L.extend(list(a))
@@ -817,7 +821,7 @@ class Polynomial1Projection(_Projection):
         L = self.L
         x, y = linEq2(L[0], L[1], xp-L[2]*z-L[3],
                       L[4], L[5], yp-L[6]*z-L[7])
-        if x == None: raise ValueError, "%s projection can not be inverted" % (self.name,)
+        if x is None: raise ValueError("%s projection can not be inverted" % (self.name,))
         return x, y, z
 
 
@@ -837,7 +841,7 @@ class Polynomial1Projection(_Projection):
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #                print "Match2 polynomial solution failed: ", why
                 return None, None, None
             L.extend(list(a))
@@ -959,11 +963,142 @@ Y =   ----------------- x + ---------------- y + -----------------
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #                print "Match2 polynomial solution failed: ", why
                 return None, None, None
             L.extend(list(a))
         self.L = L
+        return self.er(fots)
+
+
+    def read(self, fr, skipicod=False):
+        """Reads the coefficients from an opened text file.
+
+        It is the responsibility of the caller to catch any exceptions."""
+        if skipicod: ic = self.icodp
+        else:        ic = self.readIcod(fr)
+        assert ic == self.icodp, "Well it IS a polynomial1 2D projection!"
+        self.L = self.readCoefs(fr, self.NL)
+
+
+    def write(self, fw):
+        "Write the projection coefficients to a text file."
+        fw.write("#First order polynomial projection\n")
+        fw.write("# x = L0 X + L1 Y + L2\n")
+        fw.write("# y = L3 X + L4 Y + L5\n")
+        fw.write("\n%2d                             # ThanCad Projection code\n\n" % self.icodp)
+        for i in xrange(3):    fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+        fw.write("\n")
+        for i in xrange(3, 6): fw.write("%27.20e    # L%d\n" % (self.L[i], i))
+
+
+
+class Polynomial1_2D_normalisedProjection(_Projection):
+    """This class provides the machinery for the polynomial projection of 1st degree.
+
+    The data are normalised (distance and size) before the application of the LSM.
+    This should produce identical results with Polynomial1_2DProjection.
+    This class is used for testing and debugging.
+    """
+    icodp = 10
+    name = "1st order polynomial"
+    NL = 12
+
+    def __init__(self, L=None):
+        "Initialize the object with known coeffcients."
+        if (L == None):
+            self.L = [1.0, 0.0, 0.0,       # Coefs for xr
+                      0.0, 1.0, 0.0,       # Coefs for yr
+                      0.0, 0.0, 0.0,            # Xmin, Ymin, Zmin
+                      0.0, 0.0, 1.0             # xpmin, ypmin, am
+                     ]
+        else:
+            assert len(L) == self.NL, "There should be exactly %d coefficients for the Polynomial 2D Projection of 1st order" % self.NL
+            self.L = L[:]
+
+
+    def project(self, c3d):
+        "Projects 3d point with polynomial projection."
+        x, y, z = c3d[:3]
+        L = self.L
+        x -= L[6]; y -= L[7]; z -= L[8]
+        xp = L[0]*x+L[1]*y+L[2]
+        yp = L[3]*x+L[4]*y+L[5]
+        return xp/L[11]+L[9], yp/L[11]+L[10], c3d[2]      # The last coordinate (z) is not used
+
+
+    def invert(self):
+        """Returns the inverse of current transformation which is also a DLT in 2 dimensions."
+
+       L5                    -L2                  (L6 L2 - L3 L5)
+X =   ----------------- x + ---------------- y + -----------------
+       (L1 L5 - L4 L2)       (L1 L5 - L4 L2)      (L1 L5 - L4 L2)
+
+       -L4                   L1                   L4 L3 - L1 L6
+Y =   ----------------- x + ---------------- y + -----------------
+       (L1 L5 - L4 L2)       (L1 L5 - L4 L2)      (L1 L5 - L4 L2)
+
+        """
+        L = list(self.L)
+        L.insert(0, None)
+        par = (L[1]*L[5] - L[4]*L[2])
+        M = [ L[5] / par,
+             -L[2]      / par,
+             (L[6]*L[2] - L[3]*L[5]) / par,
+             -L[4]      / par,
+              L[1] / par,
+             (L[4]*L[3] - L[1]*L[6]) / par,
+        ]
+        return self.__class__(M)
+
+
+    def chain(self, other):
+        """Chain this transformation and another; first current then the other.
+
+        xp = L[0]*x+L[1]*y+L[2]
+        yp = L[3]*x+L[4]*y+L[5]
+        xn = M[0]*xp+M[1]*yp+M[2] = M[0] * {L[0]*x+L[1]*y+L[2]} + M[1] *  {L[3]*x+L[4]*y+L[5]} + M[2] = 
+             M[0]*L[0]*x + M[0]*L[1]*y + M[0]*L[2] + M[1]*L[3]*x + M[1]*L[4]*y + M[1]*L[5] + M[2]
+             {M[0]*L[0] + M[1]*L[3]}*x + {M[0]*L[1] + M[1]*L[4]}*y + {M[0]*L[2] + M[1]*L[5] + M[2]}
+        yn = M[3]*xp+M[4]*yp+M[5]
+        """
+        LL = [None]*6
+        L = self.L
+        M = other.L
+        LL[0] = M[0]*L[0] + M[1]*L[3]
+        LL[1] = M[0]*L[1] + M[1]*L[4]
+        LL[2] = M[0]*L[2] + M[1]*L[5] + M[2]
+
+        LL[3] = M[3]*L[0] + M[4]*L[3]
+        LL[4] = M[3]*L[1] + M[4]*L[4]
+        LL[5] = M[3]*L[2] + M[4]*L[5] + M[5]
+        self.L[:] = LL
+
+
+    def lsm23(self, fots):
+        "Find polynomial coefficients using least square."
+        fotsr, con, dcp = self.relative(fots)
+        L = []
+        for i in 0, 1:
+            A, B = [], []
+            for xg,yg,zg,xr,yr,zr,xyok,zok in fotsr:
+                A.append([xg*xyok, yg*xyok, xyok])
+                if i == 0: B.append(xr*xyok)
+                else     : B.append(yr*xyok)
+            A = array(A)
+            B = array(B)
+
+            AT = transpose(A)
+            A = matrixmultiply(AT, A)
+            B = matrixmultiply(AT, B)
+            try: a = solve_linear_equations(A, B)
+            except LinAlgError as why:
+#                print "Match2 polynomial solution failed: ", why
+                return None, None, None
+            L.extend(list(a))
+        self.L = L
+        self.L.extend(con)
+        self.L.extend(dcp)
         return self.er(fots)
 
 
@@ -1033,7 +1168,7 @@ class Polynomial2Projection(_Projection):
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #                print "Match2 polynomial solution failed: ", why
                 return None, None, None
             L.extend(list(a))
@@ -1112,7 +1247,7 @@ class Polynomial2_2DProjection(_Projection):
             A = matrixmultiply(AT, A)
             B = matrixmultiply(AT, B)
             try: a = solve_linear_equations(A, B)
-            except LinAlgError, why:
+            except LinAlgError as why:
 #                print "Match2 polynomial solution failed: ", why
                 return None, None, None
             L.extend(list(a))
@@ -1196,7 +1331,7 @@ class NonCartesian(_Projection):
         if thanNear2(ca, cb): return False, "The 2 x-axis definition points are identical"
         if thanNear2(cc, cd): return False, "The 2 y-axis definition points are identical"
         cor = thanSegSeg(ca, cb, cc, cd)
-        if cor == None: return False, "The 2 axes do not intersect (without extension)"
+        if cor is None: return False, "The 2 axes do not intersect (without extension)"
         tab = cb[0]-ca[0], cb[1]-ca[1]
         t = hypot(tab[0], tab[1])
         tab = tab[0]/t, tab[1]/t
@@ -1224,7 +1359,7 @@ class NonCartesian(_Projection):
         if thanNear2(ca, cb): return False, "The 2 x-axis definition points are identical"
         if thanNear2(cc, cd): return False, "The 2 y-axis definition points are identical"
         cor = thanSegSeg(ca, cb, cc, cd)
-        if cor == None: return False, "The 2 axes do not intersect (without extension)"
+        if cor is None: return False, "The 2 axes do not intersect (without extension)"
         tab = (Vector2(cb[0], cb[1])-Vector2(ca[0], ca[1])).unit()
         tcd = (Vector2(cd[0], cd[1])-Vector2(cc[0], cc[1])).unit()
         if align:
@@ -1243,7 +1378,7 @@ class NonCartesian(_Projection):
         if ic == self.icodp:
             self.L = self.readCoefs(fr, self.NL)
         else:                                   # Read coefficients from polynomial1 projection
-            raise ValueError, "Projection code in file is wrong"   # Accept polynomial as a first approximation
+            raise ValueError("Projection code in file is wrong")   # Accept polynomial as a first approximation
 
 
     def write(self, fw):
@@ -1258,4 +1393,4 @@ class NonCartesian(_Projection):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

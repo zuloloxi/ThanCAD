@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This package emulates the dxf library in ThanCad.
 """
@@ -30,11 +30,11 @@ This package emulates the dxf library in ThanCad.
 from p_gimdxf import ThanImportBase
 import p_ggen
 
-from thandxflin import ThanDxfLin
-from thandxfsym import ThanDxfSym
-from thandxfdra import ThanDxfDra
-from thandxfgeo import ThanDxfGeo
-from thandxfatt import ThanDxfAtt
+from .thandxflin import ThanDxfLin
+from .thandxfsym import ThanDxfSym
+from .thandxfdra import ThanDxfDra
+from .thandxfgeo import ThanDxfGeo
+from .thandxfatt import ThanDxfAtt
 
 
 class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
@@ -142,7 +142,7 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
             self.__blocks   = 0
             self.__entities = 0
         elif self.__entities:
-            raise p_ggen.ThanImportError, 'thanTableDef(): Table definitions must precede ENTITIES.'
+            raise p_ggen.ThanImportError('thanTableDef(): Table definitions must precede ENTITIES.')
         elif tableName == 'ENTITIES':
             if self.__tabExist and not self.__blocks: pass #self.thanDxfWrEntry(0, 'ENDTAB')
 #            self.thanDxfWrEntry(0, 'ENDSEC')
@@ -151,7 +151,7 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
             self.__entities = 1
         elif tableName == 'BLOCKS':                        # TABLE start
             if self.__blocks:
-                raise p_ggen.ThanImportError, 'thanTableDef(): Blocks already defined!'
+                raise p_ggen.ThanImportError('thanTableDef(): Blocks already defined!')
             if self.__tabExist: pass #self.thanDxfWrEntry(0, 'ENDTAB')
 #            self.thanDxfWrEntry(0, 'ENDSEC')
 #            self.thanDxfWrEntry(0, 'SECTION')
@@ -160,7 +160,7 @@ class ThanDxfEmu(ThanImportBase, ThanDxfLin, ThanDxfSym, ThanDxfDra,
             self.__tabExist = 1
         else:
             if self.__blocks:
-                raise p_ggen.ThanImportError, 'ThanTableDef(): Table defs must precede blocks.'
+                raise p_ggen.ThanImportError('ThanTableDef(): Table defs must precede blocks.')
             if self.__tabExist: pass #self.thanDxfWrEntry(0, 'ENDTAB')
 #            self.thanDxfWrEntry(0, 'TABLE')
 #            self.thanDxfWrEntry(2, tableName)

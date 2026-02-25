@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,19 +22,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 The package creates automatically architectural things such as stairs.
 The subpackage contains the commands which handle architecture related
 procedures.
 This module implements architecture related procedures.
 """
-
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi
 from thantrans import Tarch
 import thansupport, thanimp
 from thanvar import Canc
-from similar2 import Similar2D
+from .similar2 import Similar2D
 from ..thantkdia.thandialogstairs import thanCompute, thanValsDef, ThanStairsSettings
 
 

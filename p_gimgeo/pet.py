@@ -1,4 +1,5 @@
-import time
+from __future__ import print_function
+import time, copy
 from xml.etree.ElementTree import ElementTree
 #from xml.etree.ElementTree import ElementTree, parse, fromstring
 #from xml.parsers.expat import ExpatError
@@ -34,7 +35,7 @@ class SarTime:
     def __sub__(self, other):
         "Because isec is integer no roundoff error is introduced."
         if not isinstance(other, SarTime):
-            raise TypeError, "Don't know how to subtract %s from SarTime" % type(other)
+            raise TypeError( "Don't know how to subtract %s from SarTime" % type(other))
         return (self.isec-other.isec) + (self.rsec-other.rsec)
 
     def __str__(self):
@@ -62,14 +63,14 @@ def pathElementTree(element=None, file=None):
         surrounded by {}, we store the prefix and prepend it automatically
         when we search for other elements (if the element does not already have it).
     """
-    if element != None:
+    if element is not None:
         tree = element
-    elif file != None:
+    elif file is not None:
         tree = ElementTree()
         tree.parse(file)    #may raise xml.parsers.expat.ExpatError if tree not understood by parser..
                             #.. or xml.etree.ElementTree.ParseError if fn is not XML, or IOError if..
     else:                   #.. or ValueError see below
-        raise ValueError, "either element or file must be defined."
+        raise ValueError("either element or file must be defined.")
     root = tree.getroot()
     name = root.tag
     i1 = name.find("{")
@@ -106,7 +107,7 @@ class _PathElementTree:
         "Find child in parent."
         pn = self.apref(child_path)
         child_elem = self.elem.find(pn)
-        if child_elem == None: return None
+        if child_elem is None: return None
         return _PathElementTree(child_elem, "/".join((self.path, child_path)), self.pref)
 
 
@@ -120,7 +121,7 @@ class _PathElementTree:
         "Find child in parent and raise exception if not found."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
-        if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
+        if child_elem is None: raise IndexError("'%s' element not found" % (p,))
         return _PathElementTree(child_elem, p, self.pref)
 
 
@@ -128,25 +129,25 @@ class _PathElementTree:
         "Find child in parent, convert to float and raise exception if not found or error."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
-        if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
+        if child_elem is None: raise IndexError("'%s' element not found" % (p,))
         try: return float(child_elem.text)
-        except Exception: raise ValueError, "'%s' element is not float: %s" % (p, child_elem.text)
+        except Exception: raise ValueError("'%s' element is not float: %s" % (p, child_elem.text))
 
 
     def intr(self, child_path):
         "Find child in parent, convert to integer and raise exception if not found or error."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
-        if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
+        if child_elem is None: raise IndexError("'%s' element not found" % (p,))
         try: return int(child_elem.text)
-        except Exception: raise ValueError, "'%s' element is not integer: %s" % (p, child_elem.text)
+        except Exception: raise ValueError("'%s' element is not integer: %s" % (p, child_elem.text))
 
 
     def textr(self, child_path):
         "Find child in parent, and return its text."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
-        if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
+        if child_elem is None: raise IndexError("'%s' element not found" % (p,))
         return child_elem.text
 
 
@@ -154,14 +155,36 @@ class _PathElementTree:
         "Find child in parent, convert to integer and raise exception if not found or error."
         child_elem = self.elem.find(self.apref(child_path))
         p = "/".join((self.path, child_path))
-        if child_elem == None: raise IndexError, "'%s' element not found" % (p,)
+        if child_elem is None: raise IndexError("'%s' element not found" % (p,))
         try: return SarTime(child_elem.text)
-        except ValueError: raise ValueError, "'%s': can not convert time to seconds: %s" % (p, child_elem.text)
+        except ValueError: raise ValueError("'%s': can not convert time to seconds: %s" % (p, child_elem.text))
 
 
     def get(self, *args, **kw):
         "Each element may have attributes accessed with dict like methods."
         return self.elem.get(*args, **kw)
+
+
+    def set(self, *args, **kw):
+        "Each element may have attributes accessed with dict like methods."
+        return self.elem.set(*args, **kw)
+
+
+    def write(self, *args, **kw):
+        "Write the element tree to a file, opened file"
+        return self.elem.write(*args, **kw)
+
+
+    def clone(self):
+        "Make deep copy of self."
+        return _PathElementTree(copy.deepcopy(self.elem), self.path, self.pref)
+
+
+    def append(self, petchild):
+        "Append a new child."
+        if isinstance(self.elem, ElementTree): elem = self.elem.getroot()
+        else:                                  elem = self.elem
+        elem.append(petchild.elem)
 
 
     def tag(self):

@@ -1,4 +1,5 @@
-from gen import Pyos
+from __future__ import print_function
+from .gen import Pyos
 #Please see also sys.getzizeof()
 
 if Pyos.Windows:
@@ -45,7 +46,7 @@ elif Pyos.Linux:
                     if dl[0] != "MemTotal:": continue
                     m = int(dl[1])
                     break
-        except (IOError, IndexError, ValueError), e:
+        except (IOError, IndexError, ValueError) as e:
             return None
         return m
 
@@ -57,7 +58,7 @@ elif Pyos.Freebsd:
             dline = check_output("/sbin/sysctl hw.physmem")
             dl = dline.split()
             m = int(dl[2])
-        except (OSError, IndexError, ValueError, ImportError, CalledProcessError), e:
+        except (OSError, IndexError, ValueError, ImportError, CalledProcessError) as e:
             return None
         return m
 
@@ -68,4 +69,4 @@ else:
 
 
 if __name__ == "__main__":
-    print "Total memory of computer: %s" % (memTotal(),)
+    print("Total memory of computer: %s" % (memTotal(),))

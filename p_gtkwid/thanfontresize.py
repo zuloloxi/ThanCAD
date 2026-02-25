@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-7 -*-
-import tkFont
+import tkinter
 
 
 class ThanFontResize:
@@ -8,11 +8,11 @@ class ThanFontResize:
     def thanResizeFont(self, font=None):
         "Creates and sets font."
         if font is not None: 
-            if isinstance(font, tkFont.Font): font1 = font
-            else:                              font1 = tkFont.Font(name=font)
-        else:            font1 = tkFont.Font(name="TkFixedFont", exists=True, size=10)   # Negative size means size in pixels
+            if isinstance(font, tkinter.font.Font): font1 = font
+            else:                             font1 = tkinter.font.Font(name=font)
+        else:            font1 = tkinter.font.Font(name="TkFixedFont", exists=True, size=10)   # Negative size means size in pixels
         font2 = font1.copy()
-        font2.config(weight=tkFont.BOLD)
+        font2.config(weight=tkinter.font.BOLD)
         font3 = font2.copy()
         i = int(font3["size"])
         font3.config(size=i+2)           # Negative size means size in pixels

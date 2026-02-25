@@ -28,6 +28,14 @@ class ThanDxfAtt:
         if self.thanTstyle != "DEFAULT":
             self.thanFdxf.write("7\n" + self.thanTstyle + "\n")
 
+
+    def thanDxfWrPlineWidth(self):
+        "Writes the (variable) line width for polylines."
+        if self.thanPlineWidth[0] != 0.0 or self.thanPlineWidth[1] != 0.0:
+            thanDxfWrEntry(40, self.thanPlineWidth[0])
+            thanDxfWrEntry(41, self.thanPlineWidth[1])
+
+
     def thanDxfWrLinatts(self):
         "Writes all the attributes of a linear entity together."
         self.thanFdxf.write("8\n" + self.thanLayer + "\n")

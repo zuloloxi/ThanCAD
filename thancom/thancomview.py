@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,12 +21,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes view commands.
 """
 
+from __future__ import print_function
 from p_gmath import thanNear2
 from thanvar import Canc
 from thantrans import T
@@ -97,8 +98,8 @@ def thanZoomWin(proj, first=None):
 
 def thanZoomSel(proj):
     "Select elements and zoom to these elements."
-    from thancommod import thanModCanc, thanModEnd
-    from thancomsel import thanSelectGen
+    from .thancommod import thanModCanc, thanModEnd
+    from .thancomsel import thanSelectGen
     proj[2].thanCom.thanAppend(T["Select elements to zoom to\n"])
     res = thanSelectGen(proj, standalone=False)
     if res == Canc: return thanModCanc(proj)
@@ -137,9 +138,9 @@ def thanZoomExt1(proj):
         return # No active (visible) elements; zoom all has no meaning
     v = dr.viewPort
     w = dr.xMinAct, dr.yMinAct, dr.xMaxAct, dr.yMaxAct
-    print "ThanZoomExt(): w=", w
+    print("ThanZoomExt(): w=", w)
     v[:] = proj[2].thanGudZoomWin(w)
-    print "ThanZoomExt(): v=", v
+    print("ThanZoomExt(): v=", v)
     proj[2].thanAutoRegen(regenImages=False)               # Zoom is possible, but another autoregen..
     w1 = dr.xMinAct, dr.yMinAct, dr.xMaxAct, dr.yMaxAct    # ..follows, thus no regenImages
     if w != w1:

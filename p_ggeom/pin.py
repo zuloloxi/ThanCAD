@@ -1,4 +1,6 @@
 # -*- coding: iso-8859-7 -*-
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, cos, sin, atan2, fabs
 import p_ggen
 from p_gmath import dpt
@@ -35,7 +37,7 @@ class Pin:
         try:
             aa = dl[0]
             x1, y1, am, ap, theta = map(float, dl[1:6])
-        except (ValueError, IndexError), e:
+        except (ValueError, IndexError) as e:
             return False, "%s" % (e,)
         self.aa, self.x1, self.y1, self.am, self.ap = aa, x1, y1, am, ap
         self.__setdegrees(theta)
@@ -161,7 +163,7 @@ def poly2pin(thanPolylines, thanTexts=(), prt=p_ggen.prg):
             continue
 #-------Make sure the order is counter clockwise
         pin = Pin()
-        pin.fromPolygon(zip(xx, yy))
+        pin.fromPolygon(list(zip(xx, yy)))
         if pin.am < pin.ap: pin.invertsides()    #Make the first side the biggest side
         if pin.th >= pi: pin.invert()            #Make the angle 0<=angle<pi
 #-------Find frame's name

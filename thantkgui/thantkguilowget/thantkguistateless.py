@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines stateless functionality, i.e. for events (mouse wheel events) which
 are (almost) independent to state. It is used as a mixin to ThanCad's canvas.
 """
-import Tkinter
+import tkinter
 from p_ggen import Struct
-from thantkconst import THAN_STATE_ZOOMDYNAMIC, THAN_STATE_NONE
 from thanvar import thanLogTk, Canc
-from thantkguigeneric import ThanStateGeneric
+from .thantkconst import THAN_STATE_ZOOMDYNAMIC, THAN_STATE_NONE
+from .thantkguigeneric import ThanStateGeneric
 
 
 class ThanStateLess:
@@ -43,7 +43,7 @@ class ThanStateLess:
         self.__wheel.idle = 0
         self.__wheel.task = None
         self.thanEconoRaster = True      # Economise raster regens in zoom (wheel)
-        self.thanTempItems = set()       # Temporary Tkinter items, which must be deleted in case of error
+        self.thanTempItems = set()       # Temporary tkinter items, which must be deleted in case of error
 
 
     def thanUpwheel(self, evt, fact=0.8):
@@ -72,7 +72,7 @@ class ThanStateLess:
 #            self.__prepareZoom(x, y)
             self.__wheel.idle = 2
         dc.after_cancel(self.__wheel.task)
-        dc.scale(Tkinter.ALL, x, y, fact, fact)
+        dc.scale(tkinter.ALL, x, y, fact, fact)
         self.thanOState.thanZoomXyr(x, y, fact)
         self.__notifyScale(x, y, 1.0/fact)
         self.__wheel.task = dc.after(500, self.__notifyWheelEnd)

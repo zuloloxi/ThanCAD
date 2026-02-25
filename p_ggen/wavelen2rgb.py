@@ -1,4 +1,7 @@
 #!/usr/bin/python -tt
+from __future__ import print_function
+from .py23 import xrange
+#from past.builtins import xrange
 #=======================================================================
 #                        General Documentation
 
@@ -173,7 +176,7 @@ def wavelen2rgb(Wavelength, MaxIntensity=100):
     return [R, G, B]
 
 
-from Tkinter import Tk, Canvas
+from tkinter import Tk, Canvas
 def rainbow():
     root =Tk()
     dc = Canvas(root)
@@ -184,7 +187,7 @@ def rainbow():
     ws = [a+float(i)*(b-a)/255.0 for i in xrange(256)]
     for i,w in enumerate(ws):
         rgb = wavelen2rgb(w, MaxIntensity=255)
-        print "%6.2f : %r" % (w, rgb)
+        print("%6.2f : %r" % (w, rgb))
         dc.create_line(i, 10, i, 110, fill=thanFormTkcol % tuple(rgb))
     root.mainloop()
 

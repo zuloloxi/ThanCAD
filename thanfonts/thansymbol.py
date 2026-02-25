@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,25 +21,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module implements symbols for point elements.
 """
 
-from types import IntType
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, cos, sin
-from Tkinter import ARC, PIESLICE
+from tkinter import ARC, PIESLICE
 from p_ggen import frangec
-from thanfont import thanFonts
+from .thanfont import thanFonts
 
-
-##############################################################################
-##############################################################################
 
 class ThanSymbol:
     "Symbol as a union of lines, arcs, and (filled) polygons and circles."
 
-#=============================================================================
 
     def __init__(self, lines=(), arcs=(), polygons=(), circles=()):
         "Initialise symbol."
@@ -49,7 +47,6 @@ class ThanSymbol:
         self.polygons = polygons
         self.circles  = circles
 
-#=============================================================================
 
     def thanTkDraw(self, dc, x, y, r, color, fill, tags):
         "Plots the symbol to canvas dc."
@@ -92,40 +89,29 @@ class ThanSymbol:
                 style=ARC, outline=color, tags=tags)
 
 
-##############################################################################
-##############################################################################
-
-#MODULE LEVEL FUNCTIONS
-
-#=============================================================================
-
 def __pcircle(dc, x, y, r, color, fill, tags):
             r *= 0.5
             dc.create_arc(x-r, y+r, x+r, y-r, start=90.0, extent=359.99999,
                 style=PIESLICE, outline=color, fill=fill, tags=tags)
 
-#=============================================================================
 
 def __pelips(dc, x, y, r, color, fill, tags):
             r *= 0.5
             dc.create_arc(x-r*0.5, y+r, x+r*0.5, y-r, start=0.0, extent=359.99999,
                 style=ARC, outline=color, fill=fill, tags=tags)
 
-#=============================================================================
 
 def __pcross(dc, x, y, r, color, fill, tags):
             r *= 0.5
             dc.create_line(x-r, y, x+r, y, fill=color, tags=tags)
             dc.create_line(x, y-r, x, y+r, fill=color, tags=tags)
 
-#=============================================================================
 
 def __pchi(dc, x, y, r, color, fill, tags):
             r *= 0.5
             dc.create_line(x-r, y-r, x+r, y+r, fill=color, tags=tags)
             dc.create_line(x-r, y+r, x+r, y-r, fill=color, tags=tags)
 
-#=============================================================================
 
 def __pstar(dc, x, y, r, color, fill, tags):
             r *= 0.5
@@ -135,13 +121,11 @@ def __pstar(dc, x, y, r, color, fill, tags):
             dc.create_line(x-r1, y-r2, x+r1, y+r2, fill=color, tags=tags)
             dc.create_line(x+r1, y-r2, x-r1, y+r2, fill=color, tags=tags)
 
-#=============================================================================
 
 def __psquare(dc, x, y, r, color, fill, tags):
     r *= 0.5
     dc.create_rectangle(x-r, y-r, x+r, y+r, outline=color, fill=fill, tags=tags)
 
-#=============================================================================
 
 def __ptriangle(dc, x, y, r, color, fill, tags):
     r *= 0.5
@@ -150,7 +134,6 @@ def __ptriangle(dc, x, y, r, color, fill, tags):
     dc.create_polygon((x-r2, y-r1), (x+r2, y-r1), (x, y+r),
         outline=color, fill=fill, tags=tags)
 
-#=============================================================================
 
 def __ptristar(dc, x, y, r, color, fill, tags):
     r *= 0.5
@@ -160,7 +143,6 @@ def __ptristar(dc, x, y, r, color, fill, tags):
     dc.create_line(x, y, x+r2, y-r1, fill=color, tags=tags)
     dc.create_line(x, y, x, y+r, fill=color, tags=tags)
 
-#=============================================================================
 
 def __makeGkiPolygons():
     "Makes closed polygons that define a gki symbol."
@@ -218,7 +200,6 @@ def __makeGkiPolygons():
 #          lines, arcs, polygons, circles
     return (),    (),   pols,     ()
 
-#=============================================================================
 
 def __makeChristarPolygons():
     "Makes closed polygons that define a christmas star symbol."
@@ -234,7 +215,6 @@ def __makeChristarPolygons():
 #          lines, arcs, polygons, circles
     return (),    (),   [ps],     ()
 
-#=============================================================================
 
 def __makeSnowmanElements():
     "Makes lines, arcs, circles that define a snowman symbol."
@@ -301,14 +281,13 @@ def __makeSnowmanElements():
 #          lines, arcs, polygons, circles
     return lines, arcs, (),       circles
 
-#=============================================================================
 
 def __addFontAsSymbols(tfont, points):
         "Import ThanCad's font as symbols."
 
         for key in tfont.thanDilines:
             lines = tfont.thanDilines[key]
-            if type(lines) == IntType: lines = tfont.thanDilines[lines]
+            if type(lines) == int: lines = tfont.thanDilines[lines]
             lines1 = [ ]
             for lin in lines:
                 lin1 = [ ((x-2.5)/7.0, (y-3.5)/7.0) for (x, y) in lin ]
@@ -340,4 +319,4 @@ __addFontAsSymbols(thanFonts["thanprime1"], thanPoints)
 
 
 if __name__== "__main__":
-    print __doc__
+    print(__doc__)

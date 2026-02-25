@@ -1,13 +1,14 @@
+from __future__ import print_function
 from math import fabs
-from Tkinter import Tk, Toplevel, Canvas, Frame, Button, Menu, ALL, GROOVE, Image
+from tkinter import Tk, Toplevel, Canvas, Frame, Button, Menu, ALL, GROOVE, Image
 from PIL import Image as Imagepil
 from p_ggen import thanUnicode
 from p_gtkwid import (thanicon, thanGudOpenReadFile, thanGudGetSaveFile, thanGudModalMessage,
     thanGudAskOkCancel)
 from p_gtkem import dxfinter, pilinter
 import p_gfil
-from thanopt import ThanOptions
-from vistrans import T
+from .thanopt import ThanOptions
+from .vistrans import T
 
 ##############################################################################
 ##############################################################################
@@ -21,7 +22,7 @@ class WinCoor:
         elif len(args) == 1:
             self.win = list(args[0].win)
         else:
-            raise TypeError, "1 or 4 arguments expected"
+            raise TypeError("1 or 4 arguments expected")
         if self.win[2] == self.win[0]: self.win[2] = self.win[0] + 1   #Thanasis2009_02_15:empty lines
         if self.win[3] == self.win[1]: self.win[3] = self.win[1] + 1   #Thanasis2009_02_15:empty lines
 
@@ -394,9 +395,9 @@ class ChartWinx:
             filnam, fr = thanGudOpenReadFile(self, "*", "Open image file", mode="rb")
             if filnam.strip() == "": return
             try:
-                print "Image=", Image
+                print("Image=", Image)
                 im = Imagepil.open(fr)
-            except IOError, why:
+            except IOError as why:
                 thanGudModalMessage(self, why, "Image file open failed")   # (Gu)i (d)ependent
                 continue
             break
@@ -411,16 +412,16 @@ class ChartWinx:
         if self.thanIsModified():
             a = thanGudAskOkCancel(self, T["File modified. Ok to quit?"], T["FILE MODIFIED"])
             if not a: self.thanFocus(); return "break"
-        import chart
+        from . import chart
         self.__chart = chart.ThanChart()
         self.thanResetModified()
 
     def thanMnuFileSave(self, evt=None):
         if not self.thanFileDefined: return self.thanMnuFileSaveas()
         im = self.__chart.thanGetImage()
-        if im == None: return
+        if im is None: return
         try: im.save(self.thanFilnam)
-        except IOError, why: thanGudModalMessage(self, why, T["Error opening file"])
+        except IOError as why: thanGudModalMessage(self, why, T["Error opening file"])
         else:
             self.thanFileDefined = 1
             self.thanResetModified()
@@ -428,11 +429,11 @@ class ChartWinx:
 
     def thanMnuFileSaveas(self, evt=None):
         im = self.__chart.thanGetImage()
-        if im == None: return
+        if im is None: return
         filnam = thanGudGetSaveFile(self, "*", "Saves to a File")
         if filnam.strip() == "": return
         try: im.save(filnam)
-        except IOError, why: thanGudModalMessage(self, why, T["Error opening file"])
+        except IOError as why: thanGudModalMessage(self, why, T["Error opening file"])
         else:
             self.thanFilnam = filnam
             self.thanFileDefined = 1
@@ -516,7 +517,7 @@ def viswin(root, *charts, **kw):
 def visfil(*charts, **kw):
     "The caller may already started tk with library p_gfil, or not."
     winmain, _, _ = p_gfil.openfileWinget()
-    if winmain != None:
+    if winmain is not None:
         viswin(winmain, *charts, **kw)
     else:
         vis(*charts, **kw)
@@ -540,7 +541,7 @@ STATE_ZOOMOUT = 2
 STATE_CENTER = 3
 
 if __name__ == "__main__":
-    import chart
+    from . import chart
     im = Imagepil.new("L", (100, 100))
     ch = chart.ThanChart()
     ch.imageAdd(im, 0.0, 0.0, 100.0)

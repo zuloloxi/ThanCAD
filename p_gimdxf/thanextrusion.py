@@ -1,3 +1,6 @@
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import atan2, cos, sin, pi
 from p_gmath import thanThresholdx
 from p_gvec import Vector3
@@ -7,7 +10,7 @@ def thanDxfExtrusionVectorsold(az):
     """Rotate world coordinate system so that the new z is the vector az (given as tuple).
 
     The new (local) system has the mentioned az axis. The new y-axis is weird:
-    The az vector is projected to the world-xy plane. Then the 
+    The az vector is projected to the world-xy plane. Then the
     component of the projection that is normal to new z-axis (az) is taken.
     This is the direction of the new y-axis!
     The x-axis is the vector product of new y by new z.
@@ -19,7 +22,7 @@ def thanDxfExtrusionVectorsold(az):
     in a .dxf file (even version 12) may have an "extrusion" vector, which is
     the direction of the element thickness (if there is one). The components of
     the extrusion vector are given as code 210, 220, 230.
-    The weird thing is that, if an 
+    The weird thing is that, if an
     extrusion vector is defined, then the coordinates of the object are given
     in the new (local) system!...
     But the extrusion vector is given in the world coordinate system!
@@ -39,7 +42,7 @@ def thanDxfExtrusionVectorsold(az):
     and if it was not, (s)he took the component which was normal to the object.
     I have to find that Lisp code again to see what it means for various
     objects.
-    Thanasis Stamos May 11, 2009. 
+    Thanasis Stamos May 11, 2009.
     """
     x = Vector3(1.0, 0.0, 0.0)
     y = Vector3(0.0, 1.0, 0.0)
@@ -113,9 +116,9 @@ THC0000005        -28.489         20.352         -1.401"""
         ccl.append(map(float, dline.split()[1:]))
 
     testaz(az, ccw, ccl)
-    print 
-    print "-----------------------------------------------------------------"
-    print "Test of extrusion vector equals to the wolrd z-axis"
+    print()
+    print("-----------------------------------------------------------------")
+    print("Test of extrusion vector equals to the wolrd z-axis")
     az = 0.0, 0.0, 1.0
     testaz(az, ccw, ccl)
 
@@ -123,52 +126,52 @@ THC0000005        -28.489         20.352         -1.401"""
 def testazold(az, ccw, ccl):
     "Tests the extrusion transformation with given data."
     vx, vy, vz, wx, wy, wz = thanDxfExtrusionVectors(az)
-    print "system world to local="
-    print vx
-    print vy
-    print vz
+    print("system world to local=")
+    print(vx)
+    print(vy)
+    print(vz)
     vxyz = (vx, vy, vz)
     form = "%12.3f%12.3f%12.3f -> %12.3f%12.3f%12.3f"
     for x, y, z in ccw:
         c = [x*v[0]+y*v[1]+z*v[2] for v in vxyz]
-        print form % ((x, y, z)+tuple(c))
+        print(form % ((x, y, z)+tuple(c)))
 
-    print
-    print "system local to world="
-    print wx
-    print wy
-    print wz
+    print()
+    print("system local to world=")
+    print(wx)
+    print(wy)
+    print(wz)
     wxyz = (wx, wy, wz)
     for x, y, z in ccl:
         c = [x*v[0]+y*v[1]+z*v[2] for v in wxyz]
-        print form % ((x, y, z)+tuple(c))
+        print(form % ((x, y, z)+tuple(c)))
 
 
 def testaz(az, ccw, ccl):
     "Tests the extrusion transformation with given data."
     vx, vy, vz, wx, wy, wz = thanDxfExtrusionVectors(az)
-    print "system world to local="
-    print vx
-    print vy
-    print vz
+    print("system world to local=")
+    print(vx)
+    print(vy)
+    print(vz)
     vxyz = (vx, vy, vz)
     form = "%12.3f%12.3f%12.3f -> %12.3f%12.3f%12.3f"
     for x, y, z in ccw:
         c = [x*v[0]+y*v[1]+z*v[2] for v in vxyz]
-        print form % ((x, y, z)+tuple(c))
+        print(form % ((x, y, z)+tuple(c)))
 
-    print
-    print "system local to world="
-    print wx
-    print wy
-    print wz
+    print()
+    print("system local to world=")
+    print(wx)
+    print(wy)
+    print(wz)
     xx = [c[0] for c in ccl]
     yy = [c[1] for c in ccl]
     zz = [c[2] for c in ccl]
     thanDxfExtrusion2World(wx, wy, wz, xx, yy, zz)
     for i in xrange(len(ccl)):
         x, y, z = ccl[i]
-        print form % (x, y, z, xx[i], yy[i], zz[i])
+        print(form % (x, y, z, xx[i], yy[i], zz[i]))
 
 
 

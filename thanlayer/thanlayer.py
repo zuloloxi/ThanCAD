@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines a hierarchical layer structure (class).
 Each layer has a set of attributes. It is very easy to extend this set.
@@ -34,14 +34,17 @@ to do what is needed (e.g. change the color of the elements).
 thanUpdateElements is inherited by ThanLayAtts.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import weakref, copy
 import p_ggen, p_gcol
 from thanvar import ThanLayerError, THANBYPARENT, THANPERSONAL
 from thandefs import ThanId
 from thanopt import thancadconf
 
-from thanlaycon import *
-import thanlayatts
+from .thanlaycon import *
+from . import thanlayatts
 
 
 THANMRECURS = 20          # Maximum layer tree depth
@@ -181,11 +184,11 @@ class ThanLayer(object):
         "Renames a layer."
         name = name.strip()
         if name=="" or " " in name or name[0]==".":            # Check name
-            raise ThanLayerError, "Illegal layer name: "+name
+            raise ThanLayerError("Illegal layer name: "+name)
         if self.thanParent is not None:               # Root layer has no parent and no siblings
             for lay in self.thanParent.thanChildren:
                 if str(lay.thanAtts[THANNAME]) == name:        # Check unique name
-                    raise ThanLayerError, "Duplicate layer name: " + name
+                    raise ThanLayerError("Duplicate layer name: " + name)
         self.thanAtts[THANNAME].thanVal = name
         self.thanAtts[THANNAME].thanPers = name
 
@@ -234,7 +237,7 @@ class ThanLayer(object):
             while name1 in names:
                 name1 = name + str(i)
                 i += 1
-                if i > 1000: raise ThanLayerError, "Can not rename duplicate layer: "+name+"; try to rename some layers."
+                if i > 1000: raise ThanLayerError("Can not rename duplicate layer: "+name+"; try to rename some layers.")
             namen[lay] = name1
             names.append(name1)
 
@@ -250,7 +253,7 @@ class ThanLayer(object):
 
     def thanChildNew(self, name=None, atts=None):
         "Creates a new child layer; if something is wrong, an exception is raised and no changes are made."
-        if self.__getDepth() > THANMRECURS: raise ThanLayerError, "Layer nested too deep."
+        if self.__getDepth() > THANMRECURS: raise ThanLayerError("Layer nested too deep.")
         chlay = self.__newEmptyLeaf(name, atts)  # Create child here to check for error early
         self.thanMove2child()                    # If self is leaf, create new child which inherits the elements
         self.thanChildren.append(chlay)          # Now, add an empty child
@@ -273,8 +276,8 @@ class ThanLayer(object):
         if name is not None:
             names = [str(lay.thanAtts[THANNAME]) for lay in self.thanChildren]
             name = name.strip()
-            if name=="" or " " in name or name[0]==".": raise ThanLayerError, "Illegal layer name: " + name
-            if name in names: raise ThanLayerError, "Duplicate layer name: " + name
+            if name=="" or " " in name or name[0]==".": raise ThanLayerError("Illegal layer name: " + name)
+            if name in names: raise ThanLayerError("Duplicate layer name: " + name)
         else:
             name = self.thanChildUniqName()
 
@@ -290,7 +293,7 @@ class ThanLayer(object):
         copyinher = atts != None
         if atts is None: atts = self.thanAtts
         lay.thanAtts = {}
-        for a, val in thanlayatts.thanLayAtts.iteritems():
+        for a, val in thanlayatts.thanLayAtts.items():   #works for python2,3
             defval = atts[a].thanPers
             class_ = val[3]
             lay.thanAtts[a] = class_(defval)
@@ -307,7 +310,7 @@ class ThanLayer(object):
             name = "newlayer" + str(i)
             if name not in names: break
         else:
-            raise ThanLayerError, "Can not create unique name 'newlayerxxx'; try to rename some layers."
+            raise ThanLayerError("Can not create unique name 'newlayerxxx'; try to rename some layers.")
         return name
 
     def thanMove2child(self, name=None, force=False):
@@ -320,7 +323,7 @@ class ThanLayer(object):
         """
         if len(self.thanChildren) > 0: return
         if not force and len(self.thanQuad) == 0: return
-        if self.__getDepth() > THANMRECURS: raise ThanLayerError, "Layer nested too deep."
+        if self.__getDepth() > THANMRECURS: raise ThanLayerError("Layer nested too deep.")
         if name is None: name = str(self.thanAtts[THANNAME])+"child"
         lay = self.__newEmptyLeaf(name)  # No errors expected
 
@@ -365,7 +368,7 @@ class ThanLayer(object):
 
 
     def __del__(self):
-        print "Memory of layer", str(self.thanAtts[THANNAME]), " is recycled"
+        print("Memory of layer", str(self.thanAtts[THANNAME]), " is recycled")
 
     def thanSetAtts(self, leaflayers, attname, newval):
         "Sets the attributes of the layer self, propagates the attributes and returns the leaflayers affected."
@@ -499,7 +502,7 @@ class ThanLayer(object):
         fw.writeBeg("LAYER")
         fw.pushInd()
         fw.writeAttb("path", self.thanGetPathname())
-        for nam, a in self.thanAtts.iteritems():
+        for nam, a in self.thanAtts.items():   #works for python2,3
             a.thanExpThc(fw, nam)
         fw.popInd()
         fw.writeEnd("LAYER")
@@ -513,13 +516,13 @@ class ThanLayer(object):
         if ver < (0,2,0): pname = fr.readAtt("path")[0]
         else:             pname = fr.readAttb("path")
         while True:
-            dl = fr.next().strip().split()
+            dl = next(fr).strip().split()
             fr.unread()
             if dl[0] == "</LAYER>": break
             namatt = dl[0].strip("<>")
-            if namatt not in self.thanAtts: raise ValueError, "Unknown layer attribute: %s" % (namatt,)
+            if namatt not in self.thanAtts: raise ValueError("Unknown layer attribute: %s" % (namatt,))
             if namatt == "linetype" and ver < (0,2,0):
-                fr.next()    #Ignore linetype attribute; use default value ("continuous", mm, 1.0)
+                next(fr)    #Ignore linetype attribute; use default value ("continuous", mm, 1.0)
                 continue
             self.thanAtts[namatt].thanImpThc(fr, ver, namatt)
         fr.readEnd("LAYER")
@@ -580,7 +583,7 @@ class ThanLayer(object):
         try:
             for layother in rootother.thanChildren:
                 self.thanMergeLay1(layother, than)
-        except ThanLayerError, e:
+        except ThanLayerError as e:
             return None, None, e
         return than.other2lay, than.cl, ""
 
@@ -610,10 +613,10 @@ class ThanLayer(object):
 
     def pr(self, a=None, b=""):
         if a is None:
-            print b, str(self.thanAtts[THANNAME])
+            print(b, str(self.thanAtts[THANNAME]))
         else:
             ia = self.thanAtts[a]
-            print b, str(self.thanAtts[THANNAME]), ia.thanVal, "=", ia.thanAct, ia.thanPers, ia.thanInher
+            print(b, str(self.thanAtts[THANNAME]), ia.thanVal, "=", ia.thanAct, ia.thanPers, ia.thanInher)
 
         for lay in self.thanChildren:
             lay.pr(a, b+"    ")
@@ -674,7 +677,7 @@ class ThanLayerTree:
         root.thanQuad = set()                      # This holds the elements of the layer
 
         root.thanAtts = {}
-        for a,val in thanlayatts.thanLayAtts.iteritems():
+        for a,val in thanlayatts.thanLayAtts.items():   #works for python2,3
             defval = val[2]
             class_ = val[3]
             root.thanAtts[a] = class_(defval, False)
@@ -722,19 +725,19 @@ class ThanLayerTree:
 
         lay = self.thanRoot
         pname = lay.thanImpThc(fr, ver)
-        if pname != "Root": raise ValueError, "Invalid root layer pathname: %s" % (pname,)
-        if lay.thanAtts[THANNAME].thanVal != pname: raise ValueError, "Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal)
+        if pname != "Root": raise ValueError("Invalid root layer pathname: %s" % (pname,))
+        if lay.thanAtts[THANNAME].thanVal != pname: raise ValueError("Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
         lay.thanAtts[THANNAME].__init__(pname, False)   #Make sure the name is not inherited
         lay.thanAtts["expand"].__init__("-", False)     #So that the first level layers are visible in layer control
 
         lay = self.thanRoot.thanChildren[0]
         pname = lay.thanImpThc(fr, ver)
-        if pname != "0": raise ValueError, "Invalid first layer pathname: %s" % (pname,)
-        if lay.thanAtts[THANNAME].thanVal != pname: raise ValueError, "Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal)
+        if pname != "0": raise ValueError("Invalid first layer pathname: %s" % (pname,))
+        if lay.thanAtts[THANNAME].thanVal != pname: raise(ValueError, "Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
         lay.thanAtts[THANNAME].__init__(pname, False)   #Make sure the name is not inherited
 
         while True:
-            dl = fr.next().strip()
+            dl = next(fr).strip()
             fr.unread()
             if dl == "<LAYER>":
                 lay = self.thanRoot.thanChildNew()
@@ -746,25 +749,25 @@ class ThanLayerTree:
                     laypar = self.thanRoot
                 else:
                     laypar = self.thanFindic(ppar)
-                    if laypar is None: raise ValueError, "Parent of layer %s was not found" % (pname,)
+                    if laypar is None: raise ValueError("Parent of layer %s was not found" % (pname,))
                 laypar.thanChildAdd([lay])
-                if lay.thanAtts[THANNAME].thanVal != names[-1]: raise ValueError, "Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal)
+                if lay.thanAtts[THANNAME].thanVal != names[-1]: raise ValueError("Layer pathname '%s' and name '%s' differ" % (pname, lay.thanAtts[THANNAME].thanVal))
                 lay.thanAtts[THANNAME].__init__(names[-1], False)    #MAke sure that the name is not inherited
-                for nam, a in lay.thanAtts.iteritems():
+                for nam, a in lay.thanAtts.items():   #works for python2,3
                     if a.thanInher:
                         a.thanValSet(laypar.thanAtts[nam].thanVal)
             elif dl == "</LAYERTREE>":
                 break
             else:
-                raise ValueError, "<LAYER> or </LAYERTREE> was expected, but found: %s" % (dl,)
+                raise ValueError("<LAYER> or </LAYERTREE> was expected, but found: %s" % (dl,))
         fr.readEnd("LAYERTREE")
         self.thanDictRebuild()
         self.thanCur = self.thanFindic(pcur)
-        if self.thanCur is None: raise ValueError, "Current layer %s was not found" % (pcur,)
+        if self.thanCur is None: raise ValueError("Current layer %s was not found" % (pcur,))
 
 
     def __del__(self):
-        print "Memory of layertree is recycled"
+        print("Memory of layertree is recycled")
 
 
 #############################################################################
@@ -775,20 +778,20 @@ class ThanLayerTree:
 def test():
     "Tests creation and alteration of layers."
 
-    print __doc__
-    print "Module thanlayer test"
+    print(__doc__)
+    print("Module thanlayer test")
 
     laytree = testcreate()
     laytree.thanDictRebuild()
     for key in laytree.dilay:
-        print key, ':', str(laytree.dilay[key].thanAtts[THANNAME])
+        print(key, ':', str(laytree.dilay[key].thanAtts[THANNAME]))
 #    testalter(laytree)
 #    testgui(laytree)
 
-    print "Tests memory leaks."
+    print("Tests memory leaks.")
     laytree.thanRoot.thanDestroy()
     laytree.thanRoot = 1
-    print "---------------------------------------------------"
+    print("---------------------------------------------------")
 
 #===========================================================================
 
@@ -798,7 +801,7 @@ def testgui(lay):
 
 #    atts = ("expand", "name", "color", "visibility", "plotcolor", "textstyle")
 #    widths = (1, 40, 15, 2, 15, 15)
-    from Tkinter import Tk
+    from tkinter import Tk
     win = Tk()
     win.title("Test ThanLayers")
     li = p_gtkwid.ThantkClist5(win, objs=[lay], atts=thanlayatts.thanLayAttsNames,
@@ -808,7 +811,7 @@ def testgui(lay):
 #        vscroll=1, hscroll=1, onclick=onclick)
     li.grid()
     win.mainloop()
-#    print li.getResult()
+#    print(li.getResult())
 
 #===========================================================================
 
@@ -824,7 +827,7 @@ def testcreate():
     ch3 = ch1.thanChildNew("j1")
     ch4 = ch1.thanChildNew("j2")
     laytree.thanRoot.pr()
-    print "-------------------------------"
+    print("-------------------------------")
     return laytree
 
 #===========================================================================
@@ -845,11 +848,11 @@ def testalter(laytree):
     ch4 = ch1.thanChildren[2]
     ch4.thanSetAtts(**{att : 777})
 
-    print "------------------------------------", att, "=", val1
+    print("------------------------------------", att, "=", val1)
     ch.thanSetAtts(**{att : val1})
     laytree.thanRoot.pr(att)
 
-    print "------------------------------------", att, "=", val2
+    print("------------------------------------", att, "=", val2)
     ch.thanSetAtts(**{att : val2})
     laytree.thanRoot.pr(att)
 
@@ -860,5 +863,5 @@ def testalter(laytree):
 #MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
     test()

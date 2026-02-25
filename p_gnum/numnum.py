@@ -17,10 +17,9 @@ def histogram1(a, bins=10, ra=None):
         try:
             1.0/bins
         except:
-            import p_gnum
             v = array(bins, Float)
         else:
-            if ra == None: ra = min(a), max(a)
+            if ra is None: ra = min(a), max(a)
             dd = float(ra[1]-float(ra[0]))/bins
             v = arange(ra[0]+0.0, ra[1]+dd*0.5, dd)
         dd = (v[-1] - v[-2])*0.000001
@@ -33,8 +32,10 @@ def histogram1(a, bins=10, ra=None):
 #I added them to Numeric too, but it has not been tested
 try:
     from Numeric import (array, transpose, zeros, reshape, fromstring,
-        sin, cos, tan, sqrt, absolute, equal, not_equal, compress, where, mean,
-        matrixmultiply, histogram, argmin, argmax, arange, sort, searchsorted)
+        sin, cos, tan, sqrt, absolute, equal, not_equal, greater_equal, less_equal,
+        greater, less, logical_and, compress, where, mean,
+        matrixmultiply, histogram, argmin, argmax, arange, sort, searchsorted,
+        eye, polyfit, polyval, interp)
     from Numeric import (Float, Float16, Float32, Float64, Int, Int8, Int16, Int32,
         UnsignedInt8, UnsignedInt16, Complex64)
     from LinearAlgebra import (LinAlgError, eig,
@@ -64,8 +65,10 @@ try:
 
 except ImportError:
     from numpy import (array, transpose, zeros, reshape, fromstring,
-        sin, cos, tan, sqrt, absolute, equal, not_equal, compress, where, mean,
-        dot as matrixmultiply, histogram, argmin, argmax, arange, sort, searchsorted)
+        sin, cos, tan, sqrt, absolute, equal, not_equal, greater_equal, less_equal,
+        greater, less, logical_and, compress, where, mean,
+        dot as matrixmultiply, histogram, argmin, argmax, arange, sort, searchsorted,
+        eye, polyfit, polyval, interp)
     from numpy.linalg import (LinAlgError, eig,
                               solve, inv, lstsq,
                               det)
@@ -102,6 +105,6 @@ except ImportError:
         if d == numpy.uint8: return UnsignedInt8
         if d == numpy.uint16: return UnsignedInt16
         if d == numpy.complex64: return Complex64
-        raise ValueError, "numnum.typecode(): don't know how to convert numpy '%r' to old Numeric" % (d,)
+        raise ValueError("numnum.typecode(): don't know how to convert numpy '%r' to old Numeric" % (d,))
 
 solve_linear_equations = solve

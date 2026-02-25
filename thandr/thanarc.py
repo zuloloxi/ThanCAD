@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,21 +21,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the circular arc element.
 """
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import atan2, tan, pi, fabs, cos, sin, hypot
-from itertools import izip
 import bisect
-import Tkinter
+import tkinter
 from p_ggen import prg, thanUnicode
 from p_gmath import PI2, thanintersect, thanNearx
 from thanvar import Canc
 from thantrans import T
-import thanintall
-from thanelem import ThanElement
+from . import thanintall
+from .thanelem import ThanElement
 
 ############################################################################
 ############################################################################
@@ -111,16 +112,32 @@ class ThanArc(ThanElement):
         self.__boundBox()
 
 
+    def thanPointMir(self):
+        "Mirrors the element within XY-plane with respect to predefined point."
+        ca = list(self.cc)
+        ca[0] += self.r*cos(self.theta1)
+        ca[1] += self.r*sin(self.theta1)
+        cb = list(self.cc)
+        cb[0] += self.r*cos(self.theta2)
+        cb[1] += self.r*sin(self.theta2)
+        self.cc = self.thanPointMirXy(self.cc)
+        ca, cb = self.thanPointMirXy(ca), self.thanPointMirXy(cb)
+        self.theta1 = atan2(ca[1]-self.cc[1], ca[0]-self.cc[0]) % PI2
+        self.theta2 = atan2(cb[1]-self.cc[1], cb[0]-self.cc[0]) % PI2
+        if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
+        self.__boundBox()
+
+
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
-        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.cc, cs)]
+        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.cc, cs)] #works for python2,3
         self.r *= scale
         self.__boundBox()
 
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
-        self.cc = [cc1+dd1 for (cc1,dd1) in izip(self.cc, dc)]
+        self.cc = [cc1+dd1 for (cc1,dd1) in zip(self.cc, dc)]  #works for python2,3
         self.__boundBox()
 
 
@@ -378,7 +395,7 @@ class ThanArc(ThanElement):
         theta2 = self.theta2 * 180.0/pi
         dth = (theta2-theta1) % 360.0
         temp = than.dc.create_arc(xc-r, yc-r, xc+r, yc+r, start=theta1, extent=dth,
-            style=Tkinter.ARC, outline=than.outline, fill=than.fill, dash=than.dash, tags=self.thanTags)
+            style=tkinter.ARC, outline=than.outline, fill=than.fill, dash=than.dash, tags=self.thanTags)
 
 
     def thanExpDxf(self, fDxf):
@@ -399,10 +416,10 @@ class ThanArc(ThanElement):
     def thanImpThc1(self, fr, ver):
         "Read the arc from thc format."
         cc = fr.readNode()               #May raise ValueError, IndexError, StopIteration
-        r = float(fr.next())             #May raise ValueError, StopIteration
-        t1, t2 = map(float, fr.next().split()) #May raise ValueError, IndexError, StopIteration
-        spin = int(fr.next())            #May raise ValueError, StopIteration
-        if spin not in (1, 0, -1): raise ValueError, "spin must 1, 0 or -1"
+        r = float(next(fr))             #May raise ValueError, StopIteration
+        t1, t2 = map(float, next(fr).split()) #May raise ValueError, IndexError, StopIteration   #works for python2,3
+        spin = int(next(fr))            #May raise ValueError, StopIteration
+        if spin not in (1, 0, -1): raise ValueError("spin must 1, 0 or -1")
         self.thanSet(cc, r, t1, t2, spin)
 
 

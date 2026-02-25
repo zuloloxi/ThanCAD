@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,13 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter some text associated with a
 ThanCad element.
 """
 
-from Tkinter import Frame, Button, Tk
+from __future__ import print_function
+from tkinter import Frame, Button, Tk
 from p_ggen import prg
 import p_gtkwid
 from thantrans import T
@@ -106,12 +107,12 @@ class ThanElemtext(p_gtkwid.ThanDialog):
     def cancel(self, *args):
         "Ask before cancel."
         if not self.validate(strict=False):   # If anything is wrong, then it must have been changed
-            print "cancel: not validated"
+            print("cancel: not validated")
             a = p_gtkwid.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
         elif self.result != self.thanValsSaved: # If anything is wrong, then it must have been changed
-            print self.thanValsSaved
-            print self.result
+            print(self.thanValsSaved)
+            print(self.result)
             a = p_gtkwid.thanGudAskOkCancel(self, T["Data modified, OK to cancel?"], T["Warning"])
             if not a: return        # Cancel was stopped
         p_gtkwid.ThanDialog.cancel(self, *args)
@@ -127,4 +128,4 @@ class ThanElemtext(p_gtkwid.ThanDialog):
 if __name__ == "__main__":
     root = Tk()
     win = ThanElemtext(root, [None, "Dimitra"], cargo=None)
-    print win.result
+    print(win.result)

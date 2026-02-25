@@ -1,3 +1,4 @@
+from __future__ import print_function
 import struct
 from p_ggen import Struct
 
@@ -6,7 +7,7 @@ class ThanBmp:
     def __init__(self, f=None):
         "Reads header and checks for errors; f is a file object."
         self.head, ierr = readHeadBmp(f)
-        if ierr != 0: raise ValueError, "bmp error %d" % ierr 
+        if ierr != 0: raise ValueError("bmp error %d" % ierr)
 
 
     def overwriteHeader(self, fw):
@@ -14,12 +15,12 @@ class ThanBmp:
         try:
             bmp = self.head
             head1 = bmp.ift + struct.pack("=lhhl", bmp.fs, bmp.r1, bmp.r2, bmp.off)
-            if len(head1) != 14: raise ValueError
+            if len(head1) != 14: raise ValueError("Program error: head1 should be exactly 14 bytes.")
             head2 = struct.pack("=lllhhllllll", bmp.hs, bmp.iw, bmp.ih, bmp.np, bmp.bpp, bmp.cm, bmp.sb, bmp.hr,\
                 bmp.vr, bmp.ncu, bmp.nsc)
-            if len(head2) != 40: raise ValueError
+            if len(head2) != 40: raise ValueError("Program error: head2 should be exactly 40 bytes.")
         except:
-            raise ValueError, "Corrupted ThanBmp header"
+            raise ValueError("Corrupted ThanBmp header")
         fw.seek(0)
         fw.write(head1)
         fw.write(head2)
@@ -38,7 +39,7 @@ class ThanBmp:
     def getDpi(self):
         "Return the horizontal resolution to the resolution to dpi."
         if self.head.hr != self.head.vr:
-            raise ValueError, "Bmp image horizontal and vertical resolutions are not the same"
+            raise ValueError("Bmp image horizontal and vertical resolutions are not the same")
         return self.head.hr * 2.53997/100.0
 
 
@@ -86,7 +87,7 @@ def readHead1Bmp(uBmp, bmp):
     #      print 'File Size in bytes                      :', bmp.fs       
     #      print 'Reserved1, Reserved2 (always 0)         :', bmp.r1, bmp.r2
     #      print 'Start of image data OFFset (in bytes)   :', bmp.off            
-    if bmp.ift != 'BM': return 11         # Bad magic number
+    if bmp.ift != b'BM': return 11         # Bad magic number
     if bmp.fs  <  0: return 12            # Corrupted header 1
     if bmp.r1  != 0: return 12            # Corrupted header 1
     if bmp.r2  != 0: return 12            # Corrupted header 1
@@ -149,8 +150,8 @@ def readHead2Bmp(uBmp, bmp):
 
 
 def test():
-    bmp = ThanBmp(open("test.bmp", "r"))
-    print "Bmp resolution = %ddpi x %ddpi" % (bmp.head.hr*0.0254, bmp.head.vr*0.0254)
+    bmp = ThanBmp(open("test.bmp", "rb"))
+    print("Bmp resolution = %ddpi x %ddpi" % (bmp.head.hr*0.0254, bmp.head.vr*0.0254))
 
 
 if __name__ == "__main__": test()

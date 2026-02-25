@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,12 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for the commands of the tool menu.
 """
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import atan2, hypot
 import copy
 import p_ggen, p_ggeom
@@ -36,12 +38,12 @@ import thandr, thanobj, thantkdia
 from thanvar import Canc
 from thanopt import thancadconf
 from thantrans import T
-import thancomsel, thanundo
+from . import thancomsel, thanundo
 
 
 def thanToolSimplif(proj):
     "Simplifies a line."
-    from thancommod import thanModEnd, thanModCanc, thanModCancSel
+    from .thancommod import thanModEnd, thanModCanc, thanModCancSel
     ThanLine = thandr.ThanLine
     name = "LINESIMPLIFICATION"
     lss = proj[1].thanObjects[name]
@@ -107,7 +109,7 @@ __disint = 20.0
 __dismin = 0.1
 def thanToolInterpolate(proj):
     "Simplifies a line."
-    from thancommod import thanModEnd, thanModCanc, thanModCancSel
+    from .thancommod import thanModEnd, thanModCanc, thanModCancSel
     global __disint, __dismin
     disint = __disint
     dismin = __dismin
@@ -171,8 +173,8 @@ def iterdis2(a, dd, dismin=0.0):
 
 def thanToolHull(proj):
     "Finds the convex hull of a line."
-    from selutil import thanSelMultlines
-    from thancommod import thanModEnd, thanModCanc
+    from .selutil import thanSelMultlines
+    from .thancommod import thanModEnd, thanModCanc
     lins = thanSelMultlines(proj, 1, T["Select lines to find their convex hull:\n"])
     if lins == Canc: return thanModCanc(proj)    # Hull cancelled
     cp = []
@@ -188,8 +190,8 @@ def thanToolHull(proj):
 
 def thanToolCen(proj):
     "Finds the centroid lines."
-    from selutil import thanSelMultlines
-    from thancommod import thanModEnd, thanModCanc
+    from .selutil import thanSelMultlines
+    from .thancommod import thanModEnd, thanModCanc
     lins = thanSelMultlines(proj, 1, T["Select lines to find their centroid:\n"])
     if lins == Canc: return thanModCanc(proj)    # centroid cancelled
     n = proj[1].thanVar["dimensionality"]
@@ -231,7 +233,7 @@ def thanToolDist(proj):
 
 def thanToolArea(proj):
     "Computes the area of a polygon defined by the user."
-    from thancomdraw import getpol
+    from .thancomdraw import getpol
     cs = getpol(proj)
     if cs == Canc: return proj[2].thanGudCommandCan()    # Area cancelled
     a = area(cs)
@@ -344,7 +346,7 @@ def __gettext(proj, st):
     dilay = proj[1].thanLayerTree.dilay
     TT = thandr.ThanText
     PN = thandr.ThanPointNamed
-    for lay in dilay.itervalues():
+    for lay in dilay.values():    #works for python2,3
         if lay.thanAtts["frozen"].thanVal: continue
         for elem in lay.thanQuad:
             if isinstance(elem, TT) and st in elem.text: yield elem, elem.text

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the dimension element.
 """
 
+from __future__ import print_function
 from math import hypot, atan2, fabs
-from itertools import izip, islice
 from p_ggen import thanUnicode
 from p_gmath import thanNear2
 from thanvar import Canc
 from thantrans import T
-from thanelem import ThanElement
-from thanline import ThanLine
-from thantext import ThanText
+from .thanelem import ThanElement
+from .thanline import ThanLine
+from .thantext import ThanText
 
 try: import pyx
 except ImportError: pass
@@ -42,7 +42,7 @@ except ImportError: pass
 
 class ThanDimali(ThanElement):
     "A simple line of horizontal text."
-    thanTkCompound = 100       # The number of Tkinter objects that make the element. 100=compound (lines etc.)
+    thanTkCompound = 100       # The number of tkinter objects that make the element. 100=compound (lines etc.)
     thanElementName = "ALIGNEDDIMENSION"    # Name of the element's class
 
 
@@ -103,20 +103,28 @@ class ThanDimali(ThanElement):
         self.setBoundBox([min(xp), min(yp), max(xp), max(yp)])
 
 
+    def thanPointMir(self):
+        "Mirrors the element within XY-plane with respect to predefined point."
+        self.thanPointMirXyn(self.cp)
+        xp = [c1[0] for c1 in self.cp]
+        yp = [c1[1] for c1 in self.cp]
+        self.setBoundBox([min(xp), min(yp), max(xp), max(yp)])
+
+
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
         for cc in self.cp:
-            cc[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(cc, cs)]
+            cc[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(cc, cs)]  #works for python2,3
         cscs = [cs[0], cs[1], cs[0], cs[1]]
-        self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.thanXymm, cscs)]
+        self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.thanXymm, cscs)]  #works for python2,3
 
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
         for cc in self.cp:
-            cc[:] = [cc1+dd1 for (cc1,dd1) in izip(cc, dc)]
+            cc[:] = [cc1+dd1 for (cc1,dd1) in zip(cc, dc)]  #works for python2,3
         dcdc = [dc[0], dc[1], dc[0], dc[1]]
-        self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in izip(self.thanXymm, dcdc)]
+        self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in zip(self.thanXymm, dcdc)]  #works for python2,3
 
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
@@ -183,14 +191,14 @@ class ThanDimali(ThanElement):
         cost = c2[0]-c1[0]; sint = c2[1]-c1[1]
         w = hypot(cost, sint)
         cost /= w; sint /= w
-        dis = "%.2f" % w
-        mes = "%s (enter=%s): " % (T["Dimension text"], un.strdis(dis))
+        dis = un.strdis(w)
+        mes = "%s (enter=%s): " % (T["Dimension text"], dis)
         text = proj[2].thanGudGetText(mes, dis)
         if text == Canc: return Canc                     # text cancelled
 
         self.thanSet(text, c1, c2, 0.0)
         self.thanTags = ("e0", )                         # So that we know that it is temporary
-        ct = [(t1+t2)*0.5 for t1,t2 in zip(c1,c2)]
+        ct = [(t1+t2)*0.5 for t1,t2 in zip(c1,c2)]  #works for python2,3
         t = [0.0]*len(c1)
         t[:2] = -sint, cost
         c3 = proj[2].thanGudGetMovend(ct, T["Perpendicular location: "], elems=[self], direction=t)
@@ -202,9 +210,9 @@ class ThanDimali(ThanElement):
 
     ticksize = 0.15
     textsize = 0.20
-    dimscale = 10.0
+    dimscale = 1.0
     def thanTkDraw1(self, than):
-        "Draws the aligned dimension in Tkinter canvas."
+        "Draws the aligned dimension in tkinter canvas."
         for e in self.__decompose():
             e.thanTkDraw(than)
 
@@ -284,7 +292,7 @@ class ThanDimali(ThanElement):
         "Read the aligned dimension from thc format."
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         c2 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
-        perp = float(fr.next())          #May raise ValueError, StopIteration
+        perp = float(next(fr))          #May raise ValueError, StopIteration
         text = fr.readTextln()           #May raise StopIteration, ValueError
         self.thanSet(text, c1, c2, perp)
 
@@ -349,4 +357,4 @@ class ThanDimali(ThanElement):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

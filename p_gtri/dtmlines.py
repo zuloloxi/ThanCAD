@@ -1,8 +1,11 @@
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from bisect import bisect_left, bisect_right
 from math import hypot, fabs
 from p_ggen import iterby2
 from p_gmath import thanSegSeguw
-from dtmvar import ThanDTMDEM, _uniqint
+from .dtmvar import ThanDTMDEM, _uniqint
 
 
 class ThanDTMlines(ThanDTMDEM):
@@ -82,7 +85,7 @@ class ThanDTMlines(ThanDTMDEM):
         for k in xrange(i, j):
             c1, c2 = self.thanLines[k]
             uw = thanSegSeguw(ca, cb, c1, c2)
-            if uw == None: continue
+            if uw is None: continue
             cd = [ca1+(cb1-ca1)*uw[1] for (ca1,cb1) in zip(c1, c2)]
             if rev: cint.append((1-uw[0], cd))
             else:   cint.append((uw[0], cd))
@@ -98,23 +101,23 @@ class ThanDTMlines(ThanDTMDEM):
             ca[0] -= self.thanDext*p           # |cb-ca| (1)
             cb[0] += self.thanDext*p
             d1, z1 = self.__z1(cp, ca, cb)     # Try to find intersections along x direction
-#            if z1 != None and fabs(z1) < 1.0: stop()
+#            if z1 is not None and fabs(z1) < 1.0: stop()
             ca = list(cp)
             cb = list(cp)
             ca[1] -= self.thanDext*p           # |cb-ca| must be the same as in (1), or the d1, d2..
             cb[1] += self.thanDext*p           # ..returned by __z1 will not be comparable
             d2, z2 = self.__z1(cp, ca, cb)     # Try to find intersections along y direction
-#            if z2 != None and fabs(z2) < 1.0: stop()
+#            if z2 is not None and fabs(z2) < 1.0: stop()
 
 #            print "thanPointZ: d1, z1=", d1, z1
 #            print "thanPointZ: d2, z2=", d2, z2
-            if   z1 == None: z = z2            # Note that z2 may be None
-            elif z2 == None: z = z1
+            if   z1 is None: z = z2            # Note that z2 may be None
+            elif z2 is None: z = z1
             elif d1 < d2:    z = z1
             else:            z = z2
 #            print "thanPointZ: z     =", z
-            if z != None: break
-#        if z != None and fabs(z) < 1.0: stop()
+            if z is not None: break
+#        if z is not None and fabs(z) < 1.0: stop()
         return z
 
 
@@ -188,5 +191,5 @@ class ThanDTMlines(ThanDTMDEM):
         self.thanNori   = int(fr.readAtt("Original_segments")[0])
         it = fr.iterNodes()
         for ca in it:
-            cb = it.next()
+            cb = next(it)
             self.thanLines.append((tuple(ca), tuple(cb)))

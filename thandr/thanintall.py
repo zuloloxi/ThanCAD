@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module computes the intersection of any pair of elements. It also computes
 the extension of lines and arc to intersect any other element.
 """
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import fabs, atan2, hypot
 from p_gmath import PI2, thanNearx, thanNear2, converged3, thanErNear2
 from p_ggen import iterby2
 from p_gmath import thanintersect
-from thanutil import thanPntNearest2
+from .thanutil import thanPntNearest2
 
 
 class __Inv:
@@ -131,9 +134,9 @@ def thanCurveCa(curve, circle, ccu, caLinet):
     erpp = 1.0e100
     erp = erpp/10.0
     for itry in xrange(ntries):
-        print
-        print
-        print "thancurveCircle() itry=", itry
+        #print
+        #print
+        #print "thancurveCircle() itry=", itry
         if itry == 0:
             ct, iseg1, _ = thanPntNearest2(cp1, ccu)
             if ct is None: return []
@@ -141,36 +144,37 @@ def thanCurveCa(curve, circle, ccu, caLinet):
         else:
             i1 = 0
             i2 = len(cp1)
-        print "thancurveline() i1-2=", i1, i2
+        #print "thancurveline() i1-2=", i1, i2
 
         ct, iseg1 = caLinet(circle, cp1, i1, i2, ccu)
         if ct is None: return []
-        print "thancurveCircle() ctp, ct=", ctp, ct
+        #print "thancurveCircle() ctp, ct=", ctp, ct
         er = thanErNear2(ctp, ct)
-        print "errors=", erpp, erp, er
+        #print "errors=", erpp, erp, er
         cov = converged3(er, erp, erpp)
         if cov == 1: return [ct]    #Converged
         if cov == -1:
-            print "thanCurveLine(): iterations stopped after step %d due to instability." % (itry,)
+            #print "thanCurveLine(): iterations stopped after step %d due to instability." % (itry,)
             return []
         if thanNear2(ctp, ct):     #This usually saves one step
-            print "thanNear2() succeeded but converged3() did not"
+            #print "thanNear2() succeeded but converged3() did not"
             return [ct]
 
         i1, i2 = bracketNearest(cp1, iseg1)
         if itry == 0:
             dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in xrange(i1, i2-1))
             dm /= (i2-i1-1)
-            print "dm=",dm
+            #print "dm=",dm
         dm *= 0.5          #Make finer line representation of the curve
-        print "thancurveCircle() i1-2=", i1, i2, "dm=", dm
-        print "len(cp1, tp1)=", len(cp1), len(tp1)
-        print "tp1=", tp1[i1], tp1[i2-1]
+        #print "thancurveCircle() i1-2=", i1, i2, "dm=", dm
+        #print "len(cp1, tp1)=", len(cp1), len(tp1)
+        #print "tp1=", tp1[i1], tp1[i2-1]
         cp1, tp1 = curve.than2Line(dm, ta=tp1[i1], tb=tp1[i2-1])
         ctp = ct
         erpp, erp = erp, er
     else:
-        print "thanCurveCircle(): max number of iterations reached: %d" % (ntries,)
+        pass
+        #print "thanCurveCircle(): max number of iterations reached: %d" % (ntries,)
     return [ct]
 
 
@@ -185,9 +189,9 @@ def thanCurveLine(curve, line, ccu):
     erpp = 1.0e100
     erp = erpp/10.0
     for itry in xrange(ntries):
-        print
-        print
-        print "thancurveLine() itry=", itry
+        #print
+        #print
+        #print "thancurveLine() itry=", itry
         if itry == 0:
             ct, iseg1, _ = thanPntNearest2(cp1, ccu)
             if ct is None: return []
@@ -198,20 +202,20 @@ def thanCurveLine(curve, line, ccu):
         else:
             i1 = 0
             i2 = len(cp1)
-        print "thancurveline() i1-4=", i1, i2, i3, i4
+        #print "thancurveline() i1-4=", i1, i2, i3, i4
 
         ct, iseg1, iseg2 = thanLineLinet(cp1, i1, i2, cp2, i3, i4, ccu)
         if ct is None: return []
-        print "thancurveline() ctp, ct=", ctp, ct
+        #print "thancurveline() ctp, ct=", ctp, ct
         er = thanErNear2(ctp, ct)
-        print "errors=", erpp, erp, er
+        #print "errors=", erpp, erp, er
         cov = converged3(er, erp, erpp)
         if cov == 1: return [ct]    #Converged
         if cov == -1:
-            print "thanCurveLine(): iterations stopped after step %d due to instability." % (itry,)
+            #print "thanCurveLine(): iterations stopped after step %d due to instability." % (itry,)
             return []
         if thanNear2(ctp, ct):     #This usually saves one step
-            print "thanNear2() succeeded but converged3() did not"
+            #print "thanNear2() succeeded but converged3() did not"
             return [ct]
 
         i1, i2 = bracketNearest(cp1, iseg1)
@@ -219,17 +223,18 @@ def thanCurveLine(curve, line, ccu):
         if itry == 0:
             dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in xrange(i1, i2-1))
             dm /= (i2-i1-1)
-            print "dm=",dm
+            #print "dm=",dm
         dm *= 0.5          #Make finer line representation of the curve
-        print "thancurveline() i1-4=", i1, i2, i3, i4, "dm=", dm
-        print "len(cp1, tp1)=", len(cp1), len(tp1)
-        print "len(cp2,    )=", len(cp2)
-        print "tp1=", tp1[i1], tp1[i2-1]
+        #print "thancurveline() i1-4=", i1, i2, i3, i4, "dm=", dm
+        #print "len(cp1, tp1)=", len(cp1), len(tp1)
+        #print "len(cp2,    )=", len(cp2)
+        #print "tp1=", tp1[i1], tp1[i2-1]
         cp1, tp1 = curve.than2Line(dm, ta=tp1[i1], tb=tp1[i2-1])
         ctp = ct
         erpp, erp = erp, er
     else:
-        print "thanCurveLine(): max number of iterations reached: %d" % (ntries,)
+        pass
+        #print "thanCurveLine(): max number of iterations reached: %d" % (ntries,)
     return [ct]
 
 
@@ -245,9 +250,9 @@ def thanCurveCurve(curve, eother, ccu):
     erpp = 1.0e100
     erp = erpp/10.0
     for itry in xrange(ntries):
-        print
-        print
-        print "thancurvecurve() itry=", itry
+        #print
+        #print
+        #print "thancurvecurve() itry=", itry
         if itry == 0:
             ct, iseg1, _ = thanPntNearest2(cp1, ccu)
             if ct is None: return []
@@ -259,20 +264,20 @@ def thanCurveCurve(curve, eother, ccu):
             i1 = i3 = 0
             i2 = len(cp1)
             i4 = len(cp2)
-        print "thancurvecurve() i1-4=", i1, i2, i3, i4
+        #print "thancurvecurve() i1-4=", i1, i2, i3, i4
 
         ct, iseg1, iseg2 = thanLineLinet(cp1, i1, i2, cp2, i3, i4, ccu)
         if ct is None: return []
-        print "thancurvecurve() ctp, ct=", ctp, ct
+        #print "thancurvecurve() ctp, ct=", ctp, ct
         er = thanErNear2(ctp, ct)
-        print "errors=", erpp, erp, er
+        #print "errors=", erpp, erp, er
         cov = converged3(er, erp, erpp)
         if cov == 1: return [ct]    #Converged
         if cov == -1:
-            print "thanCurveCurve(): iterations stopped after step %d due to instability." % (itry,)
+            #print "thanCurveCurve(): iterations stopped after step %d due to instability." % (itry,)
             return []
         if thanNear2(ctp, ct):     #This usually saves one step
-            print "thanNear2() succeeded but converged3() did not"
+            #print "thanNear2() succeeded but converged3() did not"
             return [ct]
 
         i1, i2 = bracketNearest(cp1, iseg1)
@@ -281,19 +286,20 @@ def thanCurveCurve(curve, eother, ccu):
             dm  = sum(hypot(cp1[i+1][1]-cp1[i][1], cp1[i+1][0]-cp1[i][0]) for i in xrange(i1, i2-1))
             dm += sum(hypot(cp2[i+1][1]-cp2[i][1], cp2[i+1][0]-cp2[i][0]) for i in xrange(i3, i4-1))
             dm /= (i2-i1+i4-i3-2)
-            print "dm=",dm
+            #print "dm=",dm
         dm *= 0.5          #Make finer line representation of the curve
-        print "thancurvecurve() i1-4=", i1, i2, i3, i4, "dm=", dm
-        print "len(cp1, tp1)=", len(cp1), len(tp1)
-        print "len(cp2, tp2)=", len(cp2), len(tp2)
-        print "tp1=", tp1[i1], tp1[i2-1]
-        print "tp2=", tp2[i3], tp2[i4-1]
+        #print "thancurvecurve() i1-4=", i1, i2, i3, i4, "dm=", dm
+        #print "len(cp1, tp1)=", len(cp1), len(tp1)
+        #print "len(cp2, tp2)=", len(cp2), len(tp2)
+        #print "tp1=", tp1[i1], tp1[i2-1]
+        #print "tp2=", tp2[i3], tp2[i4-1]
         cp1, tp1 =  curve.than2Line(dm, ta=tp1[i1], tb=tp1[i2-1])
         cp2, tp2 = eother.than2Line(dm, ta=tp2[i3], tb=tp2[i4-1])
         ctp = ct
         erpp, erp = erp, er
     else:
-        print "thanCurveCurve(): max number of iterations reached: %d" % (ntries,)
+        pass
+        #print "thanCurveCurve(): max number of iterations reached: %d" % (ntries,)
     return [ct]
 
 
@@ -357,11 +363,11 @@ def bracketNearest(cp, iseg):
 
 def thanInit():
     "Initialises this module; no circular imports this way."
-    from thanline  import ThanLine, ThanCurve
-    from thancirc  import ThanCircle
-    from thanarc   import ThanArc
-    from thanimpil import ThanImage
-    from thanclasses import thanElemClass
+    from .thanline  import ThanLine, ThanCurve
+    from .thancirc  import ThanCircle
+    from .thanarc   import ThanArc
+    from .thanimpil import ThanImage
+    from .thanclasses import thanElemClass
     global thanIntPair, thanExtPair
     thanIntPair = \
     { ThanArc:    { ThanArc    : thanArcArc,
@@ -400,22 +406,22 @@ def thanInit():
                   },
     }
     eq = {}                                 #Equivalent class for a ThanCurve subclass
-    for clas in thanElemClass.itervalues():    #Create a dict for every class. Determine equivalent class of ThanCurve subclasses
+    for clas in thanElemClass.values():     #Create a dict for every class. Determine equivalent class of ThanCurve subclasses #works for python2,3
         if clas not in thanIntPair:
             thanIntPair[clas] = {}          #Create an empty dict for class
         if issubclass(clas, ThanCurve):
             e = clas()                      #Instantiate class
             if e.than2Line(None): eq[clas] = ThanCurve  #If than2Line() is implemented, then it is a curve..
             else:                 eq[clas] = ThanLine   #..otherwise it is just a dense line
-    for clas in thanElemClass.itervalues():    #Fill dictionary of ThanCurve subclasses
+    for clas in thanElemClass.values():    #Fill dictionary of ThanCurve subclasses  #works for python2,3
         if clas not in eq: continue    #It is not a subclass of ThanCurve: nothing to do
         d = thanIntPair[clas]
         #deq = thanIntPair[eq[clas]]
-        for clas1, func1 in thanIntPair[eq[clas]].iteritems(): #Copy dictionary of equivalent class
+        for clas1, func1 in thanIntPair[eq[clas]].items(): #Copy dictionary of equivalent class   #works for python2,3
             if clas1 not in d: d[clas1] = func1
-    for clas in thanElemClass.itervalues(): #Add ThanCurve subclasses to all dictionaries
+    for clas in thanElemClass.values():     #Add ThanCurve subclasses to all dictionaries  #works for python2,3
         d = thanIntPair[clas]
-        for clas1 in thanElemClass.itervalues():
+        for clas1 in thanElemClass.values():   #works for python2,3
             if clas1 in d: continue
             if clas1 not in eq: continue    #It is not a subclass of ThanCurve: nothing to do
             func1 = d.get(eq[clas1])        #Get the function for the equivalent class of clas1
@@ -457,7 +463,10 @@ def thanIntsnap(e1, e2, ccu, proj):
 def thanInt(e1, e2, proj):
     "Call the appropriate intersection function."
     if e1 is e2: return []
-    func = thanIntPair.get((e1.__class__, e2.__class__), thanDummy)
+    #print("tra01:", e1.__class__, e2.__class__)
+    #print("tra02:", thanIntPair)
+    func = thanIntPair[e1.__class__].get(e2.__class__, thanDummy)
+    #print( "tra003:", func)
     ps = []
     for cp in func(e1, e2, None):
         cc = list(proj[1].thanVar["elevation"])

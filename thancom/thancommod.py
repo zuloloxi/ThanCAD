@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,21 +22,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for a modification commands.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, hypot, fabs, atan2, cos, sin
-from itertools import izip
 from p_gmath import thanNear2, thanNear3, sign
 import p_ggen
 from thanvar import Canc, ThanLayerError
 from thantrans import T
-import thancomsel, thanjoin
-import thanundo
-from selutil import thanSel1line, thanSelMultlines, thanSelectCrosClear
+from . import thancomsel, thanjoin, thanundo
+from .selutil import thanSel1line, thanSelMultlines, thanSelectCrosClear
 
 
 def thanModContline(proj):
@@ -75,9 +76,9 @@ def thanModChelevContour(proj):
             elem1 = thancomsel.thanSelect1(proj, stat, filter=fil)
             thanModCancSel(proj)
             if elem1 == Canc: return Canc, Canc       #elevation cancelled
-            print "chelevcontour: type(sel1coor)=", type(proj[2].thanSel1coor)
+            #print("chelevcontour: type(sel1coor)=", type(proj[2].thanSel1coor))
             c1 = elem1.thanPntNearest(proj[2].thanSel1coor)
-            print "chelevcontour: type(c1)=", type(c1)
+            #print("chelevcontour: type(c1)=", type(c1))
             if c1 is not None: return elem1, c1
             proj[2].thanPrter(T["Point not near line. Try again."])
 
@@ -327,19 +328,19 @@ def thanModTrim(proj):
     delelems = []
     newelems = []
     for i in xrange(iel):
-        print i, "/", iel
+        #print(i, "/", iel)
         delelemsi, newelemsi = dodo[i]
         for e in delelemsi:
             if e in newelems:      #If (e) was a previously new element, then (e) was an intermediate element
-                print e, "is intermediate"
+                #print(e, "is intermediate")
                 newelems.remove(e) #which is already deleted, and there is no need to recreate it and redelete it
             else:
-                print e, "is to be deleted"
+                #print(e, "is to be deleted")
                 delelems.append(e)
-        print newelemsi, "are to be added"
+        print(newelemsi, "are to be added")
         newelems.extend(newelemsi)
-    print "delelems=", delelems
-    print "newelems=", newelems
+    #print("delelems=", delelems)
+    #print("newelems=", newelems)
 
     proj[1].thanDoundo.thanAdd("trim", thanundo.thanReplaceRedo, (delelems, newelems, elcut),
                                        thanundo.thanReplaceUndo, (delelems, newelems, selold))
@@ -400,7 +401,7 @@ def __modRotateDo(proj, cc, phi):
     else:         proj[2].thanGudSetSelRotate(cc[0], cc[1], phi)
     t2 = time.time(); proj[1].thanRotateSel(proj[2].thanSelall, cc, phi) # ThanTouch is implicitly called
     t3 = time.time()
-    print "Rotate time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    #print("Rotate time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1))
 
 #=============================================================================
 
@@ -445,7 +446,7 @@ def __modMirrorCopyDo(proj, elems, c1, t):
     proj[1].thanMirrorSel(copelems, c1, t)
     t2 = time.time(); proj[2].thanGudDrawElemsMany(copelems)
     t3 = time.time()
-    print "Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1)
+    #print("Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1))
     return copelems
 
 
@@ -455,7 +456,54 @@ def __modMirrorDo(proj, c1, t):
     t1 = time.time(); proj[2].thanGudSetSelMirror(c1[0], c1[1], t)
     t2 = time.time(); proj[1].thanMirrorSel(proj[2].thanSelall, c1, t) # ThanTouch is implicitly called
     t3 = time.time()
-    print "Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    #print("Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1))
+
+#=============================================================================
+
+def thanModPointMir(proj):
+    "Mirrors the selected elements with respect to a point."
+    res = thancomsel.thanSelectGen(proj, standalone=False)
+    if res == Canc: return thanModCanc(proj)               # Mirror cancelled
+    elems = proj[2].thanSelall
+    selold = proj[2].thanSelold
+
+    c1 = proj[2].thanGudGetPoint(T["Mirror point: "])
+    if c1 == Canc: return thanModCanc(proj)                # Mirror cancelled
+    keeporig = proj[2].thanGudGetYesno(T["Keep original elements (<yes>/no): "], default="yes")
+    if keeporig == Canc: return thanModCanc(proj)          # Mirror cancelled
+    assert keeporig, "Point mirror not implemented with keeporoig==False"
+    if keeporig:
+        dc = [0.0]*len(c1)
+        newelems = __modPointMirCopyDo(proj, elems, c1)
+        proj[1].thanDoundo.thanAdd("mirror", thanundo.thanReplaceRedo, ((), newelems, elems),
+                                             thanundo.thanReplaceUndo, ((), newelems, selold))
+    else:
+        __modPointMirDo(proj, c1)
+        proj[1].thanDoundo.thanAdd("mirror", thanundo.thanActionRedo, (elems,         __modPointMirDo, c1),
+                                             thanundo.thanActionUndo, (elems, selold, __modPointMirDo, c1))
+    thanModEnd(proj)       # 'Reset color' is necessary here; OK!
+
+
+def __modPointMirCopyDo(proj, elems, c1):
+    "Copies selected elements; it actualy does the job."
+    import time
+    t1 = time.time();
+    dc = [0.0]*len(c1)
+    copelems = proj[1].thanCopySel(elems, dc)   # thanTouch is implicitly called
+    proj[1].thanPointMirSel(copelems, c1)
+    t2 = time.time(); proj[2].thanGudDrawElemsMany(copelems)
+    t3 = time.time()
+    #print("Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1))
+    return copelems
+
+
+def __modPointMirDo(proj, c1):
+    "Mirrors selected elements with respect to point; it actually does the job."
+    import time
+    t1 = time.time(); proj[2].thanGudSetSelPointMir(c1[0], c1[1])
+    t2 = time.time(); proj[1].thanPointMirSel(proj[2].thanSelall, c1) # ThanTouch is implicitly called
+    t3 = time.time()
+    #print("Mirror time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1))
 
 #=============================================================================
 
@@ -483,7 +531,7 @@ def __modReverseDo(proj):
     for e in proj[2].thanSelall:
         e.thanReverse()
     t3 = time.time()
-    print "Reverse time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    #print("Reverse time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1))
     proj[1].thanTouch()
 
 #=============================================================================
@@ -625,7 +673,7 @@ def __modChlayerDo(proj, elemslays, laynew):
     draworder = False
     than = proj[2].than
     laynew.thanTkSet(than)         #Settings of the new layer for all the selected elements
-    for lay, elems in lays.iteritems():                      # Find only the attributes which differ (and thus they must be changed)
+    for lay, elems in lays.items(): #works for python2,3       # Find only the attributes which differ (and thus they must be changed)
         for a in thanlayer.thanlayatts.thanLayAttsNames[2:]: # We know that lay is NOT frozen (otherwise the elements could not be selected:) )
             nval = laynew.thanAtts[a].thanVal
             val = lay.thanAtts[a].thanAct
@@ -664,7 +712,7 @@ def __modChlayerUndo(proj, elemslays, laynew):
     assert len(lays) > 0, "How come that no layers were found, when there is at least one element????"
     draworder = False
     than = proj[2].than
-    for lay, elems in lays.iteritems():  # Find only the attributes which differ (and thus they must be changed)
+    for lay, elems in lays.items():#works for python2,3  # Find only the attributes which differ (and thus they must be changed)
         for a in thanlayer.thanlayatts.thanLayAttsNames[2:]:   # We know that lay is NOT frozen (otherwise the elements could not be selected:) )
             nval = laynew.thanAtts[a].thanVal
             val = lay.thanAtts[a].thanAct
@@ -705,7 +753,7 @@ def thanModScale(proj):
 
     c1 = proj[2].thanGudGetPoint(T["Origin of scale (Insertion point): "], options=("Insertion", ))
     if c1 == Canc: return thanModCanc(proj)                # Scale was cancelled
-    print "c1=", c1, type(c1)
+    #print("c1=", c1, type(c1))
     fact = 1.0
     fact = proj[2].thanGudGetPosFloat(T["Scale factor: "], fact)
     if fact == Canc: return thanModCanc(proj)              # Scale was cancelled
@@ -725,7 +773,7 @@ def __modScaleDo(proj, cc, fact):
     if cc == "i": proj[2].thanGudSetSelScaleIns(fact)
     else:         proj[2].thanGudSetSelScale(cc[0], cc[1], fact)
     t3 = time.time()
-    print "Scale time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1)
+    #print("Scale time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1))
 
 #=============================================================================
 
@@ -760,7 +808,7 @@ def __modMoveDo(proj, dc):
     t1 = time.time(); proj[2].thanGudSetSelMove(dc[0], dc[1])
     t2 = time.time(); proj[1].thanMoveSel(proj[2].thanSelall, dc)   # thanTouch is implicitly called
     t3 = time.time()
-    print "Move time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    #print("Move time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1))
 
 
 #=============================================================================
@@ -779,12 +827,12 @@ def thanModCopy(proj):
     if res == "":
         copelems = __modCopyDo(proj, elems, c1)
     else:
-        dc = [b-a for a,b in izip(c1, res)]
+        dc = [b-a for a,b in zip(c1, res)]   #works for python2,3
         copelems = __modCopyDo(proj, elems, dc)
         while True:                                         # Copy multiple mode
             res = proj[2].thanGudGetMovend(c1, stat1, options=("",))
             if res == Canc or res == "": break              # Copy is ended
-            dc = [b-a for a,b in izip(c1, res)]
+            dc = [b-a for a,b in zip(c1, res)]  #works for python2,3
             e1 = __modCopyDo(proj, elems, dc)
             copelems.extend(e1)
 
@@ -799,7 +847,7 @@ def __modCopyDo(proj, elems, dc):
     t1 = time.time(); copelems = proj[1].thanCopySel(elems, dc)   # thanTouch is implicitly called
     t2 = time.time(); proj[2].thanGudDrawElemsMany(copelems)
     t3 = time.time()
-    print "Move time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1)
+    #print("Move time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t3-t2, t2-t1, t3-t1))
     return copelems
 
 #=============================================================================
@@ -995,7 +1043,7 @@ def __modEraseDo(proj):
     proj[2].thanImages.difference_update(proj[2].thanSelall) #Delete deleted images from thanImages
     t2 = time.time(); proj[1].thanDelSel(proj[2].thanSelall) #thanTouch is implicitly called
     t3 = time.time()
-    print "Erase time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1)
+    #print("Erase time: canvas=%.2f   elements=%.2f   sum=%.2f (secs)" % (t2-t1, t3-t2, t3-t1))
     proj[2].thanGudSetSelClear()
 
 #=============================================================================
@@ -1018,7 +1066,7 @@ def __purgeobjects(proj):
     ansdef = False
     delyes = []
     purgeable = False
-    for name, objs in proj[1].thanObjects.iteritems():
+    for name, objs in proj[1].thanObjects.items():   #works for python2,3
         for i,obj in enumerate(objs):
             purgeable = True
             more = ""
@@ -1088,7 +1136,7 @@ def __purgeLay(proj, lay, delnot, delyes):
         if not chlay.thanIsEmpty(): continue   # Layer not empty
         emptyFound = True
         ans = proj[2].thanGudGetYesno(mes[ansdef] % chlay.thanGetPathname(), default=ansdef)
-        if ans == Canc: raise ThanLayerError, "User cancelled purge"
+        if ans == Canc: raise ThanLayerError("User cancelled purge")
         if ans: delyes.add(chlay)
         ansdef = ans
     for chlay in lay.thanChildren:

@@ -1,8 +1,10 @@
+from __future__ import print_function
 import sys, os
-from Tkinter import TclError
-import tkMessageBox, tkFileDialog
-from tkMessageBox import ERROR, INFO, QUESTION, WARNING
+from tkinter import TclError, messagebox
+from tkinter.messagebox import ERROR, INFO, QUESTION, WARNING
 from p_ggen import floate, isString, thanUnunicode, thanUnicode, path, Pyos
+if Pyos.Python3: from tkinter import filedialog
+else:            import tkFileDialog as filedialog
 
 
 #============================================================================
@@ -11,14 +13,14 @@ def thanGudGetReadFile(self, ext, tit, initialfile="", initialdir="", multiple=F
     "Gets a filename that exists, from user."
     ext = thanExtExpand(ext)
     while True:
-        opendialog = tkFileDialog.Open(parent=self, initialfile=initialfile,
+        opendialog = filedialog.Open(parent=self, initialfile=initialfile,
           #initialdir=initialdir, defaultextension=ext[0][1][1:],    # For Windows?
           initialdir=initialdir, defaultextension=ext[0][1], multiple=multiple,
           title=thanUnicode(tit), filetypes=ext)  #Here defaultextension works ok: When the users types something
         #                           #It gets the extension specified as the first element of ext
         try:
             filnam = opendialog.show()
-        except TclError, why:
+        except TclError as why:
             w = str(why)
             if "invalid" in w and "filename" in w: #If the initialfile is invalid then..
                 initialfile = ""                   #..work around tcl/tk bug
@@ -141,13 +143,13 @@ def thanGudGetSaveFile(self, ext, tit, initialfile="", initialdir=""):
     kw = {}
     if Pyos.Windows: kw["defaultextension"]=ext[0][1]
     while True:
-        opendialog = tkFileDialog.SaveAs(parent=self, initialfile=initialfile,
+        opendialog = filedialog.SaveAs(parent=self, initialfile=initialfile,
           initialdir=initialdir, title=thanUnicode(tit), filetypes=ext,
           **kw)       #Thanasis2011_08_28:Here defaultextension does not work ok in Linux: When the user types something
         #             #It gets the extension ext[0], even if the user has selected another one with the widget
         try:
             filnam = opendialog.show()
-        except TclError, why:
+        except TclError as why:
             w = str(why)
             if "invalid" in w:
                 if "filename" in w:
@@ -163,8 +165,8 @@ def thanGudOpenReadFile(self, ext, tit, mode="r", initialfile="", initialdir="")
     while 1:
         filnam = thanGudGetReadFile(self, ext, tit, initialfile, initialdir)
         if not filnam: return filnam, filnam
-        try: fw = file(filnam, mode)
-        except IOError, why: thanGudModalMessage(self, why, "Error opening file")
+        try: fw = open(filnam, mode)
+        except IOError as why : thanGudModalMessage(self, why, "Error opening file")
         else: return filnam, fw
 
 
@@ -173,14 +175,14 @@ def thanGudOpenSaveFile(self, ext, tit, mode="w", initialfile="", initialdir="")
     while True:
         filnam = thanGudGetSaveFile(self, ext, tit, initialfile, initialdir)
         if not filnam: return filnam, filnam
-        try: fw = file(filnam, mode)
-        except IOError, why: thanGudModalMessage(self, why, "Error opening file")
+        try: fw = open(filnam, mode)
+        except IOError as why: thanGudModalMessage(self, why, "Error opening file")
         else: return filnam, fw
 
 
 def thanGudGetDir(self, tit, initialdir="", mustexist=False):
     "Gets a filename that exists, from user."
-    opendialog = tkFileDialog.Directory(parent=self,
+    opendialog = filedialog.Directory(parent=self,
                  title=thanUnicode(tit), initialdir=initialdir, mustexist=mustexist)
     filnam = opendialog.show()
     return thanAbsrelPath(filnam)
@@ -189,12 +191,12 @@ def thanGudGetDir(self, tit, initialdir="", mustexist=False):
 
 def thanGudAskOkCancel(self, message, title, default="cancel"):
         "Shows message and returns true if user pressed OK; there is no default answer."
-        return tkMessageBox.askokcancel(thanUnicode(title), thanUnicode(message),
+        return messagebox.askokcancel(thanUnicode(title), thanUnicode(message),
             default=default, parent=self)
 
 def thanGudAskYesNo(self, message, title, default="yes"):
         "Shows message and returns true if user pressed OK; there is no default answer; returns boolean True or False."
-        return tkMessageBox.askyesno(thanUnicode(title), thanUnicode(message),
+        return messagebox.askyesno(thanUnicode(title), thanUnicode(message),
             default=default, parent=self)
 
 
@@ -205,7 +207,7 @@ def thanGudAskYesNo(self, message, title, default="yes"):
 #WARNING = "warning"
 def thanGudModalMessage(self, message, title, icon=None, **kw):
         "Show a message and wait until user discards it."
-        tkMessageBox.showinfo(thanUnicode(title), thanUnicode(message), parent=self, icon=icon, **kw)
+        messagebox.showinfo(thanUnicode(title), thanUnicode(message), parent=self, icon=icon, **kw)
 
 #===========================================================================
 
@@ -228,7 +230,7 @@ def _tryIconbitmap(win, iconxbm):
 #    print "thanDeficon:", b
     try:
         win.iconbitmap(b)
-    except Exception, e:
+    except Exception as e:
 #        print e
         return False
     else:
@@ -276,16 +278,16 @@ def thanValidateDouble(parentwin, controls, except_=()):
     return res 
 
 
-from Tkinter import Tk, Frame
+from tkinter import Tk, Frame
 def testmenus2():
     "Tests menus with statusbar."
     import p_gtkwid
-    def __op(): print "open"
-    def __cl(): print "close"
-    def __ii(): print "insert image"
-    def __ca(): print "load camera"
-    def __re(): print "replace"
-    def __hi(): print "history"
+    def __op(): print("open")
+    def __cl(): print("close")
+    def __ii(): print("insert image")
+    def __ca(): print("load camera")
+    def __re(): print("replace")
+    def __hi(): print("history")
     def __ex(): root.destroy()
     def cond(): return True
 

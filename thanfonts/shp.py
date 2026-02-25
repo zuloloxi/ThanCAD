@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,16 +23,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module imports shape files (.shp).
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+#from builtins import object
+from p_ggen.py23 import xrange, next
 from math import pi, sqrt, atan2, cos, sin, fabs
 import codecs, unicodedata
 from p_gmath import dpt
 from p_ggen import Struct
-from thanfont import ThanFontLine, thanFonts
+from .thanfont import ThanFontLine, thanFonts
 
 
 _xyr = \
@@ -64,11 +68,11 @@ class ShpIter:
         self.__bufferEmpty = True
         self.__ilin = 0
 
-    def next(self):
+    def __next__(self):
         "Send the next entry."
         if self.__bufferEmpty:
             while True:
-                dline = self.__fr.next()
+                dline = next(self.__fr)
                 self.__ilin += 1
                 i = dline.find(";")
                 if i >= 0: dline = dline[:i]
@@ -94,20 +98,20 @@ class ShpIter:
     def prer(self, t):
         "Prints error message to suitable output."
         t1 = "Error at line %d:\n    %s\n    %s\n" % (self.__ilin, self.__savedLine, t)
-        print t1
+        print(t1)
 
     def prwa(self, t):
         "Prints warning message to suitable output."
         t1 = "Warning at line %d:\n    %s\n    %s\n" % (self.__ilin, self.__savedLine, t)
-        print t1
+        print(t1)
 
 class Inslist(list):
     def __init__(self, *args, **kw):
         list.__init__(self, *args, **kw)
         self.thani = -1
-    def next(self):
+    def __next__(self):
         self.thani += 1
-        if self.thani >= len(self): raise StopIteration
+        if self.thani >= len(self): raise StopIteration()
         return self[self.thani]
     def replaceSubshape(self, other):
         i1 = self.thani - 1
@@ -138,7 +142,12 @@ class ThanCadShapefile:
                 elif ishape == "unifont":            ishape = 0; imax = 65535
                 elif ishape[:1] == "0":              ishape = int(ishape, 16)
                 else:                                ishape = int(ishape)
-            except: it.prer("Syntax error"); print dl; import sys; sys.exit(); continue
+            except:
+                it.prer("Syntax error")
+                print(dl)
+                import sys
+                sys.exit()
+                continue
 #           sameline = False   # When more entries in the first line the number of bytes is 1 more than those defined!!!!!!!!!!!!!!!
 #           if len(dl) > 3 and ishape != 0: it.setnext(dl[3:]); sameline = True
             if ishape < 0 or ishape > imax: it.prer("Illegal shape number: %d" % ishape); continue
@@ -218,11 +227,11 @@ class ThanCadShapefile:
                     pendown = False
                     decipher.append("%3d: penup\n" % (byte9,))
                 elif byte == 3:                              # Divide lengths by next byte
-                    byte8 = itb.next()
+                    byte8 = next(itb)
                     fact /= byte8
                     decipher.append("%3d: factor / %3d\n" % (byte9, byte8))
                 elif byte == 4:                              # Multiply lengths by next byte
-                    byte8 = itb.next()
+                    byte8 = next(itb)
                     fact *= byte8
                     decipher.append("%3d: factor * %3d\n" % (byte9, byte8))
                 elif byte == 5:                              # Push current position to stack
@@ -236,7 +245,7 @@ class ThanCadShapefile:
                     xnow, ynow = xystack.pop(-1)
                     decipher.append("%3d: pop from stack\n" % (byte9,))
                 elif byte == 7:                              # Draw subshape at this position
-                    i1 = itb.next()
+                    i1 = next(itb)
                     if i1 in self.__shape and self.__shape[i1].resolved:
                         itb.replaceSubshape(self.__shape[i1].bytes)
                     else:
@@ -244,14 +253,14 @@ class ThanCadShapefile:
                         decipher.append("%3d: draw subshape %d (not resolved)\n" % (byte9, i1))
                 elif byte == 8:                              # Explicit x,y of 1 point follow
                     if pendown and len(li) == 0: li.append((xnow, ynow))
-                    x = itb.next(); y = itb.next()
+                    x = next(itb); y = next(itb)
                     decipher.append("%3d: pen_relative %d %d\n" % (byte9, x, y))
                     xnow += x*fact; ynow += y*fact
                     if pendown: li.append((xnow,ynow))
                 elif byte == 9:                              # Explicit x,y of many points follow
                     decipher.append("%3d: multiple pen_absolute:\n" % (byte9,))
                     while True:
-                        x = itb.next(); y = itb.next()
+                        x = next(itb); y = next(itb)
                         decipher.append("     %d %d\n" % (x, y))
                         if x == 0 and y == 0:
                             decipher.append("     %d %d: stop\n" % (x, y))
@@ -261,9 +270,9 @@ class ThanCadShapefile:
                         xnow += x*fact; ynow += y*fact
                         if pendown: li.append((xnow,ynow))
                 elif byte == 10:                             # Draw octant arc
-                    r = itb.next()*fact
+                    r = next(itb)*fact
                     if r == 0: it.prer("Error: arc radius is zero"); return None
-                    byte = itb.next()
+                    byte = next(itb)
                     if byte < 0: idd = -1; byte = -byte
                     else:        idd =  1
 #                    dth = byte%16
@@ -275,11 +284,11 @@ class ThanCadShapefile:
                     xc = xnow-r*cos(th); yc = ynow-r*sin(th)
                     xnow, ynow = self.__arc(li, xnow, ynow, pendown, xc, yc, r, th, idd*dth*2*pi/8)
                 elif byte == 11:                             # Draw (more) general arc
-                    dth1 = (pi/180) * itb.next()*45/256
-                    dth2 = (pi/180) * itb.next()*45/256
-                    r = itb.next() * 256; r = (r+itb.next()) * fact
+                    dth1 = (pi/180) * next(itb)*45/256
+                    dth2 = (pi/180) * next(itb)*45/256
+                    r = next(itb) * 256; r = (r+next(itb)) * fact
                     if r == 0: it.prer("Error: arc radius is zero"); return None
-                    byte = itb.next()
+                    byte = next(itb)
                     if byte < 0: idd = -1; byte = -byte
                     else:        idd =  1
                     dth = byte & 7
@@ -291,17 +300,17 @@ class ThanCadShapefile:
                     xc = xnow-r*cos(th); yc = ynow-r*sin(th)
                     xnow, ynow = self.__arc(li, xnow, ynow, pendown, xc, yc, r, th, dth)
                 elif byte == 12:                             # Draw 1 buldge
-                    x = itb.next(); y = itb.next(); byte8 = itb.next()
+                    x = next(itb); y = next(itb); byte8 = next(itb)
                     decipher.append("%3d: buldge_relative %d %d curvature %d\n" % (byte9, x, y, byte8))
                     xnow, ynow = self.__buldge(li, xnow, ynow, fact, pendown, x, y, byte8)
                 elif byte == 13:                             # Draw many buldges
                     decipher.append("%3d: multiple_buldge_relative:\n" % (byte9,))
                     while True:
-                        x = itb.next(); y = itb.next()
+                        x = next(itb); y = next(itb)
                         if x == 0 and y == 0:
                             decipher.append("     %d %d: stop\n" % (x, y))
                             break
-                        byte8 = itb.next()
+                        byte8 = next(itb)
                         decipher.append("     %d %d curvature %d\n" % (x, y, byte8))
                         xnow, ynow = self.__buldge(li, xnow, ynow, fact, pendown, x, y, byte8)
                 elif byte == 14:
@@ -363,26 +372,26 @@ class ThanCadShapefile:
 
     def __skipNext(self, it, itb):
         "Skips next (compound) command."
-        byte = itb.next()
+        byte = next(itb)
         d = (byte >> 4) & 15
         byte &= 15
         if d > 0: return
         if byte in (0,1,2,5,6,14): return
-        if byte in (3,4,7,10): itb.next(); return
-        if byte == 8: itb.next(); itb.next(); return
+        if byte in (3,4,7,10): next(itb); return
+        if byte == 8: next(itb); next(itb); return
         if byte == 99:
             while True:
-                x = itb.next(); y = itb.next()
+                x = next(itb); y = next(itb)
                 if x == 0 and y == 0: return
         elif byte == 11:
-            for i in xrange(5): itb.next()
+            for i in xrange(5): next(itb)
         elif byte == 12:
-            for i in xrange(3): itb.next()
+            for i in xrange(3): next(itb)
         elif byte == 13:
             while True:
-                x = itb.next(); y = itb.next()
+                x = next(itb); y = next(itb)
                 if x == 0 and y == 0: break
-                itb.next()
+                next(itb)
         else:
             it.prer("%d: illegal special command." % byte); return None
 
@@ -390,7 +399,7 @@ class ThanCadShapefile:
         "A all subshape definitions."
         for tries in xrange(10):
             allresolved = True
-            for shp in self.__shape.itervalues():
+            for shp in self.__shape.values():   #works for python2,3
                 if shp.resolved: continue
                 if not self.thanConvert1(it, shp): return False
                 if not shp.resolved: allresolved = False
@@ -409,33 +418,32 @@ class ThanCadShapefile:
 #        for i1 in xrange(256):
 #           if i1 not in self.__shape: lines[i1] = imiss; continue
 #           lines[i1] = self.__shape[i1].lines
-        for i1,shp in self.__shape.iteritems():
+        for i1,shp in self.__shape.items():    #works for python2,3
             lines[i1] = self.__shape[i1].lines
         thanFonts[self.fontname] = ThanFontLine(self.fontname, (0,0), (6,self.above), (0,-self.below),
                                    True, lines)
 
     def info(self):
         "Prints info of the shape file."
-        print "Font:", self.fontname
+        print("Font:", self.fontname)
         for a in "above below modes".split():
-            print "          ", a, ":", getattr(self, a)
+            print("          ", a, ":", getattr(self, a))
 #       unu = codecs.getencoder("iso-8859-1")
-        iss = self.__shape.keys()
-        iss.sort()
+        iss = sorted(self.__shape.keys())   #works for python2,3
         for i in iss:
             shp = self.__shape[i]
 #           t = unu(unichr(i))
             t = unicodedata.name(unichr(i), "<none>")
-            print "ord=%d   shape_name=%s  unicode_name=%s" % (i, shp.name, t)
-            print "     Bytes (with subshapes resolved):"
+            print("ord=%d   shape_name=%s  unicode_name=%s" % (i, shp.name, t))
+            print("     Bytes (with subshapes resolved):")
             for i in xrange(0, len(shp.bytes), 18):
                 b1 = shp.bytes[i:i+18]
-                print "    ", (len(b1)*"%3d,") % tuple(b1)
-            print "     Deciphered bytes (with subshapes resolved):"
-            for b1 in shp.decipher: print "    ", b1,
-            print "     Generated lines:"
+                print("    ", (len(b1)*"%3d,") % tuple(b1))
+            print("     Deciphered bytes (with subshapes resolved):")
+            for b1 in shp.decipher: print("    ", b1,)
+            print("     Generated lines:")
             for li in shp.lines:
-                print "    ", li
+                print("    ", li)
 
 def test():
     "Tests the module with txt.shp."
@@ -445,7 +453,7 @@ def test():
     fs = fs.split()[-1]
     for fn in fs.split():
         shp = ThanCadShapefile()
-        if shp.thanRead(file("/home/a12/work/tcadtree.25/thanfonts/"+fn+".shp")):
+        if shp.thanRead(open("./thanfonts/developer/shp/"+fn+".shp")):
             shp.toThanCad()
 #            shp.info()
         else:

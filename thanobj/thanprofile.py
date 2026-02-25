@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines an object which creates and stores a highway profile.
 """
+from __future__ import print_function
 import p_ggen, p_grun
 from thantrans import T, Tarch
 try:                import p_gmhk
 except ImportError: pass
-from thanobject import ThanObject
+from .thanobject import ThanObject
 
 
 class ThanProfile(ThanObject):
@@ -70,7 +71,7 @@ class ThanProfile(ThanObject):
         "Write the .ger and .mhk files which are needed for the program mhker."
         try:
             fw = p_ggen.uniqfile(proj[0].parent/proj[0].namebase, suf=".ger", stat="w", n=3)
-            if fw is None: raise IOError, "Can not create unique name with prefix %s" % (proj[0],)
+            if fw is None: raise IOError("Can not create unique name with prefix %s" % (proj[0],))
             fn = p_ggen.path(fw.name)
             fns = [fn.parent / fn.namebase + suf for suf in ".ger .mhk .nmh".split()]
             fns.append(fn.parent / "mediate.tmp")
@@ -88,17 +89,17 @@ class ThanProfile(ThanObject):
 
             fw = open(fns[1], "w")
             p_gmhk.wrMhk1ti(fw, ngram=2)
-            p_gmhk.wrMhk1oned(fw, "PROFILE 1", zip(self.aa, self.xth, self.hed))
+            p_gmhk.wrMhk1oned(fw, "PROFILE 1", list(zip(self.aa, self.xth, self.hed)))  #works for python2,3
             fw.close()
 
             fw = open(fns[-1], "w")
             fw.write("1\n%s\n" % (fn.namebase,))
             fw.close()
-        except IOError, e:
+        except IOError as e:
             for fn in fns:
                 try: fn.remove()
                 except IOError: pass
-            return False, e.message
+            return False, str(e)
 
         ok = p_grun.runExecWin("c_mhker", pdir=proj[0].parent, pexpectline=True, master=proj[2],
              title=u"ThanCad - %s: Grade line computation" % (fn.namebase),)
@@ -111,7 +112,7 @@ class ThanProfile(ThanObject):
             try: fn.remove()
             except IOError: pass
         try: fns[2].rename(fns[1])
-        except IOError, e: return False, e.message
+        except IOError as e: return False, str(e)
         import thancom
         thancom.thancomfile.thanFileOpenPaths(proj, [fns[1]])
         return True, ""
@@ -125,4 +126,4 @@ class ThanProfile(ThanObject):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

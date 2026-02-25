@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module defines various constants.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import thandr, thanopt
-import thancomsel, thancommod, thancommodext, thancomedit, thancomdraw, thancomfile
-import thancomvar, thancomview, thancomedu, thancomtool, thancomhatch, thancomeng
-import thancompr, thancomim, thancomtest, thanpedit
+from . import (thancomsel, thancommod, thancommodext, thancomedit, thancomdraw, thancomfile,
+    thancomvar, thancomview, thancomedu, thancomtool, thancomhatch, thancomeng,
+    thancompr, thancomim, thancomtest, thanpedit)
 
 
 def thanAddCommands(coms1, abbrevs1):
@@ -38,7 +41,7 @@ def thanAddCommands(coms1, abbrevs1):
     coms1 = sorted(coms1)
     #coms1.reverse()
     for c,f in coms1:
-        if c in thanComsOri: raise KeyError, "Command %s is already defined" % (c,)
+        if c in thanComsOri: raise KeyError("Command %s is already defined" % (c,))
         thanComsOri[c] = thanComs[c] = c, f
         if c == "exit": continue     #Do not abbreviate exit; it is very similar to extend :)
         for i in xrange(1, min(len(c), 10)):
@@ -54,15 +57,15 @@ def __packages():
         ok = getattr(thanFrape, name)
         if not ok: continue
         name1 = "thanpro%s.thanprocom.thanprocomcon" % (name,)
-        print "importing", name1
+        print("importing", name1)
         __import__(name1)
         coms.extend(getattr(sys.modules[name1], "coms"))
 
-    for name in "urban thermo architect".split():
+    for name in "urban thermo".split():   # " architect"
         ok = getattr(thanFrape, name)
         if not ok: continue
         name1 = "thanpackages.%s.thancom.thancomcon" % (name,)
-        print "importing", name1
+        print("importing", name1)
         __import__(name1)
         coms.extend(getattr(sys.modules[name1], "coms"))
 
@@ -97,10 +100,12 @@ coms = \
   ("cutclip",     thancomedit.thanClipCut),
   ("ddedit",      thancommod.thanModDDedit),
   ("ddlmodes",    thancomvar.thanFormLay),
+  ("dfr",         thancomvar.thanDfr),
   ("decurve",     thancomdraw.thanDecurve),
   ("dem",         thancomeng.thanEngDem),
   ("demdirectory",thancomeng.thanDemImageDir),
   ("demload",     thancomeng.thanDemLoad),
+  ("demloadadf",  thancomeng.thanDemLoadAdf),
   ("devcm",       thancomvar.thanDevCm),
   ("devcmd",      thancomvar.thanDevCmdsave),
   ("devfont",     thancomvar.thanDevFont),
@@ -134,6 +139,7 @@ coms = \
   ("fill",        thancomvar.thanVarFill),
   ("find",        thancomtool.thanToolTextfind),
   ("fractal",     thancomvar.thanFractal),
+  ("geodeticprojection", thancomeng.thanEngGeodp),
   ("gpl",         thancomvar.thanHelpGpl),
   ("greeceperimeter", thancomeng.thanGreecePerimeter),
   ("hatchopen",   thancomhatch.thanHatchOpen),
@@ -172,6 +178,7 @@ coms = \
   ("linout",      thancomfile.thanExpLin),
   ("list",        thancomvar.thanList),
   ("mirror",      thancommod.thanModMirror),
+  ("pmirror",     thancommod.thanModPointMir),
   ("move",        thancommod.thanModMove),
   ("movelinepoint", thanpedit.thanModMoveLinepoint),
   ("new",         thancomfile.thanFileNew),

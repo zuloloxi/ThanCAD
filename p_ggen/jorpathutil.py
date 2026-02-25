@@ -1,4 +1,4 @@
-from jorpath import path
+from .jorpath import path
 
 def getPrefix(fn):
     "Convert fn to path and get the prefix of fn."

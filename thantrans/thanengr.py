@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,11 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek.
 """
 
+from __future__ import print_function
 from p_ggen import Translation
 #from thanopt import thancadconf
 
@@ -144,12 +145,12 @@ en2gr = \
 "Insert Raster &Image"                            : u"Εισαγωγή Eικόνας",
 "&Clip image"                                     : u"Απόκρυψη περιθωρίων εικόνας",
 "Import &log Image"                               : u"Εισαγωγή εικόνας μορφής .log",
-"Import &tfw Image"                               : u"Εισαγωγή εικόνας μορφής .tfw",
+"Import &tfw/j2w Image"                           : u"Εισαγωγή εικόνας μορφής .tfw/.j2w",
 "Import &GeoTIFF"                                 : u"Εισαγωγή εικόνας μορφής GeoTIFF",
 "Inserts TIFF images whose georeference is inside the TIFF":
                                                     u"Εισάγει εικόνες TIFF η γεωαναφορά των οποίων είναι μέσα στο TIFF",
-"Inserts TIFF images whose georeference is defined in .tfw files":
-                                                    u"Εισάγει εικόνες TIFF η γεωαναφορά των οποίων καθορίζεται σε αρχεία .tfw",
+"Inserts TIFF images whose georeference is defined in .tfw/.j2w files":
+                                                    u"Εισάγει εικόνες TIFF η γεωαναφορά των οποίων καθορίζεται σε αρχεία .tfw/.j2w",
 "Inserts BMP images whose georeference is defined in .log files": u"Εισάγει εικόνες BMP η γεωαναφορά των οποίων καθορίζεται σε αρχεία .log",
 "Import &Cadastre"                                : u"Εισαγωγή εικόνας κτηματολογίου",
 "Inserts Greek cadastre map image to its correct position using standardised file naming conventions":
@@ -292,7 +293,8 @@ en2gr = \
 "To spline"                                       : u"Σε κυβική καμπύλη",
 "&Decurve"                                        : u"Αφαίρεση καμπυλότητας",
 "Spl&ine"                                         : u"Κυβική καμπύλη",
-"Mirrors selected elements with repect to 2d axis": u"Δημιουργεί κατοπτρικά αντίθετα στοιχεία σε σχέση 2 άξονα 2Δ",
+"Mirrors selected elements with respect to 2d axis": u"Δημιουργεί τα κατοπτρικά αντίθετα ως προς άξονα 2Δ από τα επιλεγμένα στοιχεία",
+"Mirrors selected elements with respect to a point": u"Δημιουργεί τα κατοπτρικά ως προς σημείο από τα επιλεγμένα στοιχεία",
 "Reverses the orientation of lines, circles, arcs": "Αντιστρέφει τη φορά γραμμών, κύκλων, τόξων",
 "Select lines, circles, arcs to reverse orientation:": "Επιλογή γραμμών, κύκλων, τόξων προς αντιστροφή φοράς:",
 "Element"                                         : u"Στοιχείο",
@@ -312,6 +314,7 @@ en2gr = \
 "Sc&ale"                                          : u"Μεγέθυνση/σμίκρυνση",
 "&Move"                                           : u"Μεταφορά",
 "M&irror"                                         : u"Κατοπτρικά αντίθετα",
+"Point Mirror"                                    : u"Κατοπτρικά ως προς σημείο",
 "&Offset"                                         : u"Παράλληλη αντιγραφή",
 "&Break"                                          : u"Κοπή",
 "&Trim"                                           : u"Αποκοπή",
@@ -319,10 +322,14 @@ en2gr = \
 "&Join"                                           : u"Συνένωση",
 "Join &2D"                                        : u"Συνένωση 2D",
 "Join &gap"                                       : u"Συνένωση κενού",
+"&Move node"                                      : u"Μεταφορά κόμβου",
+"Moves an arbitrary node of a line the segments which lead to it.":
+                                                    u"Μεταφέρει κόμβο μίας γραμμής και τα ευθύγραμμα τμήματα που συντρέχουν σε αυτόν",
 "E&xplode"                                        : u"Διάσπαση",
 "Re&verse"                                        : u"Αντιστροφή φοράς",
 "Hatch Open"                                      : u"Διαγράμμιση ανοικτή",
 "Create hatch between disjoint lines"             : u"Σχεδίαση διαγράμμισης μεταξύ ανεξαρτητων γραμμών",
+"Mirror point: "                                  : u"Σημείο κατοπτρισμού: ",
 "Select 2 lines to create draw between:\n"        : u"Επιλογή 2 γραμμών για σχεδίαση διαγράμμισης μεταξύ τους",
 "Next line point: "                               : u"Επόμενο σημείο γραμμής: ",
 "Next line point (undo/<enter>): "                : u"Επόμενο σημείο γραμμής: (u=αναίρεση προηγούμενου/<enter>): ",
@@ -411,7 +418,8 @@ en2gr = \
 "Bounding box: %s"                                : u"Περιγεγραμμένο ορθογώνιο: %s",
 "Angle (not used): %s\n"                          : u"Γωνία (δεν χρησιμοποιείται): %s\n",
 
-"Lower-left image point (pixel/mm/cadastre/<enter>): "  : u"Σημείο κάτω-αριστερά της εικόνας (p=εικονοσημεία/m=mm/<enter>): ",
+"Lower-left image point (rectification/pixel/mm/cadastre/<enter>): ":
+                                                    u"Σημείο κάτω-αριστερά της εικόνας (r=αναγωγή/p=εικονοσημεία/m=mm/c=κτηματολόγιο/<enter>): ",
 "Image width in user data units: "                : u"Πλάτος εικόνας σε μονάδες σχεδίου: ",
 "Regenerating image.."                            : u"Αναδημιουργία εικόνας..",
 "Scanned Image has not been saved, OK to discard?": u"Η σαρωμένη Εικόνα δεν έχει αποθηκευτεί, Εντάξει να χαθεί;",
@@ -568,4 +576,4 @@ del en2gr
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

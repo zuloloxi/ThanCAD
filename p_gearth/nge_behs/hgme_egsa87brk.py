@@ -132,6 +132,6 @@ def addlines(dtm):
             del cp[:]
         else:
             dl = dline.split()
-            cp.append(map(float, dl[1:]))
+            cp.append(list(map(float, dl[1:]))) #OK for python 2,3
     assert len(cp) == 0
     del brk

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,18 +21,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the generic ThanCad element. It can be also used as a null
 element - this is NOT an asbtract class.
 The class defines functionality to speed up the rotate operation.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import cos, sin
 import copy
-from thantrans import T
 import p_ggen
-
+from thantrans import T
 
 
 class ThanElement:
@@ -70,6 +72,9 @@ class ThanElement:
         "Mirror element; mirror line is defined by point c1 and unit vector t."
         pass
 
+    def thanPointMir(self):
+        "Mirror element with respect to apoint; mirror point is defined by point c1."
+        pass
 
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
@@ -180,12 +185,12 @@ class ThanElement:
 
     def thanExpThc1 (self, fw):
         "Save the element in thc format; attributes other than the common."
-        raise ValueError, "Method thanExpThc1 must be overridden"
+        raise ValueError("Method thanExpThc1 must be overridden")
 
 
     def thanImpThc1 (self, fw):
         "Read the element from thc format; attributes other than the common."
-        raise ValueError, "Method thanExpThc1 must be overridden"
+        raise ValueError("Method thanExpThc1 must be overridden")
 
 
     def thanTransform(self, fun):
@@ -232,12 +237,21 @@ class ThanElement:
         return True
 
 
+    #def thanInarea(self, xymm):  #Thanasis2015_04_15:Commented out
+    #    "Checks if element may (partially) be in area xymm (which may have None)."
+    #    if xymm[2] is None or self.thanXymm[0] > xymm[2]: return False
+    #    if xymm[1] is None or self.thanXymm[1] > xymm[3]: return False
+    #    if xymm[2] is None or self.thanXymm[2] < xymm[0]: return False
+    #    if xymm[3] is None or self.thanXymm[3] < xymm[1]: return False
+    #    return True
+
+
     def thanInarea(self, xymm):
         "Checks if element may (partially) be in area xymm (which may have None)."
-        if xymm[2] is None or self.thanXymm[0] > xymm[2]: return False
-        if xymm[1] is None or self.thanXymm[1] > xymm[3]: return False
-        if xymm[2] is None or self.thanXymm[2] < xymm[0]: return False
-        if xymm[3] is None or self.thanXymm[3] < xymm[1]: return False
+        if xymm[2] is not None and self.thanXymm[0] > xymm[2]: return False
+        if xymm[3] is not None and self.thanXymm[1] > xymm[3]: return False
+        if xymm[0] is not None and self.thanXymm[2] < xymm[0]: return False
+        if xymm[1] is not None and self.thanXymm[3] < xymm[1]: return False
         return True
 
 
@@ -318,7 +332,7 @@ class ThanElement:
         "Read the element from thc format; common attributes."
         fr.readBeg(self.thanElementName) #May raise ValueError, StopIteration
         layname = fr.readTextln()        #May raise StopIteration, ValueError
-        self.handle = int(fr.next())     #May raise ValueError, StopIteration
+        self.handle = int(next(fr))      #May raise ValueError, StopIteration
         self.thanImpThc1(fr, ver)
         fr.readEnd(self.thanElementName) #May raise ValueError, StopIteration
         return layname
@@ -453,7 +467,36 @@ class ThanElement:
             cn[i+1] = ya - dy
 
 
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
+    @classmethod
+    def thanPointMirSet(clas, cc):
+        "Set mirror parameters for world coordinates."
+        clas.cc = cc
+
+
+    @classmethod
+    def thanPointMirXy(clas, ca):
+        "Compute mirror for 1 point of world coordinates."
+        xc = clas.cc[0]
+        yc = clas.cc[1]
+        dx = ca[0] - xc
+        dy = ca[1] - yc
+        ct = list(ca)
+        ct[0] = xc - dx
+        ct[1] = yc - dy
+        return ct
+
+
+    @classmethod
+    def thanPointMirXyn(clas, cc):
+        "Compute mirror for many points of world coordinates in-place."
+        xc = clas.cc[0]
+        yc = clas.cc[1]
+        for ct in cc:
+            dx = ct[0] - xc
+            dy = ct[1] - yc
+            ct[0] = xc - dx
+            ct[1] = yc - dy
+
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

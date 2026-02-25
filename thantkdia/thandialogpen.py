@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter the draw the pen thickness
 which the elements of a layer are plotted with.
 """
 
-
-from Tkinter import Tk, Frame, Label, Button, Entry, GROOVE, END
+from __future__ import print_function
+from tkinter import Tk, Frame, Label, Button, Entry, GROOVE, END
 from p_ggen import ThanStub as S
 import p_gtkwid
 import thanvar
@@ -116,10 +116,10 @@ class ThanPen(p_gtkwid.ThanDialog):
         p_gtkwid.ThanDialog.destroy(self)
 
     def __del__(self):
-        print "ThanPen ThanDialog", self, "dies.."
+        print("ThanPen ThanDialog", self, "dies..")
 
 
 if __name__ == "__main__":
     root = Tk()
     win = ThanPen(root, 0.25, "Pen", title="Choose ThanCad Pen Thickness")
-    print win.result
+    print(win.result)

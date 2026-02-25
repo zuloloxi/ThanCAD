@@ -1,7 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 """This module defines ThanCad fonts made by straight lines."""
 
-from types import IntType
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 
 thanFontPrime1 = {
   0 : 63,
@@ -670,7 +672,7 @@ thanFontArial1 = {
 t = { }
 for key in thanFontPrime1:
     lists = thanFontPrime1[key]
-    if type(lists) != IntType:
+    if type(lists) != int:
         ls = [ ]
         for li in lists:
             l = [ ]
@@ -683,6 +685,6 @@ del t, key, lists, ls, li, l, i
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
     for k in thanFontArial1:
-        print k, ':', thanFontArial1[k]
+        print(k, ':', thanFontArial1[k])

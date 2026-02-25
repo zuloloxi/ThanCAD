@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,24 +21,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 It implements ThanCad command line window.
 """
 
-import Tkinter, tkFont
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+import tkinter
 import p_gtkwid, p_ggen
 import thancom, thantk
 from thanvers import tcver
-from thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT,
+from thanopt import thancadconf
+from thanvar import Canc, thanLogTk, thanfiles, DEFMES
+from thantrans import T
+from .thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT,
     THAN_STATE_POINT1, THAN_STATE_LINE, THAN_STATE_TEXT,
     THAN_STATE_LINE2, THAN_STATE_RECTANGLE, THAN_STATE_MOVE, THAN_STATE_ROADP,
     THAN_STATE_SPLINEP, THAN_STATE_POLAR, THAN_STATE_CIRCLE, THAN_STATE_ARC,
     THAN_STATE_ELLIPSEB, THAN_STATE_RECTRATIO, THAN_STATE_SNAPELEM, THAN_STATE_ZOOMDYNAMIC,
     THAN_STATE_PANDYNAMIC)
-from thanopt import thancadconf
-from thanvar import Canc, thanLogTk, thanfiles, DEFMES
-from thantrans import T
 
 # self.__crel: These are the coordinates of the previous points defined by the user.
 #              IT is used to aid the relative coordinates system. But what happens
@@ -209,7 +212,7 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 #        """Shift-Pageup pressed; do nothing.
 #
 #        This function exists so that shift-pageup will not trigger __onPageup.
-#        Tkinter will happily route shift-pageup, control-pageup etc. to the
+#        tkinter will happily route shift-pageup, control-pageup etc. to the
 #        pageup handler, if specialised handlers do not exist for these key-presses.
 #        """
 #        pass
@@ -307,17 +310,17 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
     def __onCharRet(self, evt):
         "Gets the command entered by the user"
         self.thanWaitingInput = False
-#       now = [int(c) for c in self.index(Tkinter.INSERT).split(".")]
-#       end = [int(c) for c in self.index(Tkinter.END).split(".")]
-        now = self.thanIndex(Tkinter.INSERT)
-        end = self.thanIndex(Tkinter.END)
+#       now = [int(c) for c in self.index(tkinter.INSERT).split(".")]
+#       end = [int(c) for c in self.index(tkinter.END).split(".")]
+        now = self.thanIndex(tkinter.INSERT)
+        end = self.thanIndex(tkinter.END)
         if end[0]-now[0] > 1:
             l = str(now[0])
             t = self.thanGetPart(l+".0", l+".end")
-            self.thanInsert(Tkinter.END, "\n"+t)
-            self.set_insert(Tkinter.END+"-1c")
+            self.thanInsert(tkinter.END, "\n"+t)
+            self.set_insert(tkinter.END+"-1c")
         else:
-            t = self.thanGetPart(Tkinter.END+"-1l", Tkinter.END)
+            t = self.thanGetPart(tkinter.END+"-1l", tkinter.END)
         t = t.strip()
         n = -1; n1 = t.find(":")
         while n1 >= 0:
@@ -358,21 +361,21 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
                         cc = [0.0] * nd
                     else:
                         cc = [float(c1) for c1 in t[1:].split(",")]
-                        if len(cc) > nd: raise ValueError, "Too many dimensions"
-                        if len(cc) < 2:  raise ValueError, "Too few dimensions"
+                        if len(cc) > nd: raise ValueError("Too many dimensions")
+                        if len(cc) < 2:  raise ValueError("Too few dimensions")
                         cc.extend(elev[len(cc):])
                     for i in xrange(nd): cc[i] += self.__crel[i]
                 else:
                     cc = [float(c1) for c1 in t.split(",")]
-                    if len(cc) > nd: raise ValueError, "Too many dimensions"
-                    if len(cc) < 2:  raise ValueError, "Too few dimensions"
+                    if len(cc) > nd: raise ValueError("Too many dimensions")
+                    if len(cc) < 2:  raise ValueError("Too few dimensions")
                     cc.extend(elev[len(cc):])
             except (IndexError,ValueError):
                 self.thanLastResult = t
             else:
                 self.__crel = tuple(cc)
                 self.thanLastResult = cc
-                print "cmd: last result point: ", cc
+                print("cmd: last result point: ", cc)
             self.thanState = THAN_STATE_NONE
         elif s == THAN_STATE_RECTRATIO:
             try: r = float(t)
@@ -463,25 +466,25 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
         p_gtkwid.ThanScrolledText.destroy(self)
 
 
-class ThanTkCmdbig(Tkinter.Toplevel):
+class ThanTkCmdbig(tkinter.Toplevel):
     "Just the text of the command window enlarged."
 
     def __init__(self, proj, ftext, title, hbar=0, vbar=1, width=80, height=25,
         font=None, background="lightyellow", foreground="black"):
         "Setup info."
-        Tkinter.Toplevel.__init__(self, proj[2])
+        tkinter.Toplevel.__init__(self, proj[2])
         self.title(title)
         self.__proj = proj
         self.thanFont1 = font
         if font is None:
-            self.thanFont1=tkFont.Font(family=thancadconf.thanFontfamilymono, size=thancadconf.thanFontsizemono)
+            self.thanFont1=tkinter.font.Font(family=thancadconf.thanFontfamilymono, size=thancadconf.thanFontsizemono)
 
         self.thanHelp = p_gtkwid.ThanScrolledText(self, hbar=hbar, vbar=vbar, font=self.thanFont1,
             background=background, foreground=foreground, width=width, height=height, readonly=True)
         thantk.createTags((self.thanHelp,))
         self.thanHelp.thanInsertFtext(ftext)
         self.thanHelp.grid(row=0, column=0, sticky="wesn")
-        self.thanHelp.set_insert(Tkinter.END+"-1c")
+        self.thanHelp.set_insert(tkinter.END+"-1c")
         self.thanHelp.bindte("<F2>", self.__onF2)
 
         self.protocol("WM_DELETE_WINDOW", self.__onF2) # In case user closes window with window manager
@@ -504,7 +507,7 @@ class ThanTkCmdbig(Tkinter.Toplevel):
     def destroy(self):
         "Break circular references."
         del self.thanHelp, self.__proj, self.thanFont1
-        Tkinter.Toplevel.destroy(self)
+        tkinter.Toplevel.destroy(self)
 
     def __del__(self):
         "Say that it is deleted for debugging reasons."

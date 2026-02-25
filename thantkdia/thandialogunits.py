@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,12 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 With this dialog we defined units and how they are printed.
 """
 
-import Tkinter
+import tkinter
 import p_gtkwid, p_ggen
 import thandefs
 from thantrans import T
@@ -59,16 +59,16 @@ class ThanDialogUnits(p_gtkwid.ThanComDialog):
 
     def fraLength(self, win, ir):
         "Widgets of EGSA87 transformation."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["LENGTH UNITS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["LENGTH UNITS:"])
         lab.grid(row=0, column=1, columnspan=3, sticky="w")
 
         tit = "Length unit"                       #T["Length unit"]
-        lab = Tkinter.Label(fra, anchor="w", text=T[tit])
+        lab = tkinter.Label(fra, anchor="w", text=T[tit])
         lab.grid(row=1, column=1, sticky="e")
         key = "radDistunit"
         rad = p_gtkwid.ThanRadio(fra)
@@ -81,7 +81,7 @@ class ThanDialogUnits(p_gtkwid.ThanComDialog):
         self.thanWids.append((key, T[tit], rad, val))
 
         tit = "Decimal digits"                    #T["Decimal digits"]
-        lab = Tkinter.Label(fra, anchor="w", text=T[tit])
+        lab = tkinter.Label(fra, anchor="w", text=T[tit])
         lab.grid(row=2, column=1, sticky="e", pady=5)
         key = "entDistdigs"
         wid = p_gtkwid.ThanEntry(fra)
@@ -94,16 +94,16 @@ class ThanDialogUnits(p_gtkwid.ThanComDialog):
 
     def fraAngle(self, win, ir):
         "Widgets of EGSA87 transformation."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["ANGLE UNITS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["ANGLE UNITS:"])
         lab.grid(row=0, column=1, columnspan=3, sticky="w")
 
         tit = "Angle unit"                        #T["Angle unit"]
-        lab = Tkinter.Label(fra, anchor="w", text=T[tit])
+        lab = tkinter.Label(fra, anchor="w", text=T[tit])
         lab.grid(row=1, column=1, sticky="e")
         key = "radAnglunit"
         rad = p_gtkwid.ThanRadio(fra)
@@ -118,7 +118,7 @@ class ThanDialogUnits(p_gtkwid.ThanComDialog):
         self.thanWids.append((key, T[tit], rad, val))
 
         tit = "Decimal digits"                    #T["Decimal digits"]
-        lab = Tkinter.Label(fra, anchor="w", text=T[tit])
+        lab = tkinter.Label(fra, anchor="w", text=T[tit])
         lab.grid(row=2, column=1, sticky="e", pady=5)
         key = "entAngldigs"
         wid = p_gtkwid.ThanEntry(fra)
@@ -131,16 +131,16 @@ class ThanDialogUnits(p_gtkwid.ThanComDialog):
 
     def fraOrient(self, win, ir):
         "Widgets of EGSA87 transformation."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=1, column=1, rowspan=2, pady=5, sticky="nwe")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["ANGLE ORIENTATION:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["ANGLE ORIENTATION:"])
         lab.grid(row=0, column=1, columnspan=3, sticky="w")
 
         tit = "Angle is zero at"                   #T["Angle is zero at"]
-        lab = Tkinter.Label(fra, anchor="w", text=T[tit])
+        lab = tkinter.Label(fra, anchor="w", text=T[tit])
         lab.grid(row=1, column=1, sticky="e")
         key = "radAnglzero"
         rad = p_gtkwid.ThanRadio(fra)
@@ -157,7 +157,7 @@ class ThanDialogUnits(p_gtkwid.ThanComDialog):
         self.thanWids.append((key, T[tit], rad, val))
 
         tit = "Positive angle\ndirection"          #T["Positive angle\ndirection"]
-        lab = Tkinter.Label(fra, anchor="w", text=T[tit])
+        lab = tkinter.Label(fra, anchor="w", text=T[tit])
         lab.grid(row=2, column=1, sticky="e")
         key = "radAngldire"
         rad = p_gtkwid.ThanRadio(fra)

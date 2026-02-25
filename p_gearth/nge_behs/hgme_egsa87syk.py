@@ -1232,7 +1232,7 @@ def addlines(dtm):
         cp = []
         for dline in dlines:
             if dline.strip() == "$": break
-            x, y = map(float, dline.split())
+            x, y = map(float, dline.split())  #OK for python 2,3
             cp.append([x, y, z])
         if len(cp) > 1: dtm.thanAddLine1(cp)
     del syk

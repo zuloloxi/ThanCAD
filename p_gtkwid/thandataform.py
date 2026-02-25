@@ -1,10 +1,11 @@
 #!/usr/bin/python
-from Tkinter import Tk, Toplevel, Frame, Button, Label, Entry, SUNKEN, RAISED
+from __future__ import print_function
+from tkinter import Tk, Toplevel, Frame, Button, Label, Entry, SUNKEN, RAISED
 
-from thantkutila import thanGudModalMessage, thanGudAskOkCancel
-from thanval import ThanValidator, ThanValFloat, ThanValInt
-from thanwids import ThanEntry, ThanCheck, ThanChoice
-from thanwidstrans import T
+from .thantkutila import thanGudModalMessage, thanGudAskOkCancel
+from .thanval import ThanValidator, ThanValFloat, ThanValInt
+from .thanwids import ThanEntry, ThanCheck, ThanChoice
+from .thanwidstrans import T
 
 
 ##############################################################################
@@ -146,9 +147,9 @@ class ThanDataGen(ThanDataForm):
 
 if __name__ == "__main__" and 1:
     import sys
-    def f(v): print v
+    def f(v): print(v)
     root = Tk()
-    import tkFont
+    from tkinter import tkFont
     if sys.platform == "win32":
         fo = tkFont.Font(family="Arial", size=12)
         root.option_add("*font", fo)
@@ -156,7 +157,7 @@ if __name__ == "__main__" and 1:
         fo = tkFont.Font(family="Thorndale AMT", size=12)
 #        fo = tkFont.Font(family="Vera", size=12)
         fo = tkFont.Font(family="4x6", size=12)
-        print fo
+        print(fo)
         root.option_add("*font", fo)
     v = (1000.0, 100.0, 1, 1, 0, 1, 0, 0, 30.0, 1.5, 1, 2, 2)
     d = ThanDataGen(v, f, root, class_="ThanHigh")

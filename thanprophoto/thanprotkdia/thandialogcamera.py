@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,21 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This dialog accepts the parameters of a photogrammetric metric camera.
 """
-
-import sys, copy, ConfigParser, Tkinter
-from tkMessageBox import ERROR
-import p_gtkuti, p_gtkwid, p_ggen
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+import sys, copy
+import tkinter
+from tkinter.messagebox import ERROR
+import p_gtkwid, p_ggen
 from thanopt import thancadconf
 from thanvar import Canc
 from thantrans import T, Tphot
 #T = p_gtkwid.Translation(dict(__TRANSLATION__=("en", "EN", "en", "EN")))  ##############
 
 
-mm = p_gtkuti.thanGudModalMessage
+mm = p_gtkwid.thanGudModalMessage
 
 
 class ThanCamera(p_gtkwid.ThanComDialog):
@@ -87,7 +89,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
           (self.__help,   T["&Instructions"],  T["Instructions about this dialog"]),
           (self.__about,  T["&About"],         T["Information about this program"]),
         ]
-        menubar, _ = p_gtkuti.thanTkCreateThanMenus(self, m, statcommand=self.__stat.sett, condition=None)
+        menubar, _ = p_gtkwid.thanTkCreateThanMenus(self, m, statcommand=self.__stat.sett, condition=None)
         return menubar
 
 
@@ -119,9 +121,9 @@ class ThanCamera(p_gtkwid.ThanComDialog):
         if fr == Canc: return
         v = p_ggen.Struct()
         try:
-            v.entName = fr.next().strip()
-            v.entFocus = float(fr.next())
-        except ValueError, why:
+            v.entName = next(fr).strip()
+            v.entFocus = float(next(fr))
+        except ValueError as why:
             mm(self, "%s:\n\n%s" % (fr.name, why), Tphot["Syntax error while reading focus length"], ERROR)   # (Gu)i (d)ependent
             return
         except StopIteration:
@@ -132,8 +134,8 @@ class ThanCamera(p_gtkwid.ThanComDialog):
         y = [""] * 9
         for ifid in xrange(1, 9):
             try:
-                x[ifid], y[ifid] = map(float, fr.next().split())
-            except ValueError, why:
+                x[ifid], y[ifid] = map(float, next(fr).split())  #works for python2,3
+            except ValueError as why:
                 mm(self, "%s:\n\n%s" % (fr.name, why), Tphot["Syntax error while reading fiducial coordinates"], ERROR)   # (Gu)i (d)ependent
                 return
             except StopIteration:
@@ -158,7 +160,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
             return False   #do nothing if error in properties
         try:
             fw = open(self.filnam, "w")
-        except IOError, why:
+        except IOError as why:
             mm(self, "%s:\n\n%s" % (self.filnam.name, why), T["Save failed"], ERROR)   # (Gu)i (d)ependent
             return False
         return self.__saveHouse(self.filnam, fw)
@@ -190,7 +192,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
                 y = getattr(vs, fy)
                 fw.write("%f   %f\n" % (x, y))
             fw.close()
-        except IOError, why:
+        except IOError as why:
             mm(self, "%s:\n\n%s" % (filnam.name, why), T["Save failed"], ERROR)   # (Gu)i (d)ependent
             return False
         finally:
@@ -221,17 +223,17 @@ class ThanCamera(p_gtkwid.ThanComDialog):
 
     def fraId(self, win, ir):
         "Get camera name, focus length, filename."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["CAMERA ID:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["CAMERA ID:"])
         lab.grid(row=0, column=1, sticky="w", columnspan=2)
 
         key = "entName"
         tit = "Camera Name"                        #Tphot["Camera Name"]
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=1, column=1, sticky="w")
         wid = p_gtkwid.ThanEntry(fra)
         wid.grid(row=1, column=2, sticky="we")
@@ -240,7 +242,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
 
         key = "entFocus"
         tit = "Focus Length c (mm)"                #Tphot["entFocus"]
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=2, column=1, sticky="e")
         wid = p_gtkwid.ThanEntry(fra)
         wid.grid(row=2, column=2, sticky="we")
@@ -252,21 +254,21 @@ class ThanCamera(p_gtkwid.ThanComDialog):
 
     def fraFid(self, win, ir):
         "Get camera fiducials."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["CAMERA FIDUCIALS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["CAMERA FIDUCIALS:"])
         lab.grid(row=0, column=1, sticky="w", columnspan=4)
 
-        lab = Tkinter.Label(fra, text="X (mm)")
+        lab = tkinter.Label(fra, text="X (mm)")
         lab.grid(row=1, column=2, sticky="w")
-        lab = Tkinter.Label(fra, text="Y (mm)")
+        lab = tkinter.Label(fra, text="Y (mm)")
         lab.grid(row=1, column=3, sticky="w")
         i = 1
         for ifid in xrange(1, 9):
-            lab = Tkinter.Label(fra, text="%d " % ifid)
+            lab = tkinter.Label(fra, text="%d " % ifid)
             lab.grid(row=i+ifid, column=1)
             for j in xrange(2):
                 key = "entFid%d%s" % (ifid, "xy"[j])
@@ -331,7 +333,7 @@ class ThanCamera(p_gtkwid.ThanComDialog):
 
 
 def test1():
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     dia = ThanCamera(root)
 #    root.mainloop()
 

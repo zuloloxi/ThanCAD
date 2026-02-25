@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,11 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the polyline element.
 """
-from itertools import izip, islice
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+from itertools import islice
 from math import fabs, hypot, pi, atan2
 import bisect
 from p_ggen import iterby2, thanUnicode
@@ -35,9 +38,9 @@ import p_ggeom
 from thanvar import Canc, thanCleanLine3, thanCleanLine2t, thanExtendNodeDims, thanCumulDis
 from thanvar.thanoffset import thanOffsetLine
 from thantrans import T
-import thanintall
-from thanelem import ThanElement
-from thanutil import thanPntNearest2, thanSegNearest, thanPerpPoints, thanPerpPointsC
+from . import thanintall
+from .thanelem import ThanElement
+from .thanutil import thanPntNearest2, thanSegNearest, thanPerpPoints, thanPerpPointsC
 try: import pyx
 except ImportError: pass
 
@@ -75,7 +78,7 @@ class ThanLine(ThanElement):
         except: cp = self.cp
         if len(cp) < 2: return False   # Return False if line is degenerate
         it = iter(cp)
-        c1 = it.next()
+        c1 = next(it)
         for c2 in it:
             if not thanNear3(c1, c2): return True
         return False      # All line points are close together
@@ -117,20 +120,28 @@ class ThanLine(ThanElement):
         self.setBoundBox([min(xp), min(yp), max(xp), max(yp)])
 
 
+    def thanPointMir(self):
+        "Mirrors the element within XY-plane with respect to predefined point."
+        self.thanPointMirXyn(self.cp)
+        xp = [c1[0] for c1 in self.cp]
+        yp = [c1[1] for c1 in self.cp]
+        self.setBoundBox([min(xp), min(yp), max(xp), max(yp)])
+
+
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
         for cc in self.cp:
-            cc[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(cc, cs)]
+            cc[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(cc, cs)]  #works for python2,3
         cscs = [cs[0], cs[1], cs[0], cs[1]]
-        self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.thanXymm, cscs)]
+        self.thanXymm[:] = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.thanXymm, cscs)]  #works for python2,3
 
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
         for cc in self.cp:
-            cc[:] = [cc1+dd1 for (cc1,dd1) in izip(cc, dc)]
+            cc[:] = [cc1+dd1 for (cc1,dd1) in zip(cc, dc)]  #works for python2,3
         dcdc = [dc[0], dc[1], dc[0], dc[1]]
-        self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in izip(self.thanXymm, dcdc)]
+        self.thanXymm[:] = [cc1+dd1 for (cc1,dd1) in zip(self.thanXymm, dcdc)]  #works for python2,3
 
 
     def thanPntNearest(self, ccu):
@@ -415,14 +426,14 @@ class ThanLine(ThanElement):
         d = hypot(t[0], t[1])
         t = [t[i]/d for i in (0,1)]
         dp = sum(t[i]*(cp[i]-c1[i]) for i in (0,1))
-        print "c1=", c1
-        print "c2=", c2
-        print "cp=", cp
-        print "d=", d, "dp=", dp
+        print("c1=", c1)
+        print("c2=", c2)
+        print("cp=", cp)
+        print("d=", d, "dp=", dp)
         if dp <= d or thanNearx(dp, d): return []     #Intersection is within self; no extension is possible
         cp = list(c1)
         for i in (0,1): cp[i] += dp*t[i]
-        print "line extend: iend=", iend, "method=", method
+        print("line extend: iend=", iend, "method=", method)
         if method == 0:                           #One extended line, with node iend replaced
             line = self.thanClone() #The new line takes the handle (identity) of self (it also takes the tag)
             line.cp[iend] = cp
@@ -439,7 +450,7 @@ class ThanLine(ThanElement):
 
 
 #    def __del__(self):
-#        print "ThanLine", self, "is deleted"
+#        print("ThanLine", self, "is deleted")
 
 
 #===========================================================================
@@ -453,7 +464,7 @@ class ThanLine(ThanElement):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "end", c))
         if "mid" in otypes:
             for ca, cb in iterby2(self.cp):
-                c = [(ca1+cb1)*0.5 for (ca1,cb1) in izip(ca, cb)]
+                c = [(ca1+cb1)*0.5 for (ca1,cb1) in zip(ca, cb)]  #works for python2,3
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "mid", c))
         if "nea" in otypes:
             c = self.thanPntNearest(ccu)
@@ -525,7 +536,7 @@ class ThanLine(ThanElement):
                 cp.append(c1)
                 tags = "e0", cla.thanTag, "e"+str(len(cp))
                 temp = cl((g2l(cp[-2][0], cp[-2][1]), g2l(c1[0], c1[1])), fill=fi, width=wpix, tags=tags)
-#               print "line:thantkget:fi=", fi
+#               print("line:thantkget:fi=", fi)
         if res == "c":
             cp.append(list(cp[0]))
 #           Note that if we did: cp.append(cp[0])
@@ -723,9 +734,9 @@ class ThanCurve(ThanLine):
         else:
             assert False, "What? Half length is bigger than length?!"
         if thanNearx(ala, alb):       # In case of zero length segment
-            c = [(za+zb)*0.5 for (za, zb) in zip(ca, cb)]
+            c = [(za+zb)*0.5 for (za, zb) in zip(ca, cb)]  #works for python2,3
         else:
-            c = [za+(zb-za)/(alb-ala)*(alm-ala) for (za, zb) in zip(ca, cb)]
+            c = [za+(zb-za)/(alb-ala)*(alm-ala) for (za, zb) in zip(ca, cb)]  #works for python2,3
         return c
 
 
@@ -913,7 +924,7 @@ class ThanSpline(ThanCurve):
         ys = [c[1] for c in self.cpori]
         zs = [c[2] for c in self.cpori]
         try:
-            if len(xs) < 3: raise ZeroDivisionError, "Too few point to create a spline"
+            if len(xs) < 3: raise ZeroDivisionError("Too few point to create a spline")
             s = ThanSplineC(ic, xs, ys, zs)
         except ZeroDivisionError:    #Something went wrong; return the original nodes
             del xs, ys, zs
@@ -936,4 +947,4 @@ class ThanSpline(ThanCurve):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

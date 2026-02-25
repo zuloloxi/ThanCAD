@@ -21,7 +21,7 @@ class ThanImageMissing(object):
         return ThanImageMissing(self.size)
 
     def __error(self):
-        raise ValueError, "Image was not found/not supported/corrupted."
+        raise ValueError("Image was not found/not supported/corrupted.")
     def resize  (self, *args, **kw): self.__error()
 
     def getpixel(self, xy):

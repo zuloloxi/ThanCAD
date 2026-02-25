@@ -3,6 +3,8 @@
 #############################################################################
 #############################################################################
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
 PLINECLOSED   = 1
 PLINE3        = 8
@@ -48,11 +50,7 @@ class ThanDxfLin:
         self.thanDxfWrEntry(66, 1)
         self.thanDxfWrXy(px, py)
         self.thanDxfWrEntry(70, PLINEWHOKNOWS)
-
-        w = self.thanPlineWidth
-        if w != (0.0, 0.0):
-            self.thanDxfWrEntry(40, w[0])
-            self.thanDxfWrEntry(41, w[1])
+        self.thanDxfWrPlineWidth()
 
         for i in xrange(ig):
             (px, py) = self.thanDxfTop(xgram[i], ygram[i])
@@ -61,6 +59,7 @@ class ThanDxfLin:
             self.thanDxfWrXy(px, py)
 
         self.thanDxfWrEntry(0, 'SEQEND')
+        self.thanDxfSetNow(px, py)
 
 #===========================================================================
 
@@ -76,11 +75,7 @@ class ThanDxfLin:
         self.thanDxfWrEntry(66, 1)
         self.thanDxfWrXyz(px, py, pz)
         self.thanDxfWrEntry(70, PLINE3)
-
-        w = self.thanPlineWidth
-        if w != (0.0, 0.0):
-            self.thanDxfWrEntry(40, w[0])
-            self.thanDxfWrEntry(41, w[1])
+        self.thanDxfWrPlineWidth()
 
         for i in xrange(ig):
             (px, py, pz) = self.thanDxfTop3(xgram[i], ygram[i], zgram[i])
@@ -90,10 +85,11 @@ class ThanDxfLin:
             self.thanDxfWrEntry(70, PLINEVERTEX3)
 
         self.thanDxfWrEntry(0, 'SEQEND')
+        self.thanDxfSetNow3(px, py, pz)
 
 #===========================================================================
 
-    def thanDxfPlotPolyVertex (self, xx, yy, ic, bulge=None):
+    def thanDxfPlotPolyVertex (self, xx, yy, ic, bulge=0.0):
         "Plots a 2d polyline, vertex by vertex."
 
 #-------polyline beginning-----------------------------------------
@@ -106,18 +102,16 @@ class ThanDxfLin:
             self.thanDxfWrEntry(66, 1)
             self.thanDxfWrXy(px, py)
             self.thanDxfWrEntry(70, PLINEWHOKNOWS)
+            self.thanDxfWrPlineWidth()
 
-            w = self.thanPlineWidth
-            if w != (0.0, 0.0):
-                self.thanDxfWrEntry(40, w[0])
-                self.thanDxfWrEntry(41, w[1])
-            if bulge != None:
+            if bulge != 0.0:
                 self.thanDxfWrEntry(42, bulge)
 
             self.thanDxfWrEntry(0, 'VERTEX')
             self.thanDxfWrLinatts()
             self.thanDxfWrXy(px, py)
 
+            self.thanDxfSetNow(px, py)
             self.__firstVertex = 0
 
 #-------polyline end----------------------------------------
@@ -134,13 +128,12 @@ class ThanDxfLin:
             self.thanDxfWrEntry(0, 'VERTEX')
             self.thanDxfWrLinatts()
             self.thanDxfWrXy(px, py)
+            self.thanDxfWrPlineWidth()
 
-            w = self.thanPlineWidth
-            if w != (0.0, 0.0):
-                self.thanDxfWrEntry(40, w[0])
-                self.thanDxfWrEntry(41, w[1])
-            if bulge != None:
+            if bulge != 0.0:
                 self.thanDxfWrEntry(42, bulge)
+
+            self.thanDxfSetNow(px, py)
 
 #==========================================================================
 
@@ -157,17 +150,14 @@ class ThanDxfLin:
             self.thanDxfWrEntry(66, 1)
             self.thanDxfWrXyz(px, py, pz)
             self.thanDxfWrEntry(70, PLINE3)
-
-            w = self.thanPlineWidth
-            if w != (0.0, 0.0):
-                self.thanDxfWrEntry(40, w[0])
-                self.thanDxfWrEntry(41, w[1])
+            self.thanDxfWrPlineWidth()
 
             self.thanDxfWrEntry(0, 'VERTEX')
             self.thanDxfWrLinatts()
             self.thanDxfWrXyz(px, py, pz)
             self.thanDxfWrEntry(70, PLINEVERTEX3)
 
+            self.thanDxfSetNow3(px, py, pz)
             self.__firstVertex = 0
 
 #-------polyline end----------------------------------------
@@ -185,11 +175,9 @@ class ThanDxfLin:
             self.thanDxfWrLinatts()
             self.thanDxfWrXyz(px, py, pz)
             self.thanDxfWrEntry(70, PLINEVERTEX3)
+            self.thanDxfWrPlineWidth()
+            self.thanDxfSetNow3(px, py, pz)
 
-            w = self.thanPlineWidth
-            if w != (0.0, 0.0):
-                self.thanDxfWrEntry(40, w[0])
-                self.thanDxfWrEntry(41, w[1])
 
 #===========================================================================
 
@@ -230,15 +218,14 @@ class ThanDxfLin:
         if ic == 2:
             self.thanDxfWrEntry(0, "LINE")
             self.thanDxfWrLinatts()
-            self.thanDxfWrXy(self.thanPXnow, self.thanPYnow)
+            px1, py1 = self.thanDxfGetNow()
+            self.thanDxfWrXy(px1, py1)
             self.thanDxfWrXy1(px, py)
+        self.thanDxfSetNow(px, py)
 
-        self.thanPXnow = px
-        self.thanPYnow = py
+#-------Check if negative
 
-#-------Check if begative
-
-        if icom < 0: self.thanDxfLocref(0.0, 0.0, 0.0, 0.0)
+        if icom < 0: self.thanDxfLocref3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 #===========================================================================
 
@@ -293,23 +280,15 @@ class ThanDxfLin:
         if ic == 2:
             self.thanDxfWrEntry(0, "LINE")
             self.thanDxfWrLinatts()
-            self.thanDxfWrXyz(self.thanPXnow, self.thanPYnow, self.thanPZnow)
+            px1, py1, py1 = self.thanDxfGetNow3()
+            self.thanDxfWrXyz(px1, py1, pz1)
             self.thanDxfWrXyz1(px, py, pz)
+        self.thanDxfSetNow3(px, py, pz)
 
-        self.thanPXnow = px
-        self.thanPYnow = py
-        self.thanPZnow = pz
+#-------Check if negative
 
-#############################################################################
-#############################################################################
+        if icom < 0: self.thanDxfLocref3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
-#MODULE LEVEL FUNCTIONS
-
-
-#############################################################################
-#############################################################################
-
-#MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
 
 if __name__ == "__main__":
     dxf = ThanDxfLin()

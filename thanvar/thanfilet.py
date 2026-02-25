@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,15 +22,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module computes intersection of 2 lines segments (extending them if
 necessary and joins them with circular arc.
 """
+from __future__ import print_function
 from math import pi
 from p_gvec import Vector2
 from p_gmath import thanNearx
-from thanroad import calcRoadNode
+from .thanroad import calcRoadNode
 
 
 def thanFiletCalc(a, b, rr, anear=None, bnear=None):
@@ -67,7 +68,7 @@ c                         o 1   If c12isline==True, the 1-2 is considered infini
 
 #-----Υπολόγισε διανύσματα
 
-    ca, cb, c1, c2 = map(Vector2, a.cp+b.cp)
+    ca, cb, c1, c2 = map(Vector2, a.cp+b.cp)   #works for python2,3
     cab = cb - ca
     c12 = c2 - c1
     ca2 = c2 - ca
@@ -102,7 +103,7 @@ def __keep(ca, cb, u, anear):
     if anear is not None:
         cab = cb - ca
         un = (Vector2(anear)-ca) * cab / abs(cab)**2
-        print "u=", u, "un=", un
+        print("u=", u, "un=", un)
     if   u <= 0 or thanNearx(u, 0.0): K1 = cb; ia = 0     #Intersection beyond ca, keep cb
     elif u >= 1 or thanNearx(u, 1.0): K1 = ca; ia = 1     #Intersection beyond cb, keep ca
     elif anear is not None and un <= u:   K1 = ca; ia = 1     #Intersection between ca and cb, user chooses to keep ca

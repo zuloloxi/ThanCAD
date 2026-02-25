@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,27 +21,26 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the raster image element, based on Python Image Library.
 """
 
+from __future__ import print_function
 import os
 from math import fabs, cos, sin, atan2
-from itertools import izip
-import p_gimage
+import p_gimage, p_gtkwid, p_gbmp, p_gtri
 from p_gmath import PI2, thanNearx
-from p_ggen import iterby2, path, thanUnicode, thanUnunicode
+from p_ggen import iterby2, path, thanUnicode, thanUnunicode, isString
 from p_gfil import Datlin
-import p_gtkwid, p_gbmp, p_gtri
 from thanvar import Canc, thanfiles
 from thandefs import imageOpen
 from thantrans import T
-import thanintall
-from thanelem import ThanElement
-from thanutil import thanPntNearest, thanPntNearest2, thanPerpPoints, thanSegNearest
-from thanline import ThanLine
-from thantext import ThanText
+from . import thanintall
+from .thanelem import ThanElement
+from .thanutil import thanPntNearest, thanPntNearest2, thanPerpPoints, thanSegNearest
+from .thanline import ThanLine
+from .thantext import ThanText
 
 
 class ThanImage(ThanElement):
@@ -139,10 +138,10 @@ class ThanImage(ThanElement):
 
     def __setstate__(self, odict):
         self.__dict__.update(odict)
-        if issubclass(path, unicode):
+        if isString(path):
             self.filnam = path(thanUnicode(os.sep).join(self.filnam)).expand() # Filnam is already in unicode
         else:
-            self.filnam = path(os.sep.join(map(thanUnunicode, self.filnam))).expand()  #..p_ggen should have been notified about the local language encoding
+            self.filnam = path(os.sep.join(map(thanUnunicode, self.filnam))).expand()  #..p_ggen should have been notified about the local language encoding  #works for python2,3
 
         self.image, _ = imageOpen(self.filnam, self.size)
 #        try:
@@ -240,19 +239,19 @@ class ThanImage(ThanElement):
 
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
-        self.c1 = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.c1, cs)]
-        self.c2 = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.c2, cs)]
-        self.c1ori = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.c1ori, cs)]
-        self.c2ori = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.c2ori, cs)]
+        self.c1 = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.c1, cs)] #works for python2,3
+        self.c2 = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.c2, cs)] #works for python2,3
+        self.c1ori = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.c1ori, cs)] #works for python2,3
+        self.c2ori = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.c2ori, cs)] #works for python2,3
         self.setBoundBox([self.c1[0], self.c1[1], self.c2[0], self.c2[1]])
 
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
-        self.c1 = [cc1+dd1 for (cc1,dd1) in izip(self.c1, dc)]
-        self.c2 = [cc1+dd1 for (cc1,dd1) in izip(self.c2, dc)]
-        self.c1ori = [cc1+dd1 for (cc1,dd1) in izip(self.c1ori, dc)]
-        self.c2ori = [cc1+dd1 for (cc1,dd1) in izip(self.c2ori, dc)]
+        self.c1 = [cc1+dd1 for (cc1,dd1) in zip(self.c1, dc)] #works for python2,3
+        self.c2 = [cc1+dd1 for (cc1,dd1) in zip(self.c2, dc)] #works for python2,3
+        self.c1ori = [cc1+dd1 for (cc1,dd1) in zip(self.c1ori, dc)] #works for python2,3
+        self.c2ori = [cc1+dd1 for (cc1,dd1) in zip(self.c2ori, dc)] #works for python2,3
         self.setBoundBox([self.c1[0], self.c1[1], self.c2[0], self.c2[1]])
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
@@ -265,7 +264,7 @@ class ThanImage(ThanElement):
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "end", c))
         if "mid" in otypes:
             for ca, cb in iterby2(cp):
-                c = [(ca1+cb1)*0.5 for (ca1,cb1) in izip(ca, cb)]
+                c = [(ca1+cb1)*0.5 for (ca1,cb1) in zip(ca, cb)]  #works for python2,3
                 ps.append((fabs(c[0]-ccu[0])+fabs(c[1]-ccu[1]), "mid", c))
         if "nea" in otypes:
             c = thanPntNearest(cp, ccu)
@@ -343,7 +342,10 @@ class ThanImage(ThanElement):
         """Gets the attributes of the image interactively from a window.
 
         insertmode="u": user data units,
-                   "p": pixels
+                   "f": photogrammetric pixels (world coordinates 0.0,0.0
+                        correspond to the middle of the lower left pixel)
+                   "p": pixels (world coordinates 0.0,0.0 correspond to the
+                        lower left corner of the lower left pixel
                    "m": milimeters
                    "c": Greek cadastre
                    "g": GeoTiff (currently only certain parts are supported)
@@ -364,10 +366,17 @@ class ThanImage(ThanElement):
                 p_gtkwid.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
                 return Canc
 
-        if insertmode not in "pmcg":
-            insertmode = proj[2].thanGudGetPoint(T["Lower-left image point (pixel/mm/cadastre/<enter>): "], options=("pixel","mm","cadastre"))
+        if insertmode not in "rpmcg":
+            insertmode = proj[2].thanGudGetPoint(T["Lower-left image point (rectification/pixel/mm/cadastre/<enter>): "], options=("rectification", "pixel","mm","cadastre"))
             if insertmode == Canc: return Canc   # Image cancelled (no destroy required)
-        if insertmode == "p":                    # Image is for pixel counting
+        if insertmode == "r":                    # Image is for pixel counting
+            c1 = list(proj[1].thanVar["elevation"])
+            c1[:2] = -0.5, -0.5  # This is the lower-left corner of the lower-left pixel
+            c2 = list(c1)
+            c2[0] += dxp         # This is the upper-right corner of the upper-right pixel
+            c2[1] += dyp
+        elif insertmode == "p":                    # Image is for pixel counting
+            proj[2].thanPrt("Warning: use r (rectification) if you intend to digitise image for\n photogrammetry/rectification/mapping", "can1")
             c1 = list(proj[1].thanVar["elevation"])
             c1[:2] = 0.0, 0.0    # This is the lower-left corner of the lower-left pixel
             c2 = list(c1)
@@ -413,8 +422,8 @@ class ThanImage(ThanElement):
                      initialdir=fildir)
             if fi is None: return Canc, Canc            # Image canceled
             try:
-                fr = file(fi, "rb")
-            except IOError, why:
+                fr = open(fi, "rb")
+            except IOError as why:
                 p_gtkwid.thanGudModalMessage(proj[2], why, tit)     # (Gu)i (d)ependent
                 continue
             fr.close()
@@ -428,8 +437,8 @@ class ThanImage(ThanElement):
                 p_gtkwid.thanGudModalMessage(proj[2], scale, tit)   #scale has the error message
             elif insertmode == "g":      # Geotiff
                 try:                  _ = p_gtri.prop(im)
-                except ValueError, e: p_gtkwid.thanGudModalMessage(proj[2], e, tit)   #Not a geotiff/not supported
-                else:                 break
+                except ValueError as e: p_gtkwid.thanGudModalMessage(proj[2], e, tit)   #Not a geotiff/not supported
+                else:                   break
             else:
                 break
         return fi, im
@@ -442,7 +451,7 @@ class ThanImage(ThanElement):
             if dpi < 2:
                 dpi = 0
                 why = "Resolution too low"
-        except ValueError, why:
+        except ValueError as why:
             dpi = 0
         if dpi <= 0:
             proj[2].thanPrter("%s : %s" % (T["Could not determine image resolution (dpi)"], why))
@@ -487,7 +496,7 @@ class ThanImage(ThanElement):
 #            a = name.split(sep)
 #            if len(a) < 2: continue
 #            try:
-#                x, y = map(float, a[-2:])
+#                x, y = map(float, a[-2:])   #works for python2,3
 #            except ValueError:
 #                continue
 #            return x, y, 5000
@@ -553,7 +562,7 @@ UPPER LEFT:       488104.638    4238704.227
         if not fi.exists():
             fi = fi.parent / fi.namebase + ".BMP"   #Support windows; yeah, windows "just" works
         im, terr = imageOpen(fi)
-        if terr != "": raise ValueError, terr
+        if terr != "": raise ValueError(terr)
         self.thanSet(fi, im, c1, c2, theta=0.0, loaded=True)
 
 
@@ -596,21 +605,23 @@ compute the corber points.
         """
         try:
             fr = open(fi)
-            ax = float(fr.next())
-            ay = float(fr.next())
-            bx = float(fr.next())
-            by = float(fr.next())
-            cx = float(fr.next())
-            cy = float(fr.next())
+            ax = float(next(fr))
+            ay = float(next(fr))
+            bx = float(next(fr))
+            by = float(next(fr))
+            cx = float(next(fr))
+            cy = float(next(fr))
             fr.close()
-        except StopIteration: raise IOError, "Incomplete .tfw file"
+        except StopIteration: raise IOError("Incomplete .tfw/.j2w file")
         fi = path(fi)
-        fi = fi.parent / fi.namebase + ".tif"
+        if fi.ext.lower() == ".j2w": ext = ".jp2"
+        else:                        ext = ".tif"
+        fi = fi.parent / fi.namebase + ext
         if not fi.exists():
-            fi = fi.parent / fi.namebase + ".TIF"   #Support windows; yeah, windows "just" works
+            fi = fi.parent / fi.namebase + ext.upper()   #Support windows; yeah, windows "just" works
 
         im, terr = imageOpen(fi)
-        if terr != "": raise ValueError, terr
+        if terr != "": raise ValueError(terr)
         b, h = im.size
         xp1, yp1 = 0, h
         xp2, yp2 = b, 0
@@ -628,7 +639,7 @@ compute the corber points.
     def thanGeotifGet(self, proj, fi):
         "Reads a geotiff image; only certain parts are implemented; may raise ValueError."
         im, terr = imageOpen(fi)
-        if terr != "": raise ValueError, terr
+        if terr != "": raise ValueError(terr)
         dxp, dyp = im.size
         x1, y2, scalex, scaley, nxcols, nyrows, GDAL_NODATA = p_gtri.prop(im)   #Note that we already have checked the validity
         c1 = list(proj[1].thanVar["elevation"])
@@ -779,22 +790,22 @@ compute the corber points.
         if ver < (0,2,1):
             embedded = False
         else:
-            embedded = bool(int(fr.next()))  #May raise ValueError, IndexError, StopIteration
+            embedded = bool(int(next(fr)))  #May raise ValueError, IndexError, StopIteration
             if embedded:
                 imbytes = p_gbmp.readBytesB64(fr)
                 image = p_gbmp.bytes2Image(imbytes)
         c1 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
         c2 = fr.readNode()               #May raise ValueError, IndexError, StopIteration
-        theta = float(fr.next())         #May raise ValueError, StopIteration
+        theta = float(next(fr))          #May raise ValueError, StopIteration
         filnam = path(fr.readTextln()).expand() #May raise StopIteration, ValueError
-        dxp, dyp = map(int, fr.next().split()) #May raise ValueError, IndexError, StopIteration
-        transpose = int(fr.next())       #May raise ValueError, StopIteration
+        dxp, dyp = map(int, next(fr).split()) #May raise ValueError, IndexError, StopIteration  #works for python2,3
+        transpose = int(next(fr))        #May raise ValueError, StopIteration
         c1ori = fr.readNode()            #May raise ValueError, IndexError, StopIteration
         c2ori  = fr.readNode()           #May raise ValueError, IndexError, StopIteration
         if ver <= (0,1,0):
             loaded = True
         else:
-            loaded = bool(int(fr.next()))  #May raise ValueError, IndexError, StopIteration
+            loaded = bool(int(next(fr))) #May raise ValueError, IndexError, StopIteration
 
         if embedded:
             loaded = True                  #Embedded images can not be unloaded
@@ -910,25 +921,40 @@ compute the corber points.
 
 
     def thanGetPixCoor(self, cw):
-        "Finds the image pixel coordinates that corresponds to the world coordinates xw, yw."
+        """Finds the image pixel coordinates that corresponds to the world coordinates xw, yw.
+
+                        c2   c2 are the world coordinates of the upper right corner of the upper right pixel (B)
+        o---o---o---o---o    c1 are the world coordinates of the lower left corner of the lower left pixel (A)
+        |   |   |   | B |    The size of the image in world coordinates: dx, dy = c2[0]-c1[0], c2[1]-c1[1]
+        o---o---o---o---o    The size of the image in pixels is the size of the raster (here dxp, dyp = 4, 3)
+        |   |   |   |   |    If x coordinate of the point cw (cw[0]) coincides with c2[0], or is just to the
+        o---o---o---o---o        right of it (for numerical reasons), then we assume that it is inside the
+        | A |   |   |   |        rightmost pixel column: j = dxp-1
+        o---o---o---o---o    If cw[0] coincides with c1[0], or is just to the left of it, then we assume that
+        c1                       it is in the leftmost pixel column.
+                             Othwewise we find the pixel coor using ratios (dx corresponds to dxp, 4 pixels
+                                 in this example. Then we if we find 0.1 or o.5 or 0.9 this point belongs to the
+                                 0th pixel column and thus we take the int() of this real number.
+                             Likewise for the y coordinate cw[1].
+        """
         terr = "World coordinates do not correspond to image."
         dxp, dyp = self.size
         dx, dy = self.c2[0]-self.c1[0], self.c2[1]-self.c1[1]
         j = (cw[0]-self.c1[0]) / dx * dxp
         if j >= dxp:
-            if j > dxp+0.01: raise IndexError, terr
+            if j > dxp+0.01: raise IndexError(terr)
             j = dxp-1
         elif j < 0.0:
-            if j < -0.01:    raise IndexError, terr
+            if j < -0.01:    raise IndexError(terr)
             j = 0
         else:
             j = int(j)
         i = (self.c2[1]-cw[1]) / dy * dyp
         if i >= dyp:
-            if i > dyp+0.01: raise IndexError, terr
+            if i > dyp+0.01: raise IndexError(terr)
             i = dyp-1
         elif i < 0.0:
-            if i < -0.01: raise IndexError, terr
+            if i < -0.01: raise IndexError(terr)
             i = 0
         else:
             i = int(i)
@@ -939,7 +965,7 @@ compute the corber points.
         "Finds the the world coordinates that corresponds to the image pixel coordinates xp, yp."
         dxp, dyp = self.size
         if jx<0 or iy<0 or jx>dxp-1 or iy>dyp-1:
-            raise IndexError, "Pixel coordinates do not correspond to image"
+            raise IndexError("Pixel coordinates do not correspond to image")
         dx, dy = self.c2[0]-self.c1[0], self.c2[1]-self.c1[1]
         if celev is None: cw = list(self.c1)
         else:             cw = list(celev)
@@ -949,10 +975,10 @@ compute the corber points.
 
 
     def __getWorldLowlef(self, jx, iy, celev=None):
-        "Finds the the world coordinates that corresponds to the image pixel coordinates xp, yp, lower-left corner."
+        "Finds the world coordinates of the lower left corner of the pixel which corrresponds to image pixel coordinates xp, yp."
         dxp, dyp = self.size
         if jx<0 or iy<0 or jx>dxp-1 or iy>dyp-1:
-            raise IndexError, "Pixel coordinates do not correspond to image"
+            raise IndexError("Pixel coordinates do not correspond to image")
         dx, dy = self.c2[0]-self.c1[0], self.c2[1]-self.c1[1]
         if celev is None: cw = list(self.c1)
         else:             cw = list(celev)
@@ -969,19 +995,19 @@ compute the corber points.
         dx, dy = self.c2ori[0]-self.c1ori[0], self.c2ori[1]-self.c1ori[1]
         j = (cw[0]-self.c1ori[0]) / dx * dxp
         if j >= dxp:
-            if j > dxp+0.01: raise IndexError, terr
+            if j > dxp+0.01: raise IndexError(terr)
             j = dxp-1
         elif j < 0.0:
-            if j < -0.01:    raise IndexError, terr
+            if j < -0.01:    raise IndexError(terr)
             j = 0
         else:
             j = int(j)
         i = (self.c2ori[1]-cw[1]) / dy * dyp
         if i >= dyp:
-            if i > dyp+0.01: raise IndexError, terr
+            if i > dyp+0.01: raise IndexError(terr)
             i = dyp-1
         elif i < 0.0:
-            if i < -0.01: raise IndexError, terr
+            if i < -0.01: raise IndexError(terr)
             i = 0
         else:
             i = int(i)
@@ -992,7 +1018,7 @@ compute the corber points.
         "Finds the the world coordinates that corresponds to the image pixel coordinates xp, yp."
         dxp, dyp = self.imageori.size
         if jx<0 or iy<0 or jx>dxp-1 or iy>dyp-1:
-            raise IndexError, "Pixel coordinates do not correspond to image"
+            raise IndexError("Pixel coordinates do not correspond to image")
         dx, dy = self.c2ori[0]-self.c1ori[0], self.c2ori[1]-self.c1ori[1]
         if celev is None: cw = list(self.c1ori)
         else:             cw = list(celev)
@@ -1044,4 +1070,4 @@ def thanGetRendering():
 
 thanSetRendering(0)     # Quick rendering of images
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

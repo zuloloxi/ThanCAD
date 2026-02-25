@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 from p_gcol import thanTk2Rgb
-from emuinter import EmuInter, EmuCanvas, Toplevel, ALL
+from .emuinter import EmuInter, EmuCanvas, Toplevel, ALL
 
 
 class Tk(EmuInter):
@@ -9,7 +9,7 @@ class Tk(EmuInter):
 
     def __init__(self, filename=None):
         "Set the image name; this object is apparently the library object."
-        if filename == None:
+        if filename is None:
             self._idatFil[0] += 1
             filename = "data%03d.bmp" % (self._idatFil[0], )
         super(Tk, self).__init__(filename)
@@ -56,7 +56,7 @@ class Canvas(EmuCanvas):
     def create_rectangle(self, x1, y1, x2, y2, fill=None, outline="white", width=1):
         "Plot a possibly filled rectangle."
         outline = self.__color(outline)
-        if fill != None:
+        if fill is not None:
             fill = self.__color(fill)
             self.imd.rectangle((x1, y1, x2, y2), fill=fill, outline=outline)
         else:

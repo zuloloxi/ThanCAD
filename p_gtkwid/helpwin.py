@@ -1,6 +1,6 @@
-from Tkinter import Toplevel
+from tkinter import Toplevel
 from p_ggen import  thanUnicode
-import thanwids, thanfontresize, thantkutila
+from . import thanwids, thanfontresize, thantkutila
 
 
 class ThanToplevel(Toplevel, thanfontresize.ThanFontResize):
@@ -21,7 +21,7 @@ def thanGudHelpWin(parentwin, mes, title, hbar=0, vbar=1, width=80, height=25,
         txtHelp = thanwids.ThanScrolledText(help1, readonly=True, hbar=hbar, vbar=vbar,
             background=background, foreground=foreground, width=width, height=height)
         help1.thanResizeBind([txtHelp])
-        if not isinstance(mes, unicode): mes = thanUnicode(mes)
+        mes = thanUnicode(mes)
         txtHelp.thanSet(mes)
         txtHelp.grid(sticky="wesn")
 

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the valid attributes of a layer, their type, and their
 default value.
@@ -29,6 +29,7 @@ It also defines the actions to do to elements, when an attribute is forced
 on them.
 """
 
+from __future__ import print_function
 import collections
 import p_gtkwid, p_ggen
 from thanvar import Canc, THANBYPARENT, THANPERSONAL
@@ -39,7 +40,7 @@ from thanopt import thancadconf
 from thantrans import T
 from thandr import ThanPointNamed
 import thantkdia
-from thanlaycon import THANNAME
+from .thanlaycon import THANNAME
 
 ############################################################################
 ############################################################################
@@ -118,8 +119,7 @@ def thanTstyleGet(win, att, selLayers):
     "Lets the user select new textstyle for the selected layers."
     c =__commonVal(att, selLayers)
     proj = win.thanCargo
-    tlabs = proj[1].thanTstyles.keys()
-    tlabs.sort()
+    tlabs = sorted(proj[1].thanTstyles.keys())    #works for python2,3
     tlabs.insert(0, str(THANBYPARENT))
     tlabs.insert(1, str(THANPERSONAL))
     w = p_gtkwid.ThanPoplist(win, tlabs, width=40, title=T["Select ThanCad Text Style"])
@@ -139,12 +139,12 @@ def thanLinetypeGet(win, att, selLayers):
     inher = collections.Counter()
     for lay in selLayers:
         ia = lay.thanAtts[att]
-        print "attltype.thanval", ia
+        print("attltype.thanval", ia)
         lt = ia.thanVal
-        print "attltype.thanval", lt
-        print lt[0]
-        print lt[1]
-        print lt[2]
+        print("attltype.thanval", lt)
+        print(lt[0])
+        print(lt[1])
+        print(lt[2])
         name[lt[0]] += 1
         unit[lt[1]] += 1
         scale[lt[2]] += 1
@@ -153,9 +153,9 @@ def thanLinetypeGet(win, att, selLayers):
     s.butPattern = name.most_common(1)[0][0]
     s.choUnit  = 0 if unit.most_common(1)[0][0]=="mm" else 1
     s.entScale = scale.most_common(1)[0][0]
-    print "s.butPattern = ", s.butPattern
-    print "s.choUnit    = ", s.choUnit
-    print "s.entScale   = ", s.entScale
+    print("s.butPattern = ", s.butPattern)
+    print("s.choUnit    = ", s.choUnit)
+    print("s.entScale   = ", s.entScale)
     i = inher.most_common(1)[0][0]
     if i: s.butPattern = str(THANBYPARENT)
     win = thantkdia.ThanDialogLtype(master=win, vals=s, cargo=win.thanCargo, translation=None)
@@ -211,11 +211,11 @@ def thanUpdateElementsold(proj, leaflayers, updatelayers=True):
     STRUCTURE proj[2].than TO REFLECT THE CURRENT'S LAYER ATTRIBUTES i.e.
     TO CALL proj[2].thanLayerTree.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
     """
-#    for lay,atts in leaflayers.iteritems(): print lay.thanGetPathname(), "->", atts
+#    for lay,atts in leaflayers.items(): print(lay.thanGetPathname(), "->", atts   #works for python2,3)
     draworder = False
     dc = proj[2].thanCanvas
     than = proj[2].than
-    for lay,atts in leaflayers.iteritems():
+    for lay,atts in leaflayers.items():   #works for python2,3
         colourhasbeenset = False
         if "frozen" in atts:
             nval = atts["frozen"]
@@ -227,13 +227,13 @@ def thanUpdateElementsold(proj, leaflayers, updatelayers=True):
                     proj[1].thanTkDraw(proj[2].than, (lay,)) # All items are redrawn; all items are up to date
                     draworder = True                         # All items are redrawn; thus, probably, the draworder is violated
 
-                for a,nval in atts.iteritems(): # Either way, the actual value is the same with new value
+                for a,nval in atts.items(): # Either way, the actual value is the same with new value  #works for python2,3
                     ia = lay.thanAtts[a]
                     if updatelayers: ia.thanAct = nval
                 continue
 
         thawed = not lay.thanAtts["frozen"].thanVal
-        for a,nval in atts.iteritems():
+        for a,nval in atts.items():   #works for python2,3
             ia = lay.thanAtts[a]
             if thawed and ia.thanAct != nval:
                 if a == "moncolor":
@@ -285,11 +285,11 @@ def thanUpdateElements(proj, leaflayers, updatelayers=True):
     STRUCTURE proj[2].than TO REFLECT THE CURRENT'S LAYER ATTRIBUTES i.e.
     TO CALL proj[2].thanLayerTree.thanCur.thanTkSet(proj[2].than, proj[1].thanTstyles)
     """
-#    for lay,atts in leaflayers.iteritems(): print lay.thanGetPathname(), "->", atts
+#    for lay,atts in leaflayers.items(): print(lay.thanGetPathname(), "->", atts   #works for python2,3)
     draworder = False
     dc = proj[2].thanCanvas
     than = proj[2].than
-    for lay,atts in leaflayers.iteritems():
+    for lay,atts in leaflayers.items():    #works for python2,3
         if "frozen" in atts:
             nval = atts["frozen"]
             if nval:
@@ -299,12 +299,12 @@ def thanUpdateElements(proj, leaflayers, updatelayers=True):
                 proj[1].thanTkDraw(proj[2].than, (lay,)) # All items are redrawn; all items are up to date
                 draworder = True                         # All items are redrawn; thus, probably, the draworder is violated
 
-            for a,nval in atts.iteritems(): # Either way, the actual value is the same with new value
+            for a,nval in atts.items(): # Either way, the actual value is the same with new value   #works for python2,3
                 ia = lay.thanAtts[a]
                 if updatelayers: ia.thanAct = nval
             continue
 
-        for a,nval in atts.iteritems():
+        for a,nval in atts.items():   #works for python2,3
             ia = lay.thanAtts[a]
             if a == "moncolor" or a == "fill":
                 lay.thanTkSet(than)  # Note that .thanval is already set with the new value
@@ -336,7 +336,7 @@ def thanUpdateElements(proj, leaflayers, updatelayers=True):
 def thanChangedAtts(proj, leaflayers):
     "Finds which attributes of lealayers should be updated."
     cleaf = {}
-    for lay,atts in leaflayers.iteritems():
+    for lay,atts in leaflayers.items():   #works for python2,3
         catts = {}
         colourhasbeenset = False
         pnamedhasbeenset = False
@@ -349,7 +349,7 @@ def thanChangedAtts(proj, leaflayers):
                 continue
 
         thawed = not lay.thanAtts["frozen"].thanVal
-        for a,nval in atts.iteritems():
+        for a,nval in atts.items():   #works for python2,3
             ia = lay.thanAtts[a]
             if thawed and ia.thanAct != nval:
                 if a == "moncolor" or a == "fill":
@@ -458,15 +458,15 @@ thanLayAttsWidths = [1,        30,       20,         3,        20,          40, 
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
 
     form = "%-15s%-6s%-15s  %s"
-    print form % ("attribute", "type", "default value", "Doc")
-    print "------------------------------------------------"
-    for (name, att) in thanLayAtts.iteritems():
-        print form % (name, att[0], att[2], att[3])
+    print(form % ("attribute", "type", "default value", "Doc"))
+    print("------------------------------------------------")
+    for (name, att) in thanLayAtts.items():   #works for python2,3
+        print(form % (name, att[0], att[2], att[3]))
 
-    print
-    for (name, att) in thanLayAttsType.iteritems():
-        print name, att
+    print()
+    for (name, att) in thanLayAttsType.items():   #works for python2,3
+        print(name, att)
 

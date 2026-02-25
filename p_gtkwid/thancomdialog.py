@@ -2,11 +2,13 @@
 This module defines the common parts of dialogs in ThanCad.
 """
 
-from types import FloatType, IntType
-import Tkinter, ConfigParser
+from __future__ import print_function
+import tkinter
+try: from configparser import SafeConfigParser     #python3
+except: from ConfigParser import SafeConfigParser  #python2
 import p_ggen
-import thantksimpledialog, thantkutila
-import thanwidstrans
+from . import thantksimpledialog, thantkutila
+from . import thanwidstrans
 
 uni = p_ggen.thanUnicode
 
@@ -42,7 +44,7 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
     def thanValsReadFile1(self, v, fn):
         "Reads the values from a file with specific suffix; ."
         if not fn.exists(): return
-        self._c = ConfigParser.SafeConfigParser()
+        self._c = SafeConfigParser()
         self._c.read(fn)
         self._tv = {}
         for (key,tit,wid,vld) in self.thanWids: self._tv[key] = [tit, vld]
@@ -85,7 +87,7 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
 
     def thanValsWriteFile1(self, v, fn):
         "Reads the values from a file with specific suffix."
-        self._c = ConfigParser.SafeConfigParser()
+        self._c = SafeConfigParser()
         if fn.exists(): self._c.read(fn)
         self._tv = {}
         for (key,tit,wid,vld) in self.thanWids: self._tv[key] = [tit, vld]
@@ -93,7 +95,7 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
 
         self.thanValsWriteFile2()
 
-        print "p_gtwid.thanValsWrite1(): fn=%s  _c=\n%s" % (fn, self._c)
+        print("p_gtwid.thanValsWrite1(): fn=%s  _c=\n%s" % (fn, self._c))
         try: self._c.write(fn.open("w"))
         except: raise; pass
         del self._c, self._tv, self._v
@@ -113,8 +115,8 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
         if not self._c.has_section(sec): self._c.add_section(sec)
         for key in keys.split():
             tit, val = self._tv[key]
-            print "p_gtwid.thanValsWriteSec(): sec=%s  key=%s   val=%s" % (sec, tit, getattr(self._v, key))
-            print "                                %s      %s       %s" % (type(sec), type(tit), type(getattr(self._v, key)))
+            print("p_gtwid.thanValsWriteSec(): sec=%s  key=%s   val=%s" % (sec, tit, getattr(self._v, key)))
+            print("                                %s      %s       %s" % (type(sec), type(tit), type(getattr(self._v, key))))
             self._c.set(sec, tit, str(getattr(self._v, key)))
 
 
@@ -212,10 +214,10 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
 
     def thanSet(self, vs):
         "Set new values to the widgets."
-        stat = Tkinter.NORMAL
+        stat = tkinter.NORMAL
         for (key,tit,wid,vld) in self.thanWids:
             v = getattr(vs, key)
-            if type(v) == FloatType or type(v) == IntType: v = str(v)
+            if type(v) == float or type(v) == int: v = str(v)
             wid.config(state=stat) # All widgets must be enabled..
             wid.thanSet(v)         # ..to change their values
 
@@ -262,7 +264,7 @@ class ThanComDialog(thantksimpledialog.ThanDialog):
 
     def __del__(self):
         "Print that dialog dies as a debugging aid."
-        print "ThanComDialog", self, "dies.."
+        print("ThanComDialog", self, "dies..")
 
 
     def apply(self):

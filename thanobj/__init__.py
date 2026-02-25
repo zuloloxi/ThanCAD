@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,24 +21,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This package defines ThanCad's objects. Objects are entities which have no direct
 graphic representation in the drawing AND have a state which must be saved (and
 read) with the drawing.
-the drawing.
 """
-from thandtmlines     import ThanDTMlines
-from thandemusgs      import ThanDEMusgs
-from thantri          import ThanTri
-from thanfplan        import ThanFplan
-from thannoncartesian import NonCartesian
-from thanlinesimp     import LineSimplification
-from thanphotmodel    import ThanPhotModel
-from thanphotinterior import ThanPhotInterior
-from thantransform    import ThanTransformation, ThanProjection
-from thanbiocityplan  import ThanBiocityplan
-from thanprofile      import ThanProfile
+from .thandtmlines     import ThanDTMlines
+from .thandemusgs      import ThanDEMusgs
+from .thantri          import ThanTri
+from .thanfplan        import ThanFplan
+from .thannoncartesian import NonCartesian
+from .thanlinesimp     import LineSimplification
+from .thanphotmodel    import ThanPhotModel
+from .thanphotinterior import ThanPhotInterior
+from .thantransform    import ThanTransformation, ThanProjection
+from .thanbiocityplan  import ThanBiocityplan
+from .thanprofile      import ThanProfile
 
 thanObjClasses = (ThanDTMlines, ThanDEMusgs, ThanTri, ThanFplan, NonCartesian,
                   LineSimplification, ThanPhotModel, ThanPhotInterior,

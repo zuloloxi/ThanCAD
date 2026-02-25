@@ -1,8 +1,9 @@
-"Similar transformation in 2D and 3D."
 # -*- coding: iso-8859-7 -*-
+"Similar transformation in 2D and 3D."
+from __future__ import print_function
 from p_gnum import (array, matrixmultiply, transpose, zeros, Float)
 from math import cos, sin, fabs, atan2
-from var import dpt
+from .var import dpt
 
 class Transformation(object):
     "An identity transformation; transforms coordinates to the same coordinates."
@@ -146,4 +147,4 @@ def matwfk(gon):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

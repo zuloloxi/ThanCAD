@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,27 +21,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This package includes dialogs (forms to get user input) implemented with Tkinter.
 """
-from thandialogcol   import ThanColor
-from thandialogdro   import ThanDro
-from thandialogpen   import ThanPen
-from thandialogltype import ThanDialogLtype
+from .thandialogcol   import ThanColor
+from .thandialogdro   import ThanDro
+from .thandialogpen   import ThanPen
+from .thandialogltype import ThanDialogLtype
 
-from thandialoglay   import ThanDialogLay
-from thandialogosn   import ThanTkOsnap
-from thandialogsty   import ThanTkStyle
-from thandiaexppil   import ThanTkExppil
-from thandialogtext  import ThanElemtext
-from thandialogscan  import ThanScan, getScanDpi
-from thandialogprint import ThanDiaPlot
+from .thandialoglay   import ThanDialogLay
+from .thandialogosn   import ThanTkOsnap
+from .thandialogsty   import ThanTkStyle
+from .thandiaexppil   import ThanTkExppil
+from .thandialogtext  import ThanElemtext
+from .thandialogscan  import ThanScan
+from .thandialogprint import ThanDiaPlot
 #from thantkwinerror  import ThanTkWinError
-from thandialogunits import ThanDialogUnits
-from thandialogsimpl import ThanSimplificationSettings
+from .thandialogunits import ThanDialogUnits
+from .thandialogsimpl import ThanSimplificationSettings
 
-from thanarch.thandiaarch import ThanArchCom
-from thanarch.thandiafplan import ThanFplan
+from .thanarch.thandiaarch import ThanArchCom
+from .thanarch.thandiafplan import ThanFplan
 #from thanarch.thandiabcplan import ThanBcplan
-import transf
+from . import transf

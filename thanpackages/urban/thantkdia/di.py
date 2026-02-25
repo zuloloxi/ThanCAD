@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,14 +22,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 The package provides tools and automation for urban analysis/design.
 The subpackage contains dialogss which handle urban related procedures.
 This module defines dialog for land use.
 """
-import Tkinter
-import p_gtkwid, p_gtkuti
+import tkinter
+import p_gtkwid
 import urbantrans
 Twid = p_gtkwid.Twid
 T = urbantrans.Turban
@@ -49,7 +49,7 @@ entMedW = None
 
 def test():
     "Test the dialog."
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     makeWidgets(root)
     setWidgets()
     root.wait_window(top)
@@ -60,20 +60,20 @@ def test():
 def makeWidgets(root):
     "Make the widgets of the dialog."
     global top, entRoadW, entPavLeftW, entPavRightW, entMedW
-    top = Tkinter.Toplevel(root)
-    lab = Tkinter.Label(top, text=T["Road width (m)"])
+    top = tkinter.Toplevel(root)
+    lab = tkinter.Label(top, text=T["Road width (m)"])
     lab.grid(row=0, column=0, sticky="e")
     entRoadW = p_gtkwid.ThanEntry(top)
     entRoadW.grid(row=0, column=1, sticky="w")
-    lab = Tkinter.Label(top, text=T["Left Pavement width (m)"])
+    lab = tkinter.Label(top, text=T["Left Pavement width (m)"])
     lab.grid(row=1, column=0, sticky="e")
     entPavLeftW = p_gtkwid.ThanEntry(top)
     entPavLeftW.grid(row=1, column=1, sticky="w")
-    lab = Tkinter.Label(top, text=T["Right Pavement width (m)"])
+    lab = tkinter.Label(top, text=T["Right Pavement width (m)"])
     lab.grid(row=2, column=0, sticky="e")
     entPavRightW = p_gtkwid.ThanEntry(top)
     entPavRightW.grid(row=2, column=1, sticky="w")
-    lab = Tkinter.Label(top, text=T["Median strip width (m)"])
+    lab = tkinter.Label(top, text=T["Median strip width (m)"])
     lab.grid(row=3, column=0, sticky="e")
     entMedW = p_gtkwid.ThanEntry(top)
     entMedW.grid(row=3, column=1, sticky="w")
@@ -113,33 +113,33 @@ def pressedOk():
     global roadW, pavLeftW, pavRightW, medW, valuesOk
     try:
         v = float(entRoadW.thanGet())
-        if v <= 0: raise ValueError, T["A positive number was expected"]
-    except Exception, e:
-        p_gtkuti.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkuti.ERROR)
+        if v <= 0: raise ValueError(T["A positive number was expected"])
+    except Exception as e:
+        p_gtkwid.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkwid.ERROR)
         entRoadW.focus_set()
         return
     roadW = v
     try:
         v = float(entPavLeftW.thanGet())
-        if v < 0: raise ValueError, T["A non negative number was expected"]
-    except Exception, e:
-        p_gtkuti.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkuti.ERROR)
+        if v < 0: raise ValueError(T["A non negative number was expected"])
+    except Exception as e:
+        p_gtkwid.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkwid.ERROR)
         entPavLeftW.focus_set()
         return
     pavLeftW = v
     try:
         v = float(entPavRightW.thanGet())
-        if v < 0: raise ValueError, T["A non negative number was expected"]
-    except Exception, e:
-        p_gtkuti.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkuti.ERROR)
+        if v < 0: raise ValueError(T["A non negative number was expected"])
+    except Exception as e:
+        p_gtkwid.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkwid.ERROR)
         entPavRightW.focus_set()
         return
     pavRightW = v
     try:
         v = float(entMedW.thanGet())
-        if v < 0: raise ValueError, T["A non negative number was expected"]
-    except Exception, e:
-        p_gtkuti.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkuti.ERROR)
+        if v < 0: raise ValueError(T["A non negative number was expected"])
+    except Exception as e:
+        p_gtkwid.thanGudModalMessage(top, message=e, title=T["Invalid width"], icon=p_gtkwid.ERROR)
         entMedW.focus_set()
         return
     medW = v
@@ -150,7 +150,7 @@ def pressedOk():
 def pressedCan():
     "User pressed cancel; check values."
     global valuesOk
-    ans = p_gtkuti.thanGudAskYesNo(top, message=T["Are you sure to lose all values?"], title=T["Cancel"], default="no")
+    ans = p_gtkwid.thanGudAskYesNo(top, message=T["Are you sure to lose all values?"], title=T["Cancel"], default="no")
     if ans:
         valuesOk = False
         top.destroy()

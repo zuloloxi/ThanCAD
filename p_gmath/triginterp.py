@@ -1,4 +1,6 @@
 # -*- coding: iso-8859-7 -*-
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import cos, sin, sqrt, pi
 from p_gnum import zeros, Float
 import p_gmath
@@ -28,11 +30,11 @@ class TrigonometricInterpolation(object):
             nterms = int(L[0])
             ndim = int(L[1])
             Tper = L[2]
-            if nterms <= 0: raise ValueError, "L[0] = Number of trigonometric terms should be > 0"
-            if ndim   <= 0: raise ValueError, "L[1] = Number of dimensions should be > 0" 
-            if Tper <= 0.0: raise ValueError, "L[2] = period should be positive."
+            if nterms <= 0: raise(ValueError, "L[0] = Number of trigonometric terms should be > 0")
+            if ndim   <= 0: raise(ValueError, "L[1] = Number of dimensions should be > 0")
+            if Tper <= 0.0: raise(ValueError, "L[2] = period should be positive.")
             n = 3+ndim+1 + ndim*(2*nterms+1)
-            if len(L) != n: raise ValuError, "The number of coefs should be $d: 3 + number of dimensions + 1 + (number of dimensions) * [2*(number of terms) + 1]" % (n,)
+            if len(L) != n: raise(ValuError, "The number of coefs should be $d: 3 + number of dimensions + 1 + (number of dimensions) * [2*(number of terms) + 1]" % (n,))
             self.L = zeros((n, ), Float)
             self.L[:] = L
 
@@ -66,14 +68,14 @@ class TrigonometricInterpolation(object):
         npoints = len(fots)                 #Number of known points
         if npoints < 3: return None, "At least 3 known points should be defined"
         mterms   = int((npoints-1)/2)       #Nax number of trigonometric terms (they may be less)
-        if nterms == None:
+        if nterms is None:
             nterms = mterms
         else:
             if nterms <= 0: return None, "Number of trigonometric terms should be > 0"
         if nterms > mterms: return None, "Number of trigonometric terms should be not greater than %d for %d known points" % (mterms, npoints)
         ndim = len(fots[0][1])              #Number of dimensions
         tmax = max(t for t,_ in fots)       #Maximum time
-        if period == None:
+        if period is None:
             Tper = (nterms+1) * (tmax/1)       #Period for nonperiodical function (cery big period)
             #Tper = (nterms+1) * (tmax/nterms)  #Period for periodical function with period slightly bigger than max time of data
         else:
@@ -106,7 +108,7 @@ class TrigonometricInterpolation(object):
                     A[i, j] = sin(phi)
                 B[i] = cpoint[idim]
             x, terr = p_gmath.lsmsolve(A, B)
-            if x == None: None, terr
+            if x is None: None, terr
             nl2 = nl1 + 2*nterms+1
             self.L[nl1:nl2] = x
             nl1 = nl2
@@ -123,16 +125,16 @@ class TrigonometricInterpolation(object):
             nterms, ndim, Tper = self.readCoefs(fr, 3)
             nterms = int(nterms)
             ndim = int(ndim)
-            if nterms <= 0: raise ValueError, "L[0] = Number of trigonometric terms should be > 0"
-            if ndim   <= 0: raise ValueError, "L[1] = Number of dimensions should be > 0" 
-            if Tper <= 0.0: raise ValueError, "L[2] = period should be positive."
+            if nterms <= 0: raise ValueError("L[0] = Number of trigonometric terms should be > 0")
+            if ndim   <= 0: raise ValueError("L[1] = Number of dimensions should be > 0")
+            if Tper <= 0.0: raise ValueError("L[2] = period should be positive.")
 
             n = 3+ndim+1 + ndim*(2*nterms+1)
             self.L = zeros((n, ), Float)
             self.L[:3] = [nterms, ndim, Tper]
             self.L[3:] = self.readCoefs(fr, n-3)
         else:                                   # Read coefficients from polynomial1 projection
-            raise ValueError, "The code %d of the trigonometric interpolation was expected (found %d)" % (self.icodp, ic)
+            raise ValueError("The code %d of the trigonometric interpolation was expected (found %d)" % (self.icodp, ic))
 
 
     def write(self, fw):

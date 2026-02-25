@@ -1,8 +1,9 @@
-from jorpath import path
-from gen import Pyos, prg
+from .jorpath import path
+from .gen import Pyos, prg
 
-excluded = "var other"
-excludedmatch = "cop copy fortran f95 ok[number] ex developer"
+excluded = set("other".split())
+excludedmatch = set("cop copy fortran f95 ex developer".split())
+excludedmatchnumber = "ok".split()   #This means ok[number]
 
 
 def iterfpy(root):
@@ -13,7 +14,7 @@ def iterfpy(root):
 
 
 def thancadirs(root):
-    excluded1 = set(root/dir1 for dir1 in excluded.split())
+    excluded1 = set((root/dir1).abspath() for dir1 in excluded)
 #    yield from dirs(root, excluded1)
     for dir1 in dirs(root, excluded1):
         yield dir1
@@ -22,19 +23,22 @@ def thancadirs(root):
 def dirs(parent, excluded=()):
     yield parent
     for dir1 in parent.dirs():
-        if dir1 in excluded: continue
+        if dir1.abspath() in excluded: continue
         nam = dir1.namebase.lower()
-        if nam == "cop": continue
-        if nam == "copy": continue
-        if nam == "fortran": continue
-        if nam == "f95": continue
-        if nam == "ex": continue
-        if nam == "developer": continue
-        if nam[:2] == "ok":
-            try: int(nam[2:])
-            except ValueError: pass
-            else: continue
-        for subdir1 in dirs(dir1):
+        if nam in excludedmatch: continue
+        matched = False
+        for nam1 in excludedmatchnumber:
+            n1 = len(nam1)
+            if nam[:n1] != nam1: continue
+            try:
+                int(nam[n1:])
+            except ValueError:
+                pass
+            else:
+                matched = True
+                break
+        if matched: continue
+        for subdir1 in dirs(dir1, excluded):
             yield subdir1
 
 
@@ -53,7 +57,7 @@ def copyPylib(name, todir=".", fromdir=None, prt=prg):
     tolibdir = todir/name
     try:
         tolibdir.makedirs1()
-    except Exception, e:
+    except Exception as e:
         prt("Library %s can not be created/accessed in %s:\n%s" % (name, todir, e), "can1")
         return
 

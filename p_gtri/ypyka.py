@@ -1,4 +1,6 @@
 # -*- coding: iso-8859-7 -*-
+#from future.utils import iteritems
+from p_ggen.py23 import iteritems
 from math import hypot, atan2, pi
 from p_ggen import xfrange, doNothing
 from p_gmath import linint, dpt
@@ -19,8 +21,8 @@ class ThanYpyka(object):
 
     def ypyka(self, dhl=None, apmax=None):
         "Compute all isocurves."
-        if dhl != None: self.dhl = dhl
-        if apmax != None: self.apOrioMax = apmax
+        if dhl is not None: self.dhl = dhl
+        if apmax is not None: self.apOrioMax = apmax
         assert len(self.ls) > 2, "Τουλάχιστον 3 σημεία χρειάζονται στην τριγωνοποίηση"
 
 #-------ΒΡΕΣ ΜΕΓΙΣΤΟ ΚaΙ ΕΛaΧΙΣΤΟ ΥΨΟΜΕΤΡΟ
@@ -54,7 +56,7 @@ class ThanYpyka(object):
         dhis = 0.01*self.dhl
         seen = self.seen
         seen.clear()
-        for karx, linksarx in self.ls.iteritems():
+        for karx, linksarx in iteritems(self.ls):
             harx = karx[2]
             if harx == his: harx -= dhis
             if harx*pr > his*pr: continue

@@ -1,30 +1,31 @@
 # -*- coding: iso-8859-7 -*-
 "This module computes the intersection of various geometric objects."
-
+from __future__ import print_function
 from math import sqrt, fabs, hypot
-from var import linEq2, thanNearx, fsign, linint
-from varcon import thanThresholdx
+from .lineq import linEq2
+from .var import thanNearx, fsign, linint
+from .varcon import thanThresholdx
 #from thanvar import thanLogC
 
 
 def thanSegSeg(ca, cb, c1, c2, abisline=False, c12isline=False):
     "Εύρεση συντεταγμένων τομής δύο ευθυγράμμων τμημάτων ή ευθειών."
     res = thanSegSegGen(ca, cb, c1, c2, abisline, c12isline)
-    if res == None: return res
+    if res is None: return res
     return res[0]
 
 
 def thanSegSeguw(ca, cb, c1, c2, abisline=False, c12isline=False):
     "Εύρεση τοπικών συντεταγμένων τομής δύο ευθυγράμμων τμημάτων ή ευθειών."
     res = thanSegSegGen(ca, cb, c1, c2, abisline, c12isline)
-    if res == None: return res
+    if res is None: return res
     return res[1]
 
 
 def thanLineSeguw(ca, cb, c1, c2):
     "Εύρεση τοπικών συντεταγμένων τομής ευθείας ca-cb με ευθ. τμήμα c1-c2 "
     res = thanSegSegGen(ca, cb, c1, c2, abisline=True, c12isline=False)
-    if res == None: return res
+    if res is None: return res
     return res[1]
 
 
@@ -67,7 +68,7 @@ c                         o 1
 #-----Ανάλυση σε δύο συνιστώσες παράληλλες προς τα 2 ευθ. τμήματα
 
       u, w = thanAnalVec(ca2, cab, c12)
-      if u == None: return None
+      if u is None: return None
 
 #-----Ελεγχος αν η τομή βρίσκεται εντος των ευθ. τμημάτων
 
@@ -314,7 +315,7 @@ def thanCirCir(ca, ra, cb, rb):
 
     """
     if ra < thanThresholdx or rb < thanThresholdx:
-        print "Warning: Radius of circles must be positive >%s" % thanThresholdx
+        print("Warning: Radius of circles must be positive >%s" % thanThresholdx)
         return []
     dc = cb[0]-ca[0], cb[1]-ca[1]
     d = hypot(*dc)
@@ -338,7 +339,7 @@ def thanCirCir(ca, ra, cb, rb):
         rb1 = hypot(c1[0]-cb[0], c1[1]-cb[1])
         if thanNearx(rb1, rb): break
     else:
-        print "Algorithm failure in circles' intersection"
+        print("Algorithm failure in circles' intersection")
         return []
 
     c2 = cf[0] - nab[0]*dn, cf[1] - nab[1]*dn
@@ -358,4 +359,4 @@ def thanAnalVec(self, da, db):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

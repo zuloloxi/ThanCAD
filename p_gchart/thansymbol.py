@@ -1,8 +1,10 @@
-from types import IntType
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, cos, sin, modf
-from Tkinter import ARC, PIESLICE
+from tkinter import ARC, PIESLICE
 from p_ggen import frangec
-from thanfonts import thanFontPrime1
+from .thanfonts import thanFontPrime1
 
 
 ##############################################################################
@@ -309,7 +311,7 @@ def __addFontAsSymbols(tfont, points):
 
         for key in tfont:
             lines = tfont[key]
-            if type(lines) == IntType: lines = tfont[lines]
+            if type(lines) == int: lines = tfont[lines]
             lines1 = [ ]
             for lin in lines:
                 lin1 = [ ((x-2.5)/7.0, (y-3.5)/7.0) for (x, y) in lin ]

@@ -1,7 +1,8 @@
+# -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +22,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module returns the coordinates of the perimeter of Greece in EGSA87.
 """
@@ -33,9 +34,8 @@ This module returns the coordinates of the perimeter of Greece in EGSA87.
 #were copied here.
 
 from math import radians
-from p_ggeod import egsa87
 
-def thanIterGreece():
+def thanIterGreece(geodp):
     "Loop over all lines of the perimeter of Greece."
     greece= """\
         <NODES>
@@ -1290,7 +1290,22 @@ def thanIterGreece():
             if len(cs) > 1: yield cs
             cs = []
         else:
-            a = map(float, dline.split())
-            a[0], a[1] = egsa87.geodetGRS802en(radians(a[0]), radians(a[1]))
+            a = list(map(float, dline.split()))  #works for python2,3
+            a[0], a[1] = geodp.geodetGRS802en(radians(a[0]), radians(a[1]))
             cs.append(a)
     if len(cs) > 1: yield cs
+
+
+def thanPoints(geodp):
+    "Loop over all poedfined points."
+    greece= """\
+        Ã¡Õ‘∆œ’13_2OS_OROFOS    4.148278026409000e-01    6.628592078647713e-01        173.000
+        DAMASIPPOY13_4OS_OROFOS    4.147054553060465e-01    6.628628716911514e-01        108.610\
+"""
+    for dline in greece.split("\n"):
+        dline = dline.strip()
+        dl = dline.split()
+        nam = dl[0]
+        a = list(map(float, dl[1:]))
+        a[0], a[1] = geodp.geodetGRS802en(a[0], a[1])
+        yield (nam, a)

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,12 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module contains some routine to aid ThanCad with the tk library.
 """
 import sys
-import tkFont
+from tkinter import font
 from p_ggen import path
 from thanopt import thancadconf
 
@@ -44,10 +44,10 @@ thanFonts = []
 def createTags(wids=()):
     "Create standard tags and fonts in the text widgets."
     if not thanFonts:
-        font1 = tkFont.Font(family=thancadconf.thanFontfamilymono,
-                            size=thancadconf.thanFontsizemono)      # Negative size means size in pixels
+        font1 = font.Font(family=thancadconf.thanFontfamilymono,
+                          size=thancadconf.thanFontsizemono)      # Negative size means size in pixels
         font2 = font1.copy()
-        font2.config(weight=tkFont.BOLD)
+        font2.config(weight=font.BOLD)
         font3 = font2.copy()
         font3.config(size=thancadconf.thanFontsizemono+2)           # Negative size means size in pixels
         thanFonts[:] = font1, font2, font3

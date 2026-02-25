@@ -1,5 +1,5 @@
 "A fake ImageTk module in case ImageTk is not available."
-import Tkinter
+import tkinter
 
 
 def PhotoImage(im1):
@@ -7,7 +7,7 @@ def PhotoImage(im1):
 
     Since PhotoImage(im1) is compatible to Tkinter.PhotoImage, we return
     a Tkinter.PhotoImage."""
-    return Tkinter.PhotoImage(data=floppy())
+    return tkinter.PhotoImage(data=floppy())
 
 
 def floppy(): return '\

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module implements semiautomatic tracing of curves of a raster image.
 Specifically, it is intended to help the digitising of contour lines
 of topographic maps.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
 import p_gimage
 
@@ -39,9 +42,9 @@ class _RasterTracker:
     def __init__(self):
         pass
     def __getitem__(self, ji):
-        raise AttributeError, __name__+" must be overwritten."
+        raise AttributeError(__name__+" must be overwritten.")
     def __setitem__(self, ji, val):
-        raise AttributeError, __name__+" must be overwritten."
+        raise AttributeError(__name__+" must be overwritten.")
 
 
     def traceAll(self):
@@ -49,7 +52,7 @@ class _RasterTracker:
         self.visited.clear()
         for ia in xrange(self.height):
 #        for ia in xrange(100):
-            print ia, "/", self.height
+            print(ia, "/", self.height)
             ja = 0
             while ja < self.width:
                 for iloop in (0,):
@@ -58,7 +61,7 @@ class _RasterTracker:
                     if self.visited.in_((ia, int((j1+j2)/2))): break
                     if j2-j1+1 > MAXWIDTH:
                         self.visited.add((ia, int((j1+j2)/2)))
-                        print "Max width encounter:", j2-j1+1, ". Point is ignored."
+                        print("Max width encounter:", j2-j1+1, ". Point is ignored.")
                         break
                     curve = self.trace(ia, ja)
                     curves.append(curve)
@@ -71,17 +74,17 @@ class _RasterTracker:
         if curve is None: curve = []
         j1, j2 = self.thickx(i, j)
         jc = int((j1+j2)/2)
-        print "New trace: fork=%d: begin at i=%d, j=%d" % (fork, i, j)
+        print("New trace: fork=%d: begin at i=%d, j=%d" % (fork, i, j))
         if j != jc:
             j = jc
-            print "    Warning: does not begin at center of gravity of current raster line segment."
-            print "             New begin at i=%d, j=%d" % (i, j)
+            print("    Warning: does not begin at center of gravity of current raster line segment.")
+            print("             New begin at i=%d, j=%d" % (i, j))
 
         while len(curve) < STEPS:
             if fork > 0 and len(curve) > FORKSTEPS: return curve
             j1, j2 = self.thickx(i, j)
             jc = int((j1+j2)/2)
-            print i, j
+            print(i, j)
             assert j == jc, "Point not at center of gravity of current raster line segment!!!"
 
             curve.append((i, j))
@@ -90,7 +93,7 @@ class _RasterTracker:
 #            print "trace i,j", i, j, "-->>", i, int((j1+j2)/2)
             todo = self.candidatej(i+1, j1, j2)
             todo.extend(self.candidatej(i-1, j1, j2))
-            print i, j, "step=", len(curve), "fork=", fork, "# of todos=", len(todo)
+            print(i, j, "step=", len(curve), "fork=", fork, "# of todos=", len(todo))
             todo.sort(key=lambda ij: hypot(ij[0]-i, ij[1]-j))
 #            todo = [((i1-i)**2+(j1-j)**2, i1, j1) for (i1,j1) in todo]
 #            todo.sort()
@@ -106,12 +109,12 @@ class _RasterTracker:
 #               if len(curve) <= 1:
 #                   i, j = todo[0]
 #               else:
-                    print "tr(2) todo->", len(todo)
+                    print("tr(2) todo->", len(todo))
                     fcs = self.tryAllForks(todo, fork)
                     if fcs[1][0] > 10: return curve, fcs # At least 2 curves with 10 pixels;let user decide
                     assert fcs[0][0] > 0, "since len(todo) > 1, how can this happen?"
                     i, j = fcs[0][1][0]    # Next curve is the longest
-                    print "Only one long fork: next i,j=", i, j  # Only 1 curve with len() >= 10, or all curves with len() < 10
+                    print("Only one long fork: next i,j=", i, j)  # Only 1 curve with len() >= 10, or all curves with len() < 10
             else:    # If fork >= 1, then we need the longest path from fork 0, so that the user can choose at fork 0
                 self.chooseLongest(curve, todo, fork)
                 return curve
@@ -119,20 +122,20 @@ class _RasterTracker:
         else:
 #            self.plotcurve(curve)
 #            self[j, i] = "E"
-#            self.save(file("res.asc", "w"))
-            print "\nMax number of steps encountered: %d" % STEPS
+#            self.save(open("res.asc", "w"))
+            print("\nMax number of steps encountered: %d" % STEPS)
             if fork == 0: return curve, []
             return curve
 
 
     def tryAllForks(self, todo, fork):
         "Get all the possible curves that fork at this point."
-        print "tryallforks tracepoint(1)"
+        print("tryallforks tracepoint(1)")
         fork += 1
         self.visited.pushLevel()
         cs = []
         for i1, j1 in todo:
-            print "tryallforks: i1, j1=", i1, j1
+            print("tryallforks: i1, j1=", i1, j1)
             j11, j12 = self.thickx(i1, j1)
             c2 = []
             if not self.visited.in_((i1, int((j11+j12)/2) )):  # Maybe c1 includes candidate i1,j1
@@ -225,7 +228,7 @@ class _RasterTracker:
             if abs(jg2-jg1) > 3*gapmax: break
             if abs(jg2-jg1) == 0: break
             gaptolmax1 /= 2
-        print "thickx: j1,j2=", j1, j2
+        print("thickx: j1,j2=", j1, j2)
         return j1, j2
 
 
@@ -247,7 +250,7 @@ class _RasterTracker:
         for i, j in curve:
             i1, i2, j1, j2 = self.thick(i, j)
             t1 = min(i2-i1+1, j2-j1+1)
-            print t1
+            print(t1)
             t += t1
         return t / float(len(curve))
 
@@ -365,15 +368,15 @@ def test():
     global curves
     curves = []
     fot1 = ThanPilRasterTracker(p_gimage.open("seg1.bmp"))
-#    fot1 = ThanAscRasterTracker(file("seg1.asc"))
+#    fot1 = ThanAscRasterTracker(open("seg1.asc"))
 #    print "thickness=", fot1.thickness(curve)
 #    curves.append(curve)
 
     fot1.traceAll()
 #    fot1.plotcurve(curve)
-#    fot1.save(file("res.asc", "w"))
+#    fot1.save(open("res.asc", "w"))
 
-    fw = file("res.syn", "w")
+    fw = open("res.syn", "w")
     i = 0
     for curve in curves:
         for y,x in curve:

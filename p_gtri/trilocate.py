@@ -1,4 +1,6 @@
 # -*- coding: iso-8859-7 -*-
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from p_ggen import iterby2, doNothing
 from p_ggeom import TriLocal, MesaTri
 
@@ -12,9 +14,18 @@ class TriLocate(object):
         xyz = []
         en = []
         for dline in fr:
-            dl = dline.split()
-            xyz.append((float(dl[1]), float(dl[2]), float(dl[3]), float(dl[4]), float(dl[5]),))
-            if dl[0] == '####ΚΔ####': infin = 4   # Υπάρχουν άπειρα σημεία
+            a1 = dline[:10].rstrip()
+            x1 = float(dline[10:25])
+            y1 = float(dline[25:40])
+            z1 = float(dline[40:55])
+            try:
+                x1p = float(dline[55:65])
+                y1p = float(dline[65:75])
+            except ValueError as e:
+                if pixelindex: raise
+                x1p = y1p = -99999.9     #Fake pixel coordinates, when there are no pixel coordinates and pixelindex==False
+            xyz.append((x1, y1, z1, x1p, y1p))
+            if a1 == '####ΚΔ####': infin = 4   # Υπάρχουν άπειρα σημεία
             en1 = []
             for dline in fr:
                 dl = dline.strip()
@@ -107,9 +118,9 @@ class GridIndex(object):
 
     def z(self, x, y, tri1=None):
         "Finds the z of point x, y."
-        if tri1 == None:
+        if tri1 is None:
             tri1 = self.triFind(x, y)
-            if tri1 == None: return tri1
+            if tri1 is None: return tri1
         if self.ispixel: ix, iy = 3, 4
         else:            ix, iy = 0, 1
         tra  = TriLocal(tri1[0][ix], tri1[0][iy], tri1[1][ix], tri1[1][iy], tri1[2][ix], tri1[2][iy])
@@ -119,9 +130,9 @@ class GridIndex(object):
 
     def pixel(self, x, y, tri1=None):
         "Finds the pixel coordinates of point x, y."
-        if tri1 == None:
+        if tri1 is None:
             tri1 = self.triFind(x, y)
-            if tri1 == None: return None, None
+            if tri1 is None: return None, None
         if self.ispixel: ix, iy = 3, 4
         else:            ix, iy = 0, 1
         tra  = TriLocal(tri1[0][ix], tri1[0][iy], tri1[1][ix], tri1[1][iy], tri1[2][ix], tri1[2][iy])
@@ -133,9 +144,9 @@ class GridIndex(object):
 
     def world(self, x, y, tri1=None):
         "Finds the world coordinates of point x, y."
-        if tri1 == None:
+        if tri1 is None:
             tri1 = self.triFind(x, y)
-            if tri1 == None: return None, None
+            if tri1 is None: return None, None
         if self.ispixel: ix, iy = 3, 4
         else:            ix, iy = 0, 1
         tra  = TriLocal(tri1[0][ix], tri1[0][iy], tri1[1][ix], tri1[1][iy], tri1[2][ix], tri1[2][iy])

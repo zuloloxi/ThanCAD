@@ -1,14 +1,16 @@
 # -*- coding: iso-8859-7 -*-
-
-from gen import ing, prg, tog, isString, thanUnunicode
-from jorpath import path
+from __future__ import print_function
+#from builtins import input
+from p_ggen.py23 import input
+from .gen import ing, prg, tog, isString, thanUnunicode
+from .jorpath import path
 
 
 def inpDouble(mes, douDef=None):
     "Inputs a double with default value."
     while True:
-        dline = raw_input(tog(mes)).strip()
-        if dline == '' and douDef != None: return douDef     # Default value
+        dline = input(tog(mes)).strip()
+        if dline == '' and douDef is not None: return douDef     # Default value
         try: return float(dline)
         except: pass
         prg("\nΑναμένεται πραγματικός αριθμός\nΠροσπαθείστε πάλι.\n")
@@ -17,8 +19,8 @@ def inpDouble(mes, douDef=None):
 def inpLong(mes, douDef=None):
     "Inputs an integer with default value."
     while True:
-        dline = raw_input(tog(mes)).strip()
-        if dline == '' and douDef != None: return douDef     # Default value
+        dline = input(tog(mes)).strip()
+        if dline == '' and douDef is not None: return douDef     # Default value
         try: return int(dline)
         except: pass
         prg("\nΑναμένεται ακέραιος αριθμός\nΠροσπαθείστε πάλι.\n")
@@ -27,8 +29,8 @@ def inpLong(mes, douDef=None):
 def inpNo(mes, douDef=None):
     "Inputs yes or no."
     while True:
-        dline = raw_input(tog(mes)).strip()
-        if dline == '' and douDef != None: return douDef     # Default value
+        dline = input(tog(mes)).strip()
+        if dline == '' and douDef is not None: return douDef     # Default value
         dl = ing(dline[:2])
 #-------Check what We read
         if dl in ('να', 'ΝΑ', 'na', 'NA', 'ye', 'YE', '1'): return True
@@ -39,8 +41,8 @@ def inpNo(mes, douDef=None):
 def inpStr(mes, douDef=None):
     "Inputs a string with default value."
     while True:
-        dline = ing(raw_input(tog(mes)).strip())
-        if dline == '' and douDef != None: return douDef     # Default value
+        dline = ing(input(tog(mes)).strip())
+        if dline == '' and douDef is not None: return douDef     # Default value
         return dline
 
 
@@ -65,13 +67,13 @@ def inpFiles(mes, suf="", nest=False):
                 cdir = fentry.parent
                 if cdir == "": cdir = initialdir
                 fentry = fentry.basename()
-                if not fentry.lower().endswith(suf): fentry += suf
+                if fentry.ext.lower() == "": fentry += suf
                 if nest: f = list(cdir.walkfiles(fentry))      # nested subdirectories
                 else:    f = list(cdir.files(fentry))          # only current directory
                 if len(f) == 0: prg("Warning: no %s files matches '%s'" % (suf, fentry))
                 fildats.extend(f)
             else:
-                if not fentry.lower().endswith(suf): fentry += suf
+                if fentry.ext.lower() == "": fentry += suf
                 fildats.append(fentry)
         if len(fildats) > 0: return fildats
         prg("Error: No %s files defined or found." % suf)
@@ -83,8 +85,8 @@ def inpSaveFile(ext, mes, mode="w", initialfile=""):
     while True:
         filnam = inpStrB(mes, initialfile)
         try:
-            fw = file(filnam, mode)
-        except IOError, why:
+            fw = open(filnam, mode)
+        except IOError as why:
             prg("Error opening file %s: %s\nTry again.\n" % (filnam, why), "can1")
         else:
             return filnam, fw
@@ -92,14 +94,14 @@ def inpSaveFile(ext, mes, mode="w", initialfile=""):
 
 def inpDir(mes, mustexist=False, mustnotexist=False, default=None):
     "Inputs a non-blank directory name with default value."
-    if default != None:
+    if default is not None:
         try:
             default = thanUnunicode(default)
         except:
             default = ""
     while True:
-        f = ing(raw_input(tog(mes)).strip())
-        if f == '' and default != None: f = default       # Default value
+        f = ing(input(tog(mes)).strip())
+        if f == '' and default is not None: f = default       # Default value
         if f.strip() == '':
             prg('\nΑναμένεται όνομα φακέλλου (μη κενό)\nΠροσπαθείστε πάλι.\n', "can1")
             continue
@@ -125,8 +127,8 @@ def inpDir(mes, mustexist=False, mustnotexist=False, default=None):
 def inpStrB(mes, douDef=None):
     "Inputs a non-blank string with default value."
     while True:
-        dline = ing(raw_input(tog(mes)).strip())
-        if dline == '' and douDef != None: dline = douDef         # Default value
+        dline = ing(input(tog(mes)).strip())
+        if dline == '' and douDef is not None: dline = douDef         # Default value
         if dline.strip() != '': return dline
         prg('\nΑναμένεται κείμενο (μη κενό)\nΠροσπαθείστε πάλι.\n')
 
@@ -255,7 +257,7 @@ def medStr(un, mes, douDef):
 
 def medDir(un, mes, mustexist=False, mustnotexist=False, default=None):
     "Inputs a non-blank directory name with default value."
-    if default != None:
+    if default is not None:
         try:
             default = thanUnunicode(default)
         except:
@@ -264,7 +266,7 @@ def medDir(un, mes, mustexist=False, mustnotexist=False, default=None):
     f = f.strip()
     while True:
         if f == '':
-            if default != None: f = default       # Default value
+            if default is not None: f = default       # Default value
             break
         if mustexist:
             if f.exists():
@@ -289,15 +291,15 @@ def medMchoice(un, mes, coms, douDef=1):
 def test():
     "Tests the functions."
     akl = inpDoubleR('ΚΛΙΜΑΚΑ ΤΕΛΙΚΟΥ ΣΧΕΔΙΟΥ (return=500) : ', 1.0e-10, 1.0e10, 500.0)
-    print "akl=", akl
+    print("akl=", akl)
 
 def testd():
     "Tests the functions."
 #    d = inpDir('Φάκελλος: ', mustexist=True, mustnotexist=False, default=".")
 #    d = inpDir('Φάκελλος: ', mustexist=False, mustnotexist=True, default=".")
-#    print "directory=", d
+#    print("directory=", d)
     d = inpDir('Φάκελλος: ', mustexist=False, mustnotexist=False, default=".")
-    print "directory=", d
+    print("directory=", d)
 
 
-if __name__ == "__main__": testd()
+if __name__ == "__main__": testd(); test()

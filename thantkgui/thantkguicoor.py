@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,9 +21,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
-This module defines a mixin that copes with Tkinter's 2 coordinate systems -
+This module defines a mixin that copes with tkinter's 2 coordinate systems -
 plus the world (user) coordinate system of ThanCad. All the zoom, pan,
 autoregeneration, window-dimensions-related functions are here.
 
@@ -35,13 +35,14 @@ coordinates or if it is measured in canvas coordinates.
 The functions defined here should not interact with the user, i.e. accept input
 or print information to the user.
 """
+from __future__ import print_function
 from math import sqrt
-from Tkinter import SCROLL, UNITS, ALL
+from tkinter import SCROLL, UNITS, ALL
 from p_gmath import thanNearx, thanNear2, ThanRectCoorTransf, thanRoundCenter
 from thanvar import Canc, thanLogTk
 from thanopt import thancadconf
 from thantrans import T
-from thantkguilowget.thantkconst import THAN_STATE_PANDYNAMIC, THAN_STATE_ZOOMDYNAMIC
+from .thantkguilowget.thantkconst import THAN_STATE_PANDYNAMIC, THAN_STATE_ZOOMDYNAMIC
 
 
 #############################################################################
@@ -50,8 +51,8 @@ from thantkguilowget.thantkconst import THAN_STATE_PANDYNAMIC, THAN_STATE_ZOOMDY
 class ThanTkGuiCoor:
     """Mixin for viewport and coordinates transformation.
 
-    Tkinter maintains 2 coordinates systems. One is the actual pixel based
-    system. The other is a logical system which Tkinter maps to the pixel
+    tkinter maintains 2 coordinates systems. One is the actual pixel based
+    system. The other is a logical system which tkinter maps to the pixel
     system. All drawings (lines, circles etc.) are defined in logical
     coordinates.
 
@@ -119,7 +120,7 @@ class ThanTkGuiCoor:
         dx = dc.canvasx(0)
         dy = dc.canvasy(0)
         assert dx==0 and dy==0, "Something wrong with resetWinCoor()??"
-        print "__resetWinCoor(): Canvas reset to logical coordinates near 0,0"
+        print("__resetWinCoor(): Canvas reset to logical coordinates near 0,0")
 
 
     def thanGudGetWincm(self):
@@ -131,7 +132,7 @@ class ThanTkGuiCoor:
     def __robustDim(self):
         """Returns the dimensions of the window and screen in pixels and in mm.
 
-        If Tkinter answers wrong values, it is assumed that the monitor is
+        If tkinter answers wrong values, it is assumed that the monitor is
         19 inches, the ratio of height/width is assumed 0.75 and the resolution
         1024 x 768.
         """
@@ -147,28 +148,28 @@ class ThanTkGuiCoor:
         heightmm = float(self.winfo_screenmmheight())  # mm
 
         if widthmm < 2.0:
-            thanLogTk.warning("TkCoor:robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+            thanLogTk.warning("TkCoor:robustDim: tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
             if heightmm < 2.0:
                 widthmm = MON*25.4 / sqrt(1+RATIO**2)
                 heightmm = widthmm * RATIO
             else:
                 widthmm = heightmm / RATIO
         elif heightmm < 2.0:
-            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
+            thanLogTk.warning("robustDim: tkinter reported illegal screen dimensions: %fmmd x %fmm", widthmm, heightmm)
             heightmm = widthmm * RATIO
 
         if width < 2:
-            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
+            thanLogTk.warning("robustDim: tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
             if height < 2:
                 width, height = RESOL
             else:
                 width = int(height / RATIO)
         elif height < 2:
-            thanLogTk.warning("robustDim: Tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
+            thanLogTk.warning("robustDim: tkinter reported illegal screen dimensions: %dpix x %dpix", width, height)
             height = int(width * RATIO)
 
         if w < 2 or h < 2:
-            thanLogTk.warning("robustDim: Tkinter reported illegal window dimensions: %dpix x %dpix", w, h)
+            thanLogTk.warning("robustDim: tkinter reported illegal window dimensions: %dpix x %dpix", w, h)
             w, h = width, height
         return width, height, widthmm, heightmm, w, h
 
@@ -191,7 +192,7 @@ class ThanTkGuiCoor:
 
 
     def thanGudGetBbox(self):
-        """Finds the bounding box of all the entities in a Tkinter Canvas; unfortunately it does not work."
+        """Finds the bounding box of all the entities in a tkinter Canvas; unfortunately it does not work."
 
         IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
         """
@@ -235,15 +236,15 @@ class ThanTkGuiCoor:
     def thanAutoRegen(self, regenImages=False):
         """Checks if a regen is required, usually after a pan or a zoom.
 
-        Pan, as implemented with Tkinter, handles images as expected.
-        However, zoom, as implemented with Tkinter, does not affect the size
+        Pan, as implemented with tkinter, handles images as expected.
+        However, zoom, as implemented with tkinter, does not affect the size
         of the images; it affects only the insertion point of the image.
         Thus, when a zoom is performed, or when there is a possibility that
         a zoom was performed, regenImages should be set to True.
         IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
         """
         if self.__autoregen_preempt:
-            print "thanAutoRegen() called preemptively; returning immediately"
+            print("thanAutoRegen() called preemptively; returning immediately")
             return
         self.__autoregen_preempt = True
 
@@ -278,7 +279,7 @@ class ThanTkGuiCoor:
     def thanRegen(self):
         "Regenerates the current drawing."
         if self.__regen_preempt:
-            print "thanRegen() called preemptively; returning immediately"
+            print("thanRegen() called preemptively; returning immediately")
             return
         self.__regen_preempt = True
         self.thanCom.thanAppend(T["Regenerating drawing.."])
@@ -289,13 +290,13 @@ class ThanTkGuiCoor:
         self.thanCanvas.thanGudCoorChanged()
         import time
         t1 = time.time()
-        print "Regenerating elements..",
+        print("Regenerating elements..",)
         temp = self.than.markselected
         self.than.markselected = self.thanSelall
         self.thanProj[1].thanTkDraw(self.than)  # Repaint all the elements in the window
         self.than.markselected = temp
         t2 = time.time()
-        print t2-t1, "secs"
+        print(t2-t1, "secs")
         self.__regen_preempt = False
         self.thanCom.thanAppend(T["end of regeneration.\n"])   # Inform that regeneration finished
 
@@ -312,7 +313,7 @@ class ThanTkGuiCoor:
         So, no optimisation to the code (Thanasis 2007_03_18).
         """
         leaflayers = sorted((lay.thanAtts["draworder"].thanVal, taglay)
-                            for taglay,lay in self.thanProj[1].thanLayerTree.dilay.iteritems()
+                            for taglay,lay in self.thanProj[1].thanLayerTree.dilay.items()   #works for python2,3
                             if not lay.thanAtts["frozen"].thanVal
                            )
         dc = self.thanCanvas
@@ -321,10 +322,10 @@ class ThanTkGuiCoor:
 
 
     def __isRegenNeeded(self):
-        """Checks if the visible part of the drawing is already in the Tkinter Canvas.
+        """Checks if the visible part of the drawing is already in the tkinter Canvas.
 
         This routine is needed because if a drawing is big, it is not rendered
-        onto the Tkinter canvas as a whole, but only the part that is actually
+        onto the tkinter canvas as a whole, but only the part that is actually
         visible (and maybe a little more, so that we can avoid a regenerate
         when a small pan is done afterwards).
         This routine checks if any of the unrendered part of the drawing has
@@ -340,12 +341,12 @@ class ThanTkGuiCoor:
 
 
     def __isImageRegenNeeded(self, im):
-        """Checks if the visible part of the image is already in the Tkinter Canvas after a pan.
+        """Checks if the visible part of the image is already in the tkinter Canvas after a pan.
 
         Note that, after a zoom, the images must be regenerated anyway,
-        since the Tkinter scale does not scale images.
+        since the tkinter scale does not scale images.
         This routine is needed because if an image is big, it is not rendered
-        onto the Tkinter canvas as a whole, but only the part that is actually
+        onto the tkinter canvas as a whole, but only the part that is actually
         visible (and maybe a little more, so that we can avoid a regenerate
         when a small pan is done afterwards).
         This routine checks if any of the unrendered part of the image has
@@ -376,11 +377,11 @@ class ThanTkGuiCoor:
         self.__worPort[2] += dxn
         self.__worPort[1] += dyn
         self.__worPort[3] += dyn
-        print "thanGudPan(): dx, dy=", dx, dy
-        print "thanGudPan(): new worPort=", self.__worPort
+        print("thanGudPan(): dx, dy=", dx, dy)
+        print("thanGudPan(): new worPort=", self.__worPort)
 
         if abs(dx) > 1000000 or abs(dy) > 1000000:
-            self.thanRegen()     # Canvas can't scroll more than biggest long. CHECK WITH NEWER VERSIONS OF TKINTER
+            self.thanRegen()     # Canvas can't scroll more than biggest long. CHECK WITH NEWER VERSIONS OF tkinter
         else:
             dc = self.thanCanvas
             dc.xview(SCROLL, dx, UNITS)
@@ -458,26 +459,26 @@ class ThanTkGuiCoor:
             ymin -= tolxy
             ymax += tolxy
         wn = self.__roundCenter((xmin, ymin, xmax, ymax))
-        print "xyminmax", xmin, ymin, xmax, ymax
-        print "wn=", wn
-        print "w=", w
+        print("xyminmax", xmin, ymin, xmax, ymax)
+        print("wn=", wn)
+        print("w=", w)
         inside = w[0] < wn[0] and\
                  w[1] < wn[1] and\
                  w[2] > wn[2] and\
                  w[3] > wn[3]
-        print "inside=", inside
+        print("inside=", inside)
         if inside: return None, None
 
         dxn = wn[2]-wn[0]
         dyn = wn[3]-wn[1]
         if dxn > dx or dyn > dy:
-            print "Zoom to", wn
+            print("Zoom to", wn)
             self.thanGudZoomWin(self, wn)           # Zoom is needed to make all points visible
             regenImages = True
         else:
             dx = (wn[2]+wn[0])*0.5 - (w[2]+w[0])*0.5
             dy = (wn[3]+wn[1])*0.5 - (w[3]+w[1])*0.5
-            print "pan dx=", dx, "  dy=", dy
+            print("pan dx=", dx, "  dy=", dy)
             self.thanGudPan(dx, dy)
             regenImages = False
         return tuple(self.__worPort), regenImages
@@ -571,7 +572,7 @@ class ThanTkGuiCoor:
         """
         if self.__onsizepreempt:
 #            self.thanSchedule(self.__onSize, event)
-            print "onSize() called preemptively: call NOT scheduled: returning immediately."
+            print("onSize() called preemptively: call NOT scheduled: returning immediately.")
             return
         self.__onsizepreempt = 1
 
@@ -588,7 +589,7 @@ class ThanTkGuiCoor:
             self.thanAutoRegen()
             self.thanCanvas.thanGudCoorChanged()
         else:
-            print "tkguicoor.onSize() called, but window has not changed dimensions!"
+            print("tkguicoor.onSize() called, but window has not changed dimensions!")
 
         self.__onsizepreempt = 0
 
@@ -610,25 +611,25 @@ class ThanTkGuiCoor:
         thanGudPan, thanGudZoom.
         """
         if self.__zoomwin_preempt:
-            print "thanGudZoomWin() called preemptively; returning immediately"
+            print("thanGudZoomWin() called preemptively; returning immediately")
             self.__zoomwin_preempt = 0
             return
         self.__zoomwin_preempt = 1
 
-        print "thanGudZoomWin(): before: worPortn=", worPortn
+        print("thanGudZoomWin(): before: worPortn=", worPortn)
         if thanNear2(worPortn[:2], worPortn[2:]):
-            self.thanProj[2].thanPrter("Can not zoom/pan to window %s", (worPortn,))
+            self.thanProj[2].thanPrter("Can not zoom/pan to window %s" % (worPortn,))
             self.__zoomwin_preempt = 0
             return tuple(self.__worPort)
         worPortn = self.__roundCenter(worPortn)
         if thanNear2(worPortn[:2], worPortn[2:]):
-            self.thanProj[2].thanPrter("Can not zoom/pan to window %s", (worPortn,))
+            self.thanProj[2].thanPrter("Can not zoom/pan to window %s" % (worPortn,))
             self.__zoomwin_preempt = 0
             return tuple(self.__worPort)
-        print "thanGudZoomWin(): after:  worPortn=", worPortn
+        print("thanGudZoomWin(): after:  worPortn=", worPortn)
 
         if thanNear2(self.__worPort[:2], self.__worPort[2:]):   #Current viewport is invalid
-            print "Current viewport is invalid:", self.__worPort
+            print("Current viewport is invalid:", self.__worPort)
             self.__worPort[:] = worPortn
             self.thanRegen()
             self.__zoomwin_preempt = 0
@@ -638,9 +639,9 @@ class ThanTkGuiCoor:
         yc = self.__worPort[1]*0.5 + self.__worPort[3]*0.5
         xcn = worPortn[0]*0.5 + worPortn[2]*0.5
         ycn = worPortn[1]*0.5 + worPortn[3]*0.5
-        print "thanGudZoomWin(): xc,  yc =", xc, yc
-        print "thanGudZoomWin(): xcn, ycn=", xcn, ycn
-        print "thanGudZoomWin(): worPort before pan=", self.__worPort
+        print("thanGudZoomWin(): xc,  yc =", xc, yc)
+        print("thanGudZoomWin(): xcn, ycn=", xcn, ycn)
+        print("thanGudZoomWin(): worPort before pan=", self.__worPort)
         dx, dy = xcn-xc, ycn-yc
         dxp, dyp = self.thanCt.global2LocalReli(dx, dy)
         if dxp != 0 and dyp != 0:
@@ -649,7 +650,7 @@ class ThanTkGuiCoor:
                 self.__zoomwin_preempt = 0
                 return tuple(self.__worPort)
             self.thanGudPan(dx, dy)
-        print "thanGudZoomWin(): worPort after  pan=", self.__worPort
+        print("thanGudZoomWin(): worPort after  pan=", self.__worPort)
 
         dxn = worPortn[2] - worPortn[0]
         dyn = worPortn[3] - worPortn[1]
@@ -663,4 +664,4 @@ class ThanTkGuiCoor:
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

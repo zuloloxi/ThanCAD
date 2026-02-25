@@ -26,11 +26,12 @@ askfloat -- get a float from the user
 askstring -- get a string from the user
 '''
 
-import Tkinter
-from thantkutilb import thanGrabSet, thanGrabRelease               # Stamos Aug 12, 2004
-from thanwidstrans import T as Twid
+from __future__ import print_function
+import tkinter
+from .thantkutilb import thanGrabSet, thanGrabRelease               # Stamos Aug 12, 2004
+from .thanwidstrans import T as Twid
 
-class ThanDialog(Tkinter.Toplevel):
+class ThanDialog(tkinter.Toplevel):
     '''Class to open dialogs.
 
     This class is intended as a base class for custom dialogs
@@ -53,7 +54,7 @@ class ThanDialog(Tkinter.Toplevel):
               If 3 buttons: First button calls OK(), Second button calls apply2(),
                             Third button calls cancel()
         """
-        Tkinter.Toplevel.__init__(self, parent, **kw)
+        tkinter.Toplevel.__init__(self, parent, **kw)
         if parent is not None:
             self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
                                       parent.winfo_rooty()+50))
@@ -68,7 +69,7 @@ class ThanDialog(Tkinter.Toplevel):
             assert len(buttonlabels) in (2, 3), "2 or 3 buttonlabels were expected"
             self._butLabs = tuple(lab+"" for lab in buttonlabels) #Raise TypeError if not strings
 
-        body = Tkinter.Frame(self)
+        body = tkinter.Frame(self)
         self.initial_focus = self.body(body)
         body.grid(padx=5, pady=5, sticky="wesn") # Stamos Aug 12, 2004
         if not self.initial_focus: self.initial_focus = self
@@ -113,7 +114,7 @@ class ThanDialog(Tkinter.Toplevel):
         self.initial_focus = None
         self.parent = None
 #        self.grab_release()                     # Stamos Nov 28, 2006: commented out
-        Tkinter.Toplevel.destroy(self)
+        tkinter.Toplevel.destroy(self)
 
     #
     # construction hooks
@@ -145,11 +146,11 @@ class ThanDialog(Tkinter.Toplevel):
         '''
         n = max(len(t) for t in self._butLabs)
         n = max((n, 12))
-        box = Tkinter.Frame(self)
-        w = Tkinter.Button(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",   # Stamos 2007_03_21
-            width=n, command=self.ok, default=Tkinter.ACTIVE)   # Stamos Feb 26, 2006
+        box = tkinter.Frame(self)
+        w = tkinter.Button(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",   # Stamos 2007_03_21
+            width=n, command=self.ok, default=tkinter.ACTIVE)   # Stamos Feb 26, 2006
         w.grid(row=0, column=0, padx=5, pady=5, sticky="w")     # Stamos Aug 12, 2004
-        w = Tkinter.Button(box, text=self._butLabs[1], bg="pink", activebackground="red",            # Stamos 2007_03_21
+        w = tkinter.Button(box, text=self._butLabs[1], bg="pink", activebackground="red",            # Stamos 2007_03_21
             width=n, command=self.cancel)                       # Stamos Feb 26, 2006
         w.grid(row=0, column=1, padx=5, pady=5, sticky="e")     # Stamos Aug 12, 2004
 
@@ -209,7 +210,7 @@ class ThanDialog(Tkinter.Toplevel):
 
 
     def __del__(self):
-        print "ThanDialog dies.."
+        print("ThanDialog dies..")
 
 
     def buttonbox3(self):
@@ -219,14 +220,14 @@ class ThanDialog(Tkinter.Toplevel):
         '''
         n = max(len(t) for t in self._butLabs)
         n = max((n, 12))
-        box = Tkinter.Frame(self)
-        w = Tkinter.Button(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",  # Stamos 2007_03_21
-            width=n, command=self.ok, default=Tkinter.ACTIVE)   # Stamos Feb 26, 2006
+        box = tkinter.Frame(self)
+        w = tkinter.Button(box, text=self._butLabs[0], bg="lightgreen", activebackground="green",  # Stamos 2007_03_21
+            width=n, command=self.ok, default=tkinter.ACTIVE)   # Stamos Feb 26, 2006
         w.grid(row=0, column=0, padx=5, pady=5, sticky="w")     # Stamos Aug 12, 2004
-        w = Tkinter.Button(box, text=self._butLabs[1], bg="gold", activebackground="yellow",       # Stamos 2007_03_21
+        w = tkinter.Button(box, text=self._butLabs[1], bg="gold", activebackground="yellow",       # Stamos 2007_03_21
             width=n, command=self.apply2)                       # Stamos Jan 7, 2011
         w.grid(row=0, column=1, padx=5, pady=5, sticky="w")     # Stamos Jul 15, 2005
-        w = Tkinter.Button(box, text=self._butLabs[2], bg="pink", activebackground="red",          # Stamos 2007_03_21
+        w = tkinter.Button(box, text=self._butLabs[2], bg="pink", activebackground="red",          # Stamos 2007_03_21
             width=n, command=self.cancel)                       # Stamos Feb 26, 2006
         w.grid(row=0, column=2, padx=5, pady=5, sticky="e")     # Stamos Aug 12, 2004
 
@@ -256,42 +257,42 @@ class _QueryDialog(ThanDialog):
                  minvalue = None, maxvalue = None,
                  parent = None, **kw):
         if not parent:
-            parent = Tkinter._default_root
+            parent = tkinter._default_root
         self.prompt   = prompt
         self.minvalue = minvalue
         self.maxvalue = maxvalue
         self.initialvalue = initialvalue
         self.entrykw = kw
-        ThanDialog.__init__(self, parent, title, buttonlabels=3)
+        ThanDialog.__init__(self, parent, title)  #, buttonlabels=3)
 
     def destroy(self):
         self.entry = None
         ThanDialog.destroy(self)
 
     def body(self, master):
-        w = Tkinter.Label(master, text=self.prompt, justify=Tkinter.LEFT)
-        w.grid(row=0, padx=5, sticky=Tkinter.W)
-        self.entry = Tkinter.Entry(master, name="entry", **self.entrykw)
-        self.entry.grid(row=1, padx=5, sticky=Tkinter.W+Tkinter.E)
+        w = tkinter.Label(master, text=self.prompt, justify=tkinter.LEFT)
+        w.grid(row=0, padx=5, sticky=tkinter.W)
+        self.entry = tkinter.Entry(master, name="entry", **self.entrykw)
+        self.entry.grid(row=1, padx=5, sticky=tkinter.W+tkinter.E)
         if self.initialvalue:
             self.entry.insert(0, self.initialvalue)
-            self.entry.select_range(0, Tkinter.END)
+            self.entry.select_range(0, tkinter.END)
 
         return self.entry
 
     def validate(self):
-        import tkMessageBox
+        from tkinter import messagebox
         try:
             result = self.getresult()
         except ValueError:
-            tkMessageBox.showwarning(
+            messagebox.showwarning(
                 "Illegal value",
                 self.errormessage + "\nPlease try again",
                 parent = self
             )
             return 0
         if self.minvalue is not None and result < self.minvalue:
-            tkMessageBox.showwarning(
+            messagebox.showwarning(
                 "Too small",
                 "The allowed minimum value is %s. "
                 "Please try again." % self.minvalue,
@@ -299,7 +300,7 @@ class _QueryDialog(ThanDialog):
             )
             return 0
         if self.maxvalue is not None and result > self.maxvalue:
-            tkMessageBox.showwarning(
+            messagebox.showwarning(
                 "Too large",
                 "The allowed maximum value is %s. "
                 "Please try again." % self.maxvalue,
@@ -353,7 +354,7 @@ def askfloat(title, prompt, **kw):
 
 class _QueryString(_QueryDialog):
     def __init__(self, *args, **kw):
-        if kw.has_key("show"):
+        if "show" in kw:
             self.__show = kw["show"]
             del kw["show"]
         else:
@@ -387,7 +388,7 @@ def askstring(title, prompt, **kw):
 
 def test1():
     "Tests menus."
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     w = ThanDialog(root)
 
 
@@ -395,8 +396,8 @@ if __name__ == "__main__":
     if 0: 
         test1()
     else:
-        root = Tkinter.Tk()
+        root = tkinter.Tk()
         root.update()
-        print askinteger("Spam", "Egg count", initialvalue=12*12)
-        print askfloat("Spam", "Egg weight\n(in tons)", minvalue=1, maxvalue=100)
-        print askstring("Spam", "Egg label")
+        print(askinteger("Spam", "Egg count", initialvalue=12*12))
+        print(askfloat("Spam", "Egg weight\n(in tons)", minvalue=1, maxvalue=100))
+        print(askstring("Spam", "Egg label"))

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,11 +21,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the ThanCad Line type, and some builtin line types.
 """
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import fabs
 
 
@@ -116,7 +118,7 @@ class ThanLtype:
 
     def thanImpThc(self, fr, ver):
         "Reads the object name and returns its version from a .thcx file."
-        name = fr.next().strip()[1:-1]
+        name = next(fr).strip()[1:-1]
         fr.unread()
         fr.readBeg(name)
         self.thanImpThc1(fr, ver)
@@ -134,11 +136,11 @@ class ThanLtype:
 
     def thanImpThc1(self, fr, ver):
         "Reads the linetype definition from a .thcx file."
-        desc = fr.next().rstrip()
-        n = int(fr.next())
+        desc = next(fr).rstrip()
+        n = int(next(fr))
         dashes = fr.readSnode("DASH", n)
         ok, terr = thanDashesTest(dashes)
-        if not ok: raise ValueError, terr
+        if not ok: raise ValueError(terr)
         self.thanDesc = desc
         self.thanDashes = tuple(dashes)
 
@@ -194,7 +196,7 @@ def thanDashesTest(dashes):
     for d1 in dashes:
         try:
             d1 = float(d1)
-        except ValueError, e:
+        except ValueError as e:
             return False, "Invalid dash: %s" % (e,)
         if d1 < 0.0: return False, "Negative dash or space found"
     for i in xrange(1, len(dashes), 2):

@@ -1,4 +1,6 @@
 # -*- coding: iso-8859-7 -*-
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import sin, cos, atan, atan2, sqrt, hypot, pi
 import p_gmath
 
@@ -44,15 +46,15 @@ class Ellipsoid(object):
         h = xt/(cos(phi)*cos(lam)) - N - hgme
         return lam, phi, h
 
-    tee = "Don't known how to convert from %s ellipsoid to %s ellipsoid"
+    tee = "Don't know how to convert from %s ellipsoid to %s ellipsoid"
     def geocen2geocenGRS80(self, X, Y, Z):
         "Convert datum geocentric coordinates to GRS80 geocentric coordinates."
-        if self.tra2cur == None: raise ValueError, self.tee % (self.EOID.name, GRS80.name)
+        if self.tra2cur is None: raise ValueError(self.tee % (self.name, GRS80.name))
         return self.tra2GRS80.calc((X, Y, Z))
 
     def geocenGRS802geocen(self, X, Y, Z):
         "Convert datum geocentric coordinates to GRS80 geocentric coordinates."
-        if self.tra2cur == None: raise ValueError, self.tee % (GRS80.name, self.EOID.name)
+        if self.tra2cur is None: raise ValueError(self.tee % (GRS80.name, self.EOID.name))
         return self.tra2cur.calc((X, Y, Z))
 
     def setBursaWolf(self, tx, ty, tz, ex, ey, ez, sk):

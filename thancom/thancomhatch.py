@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,18 +21,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for hatch commands.
 """
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
 from p_ggen import iterby2, xfrange
 import thandr
 from thanvar import Canc
 from thantrans import T
-from thancommod import thanModCanc, thanModEnd
+from .thancommod import thanModCanc, thanModEnd
 
 
 def thanHatchOpen(proj):
@@ -40,7 +42,7 @@ def thanHatchOpen(proj):
 
     If the lines have opposite direction the result is artistic.
     """
-    from selutil import thanSelMultlines
+    from .selutil import thanSelMultlines
     lines = thanSelMultlines(proj, 2, T["Select 2 lines to create draw between:\n"])
     if lines == Canc: return thanModCanc(proj)         # open hatch was cancelled
 
@@ -70,8 +72,8 @@ def thanHatchOpen(proj):
     it1 = _iterdis2(lines[0].cp, d1)
     it2 = _iterdis2(lines[1].cp, d2)
     for i in xrange(nweb+1):
-            c1 = it1.next()
-            c2 = it2.next()
+            c1 = next(it1)
+            c2 = next(it2)
             e = thandr.ThanLine()
             e.thanSet([c1, c2])
             if e.thanIsNormal():

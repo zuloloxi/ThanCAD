@@ -3,7 +3,8 @@ This module defines a means to execute commands in an orderly way, while
 not allowing the user to do something else.
 """
 
-import thantkutila
+from __future__ import print_function
+from . import thantkutila
 
 class ThanScheduler:
     "Schedules functions to be called one by one in order FIFO."
@@ -85,8 +86,8 @@ class ThanScheduler:
                 win = self.winfo_toplevel()
                 thantkutila.thanGudModalMessage(win, mes[1], mes[0], thantkutila.ERROR)
             except AttributeError:
-                print "%s: %s" % mes
+                print("%s: %s" % mes)
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

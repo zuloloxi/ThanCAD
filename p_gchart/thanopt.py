@@ -1,14 +1,20 @@
-import sys, os.path, ConfigParser, Tkinter
+from __future__ import print_function
+import sys, os.path
+try:    from configparser import SafeConfigParser
+except: from ConfigParser import SafeConfigParser
+import tkinter
 
 
 #############################################################################
 #############################################################################
 
-class ThanConfigParser(ConfigParser.SafeConfigParser):
+class ThanConfigParser(SafeConfigParser):
     def getintvar(self, sect, opt, intvar):
         try: i = self.getint(sect, opt)
         except: pass
         else: intvar.set(i)
+    def setintvar(self, sect, opt, intvar):
+        self.set(sect, opt, str(intvar.get()))
 
 
 #############################################################################
@@ -16,14 +22,14 @@ class ThanConfigParser(ConfigParser.SafeConfigParser):
 
 class ThanOptions:
     def __init__(self, config):
-        self.zoomWhenConf     = Tkinter.IntVar()
-        self.regenWhenConf    = Tkinter.IntVar()
-        self.regenWhenZoom    = Tkinter.IntVar()
-        self.regenWhenZoomall = Tkinter.IntVar()
-        self.centerWhenZoom   = Tkinter.IntVar()
+        self.zoomWhenConf     = tkinter.IntVar()
+        self.regenWhenConf    = tkinter.IntVar()
+        self.regenWhenZoom    = tkinter.IntVar()
+        self.regenWhenZoomall = tkinter.IntVar()
+        self.centerWhenZoom   = tkinter.IntVar()
         self.zoomFact         = 1.2
-        self.showMenubar      = Tkinter.IntVar()
-        self.showToolbar      = Tkinter.IntVar()
+        self.showMenubar      = tkinter.IntVar()
+        self.showToolbar      = tkinter.IntVar()
         self.thanOptFactory()
 
         if sys.platform == "win32":
@@ -35,9 +41,9 @@ class ThanOptions:
         self.thanOptFilini = f
         self.thanOptGet()
 
+
     def thanOptFactory(self):
         "Factory set default values."
-
         self.zoomWhenConf.set(     True)
         self.regenWhenConf.set(    True)
         self.regenWhenZoom.set(    False)
@@ -47,9 +53,9 @@ class ThanOptions:
         self.showMenubar.set(      False)
         self.showToolbar.set(      True)
 
+
     def thanOptGet(self):
         "Read options from configuration file."
-
         c = ThanConfigParser()
         c.read(self.thanOptFilini)
         c.getintvar("draw", "zoom when config",    self.zoomWhenConf)
@@ -68,17 +74,17 @@ class ThanOptions:
         c = ThanConfigParser()
         c.read(self.thanOptFilini)
         if not c.has_section("draw"): c.add_section("draw")
-        c.set("draw", "zoom when config",    self.zoomWhenConf.get())
-        c.set("draw", "regen when config",   self.regenWhenConf.get())
-        c.set("draw", "regen when zoom",     self.regenWhenZoom.get())
-        c.set("draw", "regen when zoom all", self.regenWhenZoomall.get())
-        c.set("draw", "center when zoom",    self.centerWhenZoom.get())
-        c.set("draw", "show menu bar",       self.showMenubar.get())
-        c.set("draw", "show tool bar",       self.showToolbar.get())
-        c.set("draw", "zoom factor",         self.zoomFact)
+        c.setintvar("draw", "zoom when config",    self.zoomWhenConf)
+        c.setintvar("draw", "regen when config",   self.regenWhenConf)
+        c.setintvar("draw", "regen when zoom",     self.regenWhenZoom)
+        c.setintvar("draw", "regen when zoom all", self.regenWhenZoomall)
+        c.setintvar("draw", "center when zoom",    self.centerWhenZoom)
+        c.setintvar("draw", "show menu bar",       self.showMenubar)
+        c.setintvar("draw", "show tool bar",       self.showToolbar)
+        c.set("draw", "zoom factor",         str(self.zoomFact))
 
         try:
-            f = file(self.thanOptFilini, "w")
+            f = open(self.thanOptFilini, "w")
             c.write(f)
         except IOError: pass
 
@@ -87,9 +93,9 @@ class ThanOptions:
 #############################################################################
 
 if __name__ == "__main__":
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     p = ThanOptions("q1")
-    print p.zoomFact
+    print(p.zoomFact)
     p.thanOptGet()
-    print p.zoomFact
+    print(p.zoomFact)
     p.thanOptSave()

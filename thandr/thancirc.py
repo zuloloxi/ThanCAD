@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,21 +21,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the circle element.
 """
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import fabs, pi, cos, sin, tan, hypot, atan2
-from itertools import izip
 import bisect
 from p_gmath import PI2, thanintersect, thanNearx
 from p_ggen import prg, xfrange, thanUnicode
 from thanvar import Canc
 from thantrans import T
-import thanintall
-from thanelem import ThanElement
-import thanarc
+from . import thanintall, thanarc
+from .thanelem import ThanElement
 
 
 class ThanCircle(ThanElement):
@@ -78,15 +78,21 @@ class ThanCircle(ThanElement):
         self.setBoundBox([self.cc[0]-self.r, self.cc[1]-self.r, self.cc[0]+self.r, self.cc[1]+self.r])
 
 
+    def thanPointMir(self):
+        "Mirrors the element within XY-plane with respect to predefined point."
+        self.cc = self.thanPointMirXy(self.cc)
+        self.setBoundBox([self.cc[0]-self.r, self.cc[1]-self.r, self.cc[0]+self.r, self.cc[1]+self.r])
+
+
     def thanScale(self, cs, scale):
         "Rotates the element with predefined angle and rotation angle."
-        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.cc, cs)]
+        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.cc, cs)]  #works for python2,3
         self.r *= scale
         self.setBoundBox([self.cc[0]-self.r, self.cc[1]-self.r, self.cc[0]+self.r, self.cc[1]+self.r])
 
     def thanMove(self, dc):
         "Rotates the element with predefined angle and rotation angle."
-        self.cc = [cc1+dd1 for (cc1,dd1) in izip(self.cc, dc)]
+        self.cc = [cc1+dd1 for (cc1,dd1) in zip(self.cc, dc)]   #works for python2,3
         self.setBoundBox([self.cc[0]-self.r, self.cc[1]-self.r, self.cc[0]+self.r, self.cc[1]+self.r])
 
     def thanOsnap(self, proj, otypes, ccu, eother, cori):
@@ -285,10 +291,10 @@ class ThanCircle(ThanElement):
 
     def thanImpThc1(self, fr, ver):
         "Read the circle from thc format."
-        cc = fr.readNode()               #May raise ValueError, IndexError, StopIteration
-        r = float(fr.next())             #May raise ValueError, StopIteration
-        spin = int(fr.next())            #May raise ValueError, StopIteration
-        if spin not in (1, 0, -1): raise ValueError, "spin must 1, 0 or -1"
+        cc = fr.readNode()              #May raise ValueError, IndexError, StopIteration
+        r = float(next(fr))             #May raise ValueError, StopIteration
+        spin = int(next(fr))            #May raise ValueError, StopIteration
+        if spin not in (1, 0, -1): raise ValueError("spin must 1, 0 or -1")
         self.thanSet(cc, r, spin)
 
     def thanExpPil(self, than):

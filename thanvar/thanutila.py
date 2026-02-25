@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines various functions needed by other ThanCad's modules.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
-import tkFont
+import tkinter
 from p_gmath import thanNear2, thanNear3
 import p_gtkwid, p_ggen
 from thanopt import thancadconf
@@ -72,10 +75,10 @@ def thanShowFile(proj, fn, title=""):
     if title == "": title = fn.basename()
     else:           title = "%s: %s" % (fn.basename(), title)
     try:
-        t = file(fn).read()
-    except Exception, why:
+        t = open(fn).read()
+    except Exception as why:
         t = Tmatch["Error while reading file %s:\n%s"] % (fn, why)
-    font1 = tkFont.Font(family=thancadconf.thanFontfamilymono, size=thancadconf.thanFontsizemono)
+    font1 = tkinter.font.Font(family=thancadconf.thanFontfamilymono, size=thancadconf.thanFontsizemono)
     p_gtkwid.thanGudHelpWin(proj[2], t, title, font=font1, width=60)
 
 
@@ -103,4 +106,4 @@ def thanCumulDis(cp):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

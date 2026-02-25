@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,12 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This dialog asks for the line simplification parameters.
 """
 
-import Tkinter
+import tkinter
 import p_gtkwid, p_ggen
 from thantrans import Tphot
 #T = p_gtkwid.Translation(dict(__TRANSLATION__=("en", "EN", "en", "EN")))  ##############
@@ -62,14 +62,14 @@ class ThanSimplificationSettings(p_gtkwid.ThanComDialog):
 
     def fraTol(self, win, ir):
         "Widgets for simplification settings."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir-1, column=0, pady=5, sticky="wesn")
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["TOLERANCE SETTINGS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["TOLERANCE SETTINGS:"])
         lab.grid(row=0, column=1, columnspan=2, sticky="w")
 
         key = "entXYmean"
         tit = "Tolerance of mean xy error"
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=1, column=1, sticky="e")
         wid = p_gtkwid.ThanEntry(fra)
         wid.grid(row=1, column=2, sticky="we")
@@ -78,7 +78,7 @@ class ThanSimplificationSettings(p_gtkwid.ThanComDialog):
 
         key = "entXY"
         tit = "Tolerance of individual xy error"
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=2, column=1, sticky="e")
         wid = p_gtkwid.ThanEntry(fra)
         wid.grid(row=2, column=2, sticky="we")
@@ -87,7 +87,7 @@ class ThanSimplificationSettings(p_gtkwid.ThanComDialog):
 
         key = "entZ"
         tit = "Tolerance of individual z error"
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=3, column=1, sticky="e")
         wid = p_gtkwid.ThanEntry(fra)
         wid.grid(row=3, column=2, sticky="we")
@@ -98,14 +98,14 @@ class ThanSimplificationSettings(p_gtkwid.ThanComDialog):
 
     def fraLin(self, win, ir):
         "Widgets for simplification settings."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir-1, column=0, pady=5, sticky="wesn")
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["SIMPLIFIED LINES:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["SIMPLIFIED LINES:"])
         lab.grid(row=0, column=1, columnspan=2, sticky="w")
 
         key = "choKeep"
         tit = "Keep original lines after simplification"
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=1, column=1, sticky="e")
         wid = p_gtkwid.ThanYesno(fra,width=5)
         wid.grid(row=1, column=2, sticky="w")
@@ -114,13 +114,13 @@ class ThanSimplificationSettings(p_gtkwid.ThanComDialog):
 
         tit = "If the original lines are kept, the simplified lines should be put\n"\
               "into another layer (by changing the current layer)."
-        lab = Tkinter.Label(fra, text=Tphot[tit], anchor="w", justify=Tkinter.LEFT)
+        lab = tkinter.Label(fra, text=Tphot[tit], anchor="w", justify=tkinter.LEFT)
         lab.grid(row=2, column=1, columnspan=2, sticky="w", pady=5)
         fra.columnconfigure(2, weight=1)
 
 
 def test1():
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     proj = [ p_ggen.path("xxxx"), None, root]
     dia = ThanSimplificationSettings(root, cargo=proj)
 #    root.mainloop()

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This package contains ThanCad (sub)packages which are usually previous
 standalone programes, which were embedded into ThanCad.
@@ -29,9 +29,9 @@ standalone programes, which were embedded into ThanCad.
 
 #Comment the following imports to disable importing the packages
 #to make ThanCad lighter for common use
-from komb import kom
-from fractal import fractal
-import biocityplan
-import fplan
-import urban
-import thermo
+from .komb import kom
+from .fractal import fractal
+from . import biocityplan
+from . import fplan
+from . import urban
+from . import thermo

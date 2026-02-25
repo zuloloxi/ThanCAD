@@ -1,9 +1,12 @@
 # -*- coding: iso-8859-7 -*-
-import random, time, bisect, itertools
+#from future.utils import iteritems
+#from past.builtins import xrange
+from p_ggen.py23 import xrange, iteritems
+import bisect, itertools
 from math import pi, atan2, hypot
 from p_gmath import dpt, thanSegSeguw
 from p_ggen import prg
-import ypyka
+from . import ypyka
 
 class ThanLinks(set):
     "A set with ordered iteration."
@@ -115,7 +118,7 @@ class ThanTri(object):
         form = "%s%%0%dd" % (pref, n)
         for c1 in self.ls:
             a1 = self.aa.get(c1, None)
-            if a1 != None: continue
+            if a1 is not None: continue
             self.ipref += 1
             self.aa[c1] = form % (self.ipref,)
 
@@ -232,7 +235,7 @@ class ThanTri(object):
     def sortlinks(self, clist=None):
         "Sorts the links clockwise."
         gdf = lambda cb: dpt(atan2(cb[0]-ca[0], cb[1]-ca[1]))
-        if clist == None: clist = self.ls.iterkeys()
+        if clist is None: clist = self.ls
         for ca in clist:
             self.ls[ca].sort(key=gdf)
 
@@ -262,19 +265,19 @@ class ThanTri(object):
             ci = linksor[i]
             cj = linksor[j]
             if cj not in self.ls[ci]:
-                print "Hit boundary of triangulation."
+                print("Hit boundary of triangulation.")
                 return
             caa = self.diamopposed(cor, ci, cj)
-            if caa == None:
-                print "Dead End!"
+            if caa is None:
+                print("Dead End!")
 #                vis(*chs)
                 return
             ct = thanSegSeguw(cor, caa, ci, cj)
-            if ct == None:
-#                print "Non convex quadrilateral found"
+            if ct is None:
+#                print("Non convex quadrilateral found")
                 ct = thanSegSeguw(cor, cb, ci, cj)
-                if ct == None:
-                    print "There should be an intersection!"
+                if ct is None:
+                    print("There should be an intersection!")
 #                    vis(*chs)
                     return
                 u, _ = ct
@@ -313,7 +316,7 @@ class ThanTri(object):
 
     def iteredges(self):
         "Iterate through the edges of the triangulation."
-        a = (frozenset((j,k)) for j,ks in self.ls.iteritems() for k in ks)
+        a = (frozenset((j,k)) for j,ks in iteritems(self.ls) for k in ks)
         a = frozenset(a)
         for jk in a:
             yield tuple(jk)
@@ -323,7 +326,7 @@ class ThanTri(object):
         "Iterate through the triangles of the triangulation."
         apMaxEn2 = apmax**2
         seen = set()
-        for ca, linksa in self.ls.iteritems():
+        for ca, linksa in iteritems(self.ls):
             if ca in self.xyapeira: continue                # throw Infinite points out
             cb = linksa[0]
             bigKb = (cb[0]-ca[0])**2 + (cb[1]-ca[1])**2 > apMaxEn2
@@ -335,7 +338,7 @@ class ThanTri(object):
                 tri = ca, cb, cc
                 triset = frozenset(tri)
                 if bigKb or bigKc or cb in self.xyapeira or cc in self.xyapeira or discont or triset in seen:
-#                    print "Duplicate/invalid:", tri
+#                    print("Duplicate/invalid:", tri)
                     pass
                 else:
                     seen.add(triset)
@@ -374,7 +377,7 @@ class ThanTri(object):
             fw.write("$\n")
 
 
-    def writetrp(self, fw, p, hphoto, form1="%-10s%15.3f%15.3f%15.3f%10d%10d\n", form2="%10d\n"):
+    def writetrp(self, fw, p, hphoto, form1="%-10s%15.3f%15.3f%15.3f%10.2f%10.2f\n", form2="%10d\n"):
         "Write the triangulation in trp file; the links must be already sorted."
         iaa, seq = self.serialise()      # The points must be written with a certain sequence
         for c in seq:
@@ -383,7 +386,7 @@ class ThanTri(object):
             px, py, pz = p.project(ca)
             px = px + 1                  # Μετατροπή σε συντεταγμένες DVP
             py = hphoto - py             # τις οποίες αναμένει το ortho
-            fw.write(form1 % (self.aa[c], ca[0], ca[1], ca[2], int(px+0.5), int(py+0.5)))
+            fw.write(form1 % (self.aa[c], ca[0], ca[1], ca[2], px, py))
             for ca in self.ls[c]:
                 fw.write(form2 % iaa[ca])
             fw.write("$\n")
@@ -420,7 +423,7 @@ class ThanTri(object):
                 if dline.rstrip() == "$": break
                 try:
                     j = int(dline[:10])
-                    if j < 1: raise ValueError, "Invalid link"
+                    if j < 1: raise ValueError("Invalid link")
                 except ValueError:
                     prg("Syntax error/bad value at line %d of tri file." % line)
                     raise
@@ -455,20 +458,20 @@ class ThanTri(object):
         ls = {}
         i = -1
         while True:
-            if fr.next().strip() == tend: break
+            if next(fr).strip() == tend: break
             fr.unread()
             a1 = fr.readTextln()
-            c1 = tuple(map(float, fr.next().split()))
+            c1 = tuple(map(float, next(fr).split()))
             i += 1
             xy[i] = c1
             self.aa[c1] = a1
             if a1 in self.apnames: self.xyapeira.add(c1)
             links1 = ls[c1] = []
             while True:
-                dline = fr.next().strip()
+                dline = next(fr).strip()
                 if dline == "$": break
                 j = int(dline)  #May raise ValueError
-                if j < 1: raise ValueError, "Invalid link"
+                if j < 1: raise ValueError("Invalid link")
                 links1.append(j-1)
         fr.unread()
         for i in xrange(len(xy)):
@@ -586,7 +589,7 @@ class ThanTri(object):
 
 def vis1(t, ch, brk=()):
     "Adds all the edges to a ThanChart."
-    a = (frozenset((j,k)) for j,ks in t.ls.iteritems() for k in ks)
+    a = (frozenset((j,k)) for j,ks in iteritems(t.ls) for k in ks)
     a = frozenset(a)
     try:    t.xc
     except: pass
@@ -594,7 +597,7 @@ def vis1(t, ch, brk=()):
                  (t.yc-1, t.yc-1, t.yc+1, t.yc+1, t.yc-1), color="yellow")
     for i,jk in enumerate(a):
         j,k = tuple(jk)
-        if i%100000 == 0: print i
+        if i%100000 == 0: print(i)
         ch.curveAdd((j[0], k[0]), (j[1], k[1]))
 
     if len(brk) > 1:
@@ -608,22 +611,22 @@ def testTriRan():
     "Tests the triangulation and the break lines with random points."
     n = 200
     for i in xrange(2, 3):
-        print "try", i
+        print("try", i)
         r = random.Random(i)
         u = r.uniform
-        print "generating points.."
+        print("generating points..")
         ps = [(None, u(0,10000), u(0,10000), -123.456) for i in xrange(n)]
 
-        print "Creating triangulation.."
+        print("Creating triangulation..")
         t = ThanTri()
         t.make(axy=ps, convex=True, infinite=False)
         t.show()
         t.writetri(open("q1.tri", "w"))
 
-        print "Forcing break lines.."
+        print("Forcing break lines..")
         p1 = ps[50]
         p2 = ps[150]
-        print "p1=", p1, "p2=", p2
+        print("p1=", p1, "p2=", p2)
         t.brkapply(p1, p2)
         t.show()
 
@@ -632,45 +635,47 @@ def testlinks():
     "Tests the ThanLinks object."
     a = ThanLinks((999,-1, 67, 22, 33, 0))
     a.resequence()
-    print "object=", a
-    print "iterate:"
-    for x in a: print x
-    print "tolist:", list(a)
-    print "------------------------------------------------------"
-    print "sorted:" 
+    print("object=", a)
+    print("iterate:")
+    for x in a: print(x)
+    print("tolist:", list(a))
+    print("------------------------------------------------------")
+    print("sorted:")
     a.sort()
-    for x in a: print x
-    print "object sorted:", a
-    print "------------------------------------------------------"
-    print "indexing:"
+    for x in a: print(x)
+    print("object sorted:", a)
+    print("------------------------------------------------------")
+    print("indexing:")
     for i in xrange(len(a)):
-        print "a[", i, "]=", a[i]
+        print("a[", i, "]=", a[i])
 
 
 def testpickle():
     "Tests why cPickle does not archive __slots__."
-    import cPickle
+    from p_ggen import Pyos
+    if Pyos.python3: import pickle
+    else: import cPickle as pickle
     li = ThanLinks()
     li.add((10.0,20.0,30.0))
     li.add((5.0,20.0,30.0))
     li.add((5.0,80.0,30.0))
     li.sort()
-    print "Initial object:"
-    print li
-    print "Dict:",
-    try: print li.__dict__
-    except Exception, why: print why
-    print "---------------------------------------------------"
-    print "After pickling and unpickling:"
+    print("Initial object:")
+    print(li)
+    print("Dict:",)
+    try: print(li.__dict__)
+    except Exception as why: print(why)
+    print("---------------------------------------------------")
+    print("After pickling and unpickling:")
     fw = open("q1.pic", "w")
-    s = cPickle.dumps(li)
+    s = pickle.dumps(li)
     fw.write(s)
     fw.close()
     fr = open("q1.pic")
     t = fr.read()
-    lin = cPickle.loads(t)
-    print lin
-    print "Dict:", lin.__dict__
+    lin = pickle.loads(t)
+    print(lin)
+    print("Dict:", lin.__dict__)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,10 @@
+#from builtins import object
 import p_ggen
-import openfile, opgui
+from . import openfile, opgui
 Tgui = p_ggen.Tgui
 
 
-class File1:
+class File1(object):
     "A file that counts lines."
 
     def __init__(self, fr):
@@ -23,14 +24,14 @@ class File1:
         return self
 
 
-    def next(self):
+    def __next__(self):
         "Return the next line and advance line count."
         if self.isEOFf: raise StopIteration
 #-------Unreading is enabled here
         if not self.isSavedf:
             self.linesf += 1
             try:
-                self.dlineSavf = self.fr.next()
+                self.dlineSavf = next(self.fr)
             except StopIteration:
                 self.isEOFf = True
                 raise
@@ -42,30 +43,30 @@ class File1:
     def re1(self):
         "Return the next line and advance line count; return ierr!=0 end error message if error."
         try:
-            return self.next(), 0
+            return next(self), 0
         except StopIteration:
             return "End of file", -1
-        except Exception, e:
+        except Exception as e:
             return "%s" % (e,), 1
 
 
     def re1e(self):
         "Return the next line and advance line count; return ierr=-1 if end of fil; fail with error message otherwise."
         try:
-            return self.next(), 0
+            return next(self), 0
         except StopIteration:
             return "End of file", -1
-        except Exception, e:
+        except Exception as e:
             self.er1s("%s" % (e,))
 
 
     def re1ee(self):
         "Return the next line and advance line count; fail with error message otherwise."
         try:
-            return self.next()
+            return next(self)
         except StopIteration:
             self.er1s(Tgui["Unexpected end of file"])
-        except Exception, e:
+        except Exception as e:
             self.er1s("%s" % (e,))
 
 
@@ -77,14 +78,14 @@ class File1:
     def wa1(self, mes, tags="can1"):
         "Print a warning message."
         winmain, prt, _ = opgui.openfileWinget()
-        if winmain == None: prt = p_ggen.prg
+        if winmain is None: prt = p_ggen.prg
         prt(Tgui["Warning at line %d of file %s:\n%s"] % (self.linesf, self.fr.name, mes), tags)
 
 
     def er1s(self, mes, tags="can"):
         "Prints an error message and stops."
         winmain, prt, _ = opgui.openfileWinget()
-        if winmain == None: prt = p_ggen.prg
+        if winmain is None: prt = p_ggen.prg
         prt(Tgui["Error at line %d of file %s:\n%s"] % (self.linesf, self.fr.name, mes), tags)
         openfile.stopErr1()
 
@@ -92,25 +93,10 @@ class File1:
     def erSyntax1s(self, mes, tags="can"):
         "Prints a syntax error message and stops."
         winmain, prt, _ = opgui.openfileWinget()
-        if winmain == None: prt = p_ggen.prg
+        if winmain is None: prt = p_ggen.prg
         prt(Tgui["Syntax error at line %d of file %s:\n%s"] % (self.linesf, self.fr.name, mes), tags)
         openfile.stopErr1()
 
     def close(self):
         "Close the opened file."
         self.fr.close()
-
-
-def wa1(mes, tags="can1"):
-        "Print a warning message."
-        winmain, prt, _ = opgui.openfileWinget()
-        if winmain == None: prt = p_ggen.prg
-        prt("%s" % (mes,), tags)
-
-
-def er1s(mes, tags="can"):
-        "Prints an error message and stops."
-        winmain, prt, _ = opgui.openfileWinget()
-        if winmain == None: prt = p_ggen.prg
-        prt("%s" % (mes,), tags)
-        openfile.stopErr1()

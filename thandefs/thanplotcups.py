@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module provides plot capabilities except content.
 """
 
+from __future__ import print_function
 import p_ggen
 from p_gtkwid import Twid as T
-import cupsfake
+from . import cupsfake
 try:
     import cups
 except ImportError:
@@ -66,7 +67,7 @@ class ThanPlot:
 
     def thanSet(self, choPr, radWhat, butPick, filPlot):
         "Set new values if valid."
-        print "ThanPlot.thanSet() called: filplot=", filPlot
+        print("ThanPlot.thanSet() called: filplot=", filPlot)
         ccups, printers, _ = getPrinters(host=None)
         if choPr in printers: self.choPr = choPr
         if 0 <= radWhat < 2: self.radWhat = radWhat
@@ -83,10 +84,10 @@ class ThanPlot:
         if self.butPick[0][:2] == self.butPick[1][:2]:
             self.butPick[1][0] += 1.0
             self.butPick[1][1] += 1.0
-        print "thanplotcups.ThanPlot.thanrepair(): filPlot=", self.filPlot
+        print("thanplotcups.ThanPlot.thanrepair(): filPlot=", self.filPlot)
         if self.filPlot.namebase.strip() in (thanTempPrefix, "", proj[0].namebase):   #Note:the thcx file may have been moved elsewhere
             self.filPlot = proj[0].parent / proj[0].namebase + ".ps"
-        print "thanplotcups.ThanPlot.thanrepair(): filPlot=", self.filPlot
+        print("thanplotcups.ThanPlot.thanrepair(): filPlot=", self.filPlot)
 
 
     def thanExpThc(self, fw):
@@ -135,11 +136,11 @@ def getPrinters(host=None):
         if host: cups.setServer(host)
         else:    host = "localhost"
         ccups = cups.Connection()
-    except Exception, why:
+    except Exception as why:
         return fccups, fprinters, "%s:\n%s\n(%s %s)\n" % (T["Module cups failed to initialize."], why, T["Ensure that cups is running on"], host)
     try:
         printers = ccups.getPrinters()
         printers.update(fprinters)         #Add 'file' printer
         return ccups, printers, ""
-    except Exception, why:
+    except Exception as why:
         return fccups, fprinters, "%s:\n%s\n(%s)\n" % (T["Module cups failed while identifying printers"], why, host)

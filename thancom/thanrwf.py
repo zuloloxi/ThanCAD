@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,16 +22,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module implements read/write mechanism for ThanCad files..
 """
 
+#from future.builtins import object
+from p_ggen.py23 import xrange
+from p_ggen import Pyos
 
 class ThanRfile(object):
     "A wrapper of a read file with unread and count lines capability."
 
-    def __init__(self, fr, proj):
+    def __init__(self, fr, proj, name=None):
         "Initialize saved line, line counter."
         self.fr = fr
         self.thanProj = proj
@@ -40,6 +43,12 @@ class ThanRfile(object):
         self.prev = None
         self.returnPrev = False
         self.nline = 0
+        if name is None:
+            try: self.filnam = fr.name   #To acommodate BZ2File object
+            except: self.filnam = "<Unknown>"
+        else:
+            self.filnam = name
+
 
     def thanDestroy(self):
         "Break circular references."
@@ -50,13 +59,15 @@ class ThanRfile(object):
         self.elev = elev
         self.nelev = len(elev)
 
-    def next(self):
+    def __next__(self):
         "Get next line."
         if self.returnPrev:
             self.returnPrev = False
+            if Pyos.Python3: return self.prev.decode(encoding="iso-8859-7", errors="replace")
             return self.prev
-        self.prev = self.fr.next()
+        self.prev = next(self.fr)
         self.nline += 1
+        if Pyos.Python3: return self.prev.decode(encoding="iso-8859-7", errors="replace")
         return self.prev
 
     def __iter__(self):
@@ -72,73 +83,74 @@ class ThanRfile(object):
 
     def er(self, mes):
         "Return and error message with location."
-        return "Error at line %d of file %s:\n%s" % (self.nline, self.fr.name, mes)
+        return "Error at line %d of file %s:\n%s" % (self.nline, self.filnam, mes)
 
     def readBeg(self, s):
         "Read beginning of element and complain if not found."
         header = "<%s>" % s
-        if self.next().strip() != header: raise ValueError, "Header %s not found" % header
+        #print("header=", header, "   type=", type(header))
+        if next(self).strip() != header: raise ValueError("Header %s not found" % header)
 
     def readEnd(self, s, er=""):
         "Read end of element and complain if not found; er is additional error message."
         footer = "</%s>" % s
-        if self.next().strip() != footer: raise ValueError, "%sFooter %s not found" % (er, footer)
+        if next(self).strip() != footer: raise ValueError("%sFooter %s not found" % (er, footer))
 
     def readNode(self):
         "Read a node from thcx format; allow any number of dimensions but at least 2."
-        dl = self.next().split()
-        if dl[0]  != "<NODE>":  raise ValueError, "Header <NODE> not found"   #May raise IndexError
-        if dl[-1] != "</NODE>": raise ValueError, "Footer </NODE> not found"  #May raise IndexError
+        dl = next(self).split()
+        if dl[0]  != "<NODE>":  raise ValueError("Header <NODE> not found")   #May raise IndexError
+        if dl[-1] != "</NODE>": raise ValueError("Footer </NODE> not found")  #May raise IndexError
         nt = len(dl)-2
-        if nt < 2: raise ValueError, "At least 2 coordinates were expected"
-        if nt >= self.nelev: return map(float, dl[1:1+self.nelev])
-        return map(float, dl[1:1+nt]) + self.elev[nt:]
+        if nt < 2: raise ValueError("At least 2 coordinates were expected")
+        if nt >= self.nelev: return [float(x) for x in dl[1:1+self.nelev]]
+        return [float(x) for x in dl[1:1+nt]] + self.elev[nt:]
 
     def readValid(self):
         "Read valid attribute of node from thcx format; allow any number of dimensions but at least 2."
-        dl = self.next().split()
-        if dl[0]  != "<valid>":  raise ValueError, "Header <valid> not found"   #May raise IndexError
-        if dl[-1] != "</valid>": raise ValueError, "Footer </valid> not found"  #May raise IndexError
+        dl = next(self).split()
+        if dl[0]  != "<valid>":  raise ValueError("Header <valid> not found")   #May raise IndexError
+        if dl[-1] != "</valid>": raise ValueError("Footer </valid> not found")  #May raise IndexError
         nt = len(dl)-2
-        if nt < 2: raise ValueError, "At least 2 coordinates were expected"
-        if nt >= self.nelev: return map(int, dl[1:1+self.nelev])
-        return map(int, dl[1:1+nt]) + self.elev[nt:]
+        if nt < 2: raise ValueError("At least 2 coordinates were expected")
+        if nt >= self.nelev: return [int(x) for x in dl[1:1+self.nelev]]
+        return [int(x) for x in dl[1:1+nt]] + self.elev[nt:]
 
     def readNodes(self):
         "Read many nodes."
         self.readBeg("NODES")
         cp = []
         while True:
-            dl = self.next().split()
+            dl = next(self).split()
             if dl[0] == "</NODES>": return cp
             nt = len(dl)
-            if nt < 2: raise ValueError, "At least 2 coordinates were expected"
-            if nt >= self.nelev: cc = map(float, dl[:nt])
-            else:                cc = map(float, dl[:nt]) + self.elev[nt:]
+            if nt < 2: raise ValueError("At least 2 coordinates were expected")
+            if nt >= self.nelev: cc = [float(x) for x in dl[:nt]]
+            else:                cc = [float(x) for x in dl[:nt]] + self.elev[nt:]
             cp.append(cc)
 
     def iterNodes(self):
         "Read many nodes and return 1 by 1."
         self.readBeg("NODES")
         while True:
-            dl = self.next().split()
+            dl = next(self).split()
             if dl[0] == "</NODES>": break
             nt = len(dl)
-            if nt < 2: raise ValueError, "At least 2 coordinates were expected"
-            if nt >= self.nelev: cc = map(float, dl[:nt])
-            else:                cc = map(float, dl[:nt]) + self.elev[nt:]
+            if nt < 2: raise ValueError("At least 2 coordinates were expected")
+            if nt >= self.nelev: cc = [float(x) for x in dl[:nt]]
+            else:                cc = [float(x) for x in dl[:nt]] + self.elev[nt:]
             yield cc
 
     def readSnode(self, nam, ndim):
         "Read a special node from thcx format; allow only exactly ndim dimensions."
-        dl = self.next().split()
+        dl = next(self).split()
         header = "<%s" % nam
-        if dl[0]  != header: raise ValueError, "Header %s not found" % (header,)  #May raise IndexError
+        if dl[0]  != header: raise ValueError("Header %s not found" % (header,))  #May raise IndexError
         footer = "/>"
-        if dl[-1] != footer: raise ValueError, "Footer %s not found" % (footer,)  #May raise IndexError
+        if dl[-1] != footer: raise ValueError("Footer %s not found" % (footer,))  #May raise IndexError
         nt = len(dl)-2
-        if nt != ndim: raise ValueError, "Exactly %d coordinates were expected for special node" % ndim
-        return map(float, dl[1:-1])
+        if nt != ndim: raise ValueError("Exactly %d coordinates were expected for special node" % ndim)
+        return [float(x) for x in dl[1:-1]]
 
     def readSnodes(self, nam, ndim):
         """Read many special nodes until a no node entry.
@@ -150,26 +162,26 @@ class ThanRfile(object):
         footer = "</%s>" % (nam, )
         cp = []
         while True:
-            dl = self.next().split()
+            dl = next(self).split()
             if dl[0] == footer: return cp
             nt = len(dl)
-            if nt != ndim: raise ValueError, "Exactly %d coordinates were expected for special node" % ndim
-            cp.append(map(float, dl))
+            if nt != ndim: raise ValueError("Exactly %d coordinates were expected for special node" % ndim)
+            cp.append([float(x) for x in  dl])
 
     def readAtt(self, name):
         "Read a short element."
-        dl = self.next().split()
+        dl = next(self).split()
         header = "<%s" % name
-        if dl[0] != header: raise ValueError, "Header %s not found" % header
+        if dl[0] != header: raise ValueError("Header %s not found" % header)
         footer = "/>"
-        if dl[-1] != footer: raise ValueError, "Footer %s not found" % footer
+        if dl[-1] != footer: raise ValueError("Footer %s not found" % footer)
         return dl[1:-1]
 
     def readAttb(self, name, s2=None):
         "Read an attribute which may contain blanks inside it and an attribute which does not."
         self.readBeg(name)
         s = self.readTextln()
-        if s2 is not None: s2 = self.next().strip()
+        if s2 is not None: s2 = next(self).strip()
         self.readEnd(name)
         if s2 is None: return s
         return s, s2
@@ -181,21 +193,26 @@ class ThanRfile(object):
         It skips characters until first double quote.
         The it reads the rest of the line. It deletes the newline and then
         it deletes the last char, which should be double quote."""
-        dline = self.next().rstrip("\n")
+        dline = next(self).rstrip("\n")
         i = dline.find('"')
-        if i < 0 or dline[-1] != '"': raise ValueError, "Double quote(s) not found while reading text."
+        if i < 0 or dline[-1] != '"': raise ValueError("Double quote(s) not found while reading text.")
         return dline[i+1:-1]
 
 
-class ThanWfile:
+class ThanWfile(object):
     "A wrapper of a write file with format capability."
     formFloat = "%24.15e"
 
-    def __init__(self, fw, proj):
+    def __init__(self, fw, proj, name=None):
         "Initialize saved line, line counter."
         self.fw = fw
         self.ind = ""
         self.thanProj = proj
+        if name is None:
+            try: self.filnam = fw.name   #To acommodate BZ2File object
+            except: self.filnam = "<Unknown>"
+        else:
+            self.filnam = name
 
     def thanDestroy(self):
         "Break circular references."
@@ -217,40 +234,48 @@ class ThanWfile:
 
     def write(self, s):
         "Delegate write."
-        self.fw.write(s)
+        self.writeb(s)
 
     def writeln(self, s):
         "Delegate write with newline."
-        self.fw.write("%s%s\n" % (self.ind, s))
+        self.writeb("%s%s\n" % (self.ind, s))
 
     def writeBeg(self, s):
         "Write beginning of element."
-        self.fw.write("%s<%s>\n" % (self.ind, s))
+        self.writeb("%s<%s>\n" % (self.ind, s))
+
+    def writeb(self, s):
+        "Convert string to bytes and write."
+        if Pyos.Python3:
+            b = s.encode(encoding="iso-8859-7", errors="replace")
+            self.fw.write(b)
+        else:
+            self.fw.write(s)
 
     def writeEnd(self, s):
         "Write end of element."
-        self.fw.write("%s</%s>\n" % (self.ind, s))
+        self.writeb("%s</%s>\n" % (self.ind, s))
 
     def writeNode (self, cc):
         "Convert node in a string of thcx format."
         f = self.formFloat
-        self.fw.write("%s<NODE> %s </NODE>\n" % (self.ind, "".join(f%c for c in cc)))
+        self.writeb("%s<NODE> %s </NODE>\n" % (self.ind, "".join(f%c for c in cc)))
 
-    def writeNodes (self, cs):
+    def writeNodes (self, cs):    #may accept an iterator of nodes
         "Convert node in a string of thcx format."
         f = self.formFloat
         self.writeBeg("NODES")
         self.pushInd()
         for cc in cs:
-            self.fw.write("%s %s\n" % (self.ind, "".join(f%c for c in cc)))
+            self.writeb("%s %s\n" % (self.ind, "".join(f%c for c in cc)))
         self.popInd()
         self.writeEnd("NODES")
 
     def writeSnode (self, nam, ndim, cc):
         "Convert a special node in a string of thcx format."
-        if len(cc) != ndim: raise ValueError, "Exactly %d coordinates were expected for special node" % ndim
+        if len(cc) != ndim: raise ValueError("Exactly %d coordinates were expected for special node" % ndim)
         f = self.formFloat
-        self.fw.write("%s<%s %s />\n" % (self.ind, nam, "".join(f%c for c in cc)))
+        self.writeb("%s<%s %s />\n" % (self.ind, nam, "".join(f%c for c in cc)))
 
     def writeSnodes (self, nam, ndim, cs):
         "Convert node in a string of thcx format."
@@ -258,20 +283,19 @@ class ThanWfile:
         self.writeBeg(nam)
         self.pushInd()
         for cc in cs:
-            if len(cc) != ndim: raise ValueError, "Exactly %d coordinates were expected for special node" % ndim
-            self.fw.write("%s %s\n" % (self.ind, "".join(f%c for c in cc)))
+            if len(cc) != ndim: raise ValueError("Exactly %d coordinates were expected for special node" % ndim)
+            self.writeb("%s %s\n" % (self.ind, "".join(f%c for c in cc)))
         self.popInd()
         self.writeEnd(nam)
 
     def writeValid (self, validc):
         "Convert valid attribute of node in a string of thcx format."
         f = " %d"
-        self.fw.write("%s<valid> %s </valid>\n" % (self.ind, "".join(f%c for c in validc)))
+        self.writeb("%s<valid> %s </valid>\n" % (self.ind, "".join(f%c for c in validc)))
 
     def writeAtt(self, name, s):
         "Write an attribute."
-        self.fw.write("%s<%s %s />\n" % (self.ind, name, s))
-
+        self.writeb("%s<%s %s />\n" % (self.ind, name, s))
 
     def writeAttb(self, name, s, s2=None):
         "Write an attribute which may contain blanks inside it and an attribute which does not."
@@ -282,23 +306,22 @@ class ThanWfile:
         self.popInd()
         self.writeEnd(name)
 
-
     def writeTextln(self, s):
         "Writes a line of text with quotes and indent."
-        self.fw.write('%s"%s"\n' % (self.ind, s))
+        self.writeb('%s"%s"\n' % (self.ind, s))
 
 
 class ThanRBZfile(ThanRfile):
     "A wrapper of a read file compressed with bz2, with unread and count lines capability."
 
-    def next(self):
+    def __nextdisabled__(self):   #Thanasis2015_04_05
         "Get next line."
         if self.returnPrev:
             self.returnPrev = False
             return self.prev
         try:
             self.prev = self.fr.readline()
-        except EOFError, why:                  #This happens if the bzipped file was not closed properly
+        except EOFError as why:                  #This happens if the bzipped file was not closed properly when it was created
             raise StopIteration
         if self.prev == "": raise StopIteration
         self.nline += 1
@@ -308,8 +331,8 @@ class ThanRBZfile(ThanRfile):
     def isBz2(self):
         "Checks if the file opened is real a bzip2 file."
         try:
-            self.next()
-        except IOError, why:
+            next(self)
+        except IOError as why:
             why = str(why)            #If not transformed to string the in operator does not work
             if "invalid" in why and "data" in why: return False
             raise       #If other IOError propagate

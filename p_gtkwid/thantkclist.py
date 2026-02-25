@@ -28,15 +28,18 @@ Tkinter lists.
 """
 
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import types
-from Tkinter import Scrollbar, Frame, Label, EXTENDED, END, VERTICAL, HORIZONTAL
+from tkinter import Scrollbar, Frame, Label, EXTENDED, END, VERTICAL, HORIZONTAL
 import p_ggen
 from p_ggen import Canc
-from thantkutila import thanGudModalMessage
-from xinp import xinpStrB
-from thansched import ThanScheduler
-import thanwids
-from thanwidstrans import T
+from .thantkutila import thanGudModalMessage
+from .xinp import xinpStrB
+from .thansched import ThanScheduler
+from . import thanwids
+from .thanwidstrans import T
 
 
 _EXPAND="expand"
@@ -135,7 +138,7 @@ class ThantkClistBare(Frame, ThanScheduler):
 
     def thanListsDel(self, first, last=None):
         "Deletes data from lists."
-        for li in self.thanLists.itervalues():
+        for li in self.thanLists.values():   #OK for python 2, 3
             if last is None: li.delete(first)
             else:            li.delete(first, last)
 
@@ -203,16 +206,16 @@ class ThantkClistBare(Frame, ThanScheduler):
 
     def __yview(self, *args):
         "Scrolls all lists according to scrollbar."
-        for li in self.thanLists.itervalues():
-            apply(li.yview, args)
+        for li in self.thanLists.values():  #OK for python 2, 3
+            li.yview(*args)
 
 #============================================================================
 
     def __scrollset(self, *args):
         "Scrolls scrollbar and the other lists according to one list."
-        apply(self.thanVsbar.set, args)
-        for li in self.thanLists.itervalues():
-            apply(li.yview, ("moveto", args[0]))
+        self.thanVsbar.set(*args)
+        for li in self.thanLists.values():   #OK for python 2, 3
+            li.yview("moveto", args[0])
 
 #============================================================================
 
@@ -227,11 +230,11 @@ class ThantkClistBare(Frame, ThanScheduler):
 
         now = self.thanLimain.curselection()
         if now != self.__limaincur:
-            lisel = self.thanLists.itervalues()
+            lisel = self.thanLists.values()  #OK for python 2, 3
             self.__limaincur = now
         else:
             lisel = [ ]
-            for li in self.thanLists.itervalues():
+            for li in self.thanLists.values():  #OK for python 2, 3
                 if now != li.curselection: lisel.append(li)
 
         for li in lisel:
@@ -336,16 +339,16 @@ class ThanMixinUtil:
             lay = lay1
             if self.thanClipCom != "move": lay = lay1.thanClone()
             name = lay.thanAtts[self.thanAttmain]
-            if type(lay.thanRename(name)) in types.StringTypes:
+            if p_ggen.isString(lay.thanRename(name)):
                 for j in xrange(1000000):
-                    if type(lay.thanRename(name+str(j))) in types.StringTypes: break
+                    if p_ggen.isString(lay.thanRename(name+str(j))): break
 
             lay.thanParent = None
             self.thanListLayers.insert(i, lay)     # layer pointer
             for att in self.thanAtts: self.thanLists[att].thanInsert(i, lay.thanAtts[att])
             i += 1
 
-        for li in self.thanLists.itervalues(): li.see(END)
+        for li in self.thanLists.values(): li.see(END)  #OK for python 2, 3
         self.thanSel1(i0, END)
         self.thanModified = True
 
@@ -360,7 +363,7 @@ class ThanMixinUtil:
         self.thanListLayers.insert(i, lay)     # layer pointer
         for att in self.thanAtts: self.thanLists[att].thanInsert(i, lay.thanAtts[att])
 
-        for li in self.thanLists.itervalues(): li.see(END)
+        for li in self.thanLists.values(): li.see(END)   #OK for python 2, 3
         self.thanSel1(i)
         self.thanModified = True
 
@@ -387,7 +390,7 @@ class ThanMixinUtil:
             name1 = xinpStrB(self, T["Rename Layer"]+" "+name, name1)
             if name1 is None: return Canc
             lay1 = lay.thanRename(name1)
-            if type(lay1) not in types.StringTypes: break        # Check if name is valid
+            if not p_ggen.isString(lay1): break        # Check if name is valid
             thanGudModalMessage(self, lay1, T["Rename Failed"])
             return Canc
 
@@ -415,7 +418,7 @@ class ThanMixinHierUtil(ThanMixinUtil):
     def thanLayerChildNew(self):
         "Makes a new child layer."
         lay = self.thanLayerChildNewHouse()
-        if type(lay) in types.StringTypes:
+        if p_ggen.isString(lay):
             thanGudModalMessage(self, lay, "New Child Layer Failed")
             return
 
@@ -432,7 +435,7 @@ class ThanMixinHierUtil(ThanMixinUtil):
 
         self.thanBranchCollapse(i)
         lay = laypar.thanChildNew(name)
-        if type(lay) in types.StringTypes: return lay     # New Child Layer Failed
+        if p_ggen.isString(lay): return lay     # New Child Layer Failed
         lay.thanAtts[_EXPAND].thanVal = " "
 
         laypar.thanAtts[_EXPAND].thanVal = "+"
@@ -445,7 +448,7 @@ class ThanMixinHierUtil(ThanMixinUtil):
             if self.thanListLayers[j] == lay: break
         else:
             assert None, "Newly created child layer not found!"
-        for li in self.thanLists.itervalues(): li.see(j)
+        for li in self.thanLists.values(): li.see(j)   #OK for python 2, 3
         self.thanSel1(j)
         self.thanModified = True
         if self.thanCur == laypar:
@@ -485,9 +488,9 @@ class ThanMixinHierUtil(ThanMixinUtil):
                 par = par.thanParent
 
         if com == "move":
-            self.thanClipLays = [lay for (lay, val) in todel.iteritems() if val == 0]
+            self.thanClipLays = [lay for (lay, val) in todel.items() if val == 0]   #OK for python 2, 3
         else:
-            self.thanClipLays = [lay.thanClone() for (lay, val) in todel.iteritems() if val == 0]
+            self.thanClipLays = [lay.thanClone() for (lay, val) in todel.items() if val == 0]  #OK for python 2, 3
 
         self.thanClipCom = com
 
@@ -495,7 +498,7 @@ class ThanMixinHierUtil(ThanMixinUtil):
 
     def thanSelPaste(self):
         "Pastes clipboard as toplevel layers or as children; copying or moving."
-        print self.thanClipCom
+        print(self.thanClipCom)
         if not self.thanClipCom: return
         (indexes, lays) = self.thanSelGet()
         if len(lays) <= 0:
@@ -507,7 +510,7 @@ class ThanMixinHierUtil(ThanMixinUtil):
         self.thanBranchCollapse(i)
 
         er = laypar.thanChildAdd(self.thanClipLays)
-        if type(er) in types.StringTypes:
+        if p_ggen.isString(er):
             thanGudModalMessage (self, er, T["Paste Failed"])
             return
 
@@ -530,7 +533,7 @@ class ThanMixinHierUtil(ThanMixinUtil):
             i = self.thanListLayers.index(lay)
             self.thanBranchCollapse(i)
             del self.thanListLayers[i]
-            for li in self.thanLists.itervalues(): li.delete(i)
+            for li in self.thanLists.values(): li.delete(i)   #OK for python 2, 3
             par = lay.thanParent
             lay.thanUnlink()
 
@@ -603,7 +606,7 @@ class ThantkClistHierBare(ThantkClistBare):
 
     def thanRegen(self):
         "Deletes all the list entries and repaints them."
-        print "ThanTkClist: ThanRegen triggered"
+        print("ThanTkClist: ThanRegen triggered")
         root = [self.thanListLayers[0]]
         self.thanListLayers = []                        # List entry layer pointers
         for att in self.thanAtts:
@@ -786,7 +789,8 @@ class ThanMixinPartial:
 
     def thanSetsFind(self, vlistl, hlen):
         "Finds sets of lists that can be shown simultaneously."
-        hl = hl1 = reduce(lambda s, x: x+s, self.thanWidths[:vlistl])
+        #hl = hl1 = reduce(lambda s, x: x+s, self.thanWidths[:vlistl])
+        hl = hl1 = sum(self.thanWidths[:vlistl])
         self.thanSetsList = [ ]
         setList = [ ]
         for i in xrange(self.thanVlistl, len(self.thanLists)):
@@ -805,4 +809,4 @@ class ThanMixinPartial:
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

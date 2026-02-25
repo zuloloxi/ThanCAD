@@ -1,4 +1,5 @@
-import math, types
+from __future__ import print_function
+import math
 from p_gmath import linEq2
 
 class Vector2:
@@ -11,29 +12,29 @@ class Vector2:
 
     def __init__ (self, xx=None, yy=None):
         "Initialise a new 2d vector to zero by default."
-        if xx == None:                    #No arguments: Default vector is zero
+        if xx is None:                    #No arguments: Default vector is zero
             self.x = self.y = 0.0
-        elif yy == None:                  #Only one argument: it should be an iterable
+        elif yy is None:                  #Only one argument: it should be an iterable
             yy = iter(xx)
-            self.x = yy.next()
-            self.y = yy.next()
+            self.x = next(yy)
+            self.y = next(yy)
         else:                             #Two arguments: they should be the number like
-            self.x = xx
-            self.y = yy
+            self.x = float(xx)
+            self.y = float(yy)
 
     def __add__ (self, other):
         "Addition of vectors."
         if isinstance(other, Vector2):
             return Vector2(self.x+other.x, self.y+other.y)
         else:
-            raise TypeError, "Don't know how to add Vector2 by " + `type(other)`
+            raise TypeError("Don't know how to add Vector2 by " + str(type(other)))
 
     def __sub__ (self, other):
         "Subtraction of vectors."
         if isinstance(other, Vector2):
             return Vector2(self.x-other.x, self.y-other.y)
         else:
-            raise TypeError, "Don't know how to subtract Vector2 by " + `type(other)`
+            raise TypeError("Don't know how to subtract Vector2 by " + str(type(other)))
 
     def __neg__ (self):
         "Returns the 2d vector with inverse direction."
@@ -47,19 +48,18 @@ class Vector2:
         "Returns the scalar product of 2d vectors, or the vector multiplied by a number."
         if isinstance(other, Vector2):
             return self.x * other.x + self.y * other.y
-        elif isinstance(other, types.FloatType) or \
-        isinstance(other, types.IntType):
-            return Vector2(self.x * other, self.y * other)
-        else:
-            raise TypeError, "Don't know how to multiply Vector2 by " + `type(other)`
+        #if isinstance(other, Float) or isinstance(other, Int):
+        try: other+0.0      #Is it number like
+        except: raise TypeError("Don't know how to multiply Vector2 by " + str(type(other)))
+        return Vector2(self.x * other, self.y * other)
 
-    def __div__ (self, other):
+    def __truediv__ (self, other):
         "Returns the vector divided by a number."
-        if isinstance(other, types.FloatType) or \
-        isinstance(other, types.IntType):
-            return Vector2(self.x / other, self.y / other)
-        else:
-            raise TypeError, "Don't know how to divide Vector2 by " + `type(other)`
+        #if isinstance(other, types.FloatType) or isinstance(other, types.IntType):
+        try: other+0.0      #Is it number like
+        except: raise TypeError("Don't know how to divide Vector2 by " + str(type(other)))
+        return Vector2(self.x / other, self.y / other)
+    __div__ = __truediv__    #For python2 compatibility
 
     def __rmul__ (self, other):
         "Just an alias of multiplication."
@@ -84,7 +84,7 @@ class Vector2:
     def dircos(self):
         "Compute direction cosines."
         t = self.unit()
-        if t == None: return 0.0, 0.0
+        if t is None: return 0.0, 0.0
         return t.x, t.y
 
     def cross(self, b):
@@ -96,7 +96,7 @@ class Vector2:
         So the z component of the result is returned as a scalar value.
         If you want a 3d vector as a result of the cross product a x b, use:
         c = Vector3(0.0, 0.0, a.cross(b))        or:
-        c = a.vector3().cross(b.vector3())      
+        c = a.vector3().cross(b.vector3())
         """
         return self.x*b.y-self.y*b.x
 
@@ -124,7 +124,7 @@ class Vector2:
 
     def vector3(self, z=0.0):
         "Transform self to a 3d vector with given or zero z."
-        import vec3
+        from . import vec3
         return vec3.Vector3(self.x, self.y, z)
 
     def __str__ (self):
@@ -139,48 +139,49 @@ class Vector2:
 #===========================================================================
 
 def testV():
-    a = Vector2(10.0, 20.0); print "a      = ", a
-    b = Vector2(5.0, 6.0);   print "b      = ", b
-    z = Vector2(0.0, 0.0);   print "z      = ", b
-    c = a + b;               print "a+b    = ", c
-    c = a - b;               print "a-b    = ", c
-    c = a * b;               print "a*b    = ", c
-    c = -a;                  print "-a     = ", c
-    c = +a;                  print "+a     = ", c
-    print
-    c = a * 10.0;            print "a*10.0 = ", c
-    c = 10.0 * a;            print "10.0*a = ", c
-    c = a / 10.0;            print "a/10.0 = ", c
-    #c = a / b;               print "a/b    = ", c    # Error!
-    #c = 10.0 / a;            print "10.0/a = ", c    # Error!
-    print
-    c = 10.0 * a * b;        print "10.0*a*b = ", c
-    c = a * 10.0 * b;        print "a*10.0*b = ", c
-    c = a *  b * 10.0;       print "a*b*10.0 = ", c
-    print
-    c = 10.0 * a + 20.0 * b; print "10.0*a+20.0*b = ", c
-    print
-    c = abs(a);              print "abs(a) = ", c
-    c = abs(b);              print "abs(b) = ", c
-    print
-    c = a.unit();            print "a.unit = ", c
-    c = z.unit();            print "z.unit = ", c           # Error
-    c = a.normal();          print "a.normal = ", c
+    a = Vector2(10.0, 20.0); print("a      = ", a)
+    b = Vector2(5.0, 6.0);   print("b      = ", b)
+    z = Vector2(0.0, 0.0);   print("z      = ", b)
+    c = a + b;               print("a+b    = ", c)
+    c = a - b;               print("a-b    = ", c)
+    c = a * b;               print("a*b    = ", c)
+    c = -a;                  print("-a     = ", c)
+    c = +a;                  print("+a     = ", c)
+    print()
+    c = a * 10.0;            print("a*10.0 = ", c)
+    c = 10.0 * a;            print("10.0*a = ", c)
+    c = a / 10.0;            print("a/10.0 = ", c)
+    #c = a / b;               print("a/b    = ", c)    # Error!
+    #c = 10.0 / a;            print("10.0/a = ", c)    # Error!
+    print()
+    c = 10.0 * a * b;        print("10.0*a*b = ", c)
+    c = a * 10.0 * b;        print("a*10.0*b = ", c)
+    c = a *  b * 10.0;       print("a*b*10.0 = ", c)
+    print()
+    c = 10.0 * a + 20.0 * b; print("10.0*a+20.0*b = ", c)
+    print()
+    c = abs(a);              print("abs(a) = ", c)
+    c = abs(b);              print("abs(b) = ", c)
+    print()
+    c = a.unit();            print("a.unit = ", c)
+    c = z.unit();            print("z.unit = ", c)           # Error
+    c = a.normal();          print("a.normal = ", c)
 
 
     i = Vector2(1, 0)
     j = Vector2(0, 1)
-    print
-    a = 10*i + 25*j;        print "a =", a
-    t=Vector2(1, 1).unit(); print "t =", t
-    at = (a * t) * t;       print "at =", at
-    an = a - at;            print "an =", an
+    print()
+    a = 10*i + 25*j;        print("a =", a)
+    t=Vector2(1, 1).unit(); print("t =", t)
+    at = (a * t) * t;       print("at =", at)
+    an = a - at;            print("an =", an)
 
-    print
-    print "testing iterator:"
+    print()
+    print("testing iterator:")
     v = Vector2(999.0, 1999.0)
-    for i,c in enumerate(v): print "v[", i, "] =", c
-    print
+    for i,c in enumerate(v): print("v[", i, "] =", c)
+    print("list(v)=", list(v))
+    print()
 
 #    k = 1
 #    while (k < 3000):
@@ -188,17 +189,17 @@ def testV():
 #        t = a.normal()
 #        k = k + 1
 
-#    print "-----"
+#    print("-----")
 #    for k in range(3000):
 #        a = 10*i + 25*j
 #        t = a.normal()
 
 def testAnal():
-    i = Vector2(2, 9);      print "i =", i
-    j = Vector2(4, -18);    print "j =", j
-    a = Vector2(10, 25);    print "a =", a
-    s = a.anal(i, j);       print "a.anal =", s
-    print "a = ", s[0], "* i +", s[1], "* j =", s[0]*i + s[1]*j
+    i = Vector2(2, 9);      print("i =", i)
+    j = Vector2(4, -18);    print("j =", j)
+    a = Vector2(10, 25);    print("a =", a)
+    s = a.anal(i, j);       print("a.anal =", s)
+    print("a = ", s[0], "* i +", s[1], "* j =", s[0]*i + s[1]*j)
 
 if __name__ == "__main__":
     testV();

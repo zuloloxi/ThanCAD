@@ -1,14 +1,14 @@
 # -*- coding: iso-8859-7 -*-
-encoding = "iso-8859-7"
-from Tkinter import (Tk, Toplevel, Frame, Text, Label, GROOVE, END,
+from __future__ import print_function
+from tkinter import (Tk, Toplevel, Frame, Text, Label, GROOVE, END,
     StringVar)
-from thanfontresize import ThanFontResize
-from thantkutila import (thanGudOpenReadFile, thanGudModalMessage, thanGudAskOkCancel,
+from .thanfontresize import ThanFontResize
+from .thantkutila import (thanGudOpenReadFile, thanGudModalMessage, thanGudAskOkCancel,
     thanGudOpenSaveFile)
-from thanwidstrans import T
-from thanfiles import ThanFiles
-from thanwids import ThanMenu, ThanToolButton
-import thanicon
+from .thanwidstrans import T
+from .thanfiles import ThanFiles
+from .thanwids import ThanMenu, ThanToolButton
+from . import thanicon
 
 
 class ThanWinComCom(ThanFontResize):
@@ -158,8 +158,8 @@ class ThanWinComCom(ThanFontResize):
 
 
     def thanOpen(self, filnam):
-        try: fr = file(filnam, "r")
-        except IOError, why:
+        try: fr = open(filnam, "r")
+        except IOError as why:
             thanGudModalMessage(self, why, T["Error opening file"])
             return
         win = self.factoryWin(self.thanFh, filnam)
@@ -181,8 +181,8 @@ class ThanWinComCom(ThanFontResize):
     def thanMnuFileSave(self, evt=None):
         if not self.thanFileDefined: return self.thanMnuFileSaveas()
         if self.thanValidate() is None: return
-        try: fw = file(self.thanFilnam, "w")
-        except IOError, why: thanGudModalMessage(self, why, T["Error opening file"])
+        try: fw = open(self.thanFilnam, "w")
+        except IOError as why: thanGudModalMessage(self, why, T["Error opening file"])
         else:
             if self.thanSave(fw): self.thanFileDefined = 1
         self.thanFocus()
@@ -218,13 +218,13 @@ class ThanWinComCom(ThanFontResize):
 
 
     def destroy(self):
-        print "ThanWinComCom", self, "destroy called"
+        print("ThanWinComCom", self, "destroy called")
         self.thanDestroy()                      #ThanFontResize class
         del self.thanMenuBar, self.thanMnuRecent, self.thanMnuFile, self.thanMnuWin
 #            self.thanStatusbar, self.thanStatustext
 
 
-    def __del__(self): print "ThanWinComCom", self, "is deleted"
+    def __del__(self): print("ThanWinComCom", self, "is deleted")
 
 
 class ThanWinMainCom(Tk, ThanWinComCom):
@@ -259,12 +259,12 @@ class ThanWinMainCom(Tk, ThanWinComCom):
         self.option_add("*Text.insertbackground", "lightgreen")
 
     def destroy(self):
-        print "ThanWinMainCom", self, "destroy called"
+        print("ThanWinMainCom", self, "destroy called")
         del self.thanInfo
         ThanWinComCom.destroy(self)
         Tk.destroy(self)
 
-    def __del__(self): print "ThanWinMainCom", self, "is deleted"
+    def __del__(self): print("ThanWinMainCom", self, "is deleted")
 
 
 class ThanWinCom(Toplevel, ThanWinComCom):
@@ -299,10 +299,10 @@ class ThanWinCom(Toplevel, ThanWinComCom):
     def thanValidate(self): return True
 
     def destroy(self):
-        print "ThanWinCom", self, "destroy called"
+        print("ThanWinCom", self, "destroy called")
         del self.thanStatustext, self.thanStatusbar
         ThanWinComCom.destroy(self)
         Toplevel.destroy(self)
 
-    def __del__(self): print "ThanWinCom", self, "is deleted"
+    def __del__(self): print("ThanWinCom", self, "is deleted")
 

@@ -1,4 +1,7 @@
 "Base class for projection transformations and utilities."
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import sqrt, hypot
 from p_ggen import iterby2
 
@@ -134,7 +137,7 @@ class _Projection:
         if ic <  10 and ic == 0:  return ic           #Projection from 3d to 2d
         if ic >= 30 and ic == 0:  return ic           #Projection from 3d to 2d
         if ic >= 10 and ic == 10: return ic           #Transformation from 2d to 2d
-        raise ValueError, "Projection code in file is wrong"   # Accept polynomial as a first approximation
+        raise ValueError("Projection code in file is wrong")   # Accept polynomial as a first approximation
 
 
     def readCoefs(self, fr, n):
@@ -150,7 +153,7 @@ class _Projection:
 def read1(fr):
     "Reads a non-blank non-comment line; it is the responsibility of the caller to handle exceptions."
     while True:
-        dl = fr.next().strip()
+        dl = next(fr).strip()
         if len(dl) > 0 and dl[0] != "#": break    # Comment lines
     dl1 = dl.split()[0]                           # Avoid comments at the end of the line
     return dl1
@@ -158,10 +161,10 @@ def read1(fr):
 def read1raw(fr):
     "Reads a non-blank non-comment line; it is the responsibility of the caller to handle exceptions."
     while True:
-        dl = fr.next().strip()
+        dl = next(fr).strip()
         if len(dl) > 0 and dl[0] != "#": break    # Comment lines
     return dl
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

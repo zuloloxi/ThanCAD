@@ -1,7 +1,9 @@
-import re, Tkinter
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+import re, tkinter
 import p_gnum, p_gtkwid
-p_gtkuti = p_gtkwid
-from gdal_bands import readWv2mBands, readWv2pBand
+from .gdal_bands import readWv2mBands, readWv2pBand
 
 #dline="     16393: (  310,  310,  310) #013601360136 rgb(0.47303%,0.47303%,0.47303%)"
 
@@ -38,12 +40,12 @@ class Hist(object):
 
     def statistics(self):
         "Find min, max etc."
-        self.cols = self.freq.keys()
+        self.cols = list(self.freq.keys())    #OK for python 2, 3
         self.cols.sort()
         self.colmin = self.cols[0]
         self.colmax = self.cols[-1]
-        self.fmax = max(self.freq.itervalues())
-        print "statistics: colimn, colmax, fmax=", self.colmin, self.colmax, self.fmax
+        self.fmax = max(self.freq.values())   #OK for python 2, 3
+        print("statistics: colimn, colmax, fmax=", self.colmin, self.colmax, self.fmax)
 
     def approx(self):
         "Find an initial approximation of position and size, inspecting histograms."
@@ -53,18 +55,18 @@ class Hist(object):
         h1 = self
         if 1:
             fmax = per*h1.fmax
-            print "fmax=",fmax
+            print("fmax=",fmax)
             for i in xrange(len(h1.cols)):
                 if h1.freq[i] < fmax: continue
                 if i < x1: x1 = i
                 break
-            print "x1, col(x1)=", x1, h1.cols[x1]
-            print "col[4095]=", h1.cols[4095]
+            print("x1, col(x1)=", x1, h1.cols[x1])
+            print("col[4095]=", h1.cols[4095])
             for i in xrange(len(h1.cols)-1, 0, -1):
                 if h1.freq[i] < fmax: continue
                 if i > x2: x2 = i
                 break
-            print "x2, col(x2)=", x2, h1.cols[x2]
+            print("x2, col(x2)=", x2, h1.cols[x2])
         return x1, x2
 
 
@@ -81,11 +83,11 @@ class Hist(object):
         than.dc.create_line(xy, fill=col)
 
 
-class HistWin(p_gtkuti.ThanDialog, p_gtkuti.ThanFontResize):
+class HistWin(p_gtkwid.ThanDialog, p_gtkwid.ThanFontResize):
     "A window to visually access histograms."
     def __init__(self, parent, title=None, buttonlabels=2, his=(), **kw): # Stamos Jan 7, 2011
         self.his = his                   #A dict of colourname/histograms pairs to display
-        p_gtkuti.ThanDialog. __init__(self, parent, title, buttonlabels, **kw)
+        p_gtkwid.ThanDialog. __init__(self, parent, title, buttonlabels, **kw)
 
     def body(self, fra):
         "Build the window."
@@ -136,18 +138,18 @@ class HistWin(p_gtkuti.ThanDialog, p_gtkuti.ThanFontResize):
     def makeWidgets(self, fra):
         "Create the diagram."
         self.title("Colour/gray histograms - Select colour range dragging the rectangle")
-        lab = Tkinter.Label(fra, text="Colour window:")
+        lab = tkinter.Label(fra, text="Colour window:")
         lab.grid(row=0, column=0, sticky="w")
-        self.labwin = Tkinter.Label(fra, text="")
+        self.labwin = tkinter.Label(fra, text="")
         self.labwin.grid(row=0, column=1, sticky="w")
-        frb = Tkinter.Frame(fra)
+        frb = tkinter.Frame(fra)
         frb.grid(row=0, column=2, sticky="we")
 
         but = p_gtkwid.ThanButton(fra, text="Auto", command=self.auto)
         but.grid(row=0, column=3, sticky="e")
         self.butMax = p_gtkwid.ThanButton(fra, text="Max colour:%d" % (self.colmax), command=self.setMaxcolor)
         self.butMax.grid(row=0, column=4, sticky="e")
-        self.dc = Tkinter.Canvas(fra, width=self.dcw, height=self.dch, bg="pink")
+        self.dc = tkinter.Canvas(fra, width=self.dcw, height=self.dch, bg="pink")
         self.dc.grid(row=1, column=0, columnspan=6, sticky="wesn")
         fra.columnconfigure(2, weight=1)
         fra.rowconfigure(1, weight=1)
@@ -155,8 +157,8 @@ class HistWin(p_gtkuti.ThanDialog, p_gtkuti.ThanFontResize):
 
     def setMaxcolor(self):
         "Change the scale of x axis, by altering the maximum x-value."
-        m = p_gtkuti.xinpLongR(self, "Maximum x-axis value (colour):", 10, 4096, self.colmax)
-        if m == None: return
+        m = p_gtkwid.xinpLongR(self, "Maximum x-axis value (colour):", 10, 4096, self.colmax)
+        if m is None: return
         self.colmax = m
         self.butMax.config(text="Max colour:%d" % (self.colmax))
         self.redrawHist()
@@ -174,7 +176,7 @@ class HistWin(p_gtkuti.ThanDialog, p_gtkuti.ThanFontResize):
             fmax = h.fmax*0.001
             for i in xrange(len(h.freq)-1, 300, -1):   #No less than 300 in order to have room for the drag window
                 if h.freq[i] > fmax: break
-            if im == None: im = i
+            if im is None: im = i
             if i > im: im = i
         self.colmax = im + 20
         self.butMax.config(text="Max colour:%d" % (self.colmax))
@@ -190,7 +192,7 @@ class HistWin(p_gtkuti.ThanDialog, p_gtkuti.ThanFontResize):
 
     def redrawHist(self):
         "Redraw histograms after a scale change."
-        self.dc.delete(Tkinter.ALL)
+        self.dc.delete(tkinter.ALL)
         self.aklx = float(self.dcw-2*self.dcperx)/(self.colmax-self.colmin+1)
         self.akly = float(self.dch-2*self.dcpery)/self.fmax
         for h1 in self.his:
@@ -204,9 +206,9 @@ class HistWin(p_gtkuti.ThanDialog, p_gtkuti.ThanFontResize):
     def destroy(self):
         "Delete circular references."
         self.rect.destroy()
-        p_gtkuti.ThanFontResize.thanDestroy(self)
+        p_gtkwid.ThanFontResize.thanDestroy(self)
         del self.butMax, self.dc, self.labwin
-        p_gtkuti.ThanDialog.destroy(self)
+        p_gtkwid.ThanDialog.destroy(self)
 
 
     def apply(self):
@@ -237,18 +239,18 @@ class DragRectangle(object):
         per = 0.01  #Percentage of max frequency importance threshold
         for h1 in his:
             fmax = per*h1.fmax
-            print "fmax=",fmax
+            print("fmax=",fmax)
             for i in xrange(len(h1.cols)):
                 if h1.freq[i] < fmax: continue
                 if i < x1: x1 = i
                 break
-            print "x1, col(x1)=", x1, h1.cols[x1]
-            print "col[4095]=", h1.cols[4095]
+            print("x1, col(x1)=", x1, h1.cols[x1])
+            print("col[4095]=", h1.cols[4095])
             for i in xrange(len(h1.cols)-1, 0, -1):
                 if h1.freq[i] < fmax: continue
                 if i > x2: x2 = i
                 break
-            print "x2, col(x2)=", x2, h1.cols[x2]
+            print("x2, col(x2)=", x2, h1.cols[x2])
         self.x1 = x1
         self.sizex = x2-x1
 
@@ -267,7 +269,7 @@ class DragRectangle(object):
 
     def plot(self, than):
         "Create a window of sizex length."
-        if self.x1 == None:                    #First time the rectangle is drawn
+        if self.x1 is None:                    #First time the rectangle is drawn
             x1 = than.dcw/2                    #Canvas x center in canvas coordinates
             self.x1 = (x1-than.dcperx)/than.aklx + than.colmin  #Colour at center of the canvas
             self.x1 = int(self.x1 - self.sizex*0.5 + 0.5)       #The colour of the left side of the rectangle
@@ -282,7 +284,7 @@ class DragRectangle(object):
 
     def ondrag(self, than, evt):
         "Move the rectangle on dragging."
-        if self.xp != None:           #Wait a little after a drag
+        if self.xp is not None:           #Wait a little after a drag
             than.after_cancel(self.iafter)     #Cancel previous cancel operation
             dx = evt.x - self.xp
             dy = evt.y - self.yp
@@ -295,7 +297,7 @@ class DragRectangle(object):
 
     def onresize(self, than, evt, dsize):
         "Resize the rectangle on gray-plus and gray-minus."
-        if self.xp != None: return     #Wait a little after a drag
+        if self.xp is not None: return     #Wait a little after a drag
         self.sizex += dsize
         x1, y1, x2, y2 = than.dc.coords(self.itwin)
         x2 = x1 + self.sizex*than.aklx

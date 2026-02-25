@@ -36,44 +36,27 @@ def lineSimplify3d(curve, ermeanmax=0.15, erabsmax=0.20, zerabsmax=0.10):
     any other number of dimensions. Only the first 3 coordinates are taken into
     account in the simplification.
     """
-#    print "ermeanmax, erabsmax, zerabsmax=", ermeanmax, erabsmax, zerabsmax
-    ermean, erabs, zerabs = linearise(curve)
     n = len(curve)
-    if (ermean <= ermeanmax and erabs <= erabsmax and zerabs <= zerabsmax) or n < 3: return curve[0], curve[-1]
+    if n < 3: return curve[:]
+    ermean, erabs, zerabs = linearise(curve)
+    if ermean <= ermeanmax and erabs <= erabsmax and zerabs <= zerabsmax: return [curve[0], curve[-1]]
 
-    if   n >= 20: n1 = int(n/5); ms = range(n1, n-n1+1, n1)
-    elif n >= 12: n1 = int(n/4); ms = range(n1, n-n1+1, n1)
-    elif n >= 9:  n1 = int(n/3); ms = range(n1, n-n1+1, n1)
-    else:                        ms = [int(n/2)]
-    runs = []
-    for m in ms:
-#        p = curve[m]
-#        x1, y1 = curve[0]
-#        x2, y2 = curve[-1]
-#        dx = x2 - x1; dy = y2 - y1
-#        d = sqrt(dx**2+dy**2)
-#        if d == 0.0:
-#            n = 1.0, 0.0
-#        else:
-#            t = dx/d, dy/d
-#            n = -t[1], t[0]
-#        e = -erabsmax
-        e = 0.0
-        while e <= erabsmax:
-#            curve[m] = p[0]+n[0]*e, p[1]+n[1]*e
-            ermean, erabs, zerabs = linearise(curve[:m+1])
-            ermean2, erabs2, zerabs2 = linearise(curve[m:])
-            ermean = (ermean+ermean2)*0.5
-            erabs = max(erabs, erabs2)
-            zerabs = max(zerabs, zerabs2)
-#            runs.append((0.5*(er+er2), (m, curve[m])))
-#            runs.append((max(erm,erm2), (m, curve[m])))
-            runs.append((ermean+0.0*erabs, (m, curve[m])))
-            e += 0.5
-            break
-#        curve[m] = p
-    m, p = min(runs)[1]
-#    curve[m] = p
+    if   n >= 20: n1 = int(n/5)
+    elif n >= 12: n1 = int(n/4)
+    elif n >= 9:  n1 = int(n/3)
+    else:         n1 = int(n/2)
+    ercritmin = 1.0e101
+    for m in range(n1, n-n1+1, n1):
+        ermean, erabs, zerabs = linearise(curve[:m+1])
+        ermean2, erabs2, zerabs2 = linearise(curve[m:])
+        ermean = (ermean+ermean2)*0.5
+        erabs = max(erabs, erabs2)
+        zerabs = max(zerabs, zerabs2)
+        ercrit = ermean+0.0*erabs
+        if ercrit < ercritmin:
+            ercritmin = ercrit
+            mmin = m
+    m = mmin
 
     a = lineSimplify3d(curve[:m+1], ermeanmax, erabsmax, zerabsmax)
     b = lineSimplify3d(curve[m:], ermeanmax, erabsmax, zerabsmax)
@@ -85,9 +68,9 @@ def linearise(curve):
     if len(curve) < 3: return 0.0, 0.0, 0.0
     x1, y1, z1 = curve[0][1:4]
     x2, y2, z2 = curve[-1][1:4]
-    dx = x2 - x1; dy = y2 - y1; dz = z2 - z1
+    dx = x2 - x1; dy = y2 - y1
     d = sqrt(dx**2+dy**2)
-    if d == 0.0: return 1e100,1e100,1e100    # The line may be a series of identical points
+    if d == 0.0: return 1e100,1e100,1e100    # The line may be closed (or a series of identical points)
     t = dx/d, dy/d; tz = (z2-z1)/d
     n = -t[1], t[0]
     er = ermax = zermax = 0.0

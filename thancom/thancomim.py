@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes image related commands.
@@ -32,9 +32,9 @@ import thandr
 from thanvar import Canc, thanfiles
 from thantrans import T
 from thandefs import ThanImageMissing, imageOpen
-import thanundo
-from thancommod import thanModCanc, thanModEnd
-from thancomsel import thanSelect1, thanSelectGen
+from . import thanundo
+from .thancommod import thanModCanc, thanModEnd
+from .thancomsel import thanSelect1, thanSelectGen
 
 
 def thanTkGetLog(proj):
@@ -43,7 +43,7 @@ def thanTkGetLog(proj):
 
 def thanTkGetTfw(proj):
     "Imports many raster images whose positions are stored in tfw format (tif image)."
-    return thanTkGetPos(proj, "imagetfw", "thanTfwGet", ".tfw", T["Choose image .tfw files"])
+    return thanTkGetPos(proj, "imagetfw", "thanTfwGet", ".tfw .j2w", T["Choose image .tfw/.j2w files"])
 
 def thanTkGetGeotif(proj):
     "Imports many tif images whose positions are stored in tags in the tif file itself."
@@ -63,7 +63,7 @@ def thanTkGetPos(proj, com, methodname, ext, stat):
 #            elem.thanTfwGet(proj, fi)
             method = getattr(elem, methodname)
             method(proj, fi)
-        except (IOError, ValueError), why:
+        except (IOError, ValueError) as why:
             p_gtkwid.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
         else:
             proj[1].thanElementAdd(elem)     # thanTouch is implicitly called
@@ -104,7 +104,7 @@ def thanTkGetTerrasar(proj, com="imageterrasar", methodname="thanTkGet", ext=".c
     try:
         method = getattr(elem, methodname)
         if method(proj, im, fnt) == Canc: return proj[2].thanGudCommandCan()   # Image was cancelled
-    except (IOError, ValueError), why:
+    except (IOError, ValueError) as why:
         p_gtkwid.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
         return proj[2].thanGudCommandCan()
     else:
@@ -133,7 +133,7 @@ def thanTkGetTiles(proj):
     _splitter = re.compile(r""".*[rR](\d+)[cC](\d+).*""")
     for fi in fns:
         dl = _splitter.findall(fi)
-        print "fi=", fi, "dl=", dl
+        #print "fi=", fi, "dl=", dl
         if len(dl) != 1 or len(dl[0]) != 2:
             p_gtkwid.thanGudModalMessage(proj[2],
             "The 'r<n>c<n>' pattern was not found in the filename: %s" % (fi,),
@@ -150,7 +150,7 @@ def thanTkGetTiles(proj):
         imp.b, imp.h = imp.im.size
         imp.fi = fi
         imp.x = imp.y = 0
-        print imp.anal()
+        #print imp.anal()
         imps.append(imp)
 
     if len(imps) == 0: return proj[2].thanGudCommandCan(T["No images were loaded."])
@@ -178,10 +178,10 @@ def thanTkGetTiles(proj):
     irowlast = max(h)
     blast = b[icollast]
     hlast = h[irowlast]
-    print "b=", b
-    print "h=", h
-    print "irowlast, icollast=", irowlast, icollast
-    print "tilesize, blast, hlast=", tilesize, blast, hlast
+    #print "b=", b
+    #print "h=", h
+    #print "irowlast, icollast=", irowlast, icollast
+    #print "tilesize, blast, hlast=", tilesize, blast, hlast
     terr  = T["All but the last tiles should have the same width, height"]
     terrb = T["All the tiles of the last column should have the same width"]
     terrh = T["All the tiles of the last row should have the same height"]
@@ -233,7 +233,7 @@ def thanTkImageUnload(proj):
     proj[1].thanDoundo.thanAdd("imageunload", thanImageLoadunloadDo, (processed, set(), tounload),    #Redo
                                               thanImageLoadunloadDo, (set(), processed, selold))      #Undo
     if processed: proj[1].thanTouch()
-    for im in processed: print "thanTkImageUnload(): image %s:   loaded=%s" % (im.filnam, im.loaded)
+    #for im in processed: print "thanTkImageUnload(): image %s:   loaded=%s" % (im.filnam, im.loaded)
     thanModEnd(proj, T["%d images were unloaded."] % (len(processed),), "info1")
 
 

@@ -1,3 +1,5 @@
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import fabs
 
 class Lagrange(object):

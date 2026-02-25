@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the classes for layer attributes.
 """
@@ -110,10 +110,10 @@ class ThanAttLtype(ThanAtt):
         "Save the value as a tuple of a string, units and non negative double."
         namlt, unit, scale = val    #May raise IndexError
         namlt = namlt.strip()
-        if namlt == "": raise ValueError, "Blank line type name"
-        if unit not in ("mm", "u"): raise ValueError, "Invalid line type unit: %s" % (unit,)
+        if namlt == "": raise ValueError("Blank line type name")
+        if unit not in ("mm", "u"): raise ValueError("Invalid line type unit: %s" % (unit,))
         scale = float(scale)       #May raise ValueError
-        if scale < 0.0: raise ValueError, "Invalid line type scale: %s" % (scale,)
+        if scale < 0.0: raise ValueError("Invalid line type scale: %s" % (scale,))
         self.thanVal = namlt, unit, scale
 
     def __str__(self):
@@ -239,9 +239,9 @@ class ThanAttInt(ThanAtt):
         "Makes the value boolean."
         if isinstance(val, ThanAtt): val = val.thanVal
         val = self.intorfloat(val)    #If it is a string or a different number,  it is converted to correct number
-        if self.valmin is not None and val < self.valmin: raise ValueError, self.tera % (val,)
-        if self.valmax is not None and val > self.valmax: raise ValueError, self.tera % (val,)
-        if self.nonzero        and val == 0:          raise ValueError, self.tera % (val,)
+        if self.valmin is not None and val < self.valmin: raise ValueError(self.tera % (val,))
+        if self.valmax is not None and val > self.valmax: raise ValueError(self.tera % (val,))
+        if self.nonzero        and val == 0:          raise ValueError(self.tera % (val,))
         return val
 
 
@@ -299,21 +299,21 @@ class ThanAttCol(ThanAtt):
             cs = col.split()
         else:
             try: cs = col[0], col[1], col[2]; n = len(cs)
-            except: raise ValueError, terr
-            if n != 3: raise ValueError, terr
+            except: raise ValueError(terr)
+            if n != 3: raise ValueError(terr)
 
         if len(cs) == 1:
             col = cs[0]
             try: rgb = p_gcol.thanDxfColName2Rgb.get(col, None) or p_gcol.thanDxfColCode2Rgb.get(int(col), None)
-            except ValueError: raise ValueError, terr
-            if not rgb: raise ValueError, terr
+            except ValueError: raise ValueError(terr)
+            if not rgb: raise ValueError(terr)
         elif len(cs) != 3:
-            raise ValueError, terr
+            raise ValueError(terr)
         else:
-            try: rgb = tuple(map(int, cs))
-            except ValueError: raise ValueError, terr
+            try: rgb = tuple(map(int, cs))    #works for python2,3
+            except ValueError: raise ValueError(terr)
             for i in rgb:
-                if i < 0 or i > 255: raise ValueError, terr
+                if i < 0 or i > 255: raise ValueError(terr)
         self.thanVal = rgb
         self.thanPartial = p_gcol.thanRgb2DxfColCode.get(rgb, None)
         self.thanName = p_gcol.thanRgb2DxfColName.get(rgb, None)
@@ -346,9 +346,9 @@ class ThanAttCol(ThanAtt):
     def thanImpThc(self, fr, ver, name):
         "Read the arc from thc format."
         dl = fr.readAtt(name)                 #May raise ValueError, StopIteration
-        r, g, b, inher = map(int, dl)         #May raise ValueError, IndexError
+        r, g, b, inher = map(int, dl)         #May raise ValueError, IndexError   #works for python2,3
         for c in r, g, b:
-            if c < 0 or c > 255: raise ValueError, "Invalid rgb colour"
+            if c < 0 or c > 255: raise ValueError("Invalid rgb colour")
         self.__init__((r, g, b), inher)
 
 

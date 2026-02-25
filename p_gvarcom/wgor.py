@@ -1,8 +1,13 @@
 # -*- coding: iso-8859-7 -*-
-def writeGor(fw, dpi, scale, dmax, fn):
-    "Creates the .gor file for the orthoimage program."
+def writeGor(fw, imethod, dpi, scale, dmax, fn):
+    """Creates the .gor file for the orthoimage program.
+
+    imethod = 1 -> διγραμμική παρεμβολή, 2 -> δικυβική παρεμβολή."""
     form = """\
 # ΕΠΕΞΗΓΗΣΕΙΣ
+# 1. Η παρεμβολή μπορεί να είναι ΔΙΓΡΑΜΜΙΚΗ ή ΔΙΚΥΒΙΚΗ.
+#    Η ΔΙΚΥΒΙΚΗ δίνει καλύτερα αποτελέσματα αλλά αργεί πολύ περισσότερο.
+
 # 1. Η ανάλυση ανηγμένων εικόνων πρέπει να δίνεται 2 ή 3 φορές μεγαλύτερη
 #    από την επιθυμητή. Στην συνέχεια η μείωση της ανάλυσης γίνεται με
 #    το GIMP ή python με bicubic interpolation, διότι έτσι επιτυγχάνεται
@@ -109,6 +114,7 @@ def writeGor(fw, dpi, scale, dmax, fn):
 #                 pixel της εικόνας.
 #
 #
+ΠΑΡΕΜΒΟΛΗ: %s
 ΑΝΑΛΥΣΗ ΑΝΗΓΜΕΝΩΝ ΕΙΚΟΝΩΝ (dpi) : %.1f
 ΚΛΙΜΑΚΑ ΑΝΗΓΜΕΝΩΝ ΕΙΚΟΝΩΝ       : %.1f
 ΜΕΓΙΣΤΗ ΠΛΕΥΡΑ ΤΡΙΓΩΝΟΥ (m)     : %.1f
@@ -130,4 +136,5 @@ def writeGor(fw, dpi, scale, dmax, fn):
 #Filename  Περ-Αριστ  Περ-Κάτω Περ-Δεξιά  Περ-Πάνω  Χρωματισμός
 %-10s         0         0         0         0
 """
-    fw.write(form % (dpi, scale, dmax, fn))
+    meth = "ΔΙΓΡΑΜΜΙΚΗ", "ΔΙΚΥΒΙΚΗ"
+    fw.write(form % (meth[imethod-1], dpi, scale, dmax, fn))

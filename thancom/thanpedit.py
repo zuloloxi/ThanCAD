@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,18 +22,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides for modification commands of lines.
 """
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
 from thandr import ThanLine
 from thantrans import T
 from thanvar import Canc
-import thancomsel, thanundo
-from thancommod import thanModEnd, thanModCanc
+from . import thancomsel, thanundo
+from .thancommod import thanModEnd, thanModCanc
 
 
 def thanModMoveLinepoint(proj):
@@ -108,15 +110,15 @@ def thanModMoveLinepoint(proj):
         delelemsi, newelemsi = dodo[i]
         for e in delelemsi:
             if e in newelems:      #If (e) was a previously new element, then (e) was an intermediate element
-                print e, "is intermediate"
+                #print e, "is intermediate"
                 newelems.remove(e) #which is already deleted, and there is no need to recreate it and redelete it
             else:
-                print e, "is to be deleted"
+                #print e, "is to be deleted"
                 delelems.append(e)
-        print newelemsi, "are to be added"
+        #print newelemsi, "are to be added"
         newelems.extend(newelemsi)
-    print "delelems=", delelems
-    print "newelems=", newelems
+    #print "delelems=", delelems
+    #print "newelems=", newelems
 
     proj[1].thanDoundo.thanAdd("movelinepoint", thanundo.thanReplaceRedo, (delelems, newelems, None),
                                                 thanundo.thanReplaceUndo, (delelems, newelems, None))

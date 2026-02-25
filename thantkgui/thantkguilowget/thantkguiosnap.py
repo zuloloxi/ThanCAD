@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the object snap functionality.
 """
@@ -69,7 +69,7 @@ class ThanOsnap:
         dc = self.thanProj[2].thanCanvas
         tagel = self.thanProj[1].thanTagel
         ct = self.thanProj[2].thanCt
-        bpix, hpix = self.BSEL/2, self.BSEL/2
+        bpix, hpix = self.BSEL//2, self.BSEL//2
         x1, y1 = dc.thanXcu-bpix, dc.thanYcu-hpix
         x2, y2 = dc.thanXcu+bpix, dc.thanYcu+hpix
         items = dc.find_overlapping(x1, y1, x2, y2)
@@ -136,7 +136,7 @@ class ThanOsnap:
         x, y = ct.global2Local(cc[0], cc[1])
         self.x = x
         self.y = y
-        b = h = self.size/2
+        b = h = self.size//2
         tcol = self.tcol
         if t == "end":
             self.items = \

@@ -1,7 +1,10 @@
 # -*- coding: iso-8859-7 -*-
 "Various math functions."
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import fabs, pi, log10
-from varcon import PI2, thanThresholdx
+from .varcon import PI2, thanThresholdx
 
 def dpt (gon):                    # Python guarantees that result has 
     "Converts an angle (in rads) to normal form (between 0.0 and 2*PI)."
@@ -79,7 +82,7 @@ def fsign(x, xsign):
 
 
 def roundlog(dh):
-    "Round to 1, 2, 5 multiplied by anb integer power of 10."
+    "Round to 1, 2, 5 multiplied by an integer power of 10."
     lo = log10(dh)
 #    print "log=", lo
     n = int(lo)
@@ -94,28 +97,12 @@ def roundlog(dh):
 
 
 def roundStep(hmin, hmax, n=20):
-    """Compute rounded step so that between hmin and hmax there about n steps.
+    """Compute rounded step so that between hmin and hmax there are about n steps.
 
     hmin and hmax are probably not integer pollaplasia of the step."""
     dh = (hmax-hmin) / float(n)
     dh = roundlog(dh)
     return dh
-
-
-def linEq2 (a, b, c, d, e, f):
-    """Solve a system of 2 linear equations.
-
-                                 | c   b |                | a   c |
-                                 | f   e |                | d   f |
-      ax + by = c    =>     x = -----------   ,      y = -----------
-      dx + ey = f                | a   b |                | a   b |
-                                 | d   e |                | d   e |
-    """
-    delta = a*e - d*b
-    if delta == 0.0: return None, None
-    x = (c*e - f*b) / delta
-    y = (a*f - d*c) / delta
-    return (x, y)
 
 
 def linintc(x1, y1, x2, y2, x):
@@ -215,6 +202,27 @@ def converged3(er, erp, erpp, threshold=thanThresholdx):
     return 0
 
 
+def rootBisection(fun, a,b,TOL):
+    "Find the root of fun() using bisection method."
+    c = (a+b)/2.0
+    fa = fun(a)
+    fb = fun(b)
+    assert fa*fb <= 0.0, "f(a)*f(b) should be <= 0.0"
+    while (b-a)/2.0 > TOL:
+        c = (a+b)/2.0
+        #print(c)
+        fc = fun(c)
+        if fc==0.0:
+            return c
+        elif fa*fc < 0.0:
+            b = c
+            fb = fc
+        else:
+            a = c
+            fa = fc
+    return (a+b)/2.0
+
+
 from p_gnum import zeros, Float
 
 def dfridr(func,x,h):
@@ -242,12 +250,12 @@ def dfridr(func,x,h):
 
 
 def partialder(f, j, *param):
-    "Compute the partial derivative of function b with respct to variable j of the function."
+    "Compute the partial derivative of function b with respect to variable j of the function."
     par = list(param)
     def ff(a):
         par[j] = a
         return f(*par)
-    return dfridr(ff, param[j], 0.1)
+    return dfridr(ff, param[j], 0.1)[0]
 
 
 from p_gnum import transpose, matrixmultiply, solve_linear_equations, LinAlgError, lstsq
@@ -256,24 +264,27 @@ def lsmsolve(A, B):
     "Solve the Least square method problem defined by matrixes A and B."
     try:
         x, residual, rank, s = lstsq(A, B, rcond=-1.0)
-    except LinAlgError, why:
-        print why
+    except LinAlgError as why:
+        print(why)
         return None, why
-    return x, ""
-
+    try: return x[:, 0], ""  #2016_01_12thanasis:This converts shape from (333, 1) to (333,)
+                             #Otherwise x[1] is an array, not a scalar
+    except: return x, ""  #Thanasis2016_04_16: Changed again to normal???
+    #The following code is the equivalent of the above code, without using lstsq()
+    #It is not used any more.
     AT = transpose(A)
     AA = matrixmultiply(AT, A)
     BB = matrixmultiply(AT, B)
     try:
         BB = solve_linear_equations(AA, BB)
-    except LinAlgError, why:
+    except LinAlgError as why:
         import p_gnum
-        print "det(AA)=", p_gnum.det(AA)
-        print "AA=", AA
-        print "BB=", BB
+        print("det(AA)=", p_gnum.det(AA))
+        print("AA=", AA)
+        print("BB=", BB)
         return None, why
     return BB, ""
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

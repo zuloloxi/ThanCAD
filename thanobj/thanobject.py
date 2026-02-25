@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the generic ThanCad object. A ThanCad object is an element
 without graphical representation, such as DTM, It can be also used as a null
@@ -64,7 +64,7 @@ class ThanObject(object):
         fr.readBeg(self.thanObjectName)
         ver = fr.readAtt("version")[0]
         if ver not in self.thanVersions:
-            raise ValueError, "Unknown thc version of object %s: %s" % (self.thanObjectName, self.thanThcVersion)
+            raise ValueError("Unknown thc version of object %s: %s" % (self.thanObjectName, self.thanThcVersion))
         self.thanImpThc1(fr, ver)
         fr.readEnd(self.thanObjectName)
 
@@ -76,7 +76,7 @@ class ThanObject(object):
 
     def thanImpThc1(self, fr, ver):
         "Read the object from a .thc file."
-        raise ValueError, 'Object "%s" can not be read (read not implemented)' % (self.thanObjectName,)
+        raise ValueError('Object "%s" can not be read (read not implemented)' % (self.thanObjectName,))
 
 
     def thanClone(self):

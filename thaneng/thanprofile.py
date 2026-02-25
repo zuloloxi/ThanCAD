@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module draws common profiles of 3d lines.
 """
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot
-from itertools import izip
 import p_ggen
 from thanimp import ThanCadDrSave
 from thansupport import ThanDxfEmu
@@ -58,7 +59,7 @@ def thanCommonProfile(proj, cps, layers=None, colors=None):
         z1 = cps[0][i][2]
         dxf.thanDxfPlot(d[i], zmin, 3)
         dxf.thanDxfPlot(d[i], z1,   2)
-        for cp,lay in izip(cps, layers):
+        for cp,lay in zip(cps, layers):  #works for python2,3
             dxf.thanDxfSetLayer(lay)
             dxf.thanDxfPlot(d[i],   cp[i][2],   3)
             dxf.thanDxfPlot(d[i-1], cp[i-1][2], 2)
@@ -72,7 +73,7 @@ def thanCommonProfile(proj, cps, layers=None, colors=None):
 def defDxf(proj, layers, colors):
     "Initial definition."
     from thancom.thancomfile import thanFileNewDo
-    if colors is None: colors = range(1, len(layers)+1)
+    if colors is None: colors = list(xrange(1, len(layers)+1))
 
     projnew = thanFileNewDo(proj)
 
@@ -83,7 +84,7 @@ def defDxf(proj, layers, colors):
     dxf.thanDxfTableDef (' ', 0)
     dxf.thanDxfTableDef('LAYER', len(layers)+1)
     dxf.thanDxfCrLayer("0", 7, 'CONTINUOUS')
-    for lay,col in izip(layers, colors):
+    for lay,col in zip(layers, colors):  #works for python2,3
         dxf.thanDxfCrLayer(lay, col, 'CONTINUOUS')
     dxf.thanDxfTableDef ('ENTITIES', 1)
     dxf.thanDxfSetColor(0)

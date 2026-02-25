@@ -1,8 +1,9 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
 from math import hypot, pi
 from p_gmath import dpt
-import p_gcom
-from demusgs import ThanDEMusgs
+import p_gvarcom
+from .demusgs import ThanDEMusgs
 
 
 class ThanDEMsrtm(ThanDEMusgs):
@@ -18,9 +19,15 @@ class ThanDEMsrtm(ThanDEMusgs):
 
     def thanSet(self, filnam, im=None, user2geodetGRS80=None, geodetGRS802User=None):
         "Set the tif image which contains the DEM."
-        if user2geodetGRS80 != None: self.user2geodetGRS80 = user2geodetGRS80
-        if geodetGRS802User != None: self.geodetGRS802User = geodetGRS802User
+        if user2geodetGRS80 is not None: self.user2geodetGRS80 = user2geodetGRS80
+        if geodetGRS802User is not None: self.geodetGRS802User = geodetGRS802User
         return super(ThanDEMsrtm, self).thanSet(filnam, im)
+
+
+    def thanSetConversion(self, user2geodetGRS80=None, geodetGRS802User=None):
+        "Set the conversion functions."
+        if user2geodetGRS80 is not None: self.user2geodetGRS80 = user2geodetGRS80
+        if geodetGRS802User is not None: self.geodetGRS802User = geodetGRS802User
 
 
     def thanCen(self):
@@ -71,7 +78,7 @@ class ThanDEMsrtm(ThanDEMusgs):
 
     def __xymmconvert(self, xymm, convfun):
         "Convert xymm to other coordinates."
-        xymmb = p_gcom.Xymm()
+        xymmb = p_gvarcom.Xymm()
         for x1 in xymm[0], xymm[2]:
             for y1 in xymm[1], xymm[3]:
                 c1 = (x1, y1, 0.0)
@@ -106,13 +113,14 @@ class ThanDEMsrtm(ThanDEMusgs):
         If xymm is not None, only the points within xymm rectangle will be
         returned. However, because the underlying ThanDEMusgshas different
         coordinate system, some points not in xymm may be returned too."""
-        if xymm != None:
-            #print "demsrtm.iterNodes(): xymm = ", xymm
+        if xymm is not None:
             xymm = self.__xymmconvert(xymm, self.user2geodetGRS80)
-            #print "demsrtm.iterNodes(): xymm = ", xymm
         for cp in super(ThanDEMsrtm, self).iterNodes(validnodes, invalidnodes, xymm):
             cu = self.geodetGRS802User(cp)
-            if cp[2] == -10000.0: cu[2] = -10000.0
+            if cp[2] == -10000.0:
+                cu[2] = -10000.0
+            else:
+                if not self.isorthometric: cu[2] -= undul(cp)
             yield cu
 
 
@@ -124,7 +132,7 @@ class ThanDEMsrtm(ThanDEMusgs):
         cint = super(ThanDEMsrtm, self).thanIntersegZ(ca, cb, native)
         if not self.isorthometric and not native:
             for _, cc in cint:
-                if cc[2] != None: cc[2] -= undul(cc)
+                if cc[2] is not None: cc[2] -= undul(cc)
         cint = [(u, self.geodetGRS802User(c)) for u,c in cint]
         return cint
 
@@ -159,6 +167,6 @@ def undul(cp):
     N = egm08Ndyn(alam, phi)
     #print "ThanDEMsrtm.undul(): N=", N
     if N == 999999.0 or N is None:
-        print "ThanDEMsrtm.undul(): EGM08 did not compute undulation at λ=%f φ=%f. Undulation set to zero." % (alam, phi)
+        print("ThanDEMsrtm.undul(): EGM08 did not compute undulation at λ=%f φ=%f. Undulation set to zero." % (alam, phi))
         N = 0.0
     return N

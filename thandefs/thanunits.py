@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,11 +21,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module provides for ThanCad drawings units customisation.
 """
 
+from __future__ import print_function
 from math import pi
 from p_gmath import PI2
 import p_ggen
@@ -106,24 +107,24 @@ class ThanUnits:
     def thanConfig(self, distunit=None, distdigs=None, anglunit=None, angldigs=None, angldire=None, anglzero=None):
         "Checks and sets various options."
         if distunit is not None:
-            if distunit not in self.distran: raise ValueError, "Valid distance units: "+", ".join(self.distran.keys())
+            if distunit not in self.distran: raise ValueError("Valid distance units: "+", ".join(self.distran.keys())) #works for python2,3
             self.distunit = distunit
         if distdigs is not None:
             self.distdigs = int(distdigs)
-            if self.distdigs < -1 or self.distdigs > 15: raise ValueError, "Invalid distance digits: %d" % self.distdigs
+            if self.distdigs < -1 or self.distdigs > 15: raise ValueError("Invalid distance digits: %d" % self.distdigs)
         if anglunit is not None:
-            if anglunit not in self.angltran: raise ValueError, "Valid angle units: "+", ".join(self.angltran.keys())
+            if anglunit not in self.angltran: raise ValueError("Valid angle units: "+", ".join(self.angltran.keys()))  #works for python2,3
             self.anglunit = anglunit
         if angldigs is not None:
             self.angldigs = int(angldigs)
-            if self.angldigs < -1 or self.angldigs > 15: raise ValueError, "Invalid angle digits: %d" % self.angldigs
+            if self.angldigs < -1 or self.angldigs > 15: raise ValueError("Invalid angle digits: %d" % self.angldigs)
         if angldire is not None:
             angldire = int(angldire)
-            if angldire not in (1, -1): raise ValueError, "Angle direction should be 1 or -1."
+            if angldire not in (1, -1): raise ValueError("Angle direction should be 1 or -1.")
             self.angldire = angldire
         if anglzero is not None:
             anglzero = int(anglzero)
-            if anglzero not in (3,12,9,6): raise ValueError, "Angle zero should be 3, 12, 9 or 6 (o'clock)."
+            if anglzero not in (3,12,9,6): raise ValueError("Angle zero should be 3, 12, 9 or 6 (o'clock).")
             self.anglzero = ((3-anglzero)*pi/6) % PI2
         self.thanRecreate()
 
@@ -157,7 +158,7 @@ def test():
         for un in op.angltran:
             op.thanConfig(anglunit=un)
             th1 = op.rad2unit(th)
-            print "in", un, ":", th1, op.strang(th)
+            print("in", un, ":", th1, op.strang(th))
 
     while True:
         th = p_ggen.inpText("Give angle and unit: ", ("",))
@@ -166,13 +167,13 @@ def test():
         th = float(th)
         op.thanConfig(anglunit=un)
         th1 = op.unit2rad(th)
-        print "in rad :", th1, op.strang(th1)
+        print("in rad :", th1, op.strang(th1))
 
     a = 120.498
-    print "meters:", op.strdis(120.498)
+    print("meters:", op.strdis(120.498))
     op.thanConfig(distdigs=3)
-    print "meters:", op.strdis(120.498)
+    print("meters:", op.strdis(120.498))
     op.thanConfig(distdigs=-1)
-    print "meters:", op.strdis(120.498)
+    print("meters:", op.strdis(120.498))
 
 if __name__ == "__main__": test()

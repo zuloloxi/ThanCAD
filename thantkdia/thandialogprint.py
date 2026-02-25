@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,12 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to print a drawing.
 """
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import copy
-from Tkinter import Button, Label, SUNKEN, DISABLED, NORMAL
+from tkinter import Button, Label, SUNKEN, DISABLED, NORMAL
 from p_gtkwid import (ThanDialog, thanGudModalMessage,
                       thanGrabRelease, thanGrabSet,
                       ThanChoice, ThanRadio, ThanFile, ThanValidator)
@@ -95,8 +98,7 @@ class ThanDiaPlot(ThanDialog):
         self.thanValsInit = vals           # This is structure not a scalar
         self.ccups = ccups
         self.printers = printers
-        self.names = self.printers.keys()
-        self.names.sort()
+        self.names = sorted(self.printers.keys())  #works for python2,3
         self.thanProj = cargo
         kw.setdefault("title", T["Plot Drawing to Printer"])
         kw.setdefault("buttonlabels", (T["Save and Exit"],  T["Save and Print"], T["Cancel"]))
@@ -201,7 +203,7 @@ class ThanDiaPlot(ThanDialog):
         stat = NORMAL
         for (key,tit,wid,vld) in self.thanWids:
             v = getattr(vs, key)
-#            if type(v) == FloatType or type(v) == IntType: v = str(v)
+#            if type(v) == float or type(v) == int: v = str(v)
             wid.config(state=stat) # All widgets must be enabled..
             wid.thanSet(v)         # ..to change their values
         self.__printeropt()        # Enable/disable printer options
@@ -261,4 +263,4 @@ class ThanDiaPlot(ThanDialog):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

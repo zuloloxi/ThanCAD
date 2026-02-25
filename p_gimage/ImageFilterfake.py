@@ -44,7 +44,8 @@ class Kernel(Filter):
     def __init__(self, size, kernel, scale=None, offset=0):
         if scale is None:
             # default scale is sum of kernel
-            scale = reduce(lambda a,b: a+b, kernel)
+            #scale = reduce(lambda a,b: a+b, kernel)
+            scale = sum(kernel)
         if size[0] * size[1] != len(kernel):
             raise ValueError("not enough coefficients in kernel")
         self.filterargs = size, scale, offset, kernel
@@ -52,7 +53,7 @@ class Kernel(Filter):
     def filter(self, image):
         if image.mode == "P":
             raise ValueError("cannot filter palette images")
-        return apply(image.filter, self.filterargs)
+        return image.filter(*self.filterargs)
 
 class BuiltinFilter(Kernel):
     def __init__(self):

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,26 +21,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
-This module defines a Tkinter window to display a ThanCad drawing.
+This module defines a tkinter window to display a ThanCad drawing.
 """
 
-import weakref, Tkinter
+from __future__ import print_function
+import weakref
+import tkinter
 import p_ggen, p_gtkwid
-import thantk, thanvar, thanmenus, thanfonts
+import thantk, thanvar, thanfonts
 from thanvers import tcver
 from thanopt import thancadconf
 from thanopt.thancon import thanFrape
 from thantrans import T
-import thantkguicoor, thantkguihighget, thantkguihighdraw, thantkguilowget
-import thantkcmd, thantkstatus
+from . import thantkguicoor, thantkguihighget, thantkguihighdraw, thantkguilowget
+from . import thantkcmd, thantkstatus, thanmenus
 
 thanfiles = thanvar.thanfiles
 Canc = thanvar.Canc
 
 
-class ThanTkGuiWinDraw(Tkinter.Toplevel,
+class ThanTkGuiWinDraw(tkinter.Toplevel,
                        thantkguicoor.ThanTkGuiCoor,
                        thantkguihighget.ThanTkGuiHighGet,
                        thantkguihighdraw.ThanTkGuiHighDraw):
@@ -56,7 +58,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         thantkguihighdraw.ThanTkGuiHighDraw.__init__(self)
         self.thanScheduler = thanvar.ThanScheduler()
 
-        Tkinter.Toplevel.__init__(self, master=thanfiles.ThanCad[2], class_=T["ThanDrawing"])
+        tkinter.Toplevel.__init__(self, master=thanfiles.ThanCad[2], class_=T["ThanDrawing"])
         self.__position()
         self.__createControls()
         self.thanScriptComs = ()
@@ -98,7 +100,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         self.thanScheduler = thanvar.ThanScheduler()
         self.thanProj = ["", None, self]
 
-        Tkinter.Toplevel.__init__(self, master=thanfiles.ThanCad[2], class_=T["ThanDrawing"])
+        tkinter.Toplevel.__init__(self, master=thanfiles.ThanCad[2], class_=T["ThanDrawing"])
         self.__position()
         self.__createControls()
 
@@ -173,15 +175,15 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
 
 
 
-        fra = Tkinter.Frame(self)
+        fra = tkinter.Frame(self)
         fra.grid(row=0, column=0, sticky="we")
-        lab = Tkinter.Label(fra, text=T["Layer:"])
+        lab = tkinter.Label(fra, text=T["Layer:"])
         lab.grid(row=0, column=0, sticky="w")
         self.thanCurLayShow = p_gtkwid.ThanButton(fra, width=20, anchor="e", text="<Current Layer>",
             activebackground="green", command=self.__changeCurLay, takefocus=False)
         self.thanCurLayShow.grid(row=0, column=1, sticky="w")
 
-        but = Tkinter.Button(fra, text=T["Change Layer.."], activebackground="green",
+        but = tkinter.Button(fra, text=T["Change Layer.."], activebackground="green",
             command=lambda : self.thanGudCommandBegin("chprop"))
         but.grid(row=0, column=2, sticky="e")
         fra.columnconfigure(2, weight=1)
@@ -203,7 +205,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
             xscrollincrement=1, yscrollincrement=1)
         self.thanCanvas.grid(row=1, column=0, sticky="swne")
 
-        self.thanCom = thantkcmd.ThanTkCmd(self.thanProj, bd=1, relief=Tkinter.SUNKEN, background="lightyellow",
+        self.thanCom = thantkcmd.ThanTkCmd(self.thanProj, bd=1, relief=tkinter.SUNKEN, background="lightyellow",
                               height=5, maxlines=1000)
         self.thanCom.grid(row=2, column=0, columnspan=2, sticky="swne")
 
@@ -264,17 +266,17 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         del self.than
         del self.thanProj, self.thanMenu, self.thanCurLayShow, self.thanCanvas
         del self.thanCom, self.thanStatusBar
-        Tkinter.Toplevel.destroy(self)
+        tkinter.Toplevel.destroy(self)
 
 
     def __del__(self):
-        print "ThanTkGuiWinDraw", self, "dies!"
+        print("ThanTkGuiWinDraw", self, "dies!")
 
 
     def thanTkSetFocus(self):
         "Sets focus to the command window."
         self.lift()
-        Tkinter.Toplevel.focus_set(self)
+        tkinter.Toplevel.focus_set(self)
         self.thanCom.focus_sette()
 
     def focus_set(self):
@@ -283,7 +285,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
 
 
 if __name__ == "__main__":
-    print __doc__
-    gui = Tkinter.Tk()
+    print(__doc__)
+    gui = tkinter.Tk()
     mainWindow = ThanTkGuiWinDraw(gui)
     gui.mainloop()

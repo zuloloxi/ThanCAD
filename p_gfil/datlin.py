@@ -1,13 +1,17 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
+#from builtins import object
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import re
 from p_ggen import prg, tog, isString, Tgui
 
 
-class Datlin:
+class Datlin(object):
     "Class to assist reading text data."
     def __init__(self, fr, prt=None, comment="#"):
         self.fr = fr
-        if prt == None: self.prt = prg
+        if prt is None: self.prt = prg
         else:           self.prt = prt
         self.lin = 0
         self.itok = 0
@@ -34,7 +38,7 @@ class Datlin:
         "Return an iterator which produces raw lines."
         return self
 
-    def next(self):
+    def __next__(self):
         if self.datLin(failoneof=False): return self.dlPrev
         raise StopIteration
 
@@ -46,7 +50,7 @@ class Datlin:
                 dl = self.fr.readline()
                 if dl == "":
                     if not failoneof: return False
-                    raise IOError, "Unexpected end of file after line %d." % self.lin
+                    raise IOError("Unexpected end of file after line %d." % self.lin)
                 self.dlPrev = dl.strip("\n")
                 self.lin += 1
                 dl = dl.strip()
@@ -73,7 +77,7 @@ class Datlin:
                 if dl != "" and dl[0:self.ncom] != self._comment: break
             else:
                 if not failoneof: return False
-                raise IOError, "Unexpected end of file after line %d." % self.lin
+                raise IOError("Unexpected end of file after line %d." % self.lin)
 #        self.dl = self.dlPrev.strip().split()
         self.dl = self._splitter.findall(self.dlPrev)
         if len(self.dl) > 0:
@@ -126,10 +130,10 @@ class Datlin:
         for com in coms:
             if i >= len(self.dl):
                 if not fail: return False
-                raise IOError, "Error at line %d: End of line encountered where '%s' was expected." % (self.lin, tog(com))
+                raise IOError("Error at line %d: End of line encountered where '%s' was expected." % (self.lin, tog(com)))
             if not self.dl[i].startswith(com[:4]):
                 if not fail: return False
-                raise ValueError, "Error at line %d: '%s' was found where '%s' was expected." % (self.lin, tog(self.dl[i]), tog(com))
+                raise ValueError("Error at line %d: '%s' was found where '%s' was expected." % (self.lin, tog(self.dl[i]), tog(com)))
             i += 1
         for j in xrange(i, len(self.dl)):
             if self.dl[j][-1] == ":": i = j + 1; break    # Skip to colon
@@ -140,28 +144,28 @@ class Datlin:
         "Tries to read a real number."
         i = self.itok
         if i >= len(self.dl):
-            raise IOError, "Error at line %d: End of line encountered where a real number was expected." % self.lin
+            raise IOError("Error at line %d: End of line encountered where a real number was expected." % self.lin)
         self.itok += 1
         try: return float(self.dl[i])
         except ValueError:
-            raise ValueError, "Error at line %d: '%s' was found where a real number was expected." % (self.lin, self.dl[i])
+            raise ValueError("Error at line %d: '%s' was found where a real number was expected." % (self.lin, self.dl[i]))
 
     def datInt(self):
         "Tries to read an integer number."
         i = self.itok
         if self.itok >= len(self.dl):
-            raise IOError, "Error at line %d: End of line encountered where an integer number was expected." % self.lin
+            raise IOError("Error at line %d: End of line encountered where an integer number was expected." % self.lin)
         self.itok += 1
         try: return int(self.dl[i])
         except ValueError:
-            raise ValueError, "Error at line %d: '%s' was found where an integer number was expected." % (self.lin, self.dl[i])
+            raise ValueError("Error at line %d: '%s' was found where an integer number was expected." % (self.lin, self.dl[i]))
 
     def datStr(self, failoneol=True):
         "Tries to read a string."
         i = self.itok
         if self.itok >= len(self.dl):
             if not failoneol: return None
-            raise IOError, "Error at line %d: End of line encountered where a string was expected." % self.lin
+            raise IOError("Error at line %d: End of line encountered where a string was expected." % self.lin)
         self.itok += 1
         return self.dl[i]
 
@@ -170,7 +174,7 @@ class Datlin:
         t = self.datStr()[:2].strip()
         if t[:2] in ("ΝΑ", "να", "NA", "na", "YE", "ye", "1"): return True
         if t[:2] in ("ΟΧ", "οχ", "OX", "ox", "NO", "no", "0"): return False
-        raise ValueError, "Error at line %d: '%s' was found where NAI/YES/OXI/NO was expected." % (self.lin, t)
+        raise ValueError("Error at line %d: '%s' was found where NAI/YES/OXI/NO was expected." % (self.lin, t))
 
     def datMchoice(self, coms):
         "Gets a string that has to be one of the given commands."
@@ -179,25 +183,25 @@ class Datlin:
         n = min(len(t), 4)
         for com1 in coms:
             if t[:n] == com1[:n]: return com1
-        raise ValueError, "Error at line %d: '%s' was found where one of the following was expected:\n%s" % \
-                          (self.lin, t, ", ".join(coms))
+        raise ValueError("Error at line %d: '%s' was found where one of the following was expected:\n%s" %
+                          (self.lin, t, ", ".join(coms)))
 
     def datFloatR(self, amin, amax):
         "Reads a float number and checks if it is in range."
         a = self.datFloat()
         if amin <= a <= amax: return a
-        raise ValueError, "Error at line %d: '%f'\nThe real number was expected in range %f and %f" % (self.lin, a, amin, amax)
+        raise ValueError("Error at line %d: '%f'\nThe real number was expected in range %f and %f" % (self.lin, a, amin, amax))
 
     def datIntR(self, amin, amax):
         "Reads an integer number and checks if it is in range."
         a = self.datInt()
         if amin <= a <= amax: return a
-        raise ValueError, "Error at line %d: '%d'\nThe integer number was expected in range %d and %d" % (self.lin, a, amin, amax)
+        raise ValueError("Error at line %d: '%d'\nThe integer number was expected in range %d and %d" % (self.lin, a, amin, amax))
 
     def er1s(self, mes):
         "Prints error message and exits."
         t = "Error at line %d of file %s:\n%s" % (self.lin, str(self.fr.name), tog(mes))
-        raise ValueError, t
+        raise ValueError(t)
 
     def er1(self, mes):
         "Prints error message and continues."
@@ -215,10 +219,18 @@ class Datlin:
 
 def test():
     "Tests Datlin."
-    class flike:
+    class flike(object):
         def __init__(self, dlines):
             self.dlines = dlines
             self.i = 0
+        def __iter__(self):
+            return self
+        def __next__(self):
+            if self.i < len(self.dlines):
+                self.i += 1
+                return self.dlines[self.i-1]
+            else:
+                raise StopIteration
         def readline(self):
             if self.i < len(self.dlines):
                 self.i += 1
@@ -231,9 +243,9 @@ def test():
     d = Datlin(fr)
     d.datLin()
     for i in xrange(4):
-        print d.datStr()
+        print(d.datStr())
     d.datLin()
     for i in xrange(6):
-        print d.datStr()
+        print(d.datStr())
 
 if __name__ == "__main__": test()

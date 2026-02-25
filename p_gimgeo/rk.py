@@ -1,8 +1,9 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
 from math import radians
-import cStringIO
+import io
 import p_ggen, p_ggeod
-from pet import pathElementTree
+from .pet import pathElementTree
 
 
 def readKmz(fn, greece=False):
@@ -15,7 +16,7 @@ def readKmz(fn, greece=False):
     FILEOFCONTENT = "doc.kml"
     try:
         zr = ZipFile(fn)
-    except Exception, e:
+    except Exception as e:
         terr = "%s can not be accessed:\n%s" % (fn, e)
         return None, terr
     try:
@@ -24,10 +25,14 @@ def readKmz(fn, greece=False):
             terr = "The '%s' was not found in the compressed file %s:\This file may not be a Google kmz file." % (FILEOFCONTENT, fn)
             return None, terr
         co = zr.read(FILEOFCONTENT)
-    except Exception, e:
+    except Exception as e:
         terr = "The content of zip file %s can not be accessed:\n%s" % (fn, e)
         return None, terr
-    fr = cStringIO.StringIO(co)
+    if p_ggen.Pyos.Python3:
+        co = co.decode(encoding=p_ggen.thanGetEncoding(), errors="replace")
+        fr = io.StringIO(co)
+    else:
+        fr = io.BytesIO(co)
     return readKml(fr, greece=greece)
 
 
@@ -38,7 +43,7 @@ class NamedPathElementTree(object):
         "Create the object."
         self.pe = pe
         self.pathname = pathname
-        if colmap == None: self.colmap = {}
+        if colmap is None: self.colmap = {}
         else:              self.colmap = colmap.copy()
 
     def iterFolders(self):
@@ -85,23 +90,23 @@ def readKml(fn, greece=False):
     fn is a filename or a file object.
     If greece is True then points outside Greece are ignored, and the GRS80
     geodetic coordinates are transformed to EGSA87 grid coordinates."""
-    print "p_gimgeo:readkml entry"
+    print("p_gimgeo:readkml entry")
     try:
         root = pathElementTree(file=fn) #may raise xml.parsers.expat.ExpatError if tree not understood by parser..
                                         #.. or xml.etree.ElementTree.ParseError if fn is not XML
-    except Exception, e:
+    except Exception as e:
         return None, "Error opening file %s:\n%s" % (fn , e)
     nroot = NamedPathElementTree(root)
     fw = []
     try:
         for f in nroot.iterFolders():
-            print "----------------------"
-            print f.pe.path,': name=', p_ggen.grutf2iso(f.pe.textr("name"))
-            print f.pe.path, "pathname=", f.pathname
+            #print("----------------------")
+            #print(f.pe.path,': name=', p_ggen.grutf2iso(f.pe.textr("name")))
+            #print(f.pe.path, "pathname=", f.pathname)
             for pl in f.findall("Placemark"):
                 name, al, phi, z, col, desc = placemark1(pl, f.colmap)
-                print "p_gimgeo:readkml:", name, al, phi, z
-                if name == None: continue
+                #print("p_gimgeo:readkml:", name, al, phi, z)
+                if name is None: continue
                 if greece:
                     if not (20.0 < al < 30.0): continue      #Aφαιρεί εκτός ελλάδας
 #                    if not (20.0 < al < 25.0): continue      #Aφαιρεί εκτός αττικής
@@ -110,7 +115,7 @@ def readKml(fn, greece=False):
                 nam = p_ggen.grutf2iso(name)
                 desc =  p_ggen.grutf2iso(desc.replace("\n", " "))
                 fw.append([nam, x, y, z, col, desc])
-    except (ValueError, IndexError), e:
+    except (ValueError, IndexError) as e:
         raise
         return None, "Error while reading %s:\%s" % (fn, e)
     return fw, ""
@@ -193,7 +198,7 @@ def readcols(doc):
                     stylenam = pair.textr("styleUrl")
                     break
             else:
-                raise ValueError, "Style name not found"
+                raise ValueError("Style name not found")
             nam1 = stylemap.get("id")
             col1 = col[stylenam[1:]]
 #            print nam1, stylenam, col1

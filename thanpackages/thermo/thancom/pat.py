@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,15 +22,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 The package automates the data input of the diploma thesis of Xaris Patounis
 and Nikos Simos of the School of Civil Engineering, National Technical
 University of Athens.
 The subpackage implements architecture related procedures.
 """
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import sys, csv
-import p_ggen, p_gfil, p_gtkuti, p_gmath
+import p_ggen, p_gfil, p_gmath
 frw = {}
 date = ""
 winmain = None
@@ -52,7 +54,7 @@ def pyMain():
         thermgen()
         therm()
         gridgen(None, wrSyn)
-    except BaseException, e:
+    except BaseException as e:
 #        raise
         p_gfil.er1s("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
     p_gfil.closeFiles1()                        #Not reentrant
@@ -76,7 +78,7 @@ def thanCadMain(proj):
         thermgen()
         therm()
         gridgen(proj, thancadSyn)
-    except BaseException, e:
+    except BaseException as e:
 #        raise
         prg("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
         try: fr.close()
@@ -103,7 +105,7 @@ def thermgen():
     fn = frw["csv"].name
     frw["csv"].seek(0)
     fr = csv.reader(frw["csv"], delimiter=";")
-    r = [fr.next() for i in xrange(6)]
+    r = [next(fr) for i in xrange(6)]
     try:
         r[4][0], r[4][2], r[4][3], r[2][2], r[3][2], r[5][1]
     except:
@@ -132,7 +134,7 @@ def datetime(dline, fn, irow, icol):
 def er1sCsv(fn, irow, icol, terr):
     "Print error message for csv file."
     t = "Error at cell %s%d of file %s:\n%s" % (colnam(icol), irow+1, fn, terr)
-    raise ValueError, t
+    raise ValueError(t)
 
 
 def colnam(icol):
@@ -156,7 +158,7 @@ def therm():
     fn = frw["csv"].name
     frw["csv"].seek(0)
     fr = csv.reader(frw["csv"], delimiter=";")
-    for i in xrange(5): fr.next()
+    for i in xrange(5): next(fr)
     temphum.clear()
     meas.clear()
     i = 0
@@ -167,18 +169,18 @@ def therm():
         try:
             com1Csv(date, dat, fn, i+5, 1)
             tim1 = time2sec(tim)
-        except (IndexError, ValueError), e:
+        except (IndexError, ValueError) as e:
             er1sCsv(fn, i+5, 1, "Συντακτικό λάθος:\n%s" % (e,))
 
         com1Csv("°C", r[2][-2:], fn, i+5, 2)
         try:
             temp = float(r[2][:-2].replace(",", "."))
-        except ValueError, e:
+        except ValueError as e:
             er1sCsv(fn, i+5, 2, "Syntax error: %s" % (e,))
         com1Csv("%RH", r[3][-3:], fn, i+5, 3)
         try:
             hum = float(r[3][:-3].replace(",", "."))
-        except ValueError, e:
+        except ValueError as e:
             er1sCsv(fn, i+5, 3, "Syntax error: %s" % (e,))
         if tim in temphum: er1sCsv(fn, i+5, 1, "Ο χρόνος %d έχει ξαναβρεθεί." % (tim,))
         temphum[tim1] = temp, hum, i
@@ -196,7 +198,7 @@ def gridgen(proj, syn):
         irow += 1
         if r[8] == "Έναρξη": break
     else:
-        raise ValueError, "Δεν βρέθηκε η λέξη 'Έναρξη' στη στήλη %s του αρχείου %s" % (colnam(8), fn)
+        raise ValueError("Δεν βρέθηκε η λέξη 'Έναρξη' στη στήλη %s του αρχείου %s" % (colnam(8), fn))
     for i in 8, 11, 15:
         if i >= len(r): er1sCsv(fn, irow, i, "Αναμενόταν: 'Έναρξη'")
         com1Csv("Έναρξη", r[i], fn, irow, i)
@@ -219,23 +221,23 @@ def gridgen(proj, syn):
             syn(proj, "hum1",  icole, irowe, icolt, irowt, te1, tt1, 1)     #1η μέτρηση, υγρασία
             syn(proj, "temp2", icole, irowe, icolt, irowt, te2, tt2, 0)     #2η μέτρηση, θερμοκρασία
             syn(proj, "hum2",  icole, irowe, icolt, irowt, te2, tt2, 1)     #2η μέτρηση, υγρασία
-        except (ValueError, IndexError), e:
-            raise ValueError, "Συντακτικό λάθος στην γραμμή %s του αρχείου %s:\n%s" % (irow+1, fn, e)
-    for fw in meas.itervalues(): fw.close()
+        except (ValueError, IndexError) as e:
+            raise ValueError("Συντακτικό λάθος στην γραμμή %s του αρχείου %s:\n%s" % (irow+1, fn, e))
+    for fw in meas.values(): fw.close()   #works for python2,3
     for r in fr:
         irow += 1
-	try:    r[7]
-	except: continue
+        try:    r[7]
+        except: continue
         if r[7].strip() != "": er1Csv(fn, irow, 7, "'%s' was found where nothing was expected." % (r[7],))
 
 
 def time2sec(tim):
     "Convert from hours, minutes, seconds to integer seconds."
     try:
-        h, m, s = map(int, tim.split(":"))
+        h, m, s = map(int, tim.split(":"))   #works for python2,3
         tim1 = s + 60 * (m + 60*h)
-    except (ValueError, IndexError), e:
-        raise ValueError, "Συντακτικό λάθος κατά την ανάγνωση χρόνου: %s\n%s" % (tim, e)
+    except (ValueError, IndexError) as e:
+        raise ValueError("Συντακτικό λάθος κατά την ανάγνωση χρόνου: %s\n%s" % (tim, e))
     return tim1
 
 
@@ -250,7 +252,7 @@ def point(icole, irow):
             icole = icole[1:]
     else:
         irowe = irow
-    if icole not in let2num: raise ValueError, "Column out of range: %s" % (icole,)
+    if icole not in let2num: raise ValueError("Column out of range: %s" % (icole,))
     icole = let2num[icole]
     return icole, irowe
 

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 import sys
-from p_ggen import path, Struct, prg, inpStrB, Canc, Tgui
-import p_gtkwid
-import filmed, ffff, opgui, fildat
+import p_ggen, p_gtkwid
+from . import filmed, ffff, opgui, er
+prg = p_ggen.prg
 openFilePar = lambda iun, f: None
 ppro = 'egn', 'ydr'
 proth = ["", ""]
@@ -48,7 +48,7 @@ DLNODESC = '(No description available for previous program)'
 DLGETPRE = 'Getting prefix from file'
 DLERRPRV = 'Error in the execution of the previous program:'
 DLRETPRV = '(Delete file "mediate.tmp" and retry)'
-DLLOGOST = 'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
+DLLOGOST = b'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
 DLLOGOSS = '  ΑΘΑΝΑΣΙΟΣ ΣΤΑΜΟΣ - ΛΟΓΙΣΜΙΚΟ ΓΙΑ ΜΗΧΑΝΙΚΟΥΣ '
 
 
@@ -126,38 +126,65 @@ c     desc : Εξήγηση του περιεχομένου του αρχείου
         if not (1 <= abs(iPro) <= 2):
             prg(' Sr openFile1: %d %s' % (iPro, DLMAXPRE), "can")
             stopErr1()
-            sys.exit(1)
-        file1 = Struct()
+        file1 = p_ggen.Struct()
         file1.ext = ext; file1.stat = stat[:4].strip().lower(); file1.desc = desc; file1.iPro = iPro
         file1.fun = None
         file1.linesf = 0             # It signals that the file unit is used
         files1.append(file1)
 
 
-def opFile1e(un, ext, stat, pro, desc):
+def reopenUniqFile1(frw, exts):
+    """Reopen an opened file with the same prefix and suffix, and a unique integer in between.
+
+    Do the same for many files; the unique integer will be the same for all files."""
+    files1n = {}
+    for ext in exts:
+        for file1 in files1:
+            if ext == file1.ext:
+                files1n[ext] = file1
+                break
+        else:
+            raise KeyError("File extension %s has not been opened" % (ext,))
+    ext = exts[0]
+    file1 = files1n[ext]
+    file1.fun.close()
+    pref = proth[file1.iPro-1]
+    print("pref=", pref, "ipro=", file1.iPro, "proth=", proth)
+    file1.fun = p_ggen.uniqfile(pref, "."+ext, "r" if file1.stat=="old" else "w")
+    frw[ext] = frw[ext, file1.iPro] = file1.fun
+    pref = p_ggen.getPrefix(file1.fun.name)
+    for ext in exts[1:]:
+        file1 = files1n[ext]
+        file1.fun.close()
+        pref = p_ggen.putSufix(pref, "."+ext)
+        file1.fun = open(pref, "r" if file1.stat=="old" else "w")
+        frw[ext] = frw[ext, file1.iPro] = file1.fun
+
+
+def opFile1e(un, ext, stat, pro, desc, iPro=1):
     "Opens the file and fails if it can not open it."
 #---It is assumed that stat1 is at least 3 characters long
-    di, why = opFile1(un, ext, stat, pro, desc)
-    if di != None: return di
+    di, why = opFile1(un, ext, stat, pro, desc, iPro)
+    if di is not None: return di
     stat = stat[:4].lower().strip()
     if stat[:3] == 'opt': return {ext:None}   # Optional data
-    fildat.er1s("Error while opening file %s:\n%s" % (pro+"."+ext, why))
+    er.er1s("Error while opening file %s:\n%s" % (pro+"."+ext, why))
 
 
-def opFile1(un, ext, stat1, pro, desc):
+def opFile1(un, ext, stat1, pro, desc, iPro=1):
     "Opens file immediately."
     global files1
     stat = stat1[:4].strip().lower()
     if ext == "": fn = pro
     else:         fn = pro+"."+ext
     fr, why = _opFile1(fn, stat)   # Try to open file
-    if fr == None: return None, why
-    file1 = Struct()
-    file1.ext = ext; file1.stat = stat; file1.desc = desc; file1.iPro = 0
+    if fr is None: return None, why
+    file1 = p_ggen.Struct()
+    file1.ext = ext; file1.stat = stat; file1.desc = desc; file1.iPro = iPro
     file1.linesf = 0             # It signals that the file unit is used
     file1.fun = fr
     files1.append(file1)
-    return {ext:fr}, None
+    return {ext:fr, (ext, iPro):fr}, None
 
 
 def inpFile1(mhn, kat, stat):
@@ -175,7 +202,7 @@ def inpFile1(mhn, kat, stat):
 #-----Get and open file
 
     while True:
-        filnam = path(inpStrB(mhn1, "").rstrip())
+        filnam = p_ggen.path(p_ggen.inpStrB(mhn1, "").rstrip())
         kat1 = filnam.ext.rstrip()
         if filnam == "":
             prg(DLTRYAGA, "can1")                        # Try again
@@ -186,7 +213,7 @@ def inpFile1(mhn, kat, stat):
             if kat != "": filnam = filnam.parent / filnam.namebase
             if kat[:1] == ".": kat = kat[1:]                 #Delete dot
             frw, terr = opFile1(1, kat, stat, filnam, "")
-            if frw != None: return frw
+            if frw is not None: return frw
             prg("\n%s: %s" % (filnam+kat, DLFILACC), "can")  # Can't access file
             prg(DLTRYAGA, "can")
 
@@ -209,13 +236,13 @@ def xinpFile1(win, mhn, kat, stat):
 
     while True:
         fn , f = opgui.thanTxtopen(win, mhn1, kat, stat1, initialfile=None, initialdir=None)
-        if f == Canc: return None     # File open cancelled
+        if f == p_ggen.Canc: return None     # File open cancelled
 #        kat = fn.ext
 #        fn = fn.parent / fn.namebase
 #        if kat[:1] == ".": kat = kat[1:]
         f.close()
         frw, terr = opFile1(1, kat, stat, fn, "")
-        if frw != None: return frw
+        if frw is not None: return frw
         p_gtkwid.thanGudModalMessage(win, "%s: %s" % (fn+kat, DLFILACC), "Error opening file", p_gtkwid.ERROR)
 
 
@@ -225,17 +252,17 @@ def medFile1(iun, mes, kat, stat):
     If kat == ' ', then the user may supply and the suffix. Else he can't
     This routine is used to read values from file "mediate.tmp". See
     library fildat."""
-    try:                  filnam = iun.next().rstrip()
-    except StopIteration: fildat.er1s('Απροσδόκητο τέλος αρχείου %s' % (filmed.FILNAMMED,))
-    if filnam == "": fildat.er1s('Σφάλμα κατά την ανάγνωση αρχείου %s:\n%s κενό αρχείο' % (filmed.FILNAMMED, mes))
+    try:                  filnam = next(iun).rstrip()
+    except StopIteration: er.er1s('Απροσδόκητο τέλος αρχείου %s' % (filmed.FILNAMMED,))
+    if filnam == "": er.er1s('Σφάλμα κατά την ανάγνωση αρχείου %s:\n%s κενό αρχείο' % (filmed.FILNAMMED, mes))
 
     if kat != "": filnam = filnam.parent / filnam.namebase     #Delete dot
     if kat[:1] == ".": kat = kat[1:]
     frw, terr = opFile1(1, kat, stat, filnam, "")
-    if frw != None:
+    if frw is not None:
         prg('FILE %s= %s' % (mes, filnam))
         return frw
-    fildat.er1s('Σφάλμα κατά την ανάγνωση αρχείου %s:\n%s\n%s: %s' % (filmed.FILNAMMED, mes, filnam, DLFILACC))
+    er.er1s('Σφάλμα κατά την ανάγνωση αρχείου %s:\n%s\n%s: %s' % (filmed.FILNAMMED, mes, filnam, DLFILACC))
 
 #===========================================================================
 
@@ -249,17 +276,17 @@ def openFiles1(gui=False):
         nProm = None  #Windows opens mediate.tmp in program directory; thus we can not use it in GUI mode
     else:
         nProm = filmed.openFileMed(proth, nPro)
-    if nProm == None:
+    if nProm is None:
         if gui:
             openfileMhn(nPro)
             if nPro == 1:
                 proth[0] = opgui.openfilepro(DLPREFIX, 0, files1, descp)
-                if proth[0] == None: sys.exit(1)
+                if proth[0] is None: sys.exit(1)
             elif nPro == 2:
                 proth[0] = opgui.openfilepro(DLPREFI1, 0, files1, descp)
-                if proth[0] == None: sys.exit()
+                if proth[0] is None: sys.exit()
                 proth[1] = opgui.openfilepro(DLPREFI2, 1, files1, descp)
-                if proth[1] == None: sys.exit(1)
+                if proth[1] is None: sys.exit(1)
         else:
             openfileMhn(nPro)
             if nPro == 1:
@@ -292,7 +319,8 @@ def openfileMhn(nPro):
     "Prints message for the user."
     pay = "=" * (len(ffff.gggg(DLLOGOST))+1)
     if dispLogo: prg("%s\n%s" % (ffff.gggg(DLLOGOST), pay), "thancad") # Ονομασία γραφείου
-    prg("\n\n %s\n%s" % (descp, "-"*(len(descp)+2)), "mes")    # Μήνυμα στην οθόνη
+    np = max(len(x.strip()) for x in descp.split("\n"))
+    prg("\n\n %s\n%s" % (descp, "-"*(np+2)), "mes")            # Μήνυμα στην οθόνη
     openFilePar(lang, lambda t, tags="info1": prg(t, tags))    # Τυχόν οδηγίες του προγράμματος στην οθόνη
     prg("")
     if nPro == 0: return
@@ -321,8 +349,9 @@ def openfilepro(mes, icod):
     Αν icod=0 δεν επιτρέπεται ο χρήστης να δώσει κενό πρόθεμα.
     Αν icod=1  επιτρέπεται.
     """
+    from p_ggen.py23 import input
     while True:
-        pro = path(raw_input(mes).strip())
+        pro = p_ggen.path(input(mes).strip())
         if pro == '' and icod == 0: continue
         if pro == '': return pro
         if pro.ext in ("", "."): return pro.parent / pro.namebase
@@ -347,7 +376,7 @@ def openFileOpen():
 #   στο ίδιο batch file.
 
     for file1 in files1:
-        if  file1.iPro < 0 and file1.fun != None: file1.fun.close(); file1.fun = None
+        if  file1.iPro < 0 and file1.fun is not None: file1.fun.close(); file1.fun = None
 
 #===========================================================================
 
@@ -383,7 +412,7 @@ def closeFiles2():
 def doCloseFiles1():
     "JUst close the files and nothing more."
     for file1 in files1:
-        if file1.fun != None:
+        if file1.fun is not None:
             file1.fun.close()
             file1.fun = None
 
@@ -394,7 +423,7 @@ def clFile1(ext):
         if ext == file1.ext: break
     else:
         return              #File was not found/not open
-    if file1.fun != None:
+    if file1.fun is not None:
         file1.fun.close()   #File opened; close it
     del files1[i]
 
@@ -413,17 +442,16 @@ def _opFile1(filnam1, stat1):
     elif stat[:3] == 'app': stat = 'a'    # append
     elif stat[:3] == 'opt': stat = 'r'    # Optional data
     try: return open(filnam1, stat), None # Try to open file
-    except IOError, why: return None, why
+    except IOError as why: return None, why
 
 def _opFile1e(filnam1, stat1):
     "Opens a file with status stat1; fail if error."
     f, why = _opFile1(filnam1, stat1)
-    if f != None: return f
+    if f is not None: return f
     stat1 = stat1.lower().strip()
     if stat1[:3] == 'opt': return f       # Optional data
     prg("%s: %s" % (filnam1, DLFILACC))
     stopErr1()
-    sys.exit(1)
 
 
 import subprocess
@@ -436,22 +464,23 @@ def runMediate(app, pexpectline=True, popen=False):
 
     It is the responsibility of the caller to ensure that mediate.tmp exists in pdir
     and that it is valid."""
+    p_ggen.thanSetEncoding("iso-8859-7")   #Thanasis2016_07_17
     out, _, _ = opgui.openfileWinget()
     assert out != None, "runMediate() should be called in GUI mode!"
     try:
-        fn = path(proth[0]).abspath()
+        fn = p_ggen.path(proth[0]).abspath()
         pdir = fn.parent
         closeFiles2()
 #        p_gtkwid.thanGudModalMessage(out, "wait", "wait")    #for debugging
         try:
             p_grun.runExec(app, pdir, out, pexpectline, popen)
-        except BaseException, e:
-            dl = "%s '%s'" % (Tgui["Error while executing external program"], app)
+        except BaseException as e:
+            dl = "%s '%s'" % (p_ggen.Tgui["Error while executing external program"], app)
             out.thanPrt("\n%s:\n%s" % (dl, e), "can")
-            p_gtkwid.thanGudModalMessage(out, "%s.\n%s." % (dl, Tgui["Details were recorded on output window"]),
-                                          "%s %s" % (Tgui["ERROR executing"], app))
+            p_gtkwid.thanGudModalMessage(out, "%s.\n%s." % (dl, p_ggen.Tgui["Details were recorded on output window"]),
+                                          "%s %s" % (p_ggen.Tgui["ERROR executing"], app))
 #          out.thanTkSetFocus()
-    except BaseException, e:
+    except BaseException as e:
         out.thanPrt("Exception: %s" % (e,))
 
 

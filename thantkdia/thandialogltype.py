@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,13 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
-This package includes dialogs (forms to get user input) implemented with Tkinter.
+This package includes dialogs (forms to get user input) implemented with tkinter.
 This module contains the dialog which asks for line type settings.
 """
 
-import Tkinter
+import tkinter
 import p_gtkwid, p_ggen
 from thantrans import T
 from thanvar import THANBYPARENT, THANPERSONAL
@@ -60,7 +60,7 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
     def body2(self, win):
         "Create the body of the dialog in steps."
         self.fraSpec(win, 1)
-        labs = sorted((val.thanName, val.thanDesc) for val in self.thanProj[1].thanLtypes.itervalues())
+        labs = sorted((val.thanName, val.thanDesc) for val in self.thanProj[1].thanLtypes.values())   #works for python2,3
         labs.insert(0, (str(THANBYPARENT), str(THANBYPARENT)))
         labs.insert(1, (str(THANPERSONAL), str(THANPERSONAL)))
         n = max(len(b[0]) for b in labs)
@@ -82,26 +82,26 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
 
     def fraSpec(self, win, ir):
         "Widgets for line type settings."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir-1, column=0, pady=5, sticky="wesn")
 
-#        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+#        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
 #        lab.grid(row=0, column=0)
-#        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["LINE TYPE SETTINGS:"])
+#        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=T["LINE TYPE SETTINGS:"])
 #        lab.grid(row=0, column=1, columnspan=2, sticky="w")
 
         key = "butPattern"
         tit = "Line type (dashes)"
-        lab = Tkinter.Label(fra, text=T[tit])
+        lab = tkinter.Label(fra, text=T[tit])
         lab.grid(row=1, column=1, sticky="e")
-        wid = p_gtkwid.ThanButton(fra, width=30, command=self.__poppattern, anchor="w", justify=Tkinter.LEFT)
+        wid = p_gtkwid.ThanButton(fra, width=30, command=self.__poppattern, anchor="w", justify=tkinter.LEFT)
         wid.grid(row=1, column=2, sticky="we")
         val = p_gtkwid.ThanValidator()
         self.thanWids.append((key, T[tit], wid, val))
 
         key = "choUnit"
         tit = "Line type unit"
-        lab = Tkinter.Label(fra, text=T[tit])
+        lab = tkinter.Label(fra, text=T[tit])
         lab.grid(row=2, column=1, sticky="e")
         wid = p_gtkwid.ThanChoice(fra, labels=("mm", "user data units"), width=20)
         wid.grid(row=2, column=2, sticky="we")
@@ -110,7 +110,7 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
 
         key = "entScale"
         tit = "Line type scale"
-        lab = Tkinter.Label(fra, text=T[tit])
+        lab = tkinter.Label(fra, text=T[tit])
         lab.grid(row=3, column=1, sticky="e")
         wid = p_gtkwid.ThanEntry(fra, width=8)
         wid.grid(row=3, column=2, sticky="we")
@@ -126,7 +126,7 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
         except IndexError: i = self.__labs1.index("continuous")
 
 #        self.option_add("*%s*font" % (self.winfo_name(),), thantk.thanFonts[0])
-        win = p_gtkwid.ThanPoplist(self, self.__labs2, width=100, height=20, selectmode=Tkinter.SINGLE,
+        win = p_gtkwid.ThanPoplist(self, self.__labs2, width=100, height=20, selectmode=tkinter.SINGLE,
             default=i, font=thantk.thanFonts[0])
         r = win.result
         if r is not None:
@@ -139,11 +139,11 @@ class ThanDialogLtype(p_gtkwid.ThanComDialog):
         "If byparent, disable unit and scale."
         pa = self.butPattern.thanGet()
         if pa == str(THANBYPARENT) or pa == str(THANPERSONAL):
-            self.choUnit.config(state=Tkinter.DISABLED)
-            self.entScale.config(state=Tkinter.DISABLED)
+            self.choUnit.config(state=tkinter.DISABLED)
+            self.entScale.config(state=tkinter.DISABLED)
         else:
-            self.choUnit.config(state=Tkinter.NORMAL)
-            self.entScale.config(state=Tkinter.NORMAL)
+            self.choUnit.config(state=tkinter.NORMAL)
+            self.entScale.config(state=tkinter.NORMAL)
 
 
 def thanValsDef():
@@ -156,7 +156,7 @@ def thanValsDef():
 
 
 def test1():
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     proj = [ p_ggen.path("xxxx"), p_ggen.Struct(), root]
     proj[1].thanLtypes = {"<BYPARENT>":"pp", "continuous":"x", "dashed":"xx", "dot":"d1"}
     dia = ThanDialogLtype(root, cargo=proj)

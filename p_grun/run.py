@@ -36,7 +36,7 @@ try: import pexpect
 except ImportError: pexpect = None
 from p_ggen import togi, path, thanUnicode, Pyos, Tgui, isString
 import p_gtkwid
-from winerror import ThanTkWinError, ThanShellError
+from .winerror import ThanTkWinError, ThanShellError
 
 
 def runExecWin(app, pdir, pexpectline=True, popen=False, shell=False, env=None, **kw):
@@ -47,10 +47,11 @@ def runExecWin(app, pdir, pexpectline=True, popen=False, shell=False, env=None, 
     try:
         runExec(app, pdir, out, pexpectline, popen, env)
 #    except BaseException as e:
-    except BaseException, e:
+    except BaseException as e:
+        raise
         dl = "%s '%s'" % (Tgui["Error while executing external program"], app)
         out.thanPrt("\n%s:\n%s" % (dl, e), "can")
-        p_gtkwid.thanGudModalMessage(out, "%s.\n." % (dl, Tgui["Details were recorded on output window"]),
+        p_gtkwid.thanGudModalMessage(out, "%s.\n%s." % (dl, Tgui["Details were recorded on output window"]),
                                           "%s %s" % (Tgui["ERROR executing"], thanUnicode(app)))
         out.thanPrt("\n%s\n" % (Tgui["Close this window to finish.."],), "mes")
 
@@ -70,8 +71,9 @@ def runExec(app, pdir, out, pexpectline=True, popen=False, shell=False, env=None
     cdir = path(os.getcwd())
     try:
         pdir.chdir()
-        if pexpect == None or popen or shell:
+        if pexpect is None or popen or shell:
             _popenrun(app, pdir, out, shell, env)
+            #_popenrun_with_communicate(app, pdir, out, shell, env)
         elif pexpectline:
             _pexpectLinerun(app, out, env)
         else:
@@ -111,18 +113,18 @@ def _pexpectLinerun(app, out, env=None, timeout=2000):
             out.update_idletasks()
 
 
-def _popenrun_with_communicate(app, pdir, out, env=None):
+def _popenrun_with_communicate(app, pdir, out, shell=False, env=None):
         "Run the program with popen."
         prt = out.thanPrt
         try:
             prt("executing %s.." % (app,))
-            p1 = Popen(app, stdout=PIPE, stderr=STDOUT, cwd=pdir, env=_envmerge(env))
+            p1 = Popen(app, stdout=PIPE, stderr=STDOUT, cwd=pdir, shell=shell, env=_envmerge(env))
         except OSError:
             app1 = path(sys.path[0]).parent /"other" / app
-            p1 = Popen(app1, stdout=PIPE, stderr=STDOUT, cwd=pdir)
+            p1 = Popen(app1, stdout=PIPE, stderr=STDOUT, cwd=pdir, shell=shell, env=_envmerge(env))
         out1, out2 = p1.communicate()
-        if out1 != None: prt(togi(out1.replace("\r", "")))
-        if out2 != None: prt(togi(out2.replace("\r", "")))
+        if out1 is not None: prt(togi(out1.replace("\r", "")))
+        if out2 is not None: prt(togi(out2.replace("\r", "")))
         try:
             i = 0
             for dl in open("mediate.tmp"):
@@ -142,12 +144,17 @@ def _popenrun(app, pdir, out, shell=False, env=None):
         prts = out.thanPrts
         try:
             prt("executing %s.." % (app,))
-            p1 = Popen(app, bufsize=0, stdout=PIPE, stderr=STDOUT, cwd=pdir, shell=shell, env=_envmerge(env))
+            p1 = Popen(app, bufsize=-1, stdout=PIPE, stderr=STDOUT, cwd=pdir, shell=shell, env=_envmerge(env))
         except OSError:
             app1 = path(sys.path[0]).parent /"other" / app
-            p1 = Popen(app1, stdout=PIPE, stderr=STDOUT, cwd=pdir)
-        while p1.poll() == None:
+            p1 = Popen(app1, bufsize=-1, stdout=PIPE, stderr=STDOUT, cwd=pdir, shell=shell, env=_envmerge(env))
+        while True:
+            #print("p_grun:_popenrun():shell=", shell)
+            #print("p_grun:_popenrun():", p1.poll())
             dl = p1.stdout.read(4096)
+            #print("p_grun:_popenrun():", dl, p1.poll())
+            if dl==b"" and p1.poll() is not None: break
+            if Pyos.Python3: dl = thanUnicode(dl)
             out.update_idletasks()
             prts(togi(dl.replace("\r", "")))
         try:
@@ -165,12 +172,12 @@ def _popenrun(app, pdir, out, shell=False, env=None):
 
 def runCompileScript(script, dir1=".", out=None, env=None):
         "Runs a Thanasis' compile script."
-#        if out == None:
+#        if out is None:
 #            winmain, _, _ = p_gfil.openfileWinget()
-#            out = ThanShellError() if winmain == None else winmain
-        if out == None: out = ThanShellError()
+#            out = ThanShellError() if winmain is None else winmain
+        if out is None: out = ThanShellError()
         prt = out.thanPrt
-        if script == None:
+        if script is None:
             prt("******Warning: no compile script found!", "can1")
             return False
         if Pyos.Openbsd:       coms = "ksh " +script      #We use ksh  because the script may not have the execution attribute set
@@ -183,7 +190,7 @@ def runCompileScript(script, dir1=".", out=None, env=None):
         try:
             if script[1] == "b": runExec(coms, dir1, out, popen=True, shell=True, env=env)
             else:                runExec(coms, dir1, out, pexpectline=True, shell=True, env=env)
-        except Exception, e:
+        except Exception as e:
             prt("******Error while running %s:\n******%s" % (script, e), "can1")
             return False
         return True
@@ -191,7 +198,7 @@ def runCompileScript(script, dir1=".", out=None, env=None):
 
 def _envmerge(env):
     "Add environmental variables in env to the environment given to the child process."
-    if env == None:
+    if env is None:
         env1 = os.environ
     else:
         env1 = os.environ.copy()
@@ -201,9 +208,9 @@ def _envmerge(env):
 
 def test():
     "Test the library."
-    import Tkinter
-    root = Tkinter.Tk()
-    ok = runExecWin("/home/a12/h/libs/source_python/runlib/dok", pdir=".", pexpectline=True, master=root,
+    import tkinter
+    root = tkinter.Tk()
+    ok = runExecWin("/home/a12/h/libs/source_python/p_grun/dok", pdir=".", pexpectline=True, master=root,
         mes="First line - Πρώτη γραμμή\n", title=u"ThanCad: Δοκιμή του dok")
     root.mainloop()
 

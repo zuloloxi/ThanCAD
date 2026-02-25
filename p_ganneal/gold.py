@@ -1,4 +1,5 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
 from math import fabs
 import p_ggen
 
@@ -7,7 +8,7 @@ def goldSect(func, cka=0.0, ckb=1.0, eps=None, prt2=p_ggen.doNothing):
     "Golden section minimisation."
     assert ckb > cka
     t = 0.6180339887  # t= (sqrt(5.)-1.)/2. : αριΘΜΟΣ ΧΡΥΣΗΣ ΤΟΜΗΣ
-    if eps == None: eps = (ckb-cka)/100.0
+    if eps is None: eps = (ckb-cka)/100.0
     sfa = func(cka)
     sf = func(ckb)
     ckx1 = cka + (ckb-cka) / 4.0; sx1 = func(ckx1)
@@ -55,7 +56,7 @@ def goldSect(func, cka=0.0, ckb=1.0, eps=None, prt2=p_ggen.doNothing):
 def test():
     "Find the minimum of f(x)."
     from math import fabs, sin, pi
-    def prt2(x, v): print "%8.4f  %8.4f" % (x, v)
+    def prt2(x, v): print("%8.4f  %8.4f" % (x, v))
     def f(x): return (x-1)**3
     goldSect(f, cka=0.0, ckb=2*pi, prt2=prt2)
 

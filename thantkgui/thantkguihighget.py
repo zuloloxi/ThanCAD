@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,26 +21,30 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for user interaction in a drawing
 window.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import time
 from math import atan2, hypot
-import tkSimpleDialog
+import tkinter
+from tkinter import simpledialog
 import p_gtkwid, p_ggen
 
+from thanvar import Canc, ThanScheduler, thanfiles
+from thanopt import thancadconf
 from thantrans import T
-from thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_SNAPELEM,
+from .thantkguilowget.thantkconst import (THAN_STATE_NONE, THAN_STATE_SNAPELEM,
     THAN_STATE_TEXT, THAN_STATE_ZOOMDYNAMIC, THAN_STATE_PANDYNAMIC,
     THAN_STATE_POINT, THAN_STATE_POINT1, THAN_STATE_LINE, THAN_STATE_LINE2,
     THAN_STATE_RECTANGLE, THAN_STATE_RECTRATIO, THAN_STATE_MOVE, THAN_STATE_ROADP,
     THAN_STATE_ROADR, THAN_STATE_SPLINEP, THAN_STATE_POLAR, THAN_STATE_CIRCLE,
     THAN_STATE_ARC, THAN_STATE_ELLIPSEB)
-from thanvar import Canc, ThanScheduler, thanfiles
-from thanopt import thancadconf
 
 
 class ThanTkGuiHighGet:
@@ -143,7 +147,7 @@ class ThanTkGuiHighGet:
                 cmd.thanCleanup()                           # Cleanup saved answer in commandline
                 dc.thanCleanup()                            # Cleanup gui
                 if res == Canc: return res, None
-                #print "__waitfor: cmd answered: type=", type(res), "  result=", res
+                #print("__waitfor: cmd answered: type=", type(res), "  result=", res)
                 return res, None
 
 #============================================================================
@@ -159,7 +163,7 @@ class ThanTkGuiHighGet:
         self.thanCom.thanWaitingInput = True
 
     def thanGudCommandCan(self, mes=None, mestype="can"):
-        """Print (at least default) cancel message and reprompt.
+        """print((at least default) cancel message and reprompt.)
 
         The meaning of this is that the precious command ended
         unsuccessfully and no do/undo was added. That's why
@@ -206,7 +210,7 @@ class ThanTkGuiHighGet:
         5. If it is one of the options, return the first letter of this option.
         6. If we reached here it is not a point, osnap, or option. So:
         7. If strict==False, return the user response as text.
-        8. Otherwise print error message, and go to step 1.
+        8. Otherwise print(error message, and go to step 1.)
         9. Before returning (steps 2,3,5,7), restore object snap to original settings.
         10.statonce is a message that is printed only the first time that this
            function asks for input. If the function asks again for input (in
@@ -266,7 +270,7 @@ class ThanTkGuiHighGet:
             if not strict:
                 ret = res, "t", cargo                        # Text (other than coordinates,osnap or options) plus cargo are returned
                 break
-#-----------If none of the above applies, print error message and repeat inquiry
+#-----------If none of the above applies, print(error message and repeat inquiry)
             if len(opts) == 0: stat = T["Invalid Point. Try again.\n"]
             else:              stat = T["Invalid point or option. Try again.\n"]
             self.thanCom.thanAppend(stat, "can")
@@ -471,14 +475,14 @@ class ThanTkGuiHighGet:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
                 options=options, args=(cc,), state=THAN_STATE_CIRCLE)
             if typres == "v":              # coordinates
-#                print "GUI answered"
+#                print("GUI answered")
                 r = hypot(res[1]-cc[1], res[0]-cc[0])
-#                print "GUI answered: r=", r
+#                print("GUI answered: r=", r)
                 return r
             if typres == "o": return res   # Option or Cancel
             try:
                 r = float(res)
-                print "CMD answered: r=", r
+                print("CMD answered: r=", r)
                 if r > 0.0: return r
             except ValueError:
                 pass
@@ -516,14 +520,14 @@ class ThanTkGuiHighGet:
             res, typres, cargo = self.__getPoint(stat, statonce=statonce, strict=False,
                 options=options, args=(cc,None,None,a,theta,None), state=THAN_STATE_ELLIPSEB)
             if typres == "v":              # coordinates
-#                print "GUI answered"
+#                print("GUI answered")
                 r = hypot(res[1]-cc[1], res[0]-cc[0])
-#                print "GUI answered: r=", r
+#                print("GUI answered: r=", r)
                 return r
             if typres == "o": return res   # Option or Cancel
             try:
                 r = float(res)
-                print "CMD answered: r=", r
+                print("CMD answered: r=", r)
                 if r > 0.0: return r
             except ValueError:
                 pass
@@ -576,7 +580,7 @@ class ThanTkGuiHighGet:
            return the validated value.
         8. if validation is NOT ok, but strict==False, we dont't mind and so
            return the (illegal) response.
-        9. Otherwise print error message, and go to step 1.
+        9. Otherwise print(error message, and go to step 1.)
         10.statonce is a message that is printed only the first time that this
            function asks for input. If the function asks again for input (in
            case of error, statonce is not printed).
@@ -702,9 +706,9 @@ class ThanTkGuiHighGet:
             res = self.thanGudGetText(stat)
             if res == Canc: return res
             try:
-                if res.strip() == "" and default is not None: cz = map(float, default)
-                else:                                     cz = map(float, res.split(","))
-            except (ValueError, TypeError), e:
+                if res.strip() == "" and default is not None: cz = list(map(float, default))  #works for python2,3
+                else:                                         cz = list(map(float, res.split(",")))  #works for python2,3
+            except (ValueError, TypeError) as e:
                 self.thanPrter(T["Syntax error. Try again."])
                 continue
             if len(cz) == nd-2: break
@@ -756,9 +760,8 @@ class ThanTkGuiHighGet:
         "Let the user select a single layer (only leaf layers)."
         if proj is None: proj = self.thanProj
         lt = proj[1].thanLayerTree
-        lays = dict((lay.thanGetPathname(), lay) for lay in lt.dilay.itervalues())
-        names = lays.keys()
-        names.sort()
+        lays = dict((lay.thanGetPathname(), lay) for lay in lt.dilay.values())   #works for python2,3
+        names = sorted(lays.keys())      #works for python2,3
         win = p_gtkwid.ThanPoplist(self, names, width=50, title=mes)
         self.thanTkSetFocus()
         if win.result is None: return Canc
@@ -769,11 +772,9 @@ class ThanTkGuiHighGet:
         "Let the user select multiple layers (only leaf layers)."
         if proj is None: proj = self.thanProj
         lt = proj[1].thanLayerTree
-        lays = dict((lay.thanGetPathname(), lay) for lay in lt.dilay.itervalues())
-        names = lays.keys()
-        names.sort()
-        import Tkinter
-        win = p_gtkwid.ThanPoplist(self, names, width=50, selectmode=Tkinter.EXTENDED, title=mes)
+        lays = dict((lay.thanGetPathname(), lay) for lay in lt.dilay.values())   #works for python2,3
+        names = sorted(lays.keys())  #works for python2,3
+        win = p_gtkwid.ThanPoplist(self, names, width=50, selectmode=tkinter.EXTENDED, title=mes)
         self.thanTkSetFocus()
         if win.result is None: return Canc
         return [lays[n] for n in win.result]
@@ -782,8 +783,7 @@ class ThanTkGuiHighGet:
     def thanGudGetProject(self, mes):
         "Let the user select a single of the currently opened drawings."
         lays = dict((p[0], p) for p in thanfiles.getOpened()[1:])
-        names = lays.keys()
-        names.sort()
+        names = sorted(lays.keys())   #works for python2,3
         win = p_gtkwid.ThanPoplist(self, names, width=50, title=mes)
         self.thanTkSetFocus()
         if win.result is None: return Canc
@@ -795,11 +795,10 @@ class ThanTkGuiHighGet:
         projlays = {}
         for proj in thanfiles.getOpened()[1:]:
             lt = proj[1].thanLayerTree
-            for lay in lt.dilay.itervalues():
+            for lay in lt.dilay.values():   #works for python2,3
                 nam = "%s::%s" % (proj[0], lay.thanGetPathname())
                 projlays[nam] = (proj, lay)
-        names = projlays.keys()
-        names.sort()
+        names = sorted(projlays.keys())   #works for python2,3
         win = p_gtkwid.ThanPoplist(self, names, width=60, title=mes)
         self.thanTkSetFocus()
         if win.result is None: return Canc, Canc
@@ -812,7 +811,8 @@ class ThanTkGuiHighGet:
                                     # Tk jobs when we show a modal window.
                                     # _idletasks breaks WinDoze (98?) support. Skotistika
         while True:
-            ans = tkSimpleDialog.askstring("Please enter text", mes,
+            #ans = simpledialog.askstring("Please enter text", mes,
+            ans = p_gtkwid.askstring("Please enter text", mes,
                 initialvalue=p_ggen.thanUnicode(textDefault), parent=self)
             if ans is None: return Canc
             if ans != "": return p_ggen.thanUnunicode(ans)
@@ -824,13 +824,13 @@ class ThanTkGuiHighGet:
         self.update_idletasks()     # Experience showed that there should be no pending
                                     # Tk jobs when we show a modal window
                                     # _idletasks breaks WinDoze (98?) support. Skotistika
-        ans = tkSimpleDialog.askfloat("Please enter a number", mes,
+        ans = simpledialog.askfloat("Please enter a number", mes,
             initialvalue=str(textDefault), parent=self)
         return ans
 
     def thanGudGetPosFloat1(self, mes, textDefault):
         "Accepts a positive real number via a modal window."
-        ans = tkSimpleDialog.askfloat("Please enter a positive number", mes,
+        ans = simpledialog.askfloat("Please enter a positive number", mes,
             initialvalue=str(textDefault), minvalue=0.00000001, parent=self)
         return ans
 
@@ -844,7 +844,7 @@ class ThanTkGuiHighGet:
         dc.thanChs.thanPush(-1)                   #Set dummy croshair, so that no croshair objects are on the canvas
         tagel = self.thanProj[1].thanTagel
 #        for item in dc.find_all():
-#            print item, dc.type(item), cget(item)
+#            print(item, dc.type(item), cget(item))
         elems = {tagel[cget(item)[0]] for item in dc.find_all()}
         dc.thanChs.thanPop()                      #Restore croshair
         try: elems.remove(tagel["e0"])            #Remove temporary elements for the selection
@@ -859,7 +859,7 @@ class ThanTkGuiHighGet:
         ct = self.thanCt
         xa, ya = ct.global2Local(xa, ya)
         dc = self.thanCanvas
-        bpix, hpix =  thancadconf.thanBSEL/2, thancadconf.thanBSEL/2
+        bpix, hpix =  thancadconf.thanBSEL//2, thancadconf.thanBSEL//2
         self.thanProj[2].thanCanvas.thanCh.thanDisable()
         items = list(dc.find_overlapping(xa-bpix, ya-hpix, xa+bpix, ya+hpix))
         items.reverse()     # Tkinter places the most recently drawn element to the end of the list
@@ -869,7 +869,7 @@ class ThanTkGuiHighGet:
         for item in items:
             if dc.type(item) == "image": continue
 #            if dc.type(item) == "polygon": continue
-            print "thanGudGetSel1: type=", dc.type(item)
+            print("thanGudGetSel1: type=", dc.type(item))
             if self.__externalFilterFunc is None: break
             titem = dc.gettags(item)[0]
             e = tagel[titem]
@@ -895,9 +895,9 @@ class ThanTkGuiHighGet:
         self.thanProj[2].thanCanvas.thanCh.thanDisable()
         items = dc.addtag_enclosed("sel", xa, ya, xb, yb)
 #       No need to avoid selecting the raster of ThanImage, because all the raster must be enclosed, in order to be selected
-        print "filterwin started"; t1 = time.time()
+        print("filterwin started"); t1 = time.time()
         self.__filterwin()
-        print "filterwin ended:", time.time()-t1
+        print("filterwin ended:", time.time()-t1)
         return self.__selCount()
 
     def __selCount(self):
@@ -936,11 +936,11 @@ class ThanTkGuiHighGet:
         """
         dc = self.thanCanvas
         dc.addtag_withtag("sel1", "sel")  # Add sel1 to all items within selection window
-#        print "elements selected=", dc.find_withtag("sel1")
-#        print "noncompound elements=", dc.find_withtag("nocomp")
+#        print("elements selected=", dc.find_withtag("sel1"))
+#        print("noncompound elements=", dc.find_withtag("nocomp"))
         dc.dtag("nocomp", "sel1")              # Delete sel1 from items of non-compound elements
         items = set(dc.find_withtag("sel1"))   # All items of compound elements within selection window
-#        print "Items compound=", items
+#        print("Items compound=", items)
         while len(items) > 0:
             for item in items: break
 #            titem = dc.itemcget(item, "tags").split()[0]
@@ -1013,9 +1013,9 @@ class ThanTkGuiHighGet:
         self.thanProj[2].thanCanvas.thanCh.thanDisable()
         dc.addtag_overlapping("sel", xa, ya, xb, yb)
 #       We need to avoid selecting the raster of ThanImage
-        print "filtercros started"; t1 = time.time()
+        print("filtercros started"); t1 = time.time()
         self.__filtercros()
-        print "filtercros ended:", time.time()-t1
+        print("filtercros ended:", time.time()-t1)
         return self.__selCount()
 
 
@@ -1032,11 +1032,11 @@ class ThanTkGuiHighGet:
         dc = self.thanCanvas
         tagseen = set()
         dc.addtag_withtag("sel1", "sel")  # Add sel1 to all items within selection window
-#        print "elements selected=", dc.find_withtag("sel1")
-#        print "noncompound elements=", dc.find_withtag("nocomp")
+#        print("elements selected=", dc.find_withtag("sel1"))
+#        print("noncompound elements=", dc.find_withtag("nocomp"))
         dc.dtag("nocomp", "sel1")         # Delete sel1 from items of non-compound elements
         items = dc.find_withtag("sel1")   # All items of compound elements within selection window
-#        print "Items compound=", items
+#        print("Items compound=", items)
         for item in items:
             titem = dc.gettags(item)[0]
             if titem in tagseen: continue
@@ -1102,10 +1102,10 @@ class ThanTkGuiHighGet:
     def prtags(self, stag="all"):
         "Print Item tags of all items with tag stag."
         dc = self.thanCanvas
-        print "Item tags of all items with tag '"+stag+"'"
+        print("Item tags of all items with tag '"+stag+"'")
         for item in dc.find_withtag(stag):
-            print item, ":", dc.gettags(item)
+            print(item, ":", dc.gettags(item))
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

@@ -1,1 +1,1 @@
-import dxfinter, pilinter
+from . import dxfinter, pilinter

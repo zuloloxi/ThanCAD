@@ -8,12 +8,22 @@ try:
     from PIL.ImageFont import load_path
     from PIL.ImageFilter import SMOOTH
 except ImportError:
-    from Imagefake import (open, new,
+    from .Imagefake import (open, new,
         ROTATE_90, ROTATE_180, ROTATE_270,
         NEAREST, ANTIALIAS, BICUBIC)
-    from ImageTkfake import PhotoImage
-    from ImageEnhancefake import Brightness
-    from ImageDrawfake import Draw
-    from ImageFilterfake import SMOOTH       #ImageFilterfake is the real ImageFilter
+    from .ImageTkfake import PhotoImage
+    from .ImageEnhancefake import Brightness
+    from .ImageDrawfake import Draw
+    from .ImageFilterfake import SMOOTH       #Note: ImageFilterfake is the real ImageFilter (it is not fake)
 
-from Imagefake import ThanImageMissing
+try:
+    import sane
+except ImportError:
+    from . import sanefake as sane
+try:
+    import _sane
+except ImportError:
+    from . import _sanefake as _sane
+
+from .getscandpi import getScanDpi, getScanDpiFake
+from .Imagefake import ThanImageMissing

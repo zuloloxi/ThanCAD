@@ -1,11 +1,14 @@
 # -*- coding: iso-8859-7 -*-
-from itertools import islice, izip
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+from itertools import islice
 from bisect import bisect
-from math import fabs
+from math import fabs, hypot
 from p_gmath import linEq2, linint
-from p_ggen import prg, iterby2, tog
+from p_ggen import prg, iterby2, tog, xfrange, xfrangec
 from p_gvec import Vector2
-from area import area
+from .area import area
 
 
 class Polygon:
@@ -19,7 +22,7 @@ class Polygon:
         "Initialise polygon."
         dcmin = self.DCMIN
         cs2 = [quant(a, dcmin) for a in cs]    # Make the coordinates quantumised
-        self.csori = dict(izip(cs2, cs))       # Save original coordinates
+        self.csori = dict(zip(cs2, cs))        # Save original coordinates    #Ok for python 2, 3
         cs = cs2
         remDup(cs, dcmin)                      # Delete very close points
         assert len(cs) > 2, "Degenerate polygon."
@@ -62,7 +65,7 @@ class Polygon:
         "Assuming that self and other has common edge, merge polygon to a new one, deleting the common edge."
         if self.state != other.state: self.changeState()
         ia, ib = self.__common1(other)
-        if ia == None: return None
+        if ia is None: return None
         for da in 1, -1:
             for db in 1, -1:
                 ja = self.__next1(ia, da)
@@ -131,9 +134,9 @@ class Polygon:
                     polnew.csori[cs1] = other.csori[cs1]
                 except KeyError:
                     prg("self:")
-                    for x,y in self.csori.iteritems(): print x, "\t", y
+                    for x,y in self.csori.iteritems(): print(x, "\t", y)
                     prg("other:")
-                    for x,y in other.csori.iteritems(): print x, "\t", y
+                    for x,y in other.csori.iteritems(): print(x, "\t", y)
                     polnew.csori[cs1] = other.csori[cs1]
 
         return polnew
@@ -175,7 +178,7 @@ class Polygon:
                 return cints
             for j in xrange(1, len(other.cs)):
                 fs, fo = intLinseg(self.cs[i1], self.cs[i2], other.cs[j-1], other.cs[j])
-                if fs != None and 0 <= fs <= 1 and 0 <= fo <= 1:
+                if fs is not None and 0 <= fs <= 1 and 0 <= fo <= 1:
                     a, b = self.cs[i1], self.cs[i2]
                     ct1 = a[0] + (b[0]-a[0])*fs, a[1] + (b[1]-a[1])*fs
                     cints.append(ct1)
@@ -212,9 +215,9 @@ class Polygon:
             for j in xrange(1, len(other.cs)):
                 fs, fo = intLinseg(self.cs[i-1], self.cs[i], other.cs[j-1], other.cs[j])
 #                print "fs,fo=", fs, fo
-#                if fs != None and -1 <= fs <= 2 and -1 <= fo <= 2:
+#                if fs is not None and -1 <= fs <= 2 and -1 <= fo <= 2:
 #                print "fs,fo=", fs, fo
-                if fs != None and 0 <= fs <= 1 and 0 <= fo <= 1:
+                if fs is not None and 0 <= fs <= 1 and 0 <= fo <= 1:
                     a, b = self.cs[i-1:i+1]
                     ct1 = a[0] + (b[0]-a[0])*fs, a[1] + (b[1]-a[1])*fs
                     cints.append(ct1)
@@ -310,7 +313,7 @@ class Polygon:
 
     def onEdge(self, cp):
         "Checks if point p is on an edge of a polygon."
-        vp = Vector2(*cp)
+        vp = Vector2(*cp[:2])
         dy = 0.5*self.DYMAX
         i1 = bisect(self.css, (cp[1]-self.DYMAX-dy, cp, cp))
         jj = i1 - 1
@@ -353,8 +356,19 @@ class Polygon:
         xx += self.DCMIN*0.25
         yy += self.DCMIN*0.25
 
+        xs = self.compYinter(yy)
+        if len(xs) == 0 or xx < xs[0]: return 0, None, None
+        for i in xrange(len(xs)):
+#            assert xx != xs[i], "inpol: xx="+str(xx)+" should not be equal to polygon point."
+            if xs[i] > xx: return (i % 2 == 1), None, None
+        return 0, None, None
+
+
+    def compYinter(self, yy):
+        "Compute intersection of the polygon with a horizontal line at y; assume yy is already quantumised."
         dy = 0.5*self.DYMAX
-        i1 = bisect(self.css, (yy-self.DYMAX-dy, ca, ca))
+        #i1 = bisect(self.css, (yy-self.DYMAX-dy, ca, ca))
+        i1 = bisect(self.css, (yy-self.DYMAX-dy, (0.0,0.0), (0.0,0.0)))
         xs = []
         for y, va, vb in islice(self.css, i1, None):
             if y - yy > dy: break
@@ -372,17 +386,45 @@ class Polygon:
             dxf.thanDxfPlot(0.0, 0.0, 999)
             assert len(xs) % 2 == 0, 'in: %f %f: odd number of intersections!' % (xx, yy)
         xs.sort()
+        return xs
 
-        if len(xs) == 0 or xx < xs[0]: return 0, None, None
-        for i in xrange(len(xs)):
-#            assert xx != xs[i], "inpol: xx="+str(xx)+" should not be equal to polygon point."
-            if xs[i] > xx: return (i % 2 == 1), None, None
-        return 0, None, None
+
+    def interpYpoints(self, yy, dx):
+        "Compute interpolation points inside the polygon with distance dx, at a horizontal line at yy; assume yy is already quantumised."
+        xs = self.compYinter(yy)
+        for i in xrange(0, len(xs), 2):
+            for xx in xfrangec(xs[i], xs[i+1], dx):
+                yield xx, yy
+
+
+    def interpPoints(self, dx, dy):
+        "Compute interpolation points inside the polygon with distance every dx and dy."
+        ymin, ccmin = min((cc[1],cc) for cc in self.cs)
+        ymax, ccmax = max((cc[1],cc) for cc in self.cs)
+        yield ccmin[:2]
+        for y in xfrange(ymin+dy, ymax-dy*0.1, dy):
+            _, yy = quant((0.0, y), self.DCMIN)
+            yy += self.DCMIN*0.25
+            for cp in self.interpYpoints(yy, dx):
+                yield cp
+        yield ccmax[:2]
+
+
+    def interpPerim(self, dd):
+        "Compute interpolation points on the perimeter with distance every dd."
+        for (xa, ya), (xb, yb) in iterby2(self.cs):   #Create points in the edges of the polygon
+            yield xa, ya
+            dol = hypot(yb-ya, xb-xa)
+            for d in xfrange(dd, dol-dd/10.0, dd):
+                xp = linint(0.0, xa, dol, xb, d)
+                yp = linint(0.0, ya, dol, yb, d)
+                yield xp, yp
+        #Note that self.cs[0] == self.cs[-1]
 
 
     def area(self, force=False):
         "Computes the area of the polygon; note that this is lasy operation."
-        if self._area == None or force:
+        if self._area is None or force:
             self._area = area(self.cs)
         return self._area
 
@@ -513,9 +555,9 @@ def intLinseg(a, b, c, d):
                   b[1]-a[1], c[1]-d[1], c[1]-a[1])
 
 
-def thanMain():
-    "Tests Polygons."
 
+def samplePolygons():
+    "Some polygons used for tests."
     c1 = [ (0, 0), (10, 0), (10, 10), (0, 0) ]
     c2 = [ (7, 5), (15, 5), (7, -5), (7, 5) ]
     c3 = [ (7, 5), (15, 5), (7.7, -0.85), (7, 5) ]
@@ -552,11 +594,15 @@ def thanMain():
           ( -9.094,         10.053),
            (-9.246,          9.483)
          ]
+    return c1, c2, c3, c4, c5
 
+
+def testKthm():
+    "Tests Polygons from Greek Cadastre."
     cdas1 = [ ]
     f = file("das1.syk", "r")
     it = iter(f)
-    it.next()
+    next(it)
     for dline in it:
         cols = dline[:-1].split()
         if cols[0] == "$": break
@@ -566,7 +612,7 @@ def thanMain():
     ckt1 = [ ]
     f = file("kthm1.syk", "r")
     it = iter(f)
-    it.next()
+    next(it)
     for dline in it:
         cols = dline[:-1].split()
         if cols[0] == "$": break
@@ -583,4 +629,5 @@ def thanMain():
     f.close()
 
 
-if __name__ == "__main__": thanMain()
+if __name__ == "__main__": 
+    testPoints()

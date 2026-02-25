@@ -1,4 +1,8 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+import p_ggen
 import base64
 k = []
 
@@ -6,11 +10,11 @@ k = []
 def than():
     f = '  ΑΘΑΝΑΣΙΟΣ ΣΤΑΜΟΣ - ΛΟΓΙΣΜΙΚΟ ΓΙΑ ΜΗΧΑΝΙΚΟΥΣ '
     f = ffff(f)
-    print f
-    f = 'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
+    print(f)
+    f = b'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
     f = gggg(f)
-    print "|%s|" % (f,)
-    print "|%s|" % (fff(),)
+    print("|%s|" % (f,))
+    print("|%s|" % (fff(),))
 
 
 def pre():
@@ -23,28 +27,46 @@ def pre():
 
 
 def fff():
-    f = 'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
+    f = b'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
     return gggg(f)
 
 
-def ffff (dl):
-    dl1 = []
-    for i,c in enumerate(dl):
-        j = ord(c)
-        j = j + k[i % 8]
-        dl1.append(chr(j))
-    dl1 = "".join(dl1)
-    return base64.encodestring(dl1)[:-1]
+if p_ggen.Pyos.Python3:
+    def ffff (dl):
+        #dl = dl.encode(p_ggen.thanGetEncoding())   #Thanasis2016_07_17
+        dl = dl.encode("ISO-8859-7")                #Thanasis2016_07_17
+        dl1 = []
+        for i,j in enumerate(dl):
+            dl1.append(j + k[i % 8])
+        dl1 = bytes(dl1)
+        return base64.encodestring(dl1)[:-1]
+    def gggg(dl):
+        dl = base64.decodestring(dl)[:-1]
+        dl1 = []
+        for i,j in enumerate(dl):
+            j = j - k[i % 8]
+            dl1.append(j)
+        dl1 = bytes(dl1)
+        #return dl1.decode(p_ggen.thanGetEncoding())    #Thanasis2016_07_17
+        return dl1.decode("ISO-8859-7")                 #Thanasis2016_07_17
+else:
+    def ffff (dl):
+        dl1 = []
+        for i,c in enumerate(dl):
+            j = ord(c)
+            j = j + k[i % 8]
+            dl1.append(chr(j))
+        dl1 = "".join(dl1)
+        return base64.encodestring(dl1)[:-1]
+    def gggg(dl):
+        dl = base64.decodestring(dl)[:-1]
+        dl1 = []
+        for i,c in enumerate(dl):
+            j = ord(c)
+            j = j - k[i % 8]
+            dl1.append(chr(j))
+        return "".join(dl1)
 
-
-def gggg(dl):
-    dl = base64.decodestring(dl)[:-1]
-    dl1 = []
-    for i,c in enumerate(dl):
-        j = ord(c)
-        j = j - k[i % 8]
-        dl1.append(chr(j))
-    return "".join(dl1)
 
 #c============================================================================
 #

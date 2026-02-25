@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes photogrammetry related commands.
 """
 
 from math import hypot, atan2
-from tkMessageBox import ERROR
+from tkinter.messagebox import ERROR
 from p_gmath import thanSegSeg, thanNear2
-import p_ggen, p_gtkuti
+import p_ggen, p_gtkwid
 from thantrans import Tphot, T
 from thanvar import Canc
 import thandr, thanobj
@@ -40,7 +40,7 @@ from thanopt import thancadconf
 from thandefs import ThanImageMissing
 
 
-mm = p_gtkuti.thanGudModalMessage
+mm = p_gtkwid.thanGudModalMessage
 
 def thanPhotF6(proj): proj[2].thanCom.thanOnF6(None)
 def thanPhotF7(proj): proj[2].thanCom.thanOnF7(None)
@@ -52,7 +52,7 @@ def thanPhotImage(proj, insertmode="p"):
     dimitra(proj, "interior")
     im, terr, nim = thanFindImage(proj)
     if nim > 0:
-        ret1 = p_gtkuti.thanGudAskOkCancel(proj[2],
+        ret1 = p_gtkwid.thanGudAskOkCancel(proj[2],
         Tphot["1 or more images are already present.\n\nOK to replace?"], T["Warning"])
         if not ret1: return proj[2].thanGudCommandCan()
 
@@ -217,7 +217,7 @@ def __crlayer(proj, layname, moncolor, draworder=None):
         else:
             lay = thanToplayerCurrent(proj, layname, current=False)
         return lay, ""
-    except Exception, why:
+    except Exception as why:
         terr = ["%s %s/%s:" % (Tphot["Could not create/access layer"], "photogrammetry", layname),
                 str(why),
                 Tphot["Please create a new drawing and try again."],
@@ -254,7 +254,7 @@ def dimitra(proj, icom):
     pr = proj[2].thanPrtbo
     if icom == "interior":
         pr("Photogrammetry, Dimitra Vassilaki, PhD Candidate", "info")
-        pr("Lab of Photogrammetry, NTUA, 2010-2014", "info")
+        pr("Lab of Photogrammetry, NTUA, 2010-2015", "info")
 
 
 def thanPhotCamera(proj):
@@ -274,7 +274,7 @@ def thanPhotIntcamera(proj):
     if len(iors) > 0:
         cam = iors[0].getCamera()
         if cam is not None:
-            ret2 = p_gtkuti.thanGudAskOkCancel(proj[2],
+            ret2 = p_gtkwid.thanGudAskOkCancel(proj[2],
             Tphot["A camera file is already loaded. "\
             "If a new camera file is loaded, "\
             "any previous computations will probably become invalid "\
@@ -315,7 +315,7 @@ def __getimage(proj):
     if len(iors) > 0:
         imi = iors[0].getImage()
         if imi is not None and im != imi:
-            ret1 = p_gtkuti.thanGudAskOkCancel(proj[2],
+            ret1 = p_gtkwid.thanGudAskOkCancel(proj[2],
             Tphot["ThanCad found that the image was changed. "\
             "Any previous computations have probably become invalid and must be redone.\n\n"
             "OK to continue?"], T["Warning"])
@@ -332,9 +332,9 @@ def __checkCam(fr):
     """
     v = p_ggen.Struct()
     try:
-        v.name = fr.next().strip()
+        v.name = next(fr).strip()
         if v.name.strip() == "": return None, Tphot["Blank camera name"]
-        try: v.focus = float(fr.next())
+        try: v.focus = float(next(fr))
         except ValueError: return None, Tphot["Syntax error while reading focus length"]
         if v.focus < 0.001 or v.focus > 1000.0: return None, Tphot["Invalid focus length"]
     except StopIteration:
@@ -343,8 +343,8 @@ def __checkCam(fr):
     v.x = []
     v.y = []
     for dline in fr:
-        try: x1, y1 = map(float, dline.split())
-        except (ValueError, IndexError): Tphot["Syntax error while reading fiducial coordinates"]
+        try: x1, y1 = map(float, dline.split())   #works for python2,3
+        except (ValueError, IndexError): return None, Tphot["Syntax error while reading fiducial coordinates"]
         v.x.append(x1)
         v.y.append(y1)
     if len(v.x) < 3: return None, Tphot["At least 3 fiducials should be given"]
@@ -377,7 +377,7 @@ def thanPhotInterior(proj):
     other.newelems = newelems
     w = thanprotkdia.ThanInterior(proj[2], vals, proj, Tphot, other)
     if w.result is None:                         #Interior cancelled
-        thanundo.thanReplaceUndo(proj, delelems, newelems.values())
+        thanundo.thanReplaceUndo(proj, delelems, list(newelems.values()))    #works for python2,3
         thanundo.thanLtRestore(proj, oldcl, oldroot)   #It also calls thanTkSet for current layer
         proj[1].viewPort[:] = proj[2].thanGudZoomWin(oldport)
         proj[2].thanAutoRegen(regenImages=True)
@@ -386,7 +386,7 @@ def thanPhotInterior(proj):
     proj[1].thanObjects["PHOTINTERIOR"][:] = [ior]
     lt.thanCur.thanTkSet(proj[2].than)
 
-    newelems = w.other.newelems.values()
+    newelems = list(w.other.newelems.values())   #works for python2,3
     oldobjs = [("PHOTINTERIOR", iors[0])]
     newobjs = [("PHOTINTERIOR", ior)]
     proj[1].thanDoundo.thanAdd("photinterior", __photImageRedo, (lt.thanCur, lt.thanRoot, delelems, newelems, list(v), oldobjs, newobjs),

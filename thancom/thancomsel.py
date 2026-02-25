@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module provides the mechanism for element selection."
@@ -66,6 +66,7 @@ def thanSelectOr(proj, standalone=True, filter=None, optionname="", optiontext="
             c1 = proj[2].thanGudGetPoint(T["First window corner: "])
             if c1 == Canc: continue
             res = __corner2(proj, c1, com)
+            if res == Canc: continue
             proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
         elif com == "l":                                     # Select layer(s)
             proj[2].thanCanvas.thanChs.thanSet(0)            # Set big croshair
@@ -115,7 +116,7 @@ def thanSelectOr(proj, standalone=True, filter=None, optionname="", optiontext="
     proj[2].thanGudSetSelcurClear()                          # Clears current selection (which is already inside selall)
     proj[2].thanGudSetSelExternalFilter(None)                # Reset filter
     if standalone:
-        from thancommod import thanModCanc, thanModEnd
+        from .thancommod import thanModCanc, thanModEnd
         if com == Canc: return thanModCanc(proj)
         proj[1].thanDoundo.thanAdd("select", thanModSelectRedo, (proj[2].thanSelall,),
                                              thanModSelectUndo, (proj[2].thanSelold,))
@@ -146,6 +147,7 @@ def thanSelectGen(proj, standalone=True, filter=None):
             c1 = proj[2].thanGudGetPoint(T["First window corner: "])
             if c1 == Canc: continue
             res = __corner2(proj, c1, com)
+            if res == Canc: continue
             proj[2].thanSel1coor = None                      # This is the first point in the 'break' command
         elif com == "l":                                     # Select layer(s)
             proj[2].thanCanvas.thanChs.thanSet(0)            # Set big croshair
@@ -190,7 +192,7 @@ def thanSelectGen(proj, standalone=True, filter=None):
     proj[2].thanGudSetSelcurClear()                          # Clears current selection (which is already inside selall)
     proj[2].thanGudSetSelExternalFilter(None)                # Reset filter
     if standalone:
-        from thancommod import thanModCanc, thanModEnd
+        from .thancommod import thanModCanc, thanModEnd
         if com == Canc: return thanModCanc(proj)
         proj[1].thanDoundo.thanAdd("select", thanModSelectRedo, (proj[2].thanSelall,),
                                              thanModSelectUndo, (proj[2].thanSelold,))

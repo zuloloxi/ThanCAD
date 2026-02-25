@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,11 +21,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines utilities for lines.
 """
-from itertools import izip
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import hypot, fabs, atan2, pi
 from p_gmath import thanNearx, PI2, dpt
 
@@ -55,7 +56,7 @@ def thanPntNearest2(cp, ccu):
             elif dt < 0.0 or dt > aa: continue
             dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
             if dn < dmin:
-                cp1 = [e+(f-e)*dt/aa for (e,f) in izip(cp[i-1], cp[i])]
+                cp1 = [e+(f-e)*dt/aa for (e,f) in zip(cp[i-1], cp[i])]  #works for python2,3
                 dmin = dn
                 iseg = i
                 tcp1 = tall - aa + dt
@@ -102,7 +103,7 @@ def thanPerpPoints(cp, ccu):
             elif thanNearx(dt, aa)  : dt = aa
             elif dt < 0.0 or dt > aa: continue
             #dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
-            cp1 = [e+(f-e)*dt/aa for (e,f) in izip(cp[i-1], cp[i])]
+            cp1 = [e+(f-e)*dt/aa for (e,f) in zip(cp[i-1], cp[i])]  #works for python2,3
             ps.append(cp1)
         return ps
 
@@ -132,7 +133,7 @@ def thanPerpPointsC(cp, ccu, thtol):
                         ps.append(list(cp[i-1]))
             else:
                 #dn = fabs(-ta[1]*b[0]+ta[0]*b[1])
-                cp1 = [e+(f-e)*dt/aa for (e,f) in izip(cp[i-1], cp[i])]
+                cp1 = [e+(f-e)*dt/aa for (e,f) in zip(cp[i-1], cp[i])]  #works for python2,3
                 ps.append(cp1)
             dtp = dt
         return ps

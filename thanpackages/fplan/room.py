@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,10 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which creates a floor plan design automatically.
 """
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import random, copy
 from functools import partial
 from p_ggen import prg
@@ -48,14 +51,14 @@ class Room:
         "Split the room to 2 children."
         assert self.isleaf(), "room is already split!"
         assert self.xymm[isplit] < csplit < self.xymm[isplit+2], "Split line outside of the room"
-	self.isplit = isplit
-	self.csplit = csplit
-	xymm = list(self.xymm)
-	xymm[isplit+2] = csplit
-	self.roomll = Room(xymm, self.rcon)
-	xymm = list(self.xymm)
-	xymm[isplit] = csplit
-	self.roomur = Room(xymm, self.rcon)
+        self.isplit = isplit
+        self.csplit = csplit
+        xymm = list(self.xymm)
+        xymm[isplit+2] = csplit
+        self.roomll = Room(xymm, self.rcon)
+        xymm = list(self.xymm)
+        xymm[isplit] = csplit
+        self.roomur = Room(xymm, self.rcon)
 
 
     def merge(self):
@@ -80,12 +83,12 @@ class Room:
 
     def energyold(self, e):
         "Computed the energy of the ...."
-	e += self.penalty(self.xymm[2]-self.xymm[0])
-	e += self.penalty(self.xymm[3]-self.xymm[1])
-	if self.isleaf(): return e
-	e = self.roomll.energy(e)
-	e = self.roomur.energy(e)
-	return e
+        e += self.penalty(self.xymm[2]-self.xymm[0])
+        e += self.penalty(self.xymm[3]-self.xymm[1])
+        if self.isleaf(): return e
+        e = self.roomll.energy(e)
+        e = self.roomur.energy(e)
+        return e
 
     def energy(self):
         "Compute the energy of the room"
@@ -96,25 +99,25 @@ class Room:
     col = "red yellow green blue cyan magenta white".split()
     def plot(self, ch, icol):
         "Plots the room into a ThanChart."
-	xa, ya = self.xymm[:2]
-	xb, yb = self.xymm[2:]
-	xx = (xa, xb, xb, xa, xa)
-	yy = (ya, ya, yb, yb, ya)
-	ch.curveAdd(xx, yy, color=self.col[icol%len(self.col)])
-	if not self.isleaf(): self.plotSplit(ch, icol+1)
+        xa, ya = self.xymm[:2]
+        xb, yb = self.xymm[2:]
+        xx = (xa, xb, xb, xa, xa)
+        yy = (ya, ya, yb, yb, ya)
+        ch.curveAdd(xx, yy, color=self.col[icol%len(self.col)])
+        if not self.isleaf(): self.plotSplit(ch, icol+1)
 
 
     def plotSplit(self, ch, icol):
         "Plots the split line of the room."
-	if self.isplit == 0:
-	    xx = (self.csplit,  self.csplit)
-	    yy = (self.xymm[1], self.xymm[3])
-	else:
-	    xx = (self.xymm[0], self.xymm[2])
-	    yy = (self.csplit,  self.csplit)
-	ch.curveAdd(xx, yy, color=self.col[icol%len(self.col)])
-	if not self.roomll.isleaf(): self.roomll.plotSplit(ch, icol+1); icol += 1
-	if not self.roomur.isleaf(): self.roomur.plotSplit(ch, icol+1)
+        if self.isplit == 0:
+            xx = (self.csplit,  self.csplit)
+            yy = (self.xymm[1], self.xymm[3])
+        else:
+            xx = (self.xymm[0], self.xymm[2])
+            yy = (self.csplit,  self.csplit)
+        ch.curveAdd(xx, yy, color=self.col[icol%len(self.col)])
+        if not self.roomll.isleaf(): self.roomll.plotSplit(ch, icol+1); icol += 1
+        if not self.roomur.isleaf(): self.roomur.plotSplit(ch, icol+1)
 
     def plot3(self, imd, ct, icol):
         "Plots the room into a ThanChart."
@@ -126,7 +129,7 @@ class Room:
             xb, yb = g2li(*self.xymm[2:])
             xx = (xa, xb, xb, xa, xa)
             yy = (ya, ya, yb, yb, ya)
-            imd.line(zip(xx, yy), width=4, fill=self.col[icol%len(self.col)])
+            imd.line(list(zip(xx, yy)), width=4, fill=self.col[icol%len(self.col)])  #works for python2,3
             if not self.isleaf(): self.plotSplit3(imd, ct, icol+1)
 
 
@@ -210,32 +213,32 @@ class RoomConfiguration(SAAnnealable):
 
     def changeState(self, fill=False):
         "Changes the configuration a little."
-	p = self.r.random()
-	if p < 0.4 and self.chable:     # In case that only the root room exists
-#	    print "change"
-	    room = self.r.choice(self.chable)
-	    i = room.isplit
-	    dc = (room.xymm[i+2] - room.xymm[i])*self.per
-	    room.csplit = self.r.uniform(room.xymm[i]+dc, room.xymm[i+2]-dc)
-	    room.roomll.xymm[i+2] = room.csplit
-	    room.roomur.xymm[i]   = room.csplit
-	elif self.splitable(p, fill): #Note that in normal mode this may lead to more than maxrooms
-#	    print "split"
-	    room = self.r.choice(self.sable)
-	    dx = room.xymm[2]-room.xymm[0]
-	    dy = room.xymm[3]-room.xymm[1]
-	    px = 1.0/(1.0+dy/dx)
-	    if self.r.random() < px: i = 0
-	    else:                    i = 1
-	    dc = (room.xymm[i+2] - room.xymm[i])*self.per
-	    c = self.r.uniform(room.xymm[i]+dc, room.xymm[i+2]-dc)
-	    room.split(i, c)
-	    self.typeNodes()
+        p = self.r.random()
+        if p < 0.4 and self.chable:     # In case that only the root room exists
+#            print "change"
+            room = self.r.choice(self.chable)
+            i = room.isplit
+            dc = (room.xymm[i+2] - room.xymm[i])*self.per
+            room.csplit = self.r.uniform(room.xymm[i]+dc, room.xymm[i+2]-dc)
+            room.roomll.xymm[i+2] = room.csplit
+            room.roomur.xymm[i]   = room.csplit
+        elif self.splitable(p, fill): #Note that in normal mode this may lead to more than maxrooms
+#            print "split"
+            room = self.r.choice(self.sable)
+            dx = room.xymm[2]-room.xymm[0]
+            dy = room.xymm[3]-room.xymm[1]
+            px = 1.0/(1.0+dy/dx)
+            if self.r.random() < px: i = 0
+            else:                    i = 1
+            dc = (room.xymm[i+2] - room.xymm[i])*self.per
+            c = self.r.uniform(room.xymm[i]+dc, room.xymm[i+2]-dc)
+            room.split(i, c)
+            self.typeNodes()
         else:                      # Note that here this may result to less than minrooms
-#	    print "merge"
-	    room = self.r.choice(self.chable)
-	    room.merge()
-	    self.typeNodes()
+#            print "merge"
+            room = self.r.choice(self.chable)
+            room.merge()
+            self.typeNodes()
 
 
     def splitable(self, p, fill):
@@ -297,9 +300,9 @@ class RoomConfiguration(SAAnnealable):
       self.efact = 100.0 / de             # Normalise delta energy to 100: efact*de = 100
       self.prt('Αρχική ενέργεια=%.3f' % e1)
       self.prt("Αρχική μέση Δε =%.3f" % de)
-      print "Initial    number of rooms:", n1
-      print "Randomized number of rooms:", len(self.sable)
-      print "efact=", self.efact, "Initial temperature=", 100.0/self.efact
+      print("Initial    number of rooms:", n1)
+      print("Randomized number of rooms:", len(self.sable))
+      print("efact=", self.efact, "Initial temperature=", 100.0/self.efact)
 #      self.plot("First approximation")
       return len(self.all)
 
@@ -314,7 +317,6 @@ class RoomConfiguration(SAAnnealable):
 
     def imageForegroundState(self, im, ct, colot, T, e):
         "Superimpose image foreground to the given the background image."
-        import p_gimage
         imd = p_gimage.Draw(im)
         if colot == "green":
             self.root.plot3(imd, ct, -1)
@@ -359,17 +361,17 @@ def test():
     for itry in xrange(5):
         all = []; mall = []; sall = []; chall = []
         root.list(all, mall, sall, chall)
-	room = r.choice(sall)
-	dx = room.xymm[2]-room.xymm[0]
-	dy = room.xymm[3]-room.xymm[1]
-	px = 1.0/(1.0+dy/dx)
-	if r.random() < px: i = 0
-	else:               i = 1
+        room = r.choice(sall)
+        dx = room.xymm[2]-room.xymm[0]
+        dy = room.xymm[3]-room.xymm[1]
+        px = 1.0/(1.0+dy/dx)
+        if r.random() < px: i = 0
+        else:               i = 1
 #        i = r.randint(0, 1)
-	dc = (room.xymm[i+2] - room.xymm[i])*per
-	c = r.uniform(room.xymm[i]+dc, room.xymm[i+2]-dc)
-	room.split(i, c)
-    print "energy=", root.energy()
+        dc = (room.xymm[i+2] - room.xymm[i])*per
+        c = r.uniform(room.xymm[i]+dc, room.xymm[i+2]-dc)
+        room.split(i, c)
+    print("energy=", root.energy())
     ch = ThanChart()
     root.plot(ch, 0)
     vis(ch)

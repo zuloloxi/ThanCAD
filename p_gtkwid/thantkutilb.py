@@ -1,6 +1,7 @@
+from __future__ import print_function
 from math import sqrt
 import weakref
-import tkFont, Tkinter
+import tkinter, tkinter.font
 
 
 def thanFontGet(wid):
@@ -19,27 +20,27 @@ def thanText2Font(t):
         try: n = int(t1)
         except ValueError: pass
         else: __set(kw, "size", n); continue
-        if t1 == tkFont.NORMAL:
-            __set(kw, "weight", tkFont.NORMAL)
-        elif t1 == tkFont.BOLD:
-            __set(kw, "weight", tkFont.BOLD)
-        elif t1 == tkFont.ROMAN:
-            __set(kw, "slant", tkFont.ROMAN)
-        elif t1 == tkFont.ITALIC:
-            __set(kw, "slant", tkFont.ITALIC)
+        if t1 == tkinter.font.NORMAL:
+            __set(kw, "weight", tkinter.font.NORMAL)
+        elif t1 == tkinter.font.BOLD:
+            __set(kw, "weight", tkinter.font.BOLD)
+        elif t1 == tkinter.font.ROMAN:
+            __set(kw, "slant", tkinter.font.ROMAN)
+        elif t1 == tkinter.font.ITALIC:
+            __set(kw, "slant", tkinter.font.ITALIC)
         elif t1 == "overstrike":
             __set(kw, "overstrike", True)
         else:
             __set(kw, "family", t1)
 #    for key,val in kw.iteritems(): print key,val
-    return tkFont.Font(**kw)
+    return tkinter.font.Font(**kw)
 
 
 def __set(kw, key, val):
     "Sets the key/val in dictionary kw, if it is not already there."
     if key in kw:
-        print "Option", key, "is already set to", kw[key]
-        print "Option", key, "value", val, "is ignored"
+        print("Option", key, "is already set to", kw[key])
+        print("Option", key, "value", val, "is ignored")
         return
     kw[key] = val
 
@@ -121,7 +122,8 @@ def thanRobustDim(self=None):
     """
     MON = 19.0; RATIO = 0.75; RESOL = (1024, 768)
     if self is None:
-        self = Tkinter._default_root
+        try: self = tkinter._default_root
+        except: import Tkinter; self = Tkinter._default_root   #Ease the trasition to python3
     else:
         self.update_idletasks()              # _idletasks breaks WinDoze (98?) support. Skotistika
         self = self.winfo_toplevel()
@@ -158,51 +160,51 @@ def thanRobustDim(self=None):
 #=============================================================================
 
 def __testGrab():
-    from thantksimpledialog import ThanDialog
+    from .thantksimpledialog import ThanDialog
     class ThanD1(ThanDialog):
         def body(self, fra):
-            b=Tkinter.Button(fra, text="fork", command=self.fork)
+            b=tkinter.Button(fra, text="fork", command=self.fork)
             b.grid()
-            b=Tkinter.Button(fra, text="do1", command=self.do1)
+            b=tkinter.Button(fra, text="do1", command=self.do1)
             b.grid()
         def do1(self):
-            print "do1"
+            print("do1")
         def fork(self):
             return ThanD1(self)
 
     class ThanD2(ThanDialog):
         def body(self, fra):
-            b=Tkinter.Button(fra, text="do2", command=self.do2)
+            b=tkinter.Button(fra, text="do2", command=self.do2)
             b.grid()
         def do2(self):
-            print "do2"
+            print("do2")
 
     root.update()
-    def do(): print "do"
-    b=Tkinter.Button(root, text="do", command=do)
+    def do(): print("do")
+    b=tkinter.Button(root, text="do", command=do)
     b.grid()
-    print "d1=", ThanD1(root)
+    print("d1=", ThanD1(root))
 
 
 def __testText2Font():
     "A test for thanText2Font."
     f = thanText2Font("Courier -12")
-    print
-    print f
-    print
+    print()
+    print(f)
+    print()
     f.config(size=14)
-    print f
-    print "size=", f.cget("size")
-    print
-    wid = Tkinter.Text(root)
+    print(f)
+    print("size=", f.cget("size"))
+    print()
+    wid = tkinter.Text(root)
     wid.grid()
-    print "text font:", thanFontGet(wid)
-    wid = Tkinter.Entry(root)
+    print("text font:", thanFontGet(wid))
+    wid = tkinter.Entry(root)
     wid.grid()
-    print "entry font:", thanFontGet(wid)
+    print("entry font:", thanFontGet(wid))
 
 
 if __name__ == "__main__": 
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     __testText2Font()
     __testGrab()

@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -68,10 +68,10 @@ en2gr = \
                                                     u"Υπολογισμός μετασχηματισμού προβολής με φωτοσταθερά",
 "Global Matching of FFLF networks of different Dimensionality":
                                                     u"Ολική Συνταύτιση δικτύων FFLF διαφορετικής Διάστασης",
-"Select the\nreference (3D) lines"                : u"Επιλογή γραμμών\nαναφοράς (3Δ)",
-"Select the\nprojected (2D) lines"                : u"Επιλογή γραμμών\nπροβολής (2Δ)",
-"Select the reference (3D) lines\n"               : u"Επιλογή γραμμών αναφοράς (3Δ)\n",
-"Select the projected (2D) lines\n"               : u"Επιλογή γραμμών προβολής (2Δ)\n",
+"Select the\nsecondary (3D) lines"                : u"Επιλογή δευτερευουσών\n γραμμών (3Δ)",
+"Select the\nreference (2D) lines"                : u"Επιλογή γραμμών\nαναφοράς (2Δ)",
+"Select the secondary (3D) lines\n"               : u"Επιλογή δευτερευουσών γραμμών (3Δ)\n",
+"Select the reference (2D) lines\n"               : u"Επιλογή γραμμών αναφοράς (2Δ)\n",
 "2D polynomial approximation"                     : u"Πολυωνυμική προσέγγιση 2Δ",
 "Global Matching of 2D Curves"                    : u"Ολική Συνταύτιση Διδιάστατων Γραμμών",
 "Global Matching of 3D Curves"                    : u"Ολική Συνταύτιση Τρισδιάστατων Γραμμών",
@@ -152,8 +152,8 @@ en2gr = \
 "1 reference line must be selected"               : u"Πρέπει να γίνει επιλογή 1 γραμμής αναφοράς",
 "1 projected line must be selected"               : u"Πρέπει να γίνει επιλογή 1 γραμμής προβολής",
 "Error in data"                                   : u"Λάθος στα δεδομένα",
-"Select the reference (3D) line\n"                : u"Επιλογή της γραμμής αναφοράς (3Δ)\n",
-"Select the projected (2D) line\n"                : u"Επιλογή της γραμμής προβολής (2Δ)\n",
+"Select the secondary (3D) line\n"                : u"Επιλογή της δευτερεύουσας γραμμής (3Δ)\n",
+"Select the reference (2D) line\n"                : u"Επιλογή της γραμμής αναφοράς (2Δ)\n",
 
 "Image Registration with Control Points"          : u"Συσχέτιση Εικόνας με Φωτοσταθερά",
 "COMPUTATION TYPE:"                               : u"ΟΡΙΣΜΟΣ ΥΠΟΛΟΓΙΣΜΟΥ:",

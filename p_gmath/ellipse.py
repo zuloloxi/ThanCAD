@@ -1,10 +1,13 @@
 "Ellipse related module."
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, cos, sin, atan2, sqrt, fabs
 from p_gnum import (array, matrixmultiply, transpose, inv, Float, eig, zeros,
                     LinAlgError, solve_linear_equations)
 from p_ggen import xfrangec
-from var import thanNearx, lsmsolve
-from varcon import thanThresholdx, PI2, PI05
+from .var import thanNearx, lsmsolve
+from .varcon import thanThresholdx, PI2, PI05
 
 
 def ellipse5Fit(x, y):
@@ -36,10 +39,10 @@ def ellipse5Fit(x, y):
 ##    print cond
     temp = [(cond1.real, i) for i,cond1 in enumerate(cond) if cond1.imag == 0 and cond1.real > 0.0]
     if len(temp) == 0:
-        print "there should be exactly 1 positive eigenvalue: None was found"
+        print("There should be exactly 1 positive eigenvalue: None was found")
         return None, "Failed to fit ellipse."
     if len(temp) > 1:
-        print "there should be exactly 1 positive eigenvalue: more were found"
+        print("There should be exactly 1 positive eigenvalue: more were found")
         return None, "Failed to fit ellipse."
     i = min(temp)[1]
     a1 = evec[:, i]
@@ -47,7 +50,7 @@ def ellipse5Fit(x, y):
     # a = [a1; T * a1];              % ellipse coefficients
     a = [None]+list(a1)+list(matrixmultiply(T, a1))              # ellipse coefficients
     v = ellipse2Standard5(a)
-    if v == None: return None, "Failed to convert to standard form: probably degenerate ellipse."
+    if v is None: return None, "Failed to convert to standard form: probably degenerate ellipse."
     return v[1:6], ""
 
 
@@ -81,10 +84,10 @@ def ellipse4Fit(x, y):
 ##    print cond
     temp = [(cond1.real, i) for i,cond1 in enumerate(cond) if cond1.imag == 0 and cond1.real > 0.0]
     if len(temp) == 0:
-        print "there should be exactly 1 positive eigenvalue: None was found"
+        print("There should be exactly 1 positive eigenvalue: None was found")
         return None, "Failed to fit ellipse."
     if len(temp) > 1: 
-        print "there should be exactly 1 positive eigenvalue: more were found"
+        print("There should be exactly 1 positive eigenvalue: more were found")
         return None, "Failed to fit ellipse."
     i = min(temp)[1]
     a1 = evec[:, i]
@@ -92,7 +95,7 @@ def ellipse4Fit(x, y):
     # a = [a1; T * a1];              % ellipse coefficients
     a = [None, a1[0], 0.0, a1[1]]+list(matrixmultiply(T, a1))              # ellipse coefficients
     v = ellipse2Standard4(a)
-    if v == None: return None, "Failed to convert to standard form: probably degenerate ellipse."
+    if v is None: return None, "Failed to convert to standard form: probably degenerate ellipse."
     return v[1:6], ""
 
 
@@ -114,11 +117,11 @@ def ellipse5Lsm(x, y):
         B[i] = -x[i]**2
     #a = lsmLinDo(A, B)
     a, ter = lsmsolve(A, B)
-    if a == None: return None, "LSM failed: probably degenerate ellipse."
+    if a is None: return None, "LSM failed: probably degenerate ellipse."
     a, b, c, d, e, f = 1.0, a[0], a[1], a[2], a[3], a[4]
     if b**2-4.0*a*c >= 0.0: return None, "The points do not define an ellipse."
     v = ellipse2Standard5((None, a, b, c, d, e, f))
-    if v == None: return None, "Failed to convert to standard form: probably degenerate ellipse."
+    if v is None: return None, "Failed to convert to standard form: probably degenerate ellipse."
     return v[1:6], ""
 
 
@@ -140,11 +143,11 @@ def ellipse4Lsm(x, y):
         B[i] = -x[i]**2
 #    a = lsmLinDo(A, B)
     a, ter = lsmsolve(A, B)
-    if a == None: return a, "LSM failed: probably degenerate ellipse."
+    if a is None: return a, "LSM failed: probably degenerate ellipse."
     a, b, c, d, e, f = 1.0, 0.0, a[0], a[1], a[2], a[3]
     if b**2-4.0*a*c >= 0.0: return None, "The points do not define an ellipse."
     v = ellipse2Standard4((None, a, b, c, d, e, f))
-    if v == None: return None, "Failed to convert to standard form: probably degenerate ellipse."
+    if v is None: return None, "Failed to convert to standard form: probably degenerate ellipse."
     return v[1:6], ""
 
 
@@ -200,7 +203,7 @@ def ellipse2Standard4(a):
     Here we know that theta == 0.0
     """
     v = ellipse2Standard5(a)
-    if v == None: return v
+    if v is None: return v
 #    print v
     theta = v[-1] % PI2
 #    print "theta=", theta
@@ -291,7 +294,7 @@ def ellipse2Line(cx, cy, a, b, phia=0.0, phib=PI2, theta=0.0, dt=0.0):
 
     standard form: ((x-cx)/a)^2 + ((y-cy)/b)^2 = 1
     Note: phib should be bigger than phia or nothing will be returnd.
-    The anti-clockwise anges are positive. To plot an eeliptic arc form 1.5pi to 0.5pi
+    The anti-clockwise anges are positive. To plot an elliptic arc form 1.5pi to 0.5pi
     set phia=1.5pi and phib=0.5pi+2pi=2.5pi.
     """
     a = fabs(a)
@@ -309,7 +312,7 @@ def ellipse2Line(cx, cy, a, b, phia=0.0, phib=PI2, theta=0.0, dt=0.0):
         n = max(phiab/dphi, n16/2.0)  #At least 8 points for a full ellipse
     if n < 3.0: n = 3.0               #At least 3 points for any elliptic arc
     dphi = phiab / n
-    print "****ellipse2Line: dphi=", dphi
+    print("****ellipse2Line: dphi=", dphi)
 
     cosf = cos(theta)
     sinf = sin(theta)
@@ -341,7 +344,7 @@ def circle3Lsm(x, y):
         A[i, :] = 2*x[i], 2*y[i], 1.0
         B[i] = x[i]**2+y[i]**2
     sol, ter = lsmsolve(A, B)
-    if sol == None: return None, ter
+    if sol is None: return None, ter
     a, b, c = sol
     r2 = c + a**2 + b**2
     if r2 < 0.0: return None, "Not a circle"
@@ -349,4 +352,4 @@ def circle3Lsm(x, y):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

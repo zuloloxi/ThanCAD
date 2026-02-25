@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes draw commands.
@@ -33,10 +33,10 @@ import thandr
 from thanvar import Canc, thanCumulDis, THANBYPARENT
 from thantrans import T
 from thansupport import thanToplayerCurrent
-import thanundo
-from thancommod import thanModCanc, thanModEnd
-from thancomsel import thanSelect1, thanSelectGen
-from selutil import thanSel1line
+from . import thanundo
+from .thancommod import thanModCanc, thanModEnd
+from .thancomsel import thanSelect1, thanSelectGen
+from .selutil import thanSel1line
 
 
 def thanTkDrawElem(proj, elemClass, fn="thanTkGet", **kw):

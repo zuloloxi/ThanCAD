@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,13 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to create/modify/delete a text style.
 """
 
-
-from Tkinter import Tk, Frame, Label, Button, Entry, Checkbutton, Canvas, IntVar, GROOVE, SUNKEN, RIDGE, ALL, END
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+from tkinter import Tk, Frame, Label, Button, Entry, Checkbutton, Canvas, IntVar, GROOVE, SUNKEN, RIDGE, ALL, END
 import p_ggen, p_gtkwid
 from thanfonts import thanFonts
 from thandefs import ThanTstyle
@@ -39,7 +41,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
     def __init__(self, master, tstyles, val, tstyleinuse, *args, **kw):
         "Extract initial style."
         c = {}
-        for k,v in tstyles.iteritems(): c[k] = v.thanCopy()
+        for k,v in tstyles.items(): c[k] = v.thanCopy()   #works for python2,3
         self.__val = c.get(str(val), v)     # If val is unknown, choose arbitrarily another one
         self.thanTstyles = c
         self.__tstyleinuse = tstyleinuse
@@ -65,7 +67,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
         w = Label(f, text=" "+T["Style Name"])
         w.grid(row=0, column=0, columnspan=4, sticky="w")
 
-        self.__tlabs = self.thanTstyles.keys();        self.__tlabs.sort()
+        self.__tlabs = sorted(self.thanTstyles.keys())    #works for python2,3
         self.thanTname = p_gtkwid.ThanChoice(f, labels=self.__tlabs, width=20, anchor="w", command=self.__styleFill, relief=SUNKEN)
         self.thanTname.grid(row=1, column=0, sticky="w", padx=5)
         w = Button(f, text=T["New"], width=6, command=self.__nameNew)
@@ -81,7 +83,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
         for i in xrange(3): f.columnconfigure(i, weight=1)
 
         w = Label(f, text=" "+T["Font Name"]); w.grid(row=0, column=0, sticky="w", padx=5)
-        self.__flabs = thanFonts.keys(); self.__flabs.sort()
+        self.__flabs = sorted(thanFonts.keys())  #works for python2,3
 #        w = self.thanFname = p_gtkwid.ThanChoice(f, labels=self.__flabs, width=20,  relief=SUNKEN)
         w = self.thanFname = Button(f, text=self.__flabs[0], width=20, anchor="w", relief=SUNKEN, command=self.__fontShow)
         w.grid(row=1, column=0, sticky="w", padx=5)
@@ -177,8 +179,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
             p_gtkwid.thanGudModalMessage(self, "A font with this name already exists", "Create Failed")
         sty = ThanTstyle(name1, thanFonts["thanprime1"])
         self.thanTstyles[name1] = sty
-        labs = self.thanTstyles.keys()
-        labs.sort()
+        labs = sorted(self.thanTstyles.keys())   #works for python2,3
         self.thanTname.config(labels=labs)
         self.__updateChosen(sty)
         self.__changed = True
@@ -201,8 +202,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
         sty = self.thanTstyles.pop(name)
         sty.thanName = name1
         self.thanTstyles[name1] = sty
-        labs = self.thanTstyles.keys()
-        labs.sort()
+        labs = sorted(self.thanTstyles.keys())   #works for python2,3
         self.thanTname.config(labels=labs)
         self.thanTname.thanSetText(name1)
         self.__changed = True
@@ -218,8 +218,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
             return
         i = self.thanTname.thanGet()
         del self.thanTstyles[name1]
-        labs = self.thanTstyles.keys()
-        labs.sort()
+        labs = sorted(self.thanTstyles.keys())   #works for python2,3
         self.thanTname.config(labels=labs)
         if i <= len(labs): i -= 1     # last tstyle was deleted
         self.thanTname.thanSet(i)
@@ -227,8 +226,8 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
 
     def __styleFill(self, *args):
         "Fill the dialog with the attributes of the chosen text style."
-        print "styleFill:", args
-        print "efUp:", self.__efUp.get()
+        print("styleFill:", args)
+        print("efUp:", self.__efUp.get())
         self.__updateChosen()
 
 
@@ -266,7 +265,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
         ok = True
         try:
             height = float(self.thanHeight.get())
-            if height < 0: raise ValueError
+            if height < 0: raise ValueError()
         except:
             if strict:
                 p_gtkwid.thanGudModalMessage(self, "Invalid height", "Error Message")
@@ -275,7 +274,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
             height = 0.0; ok = False
         try:
             fact = float(self.thanWidthf.get())
-            if fact <= 0: raise ValueError
+            if fact <= 0: raise ValueError()
         except:
             if strict:
                 p_gtkwid.thanGudModalMessage(self, "Invalid width factor", "Error Message")
@@ -284,7 +283,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
             fact = 1.0; ok = False
         try:
             obl = float(self.thanObliq.get())
-            if obl <= -90.0 or obl >= 90.0: raise ValueError
+            if obl <= -90.0 or obl >= 90.0: raise ValueError()
         except:
             if strict:
                 p_gtkwid.thanGudModalMessage(self, "Invalid oblique angle", "Error Message")
@@ -322,7 +321,7 @@ class ThanTkStyle(p_gtkwid.ThanDialog):
         p_gtkwid.ThanDialog.destroy(self)
 
     def __del__(self):
-        print "ThanTstyle ThanDialog", self, "dies.."
+        print("ThanTstyle ThanDialog", self, "dies..")
 
 
 def test():
@@ -334,4 +333,4 @@ def test():
         fs = {t.thanName:t, t1.thanName:t1}
         root = Tk()
     win = ThanTkStyle(root, fs, "standard", lambda x: False, title="Edit ThanCad Text styles")
-    print win.result
+    print(win.result)

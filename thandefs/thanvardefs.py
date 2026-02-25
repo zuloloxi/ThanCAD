@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,10 +21,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the ThanCad TextStyle, and others.
 """
+from __future__ import print_function
 import random, copy
 import p_gimage
 
@@ -55,13 +56,13 @@ def imageOpen(fi, size=None, load=True):
     "Get an image from a file and report errors."
     try:
         im = p_gimage.open(fi)
-        if im.size[0] < 2 or im.size[1] < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
+        if im.size[0] < 2 or im.size[1] < 2: raise ValueError(T["Image is probably corrupted: size is less than 2 pixels"])
         if im.mode == "I;16S": im.mode = "I"
         if load:
             im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
         if isinstance(im, p_gimage.ThanImageMissing): return im, "Python module Image was not found"
         return im, ""
-    except (IOError, ValueError), e:
+    except (IOError, ValueError) as e:
         if size is not None: im = p_gimage.ThanImageMissing(size)
         else:                im = p_gimage.ThanImageMissing()        #Default size
         return im, str(e)
@@ -114,16 +115,16 @@ class ThanId:
         "Remove the prefix from an existing id."
         np = len(self.prefix)
         if tid1[:np] != self.prefix:
-            raise ValueError, "Not valid id: %s: It should begin with: %s" % (tid1, self.prefix)
+            raise ValueError("Not valid id: %s: It should begin with: %s" % (tid1, self.prefix))
         try:
             id1 = int(tid1[np:])
         except ValueError:
-            raise ValueError, "Not valid id: %s: It should begin with: %s" % (tid1, self.prefix)
+            raise ValueError("Not valid id: %s: It should begin with: %s" % (tid1, self.prefix))
         if id1 >= self.id:
-            raise ValueError, "Not valid id: %s: Greater than current free value: %d" % (tid1, self.id)
+            raise ValueError("Not valid id: %s: Greater than current free value: %d" % (tid1, self.id))
         return id1
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
     testThanCoorMemory()

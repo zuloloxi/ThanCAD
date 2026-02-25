@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,38 +21,39 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines functionality necessary for user lowlevel interaction in
 a drawing window.
 """
 
+from __future__ import print_function
 import p_ggen
-import Tkinter
+import tkinter
 from thanvar import thanLogTk
 from thantrans import T
-from thantkguicroshair import CrosHair, ThanCrosHairs
-from thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT1, THAN_STATE_POINT,
+from .thantkguicroshair import CrosHair, ThanCrosHairs
+from .thantkconst import (THAN_STATE_NONE, THAN_STATE_POINT1, THAN_STATE_POINT,
     THAN_STATE_DRAGFOLLOWS,THAN_STATE_MOVE, THAN_STATE_LINE, THAN_STATE_LINE2,
     THAN_STATE_POLAR, THAN_STATE_CIRCLE, THAN_STATE_ARC, THAN_STATE_RECTANGLE,
     THAN_STATE_RECTRATIO, THAN_STATE_ROADP, THAN_STATE_ROADR, THAN_STATE_SPLINEP,
     THAN_STATE_ELLIPSEB, THAN_STATE_SNAPELEM, thanCursor)
-from thantkguiosnap import ThanOsnap, ThanOrtho
+from .thantkguiosnap import ThanOsnap, ThanOrtho
 
-from thantkguistateless import ThanStateLess
-from thantkguigeneric   import ThanStateGeneric
-from thantkguidrag      import ThanStateDrag
-from thantkguimove      import ThanStateMove
-from thantkguiline      import ThanStateLine, ThanStateLine2, ThanStatePolar
-from thantkguicircle    import ThanStateCircle, ThanStateArc
-from thantkguirect      import ThanStateRectangle, ThanStateRectratio
-from thantkguiroad      import ThanStateRoadp, ThanStateRoadr
-from thantkguispline    import ThanStateSplinep
-from thantkguiellipse   import ThanStateEllipseb
-from thantkguivar       import ThanStatePoint, ThanStateSelem
+from .thantkguistateless import ThanStateLess
+from .thantkguigeneric   import ThanStateGeneric
+from .thantkguidrag      import ThanStateDrag
+from .thantkguimove      import ThanStateMove
+from .thantkguiline      import ThanStateLine, ThanStateLine2, ThanStatePolar
+from .thantkguicircle    import ThanStateCircle, ThanStateArc
+from .thantkguirect      import ThanStateRectangle, ThanStateRectratio
+from .thantkguiroad      import ThanStateRoadp, ThanStateRoadr
+from .thantkguispline    import ThanStateSplinep
+from .thantkguiellipse   import ThanStateEllipseb
+from .thantkguivar       import ThanStatePoint, ThanStateSelem
 
 
-class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
+class ThanTkGuiLowGet(tkinter.Canvas, ThanStateLess):
     "Lowlevel input from a Tk canvas."
 
 #============================================================================
@@ -60,7 +61,7 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
     def __init__(self, proj, *args, **kw):
         "Initialise base class and then this class."
         ThanStateLess.__init__(self)
-        Tkinter.Canvas.__init__(self, proj[2], *args, **kw)
+        tkinter.Canvas.__init__(self, proj[2], *args, **kw)
         self.__sb = proj[2].thanStatusBar
 
 #-------Do some local initialisation
@@ -101,8 +102,8 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
         dc.update_idletasks()                 # _idletasks breaks WinDoze (98?) support. Skotistika
         mx = dc.winfo_width() - 1
         my = dc.winfo_height() - 1
-        self.thanXcu = dc.canvasx(mx / 2)
-        self.thanYcu = dc.canvasy(my / 2)
+        self.thanXcu = dc.canvasx(mx // 2)
+        self.thanYcu = dc.canvasy(my // 2)
 
         self.thanChs = ThanCrosHairs(proj)
         self.thanCh = CrosHair(dc)
@@ -248,7 +249,7 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
 
 
     def __createFloatMenu(self):
-        m = Tkinter.Menu(self, tearoff=False)
+        m = tkinter.Menu(self, tearoff=False)
         fbeg = self.thanProj[2].thanGudCommandBegin
         m.add_command(label=T["P&aste to Original Coordinates"], command=lambda fbeg=fbeg: fbeg("pasteorig"))
         m.add_command(label="Repeat last command", command=lambda fbeg=fbeg: fbeg(""))
@@ -349,7 +350,7 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
     def thanTkClear(self):
         "Clears a window."
         dc = self
-        dc.delete(Tkinter.ALL)                          # Clear window
+        dc.delete(tkinter.ALL)                          # Clear window
         self.thanCh.resize()
 
 
@@ -362,12 +363,12 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
         "Deletes circular references."
         del self.__sb, self.thanProj, self.thanChs, self.thanCh,\
             self.thanOState, self.thanOsnap
-        Tkinter.Canvas.destroy(self)
+        tkinter.Canvas.destroy(self)
 
 
     def __delete__(self):
         "Show that self is really deleted."
-        print "thantklowget:", self, "has been freed."
+        print("thantklowget:", self, "has been freed.")
 
 
 #############################################################################
@@ -376,4 +377,4 @@ class ThanTkGuiLowGet(Tkinter.Canvas, ThanStateLess):
 #MODULE LEVEL CODE. IT IS EXECUTED ONLY ONCE
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

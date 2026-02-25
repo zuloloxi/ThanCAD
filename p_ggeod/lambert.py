@@ -1,22 +1,28 @@
+# -*- coding: iso-8859-7 -*-
 from math import pi, sqrt
-from ellipsoid import Ellipsoid
-from mercator import GeodProjection
+from .ellipsoid import Ellipsoid
+from .mercator import GeodProjection
 
 
 class Lambert(GeodProjection):
     "Lambert azimuthal equal-area projection."
 
-    def __init__(self, phi0, lam0, eoid=None):
+    def __init__(self, phi0, lam0, eoid=None, name=None):
         "The center of the projection is phi0, lam0."
         self.phi0 = phi0
         self.lam0 = lam0
-        if eoid == None:
+        if eoid is None:
             r = 6370997.0
             self.eoid = Ellipsoid(a=r, b=r, name="Lambert_default")
         else:
             self.eoid = eoid
         self.dlam = 0.0 - lam0
         self.dphi = -pi*0.5 - phi0
+        if name is None:
+            self.pname = "Lambert azimuthal equal-area, center ë=%.1f ö=%.1f, ellipsoid=%s"
+            self.pname %= (self.lam0*180.0/pi, self.phi0*180.0/pi, self.EOID.name)
+        else:
+            self.pname = name
 
 
     def geodet2en(self, lam, phi):

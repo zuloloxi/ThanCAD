@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines various croshairs for ThanCad's canvas.
 """
@@ -92,8 +92,8 @@ class CrosHair(object):
         "Initialise the croshair."
         self.thanDc = dc
         self.thanExists = 0
-        self.thanX1p = None
-        self.thanY1p = None
+        self.thanX1p = -999999
+        self.thanY1p = -999999
         self.thanOn = True
         self.thanChx = []
         self.resize()
@@ -129,8 +129,8 @@ class CrosHair(object):
         if x1 is None: x1 = self.thanX1p; y1 = self.thanY1p
         if x1 < self.thanMinx or x1 > self.thanMaxx or \
            y1 < self.thanMiny or y1 > self.thanMaxy:
-            x1 = self.thanMinx + (self.thanMaxx - self.thanMinx) / 2
-            y1 = self.thanMiny + (self.thanMaxy - self.thanMiny) / 2
+            x1 = self.thanMinx + (self.thanMaxx - self.thanMinx) // 2
+            y1 = self.thanMiny + (self.thanMaxy - self.thanMiny) // 2
         self.draw(x1, y1)
 #        self.thanX1p = x1; self.thanY1p = y1   !These are also set in .draw()
 
@@ -184,7 +184,7 @@ class CrosHairRect(CrosHair):
 
     def __init__(self, dc, size):
         "Take size as an argument."
-        self.dx = self.dy = size/2
+        self.dx = self.dy = size//2
         CrosHair.__init__(self, dc)
 
 

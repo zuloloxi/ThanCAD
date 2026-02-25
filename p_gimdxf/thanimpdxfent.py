@@ -1,6 +1,9 @@
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi, hypot, atan2, fabs
 from p_gmath import PI2, thanNearx
-from thanextrusion import thanDxfExtrusion2World, thanDxfExtrusionVectors
+from .thanextrusion import thanDxfExtrusion2World, thanDxfExtrusionVectors
 
 
 #FIXME: extrusion must be implemented for all 2dimensional elements (which means almost all!)
@@ -121,7 +124,7 @@ class ThanEntities:
                 xx.append(atts[10])
                 yy.append(atts[20])
                 z1 = atts.get(30, None)
-                if z1 == None:
+                if z1 is None:
                     z1 = zdef
                 else:
                     if z1 == 0.0:
@@ -224,12 +227,17 @@ class ThanEntities:
             handle = atts.get(5, "")
             col = atts.get(62, -1)
             if col <= 0: col = None               # Sometimes thAtCAD sets undefined color zero
-            xx = atts[10]
-            yy = atts[20]
+            xx = atts[10]     #left point
+            yy = atts[20]     #left point
             zz = atts.get(30, ZDEFAULT)
             h = atts[40]
             theta = atts.get(50, 0.0)
             text = atts[1]
+            if self.thanDxfVer == 2000:      #This is for dxf2000
+                self.trAttsFloat(atts, -11, -21)
+                if 11 in atts and 21 in atts:
+                    xx = atts[11]    #Insertion point may be at center or at left 
+                    yy = atts[21]
             self.thanDr.dxfText(xx, yy, zz, self.defLay, handle, col, text, h, theta)
 
 #===========================================================================
@@ -320,7 +328,7 @@ class ThanEntities:
             theta1 = atts[41]
             theta2 = atts[42]
             full = thanNearx(fabs(theta2-theta1)*a, PI2*a)  #True if it is full ellipse (not an arc)
-            print "elliptic arc:", xx, yy, a, b, theta1, theta2, phi, full
+            print("elliptic arc:", xx, yy, a, b, theta1, theta2, phi, full)
             self.thanDr.dxfEllipse(xx, yy, zz, self.defLay, handle, col, a, b,
                 theta1*dr, theta2*dr, phi, full)
 

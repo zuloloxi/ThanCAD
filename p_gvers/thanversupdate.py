@@ -6,9 +6,11 @@ written as comments in the beginning of every source file.
 """
 descMod = __doc__
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import sys
 import p_ggen, p_gtkwid
-from thanvers import SENTCOM
+from .thanvers import SENTCOM
 frw = {}
 winmain = None
 prg = p_ggen.prg
@@ -22,7 +24,8 @@ def thanVersUpdate(thanCadAbout, title):
     openFiles()
     try:
         doversion(thanCadAbout, title)
-    except BaseException, e:
+    except BaseException as e:
+        raise
         p_gfil.er1s("\n%s:\n%s" % (p_ggen.Tgui["Error while executing program"], e), "can")
     p_gfil.closeFiles1()                        #Not reentrant
 
@@ -31,17 +34,19 @@ def doversion(thanCadAbout, title):
     "Main function."
     global sourceDir
     prg("source path: %s" % (sourceDir,), "info")
-    prg("excluded directories: %s" % (p_ggen.thancadrel.excluded,), "info")
-    prg("excluded matched directories: %s" % (p_ggen.thancadrel.excludedmatch,), "info")
+    prg("excluded directories: %s" % (",".join(p_ggen.thancadrel.excluded),), "info")
+    p_ggen.thancadrel.excludedmatch.add("thanprofflf")
+    prg("excluded matched directories: %s" % (",".join(p_ggen.thancadrel.excludedmatch),), "info")
+    prg("excluded matched directories with numbers: %s" % (",".join(p_ggen.thancadrel.excludedmatchnumber),), "info")
     prg("-----------------------------------------------------------------------------")
-    if winmain == None: a = p_ggen.inpNo("Proceed with update (enter=yes)?", True)
+    if winmain is None: a = p_ggen.inpNo("Proceed with update (enter=yes)?", True)
     else:               a = p_gtkwid.xinpNo(winmain, "Proceed with update (enter=yes)?", True)
     if not a: return
     thanUpdateSources(sourceDir, thanCadAbout, title)
     prg("-----------------------------------------------------------------------------")
     prg("Sources have been updated as .new files.", "info")
     lineCount(sourceDir)
-    if winmain == None:
+    if winmain is None:
         a = p_ggen.inpNo("Proceed with replace (enter=no)?", False)
     else:
         winmain.showEnd()
@@ -58,9 +63,9 @@ def thanUpdateSources(sourceDir, thanCadAbout, title):
     "Updates the version number, description and license in the sources."
     for fp in p_ggen.thancadrel.iterfpy(sourceDir):
         prg(fp)
-        fInp = file(fp, "r")
+        fInp = open(fp, "r")
         iterInp = iter(fInp)
-        fOut = file(fp+".new", "w")
+        fOut = open(fp+".new", "w")
         __skipOldDoc(iterInp, fOut)
         __writeNewDoc(fOut, thanCadAbout, title)
         __writeRest(iterInp, fOut)
@@ -95,7 +100,7 @@ def __getBackupName(fp):
     for i in xrange(10):
         filnam = p_ggen.path("%s.bk%d" % (fp, i))
         if not filnam.exists(): return filnam
-    raise IOError, fp+": Can not create backup file."
+    raise IOError(fp+": Can not create backup file.")
 
 #==========================================================================
 
@@ -148,7 +153,7 @@ def openFiles():
     p_gfil.openFile1(0, ' ', ' ', 0, 'Πρόγραμμα αντικατάστασης έκδοσης σε αρχεία κώδικα python')
     frw = p_gfil.openFile1(998, ' ', ' ', 0, ' ')
     winmain, prg1, _ = p_gfil.openfileWinget()
-    if winmain != None: prg = prg1
+    if winmain is not None: prg = prg1
 
 
 def openfileParx (icod1, un):
@@ -167,7 +172,7 @@ def openfileParx (icod1, un):
 #---Read parameters from xwin
     elif icod1 == 3:
         sourceDir = p_gtkwid.thanGudGetDir(un, "Φάκελλος αρχείων κώδικα", initialdir=sourceDir1)
-        if sourceDir == None: sys.exit()
+        if sourceDir is None: sys.exit()
         sourceDir = p_ggen.path(sourceDir).expand().abspath()
     elif icod1 == 2:
         un.write("%s\n" % (sourceDir,))

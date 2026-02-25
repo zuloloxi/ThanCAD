@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,15 +23,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This dialog performs photogrammetric interior orientation of a metric image.
 """
-
-import sys, copy, ConfigParser, Tkinter
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+import sys, copy
+import tkinter
 from math import sqrt, fabs
-from tkMessageBox import ERROR
-import p_gtkuti, p_gtkwid, p_ggen, p_gmath
+from tkinter.messagebox import ERROR
+import p_gtkwid, p_ggen, p_gmath
 import thandr
 from thanopt import thancadconf
 from thantrans import Tphot, T
@@ -40,7 +43,7 @@ from thanvar import Canc
 #T = p_gtkwid.Translation(dict(__TRANSLATION__=("en", "EN", "en", "EN")))  ##############
 
 
-mm = p_gtkuti.thanGudModalMessage
+mm = p_gtkwid.thanGudModalMessage
 
 
 class ThanInterior(p_gtkwid.ThanComDialog):
@@ -68,27 +71,27 @@ class ThanInterior(p_gtkwid.ThanComDialog):
 
     def fraImage(self, win, ir):
         "Image parameters."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["IMAGE PARAMETERS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["IMAGE PARAMETERS:"])
         lab.grid(row=0, column=1, columnspan=4, sticky="w")
 
         im = self.other.image
-        lab = Tkinter.Label(fra, text=T["Image file"])
+        lab = tkinter.Label(fra, text=T["Image file"])
         lab.grid(row=1, column=1, sticky="e")
         lab = p_gtkwid.ThanLabel(fra, text=im.filnam.basename(), width=20)
         lab.grid(row=1, column=2, sticky="we")
 
         cam = self.other.camera
-        lab = Tkinter.Label(fra, text=Tphot["Camera Name"])
+        lab = tkinter.Label(fra, text=Tphot["Camera Name"])
         lab.grid(row=2, column=1, sticky="e")
         lab = p_gtkwid.ThanLabel(fra, text=cam.name, width=20)
         lab.grid(row=2, column=2, sticky="we")
 
-        lab = Tkinter.Label(fra, text=Tphot["Focus Length c (mm)"])
+        lab = tkinter.Label(fra, text=Tphot["Focus Length c (mm)"])
         lab.grid(row=2, column=3, sticky="e")
         lab = p_gtkwid.ThanLabel(fra, text="%.3f" % cam.focus, width=20)
         lab.grid(row=2, column=4, sticky="we")
@@ -99,24 +102,24 @@ class ThanInterior(p_gtkwid.ThanComDialog):
 
     def fraFid(self, win, ir):
         "Show the fiducials and help digitize."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["FIDUCIALS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["FIDUCIALS:"])
         lab.grid(row=0, column=1, columnspan=6, sticky="w")
 
         cam = self.other.camera
-        lab = Tkinter.Label(fra, text=Tphot["Camera X (mm)"])
+        lab = tkinter.Label(fra, text=Tphot["Camera X (mm)"])
         lab.grid(row=1, column=2, sticky="w")
-        lab = Tkinter.Label(fra, text=Tphot["Camera Y (mm)"])
+        lab = tkinter.Label(fra, text=Tphot["Camera Y (mm)"])
         lab.grid(row=1, column=3, sticky="w")
-        lab = Tkinter.Label(fra, text=Tphot["Photo x (pixel)"])
+        lab = tkinter.Label(fra, text=Tphot["Photo x (pixel)"])
         lab.grid(row=1, column=4, sticky="w")
-        lab = Tkinter.Label(fra, text=Tphot["Photo y (pixel)"])
+        lab = tkinter.Label(fra, text=Tphot["Photo y (pixel)"])
         lab.grid(row=1, column=5, sticky="w")
-        lab = Tkinter.Label(fra, text=Tphot["Reject"])
+        lab = tkinter.Label(fra, text=Tphot["Reject"])
         lab.grid(row=1, column=6, sticky="w")
         i = 2
         n = len(cam.x)
@@ -162,22 +165,22 @@ class ThanInterior(p_gtkwid.ThanComDialog):
 
     def fraComp(self, win, ir):
         "Computation - errors."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["COMPUTATION:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["COMPUTATION:"])
         lab.grid(row=0, column=1, columnspan=3, sticky="w")
 
         cam = self.other.camera
-        lab = Tkinter.Label(fra, text=Tphot["Computed X (mm)"])
+        lab = tkinter.Label(fra, text=Tphot["Computed X (mm)"])
         lab.grid(row=1, column=2, sticky="w")
-        lab = Tkinter.Label(fra, text=Tphot["Computed Y (mm)"])
+        lab = tkinter.Label(fra, text=Tphot["Computed Y (mm)"])
         lab.grid(row=1, column=3, sticky="w")
-        lab = Tkinter.Label(fra, text=Tphot["Error X (mm)"])
+        lab = tkinter.Label(fra, text=Tphot["Error X (mm)"])
         lab.grid(row=1, column=4, sticky="w")
-        lab = Tkinter.Label(fra, text=Tphot["Error Y (mm)"])
+        lab = tkinter.Label(fra, text=Tphot["Error Y (mm)"])
         lab.grid(row=1, column=5, sticky="w")
         i = 2
         n = len(cam.x)
@@ -186,7 +189,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         self.labXer = [None]*n
         self.labYer = [None]*n
         for ifid in xrange(n):
-            lab = Tkinter.Label(fra, text="%d " % (ifid+1,))
+            lab = tkinter.Label(fra, text="%d " % (ifid+1,))
             lab.grid(row=i+ifid, column=1)
             lab = self.labXcom[ifid] = p_gtkwid.ThanLabel(fra, text="", width=14)
             lab.grid(row=i+ifid, column=2, sticky="we")
@@ -199,7 +202,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         i += n
         but = p_gtkwid.ThanButton(fra, text=Tphot["Compute"], bd=2, command=self.__compute)
         but.grid(row=i, column=2, pady=5)
-        lab = Tkinter.Label(fra, text=Tphot["Overall error"])
+        lab = tkinter.Label(fra, text=Tphot["Overall error"])
         lab.grid(row=i, column=4, sticky="e")
         lab = self.labEr = p_gtkwid.ThanLabel(fra, text="", width=14)
         lab.grid(row=i, column=5, sticky="we")
@@ -230,13 +233,13 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         "Disable all rejected."
         for ifid in xrange(len(self.other.camera.x)):
             if self.thanChkReject[ifid].thanGet():
-                self.entXpix[ifid].config(state=Tkinter.DISABLED)
-                self.entYpix[ifid].config(state=Tkinter.DISABLED)
+                self.entXpix[ifid].config(state=tkinter.DISABLED)
+                self.entYpix[ifid].config(state=tkinter.DISABLED)
 
 
     def __createFloatMenu(self, ifid):
         "A menu with action for the fiducials."
-        m = Tkinter.Menu(self, tearoff=False)
+        m = tkinter.Menu(self, tearoff=False)
         m.add_command(label=Tphot["Move to and digitize fiducial"], command=lambda ifid=ifid: self.__digfid(ifid, go=True))
         m.add_command(label=Tphot["Digitize fiducial"],             command=lambda ifid=ifid: self.__digfid(ifid, go=False))
         m.add_command(label=Tphot["Clear pixel coordinates"],       command=lambda ifid=ifid: self.__clear(ifid))
@@ -258,8 +261,8 @@ class ThanInterior(p_gtkwid.ThanComDialog):
             self.thanChkReject[ifid].thanSet(v)
         else:
             assert 0, "toggle, reject or accept was expected"
-        if v: stat = Tkinter.DISABLED
-        else: stat = Tkinter.NORMAL
+        if v: stat = tkinter.DISABLED
+        else: stat = tkinter.NORMAL
         self.labXpix[ifid].config(state=stat)
         self.labYpix[ifid].config(state=stat)
         self.update_idletasks()
@@ -303,7 +306,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         "Select the 1 point."
         proj = self.thanProj
         im = self.other.image
-        p_gtkuti.thanGrabRelease()
+        p_gtkwid.thanGrabRelease()
         self.withdraw()
         if go: self.__zoomto(ifid)
 
@@ -327,7 +330,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
             self.__addpoint(ifid, cf)
 
         self.deiconify()
-        p_gtkuti.thanGrabSet(self)
+        p_gtkwid.thanGrabSet(self)
 
 
     def __zoomto(self, ifid):
@@ -383,7 +386,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
             mm(self, Tphot["The system of equations is singular."], Tphot["Error in computation"])
             return
         er = 0.0
-        for ifid,(xpix,ypix,zpix,xcam,ycam,zcam,xyok,zok) in zip(ifids, fots):
+        for ifid,(xpix,ypix,zpix,xcam,ycam,zcam,xyok,zok) in zip(ifids, fots):  #works for python2,3
             xcom, ycom, _ = tra.project((xpix, ypix, zpix))
             erx = xcam - xcom
             ery = ycam - ycom
@@ -401,7 +404,7 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         "Ensure that the user has done the computation."
         if self.other.tra is None:
             if not self.ok2change(Tphot["Computation not performed, OK to close dialog?"]): return # Ok was stopped
-        p_gtkuti.ThanDialog.ok(self, *args)
+        p_gtkwid.ThanDialog.ok(self, *args)
 
 
     def cancel(self, *args):
@@ -420,4 +423,4 @@ class ThanInterior(p_gtkwid.ThanComDialog):
         p_gtkwid.ThanComDialog.destroy(self)
 
 
-if __name__ == "__main__": print __doc__
+if __name__ == "__main__": print(__doc__)

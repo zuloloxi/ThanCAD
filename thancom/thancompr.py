@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,13 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes print and scan commands.
 """
 import tempfile
 from p_ggen import path
+import p_gimage
 from thandefs import thanplotcups
 import thantkdia
 from thanvar import Canc
@@ -38,7 +39,7 @@ from thanvar import Canc
 #def doprint(self):
 #   "Experimental tests for printing."
 #   atts = self.ccups.getPrinterAttributes(nam)
-#   for key,val in atts.iteritems():
+#   for key,val in atts.items():  #works for python2,3
 #       print "%-20s: %s" % (key, val)
 #   ppd = self.ccups.getPPD(nam)
 #   print ppd
@@ -115,8 +116,8 @@ def thanPrPlot(proj):
 def thanImageScan(proj):
     "Scan an image and insert it to ThanCad."
     from thandr import ThanImage
-    can, dpis = thantkdia.getScanDpi()
-    if can is None: return proj[2].thanGudCommandCan(dpis)          #Here 'dpis' is an error message
+    can, dpis, ScanException = p_gimage.getScanDpi()
+    if can is None: return proj[2].thanGudCommandCan(ScanException)    #Here 'ScanException' is an error message
     win = thantkdia.ThanScan(proj[2], can, dpis, proj)
     if win.result is None: return proj[2].thanGudCommandCan()
     im, imfilnam = win.result

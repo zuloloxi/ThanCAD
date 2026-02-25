@@ -33,7 +33,7 @@ import sys, os, fnmatch, glob, shutil, codecs
 
 __version__ = '2.0.1'
 __all__ = ['path']
-
+Python3 = sys.version_info.major == 3    #Thanasis2016_02_09
 # Pre-2.3 support.  Are unicode filenames supported?
 _base = str
 #try:                                           #Thanasis2010_12_02:commented out
@@ -43,14 +43,14 @@ _base = str
 #    pass
 
 # Pre-2.3 workaround for basestring.
-try:
-    basestring
-except NameError:
-    basestring = (str, unicode)
+#try:                                           #Thanasis2015_04_05:DELETED as it is not used anywhere
+#    basestring
+#except NameError:
+#    basestring = (str, unicode)
 
 # Universal newline support
 _textmode = 'r'
-if hasattr(file, 'newlines'):
+if sys.version_info.major < 3 and hasattr(file, 'newlines'):
     _textmode = 'U'
 
 
@@ -63,12 +63,12 @@ class path(_base):
 
 #    def __init__(self, a=""):                       #Thanasis2009_06_16
 #        if issubclass(self.__class__, unicode):
-#	    from gen import thanUnicode
+#	    from .gen import thanUnicode
 #	    #print "path is unicode:"
 #	    a = thanUnicode(a)
 #	    #print "path is unicode: path.__init__:",  a, type(a)
 #	else:
-#	    from gen import thanUnunicode
+#	    from .gen import thanUnunicode
 #	    #print "path is str:"
 #	    a = thanUnunicode(a)
 #	    #print "path is str: path.__init__:",  a, type(a)
@@ -97,8 +97,6 @@ class path(_base):
         """
         return path(os.path.join(self, rel))
 
-    # Make the / operator work even when true division is enabled.
-    __truediv__ = __div__
 
     def __rdiv__(self, rel):               #Thanasis2011_02_23:new method
         """ fp.__div__(rel) == fp / rel == fp.joinpath(rel)
@@ -107,6 +105,11 @@ class path(_base):
         needed.
         """
         return path(os.path.join(rel, self))
+
+    # Make the / operator work even when true division (or python3) is enabled.
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
 
     def getcwd():
         """ Return the current working directory as a path object. """
@@ -123,7 +126,10 @@ class path(_base):
     def expanduser(self):    return path(os.path.expanduser(self))
     def expandvars(self):    return path(os.path.expandvars(self))
     def dirname(self):       return path(os.path.dirname(self))
-    basename = os.path.basename
+
+    #basename = os.path.basename                                  #Thanasis2015_10_28commented out
+    def basename(self):      return path(os.path.basename(self))  #Thanasis2015_10_28commented out
+
 
     def expand(self):
         """ Clean up a filename by calling expandvars(),
@@ -440,7 +446,7 @@ class path(_base):
 
     def open(self, mode='r'):
         """ Open this file.  Return a file object. """
-        return file(self, mode)
+        return open(self, mode)
 
     def bytes(self):
         """ Open this file, read all bytes, return them as a string. """
@@ -533,7 +539,7 @@ class path(_base):
         exactly the same as when you open a file for writing with
         fopen(filename, "w") in C or file(filename, 'w') in Python.)
         """
-        if isinstance(text, unicode):
+        if not Python3 and isinstance(text, unicode):   #Thanasis2016_02_096
             text = text.replace(u'\n', os.linesep)
             if encoding is None:
                 encoding = sys.getdefaultencoding()
@@ -588,12 +594,23 @@ class path(_base):
         linesep - A character sequence that will be added at the
             end of every line that doesn't already have it.
         """
+        if Python3:     #Thanasis2016_02_096
+            f = self.open('w')
+            try:
+                for line in lines:
+                    if not line.endswith(linesep):
+                        line += linesep
+                    f.write(line)
+            finally:
+                f.close()
+            return
+
         f = self.open('wb')
         try:
             for line in lines:
                 if not line.endswith(linesep):
                     line += linesep
-                if isinstance(line, unicode):
+                if isinstance(line, unicode):   #Thanasis2016_02_096
                     if encoding is None:
                         encoding = sys.getdefaultencoding()
                     line = line.encode(encoding, errors=errors)
@@ -699,13 +716,13 @@ class path(_base):
 
     # --- Create/delete operations on directories
 
-    def mkdir(self, mode=0777):
+    def mkdir(self, mode=0o777):
         os.mkdir(self, mode)
 
-    def makedirs(self, mode=0777):
+    def makedirs(self, mode=0o777):
         os.makedirs(self, mode)
 
-    def makedirs1(self, mode=0777):  #Thanasis2011_02_23:new method
+    def makedirs1(self, mode=0o777):  #Thanasis2011_02_23:new method
         try: 
             os.makedirs(self, mode)
         except:
@@ -713,11 +730,11 @@ class path(_base):
         if not self.exists(): raise    #makedirs did not succeed to make directory
         if not self.isdir(): raise     #makedirs did not succeed because a file with this name exists
 
-    def makeparentdirs(self, mode="0777"):  #Thanasis2011_02_23:new method
-        try: os.makedirs(self.parent, mode)
-        except: pass
-        if not self.exists(): raise    #makedirs did not suceed to make directory
-        if not self.isdir(): raise     #makedirs did not succed because a file with this name exists
+#    def makeparentdirs(self, mode="0777"):  #Thanasis2011_02_23:new method #Thanasis2015_04_05:DELETED as it is not used anywhere
+#        try: os.makedirs(self.parent, mode)
+#        except: pass
+#        if not self.exists(): raise    #makedirs did not suceed to make directory
+#        if not self.isdir(): raise     #makedirs did not succed because a file with this name exists
 
     def rmdir(self):
         os.rmdir(self)
@@ -732,7 +749,7 @@ class path(_base):
         """ Set the access/modified times of this file to the current time.
         Create the file if it does not exist.
         """
-        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0666)
+        fd = os.open(self, os.O_WRONLY | os.O_CREAT, 0o666)
         os.close(fd)
         os.utime(self, None)
 

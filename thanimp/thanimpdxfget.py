@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,16 +21,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines an object which reads a .dxf file and it creates
 ThanCad's elements to represent it in ThanCad.
 """
-
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import time
-from types import NoneType, IntType
 from math import pi
 from p_gimdxf import ThanImportDxf, ThanDrWarn
+from p_gmath import thanNear2
 from thandefs import imageOpen, ThanLtype
 from thandefs.thanatt import ThanAttCol
 from thanlayer import THANNAME
@@ -165,7 +167,7 @@ class ThanCadDrSave(ThanDrWarn):
         nd = len(elev)
         more = [n*[elev[i]] for i in xrange(3, nd)]
         e = ThanLine()
-        e.thanSet(zip(xx, yy, zz, *more))
+        e.thanSet(list(zip(xx, yy, zz, *more)))   #works for python2,3
         if e.thanIsNormal():
             self.thanSetLay(lay, col)
             self.addElem(e)
@@ -173,8 +175,28 @@ class ThanCadDrSave(ThanDrWarn):
         else:
             self._count(degenerate=True)
 
-
     dxfLine = dxfPolyline                               # "Saves a line."
+
+
+    def dxf3dface(self, xx, yy, zz, lay, handle, col):
+        "Saves 3dface as a closed polyline."
+        n = len(xx)
+        elev = self._elev
+        nd = len(elev)
+        more = [n*[elev[i]] for i in xrange(3, nd)]
+        cp = list(zip(xx, yy, zz, *more))   #works for python2,3
+
+        if thanNear2(cp[-1], cp[-2]): del cp[-1]     #This is a 3 point 3dface
+        cp.append(list(cp[0]))                       #Make the polyline closed
+
+        e = ThanLine()
+        e.thanSet(cp)
+        if e.thanIsNormal():
+            self.thanSetLay(lay, col)
+            self.addElem(e)
+            self._count()
+        else:
+            self._count(degenerate=True)
 
 
     def dxfCircle(self, xx, yy, zz, lay, handle, col, r):
@@ -238,7 +260,7 @@ class ThanCadDrSave(ThanDrWarn):
         cc[2] = zz
         e = ThanEllipse()
         dr = pi/180.0
-        print "thanCad.imp.dxfEllipse:", xx, yy, a, b, phia, phib, theta, full
+        print("thanCad.imp.dxfEllipse:", xx, yy, a, b, phia, phib, theta, full)
         e.thanSet(cc, a, b, phia*dr, phib*dr, theta*dr, full)
         if e.thanIsNormal():
             self.thanSetLay(lay, col)
@@ -302,8 +324,8 @@ class ThanCadDrSave(ThanDrWarn):
 
 #-------Layer, color pair in cache
 
-        assert type(col) in (NoneType, IntType)
-        if col <= 0: col = None
+        assert col is None or type(col) == int, "col should be positive int or None"
+        if col is not None and col <= 0: col = None
         lt = self._dr.thanLayerTree
         try:
             lt.thanRoot.tempCol                       # This means we just entered SECTION ENTITIES..
@@ -356,11 +378,12 @@ class ThanCadDrSave(ThanDrWarn):
             lay = laypar.thanChildNew(name)            # Create new layer if possible
             self._setCol(lay, None)
             return lay
-        except ThanLayerError, why:
+        except ThanLayerError as why:
+            why1 = why                                 #Work around curious Python3 bug
             pass
         name = "unknown"                               # Layer is invalid; create default
         self.prt(T["Dxf layer '%s' can not be created and it is ignored:"] % named)
-        self.prt("    %s" % why)
+        self.prt("    %s" % why1)
         self.prt(T["    Layer '%s' is used instead."] % name)
         for lay in laypar.thanChildren:
             if name == str(lay.thanAtts[THANNAME]): return lay # Return existing default layer
@@ -414,10 +437,10 @@ class ThanCadDrSave(ThanDrWarn):
 
 
 if 0:
-    print __doc__
+    print(__doc__)
     from thandwg import ThanDrawing
     dr = ThanDrawing()
-    f = file("mhk.dxf", "r")
+    f = open("mhk.dxf", "r")
 
     ts = ThanCadDrSave(dr)
     t = ThanImportDxf(f, ts)

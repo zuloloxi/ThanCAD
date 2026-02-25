@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines line states, i.e. as the user moves the mouse, a road
 (which is a line with circular arcs) is drawn from a given point to mouse
 cursor, continuously.
 """
-from thantkconst import THAN_STATE_NONE
 from thanvar import calcRoadNode, tkRoadNode, tkRoadNodeR
-from thantkguigeneric import ThanStateGeneric
+from .thantkconst import THAN_STATE_NONE
+from .thantkguigeneric import ThanStateGeneric
 
 
 class ThanStateRoadp(ThanStateGeneric):

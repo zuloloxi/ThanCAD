@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,12 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines ThanCad fonts made by straight lines.
 """
-from types import IntType
-from thanfont import ThanFont, ThanFontLine, thanFonts
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+from .thanfont import ThanFont, ThanFontLine, thanFonts
 
 def makePrime1Lines():
     """Makes the lines that define each character of fixed width line font Prime1.
@@ -561,8 +563,8 @@ def makePrime1Lines():
 255 : [ [ 0,0, 4,0,  4,4, 0,4, 0,0 ]                              # quadrilateral
       ]
 }
-    for lines in dilines.itervalues():
-        if type(lines) == IntType: continue  # An integer for indirection
+    for lines in dilines.values():   #works for python2,3
+        if type(lines) == int: continue  # An integer for indirection
         lines.append([(7, 0)])               # The next character start position
     return dilines
 
@@ -1145,8 +1147,8 @@ def makePrime2Lines():
 255 : [ [ 0,0, 4,0,  4,4, 0,4, 0,0 ]                              # quadrilateral
       ]
 }
-    for lines in dilines.itervalues():
-        if type(lines) == IntType: continue
+    for lines in dilines.values():   #works for python2,3
+        if type(lines) == int: continue
         lines.append([(7, 0)])
     return dilines
 
@@ -1540,8 +1542,8 @@ def makeLcd1Lines():
 254 : 249,                                                        # "ώ"
 255 : 239,                                                        # quadrilateral
 }
-    for lines in dilines.itervalues():
-        if type(lines) == IntType: continue
+    for lines in dilines.values():   #works for python2,3
+        if type(lines) == int: continue
         for li in lines:
             for i in xrange(0, len(li), 2): li[i] *= 0.75
         lines.append([(2, 0)])
@@ -1555,7 +1557,7 @@ thanFonts["thanlcd1"]   = ThanFontLine("thanlcd1",   (0,0), (2,2), (0,-1), False
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
     thanFonts["thanprime1"].thanExportTxt(open("pr1.txf", "w"))
-#    for k,dilines in thanFonts["thanlcd1"].thanDilines.iteritems():
+#    for k,dilines in thanFonts["thanlcd1"].thanDilines.items():  #works for python2,3
 #        print k, ':', dilines

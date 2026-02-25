@@ -1,8 +1,8 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,16 +22,32 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 """
+from __future__ import print_function
 import sys
-print __doc__
+print(__doc__)
+developer = 1
+if developer and __name__ == "__main__":
+    import platform, sys
+    mach = platform.machine().lower()
+    Amd64 = ("x86" in mach or "amd" in mach) and "64" in mach  #If machine is x86-64 compatible (OS may still run in 32bits
+    mach = sys.platform.lower()
+    Windows = mach == "win32" or mach == "win64"       #If we run Windoze
+    if Amd64: binp = "binwm"
+    else:     binp = "binwi"
+    if sys.version_info.major >= 3: libsp = "libs3"
+    else:                           libsp = "libs2"
+    if Windows: sys.path.append("x:\\"+binp+"\\"+libsp)         # Developer environment
+    else:       sys.path.append("/home/a12/x/"+binp+"/"+libsp)  # Developer environment
 import thanopt             # This runs a test for the needed modules automatically
 thanopt.thanInitPregui()
 import thantkgui
 thanCad = thantkgui.ThanTkGuiWinMain()
 thanopt.thanInitPostgui()
+#Comment out the following imports to disable importing the packages
+#to make ThanCad lighter for common use
 if __name__ == "__main__":
     thanCad.mainloop()
     thanopt.thanInitEndgui()

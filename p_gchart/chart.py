@@ -1,8 +1,9 @@
 # -*- coding: iso-8859-7 -*-
-import Tkinter
+from __future__ import print_function
+import tkinter
 from PIL import Image, ImageTk
 from math import hypot, fabs
-from thansymbol import thanPoints
+from .thansymbol import thanPoints
 
 
 ##############################################################################
@@ -84,28 +85,28 @@ class ThanChart:
                 if im.mode == "1":
                     pass
                 elif im.mode == "L":
-                    print "Converting to black and white.."
+                    print("Converting to black and white..")
                     im = im.convert("1")
                 else:
-                    print "Converting to gray scale.."
+                    print("Converting to gray scale..")
                     im = im.convert("L")
-                    print "Converting to black and white.."
+                    print("Converting to black and white..")
                     im = im.convert("1")
             elif c == "3":
                 if im.mode == "1":
-                    print "Inverting.."
+                    print("Inverting..")
                     im = im.point(finv)
                 elif im.mode == "L":
-                    print "Inverting.."
+                    print("Inverting..")
                     im = im.point(finv)
-                    print "Converting to black and white.."
+                    print("Converting to black and white..")
                     im = im.convert("1")
                 else:
-                    print "Converting to gray scale.."
+                    print("Converting to gray scale..")
                     im = im.convert("L")
-                    print "Inverting.."
+                    print("Inverting..")
                     im = im.point(finv)
-                    print "Converting to black and white.."
+                    print("Converting to black and white..")
                     im = im.convert("1")
             else:
                 im = im.convert(c)
@@ -121,13 +122,13 @@ class ThanChart:
     def regen(self, dc, dx, dy, xsc, ysc):
         "Regenerates all the curves into canvas dc."
         self.minmax()
-        dc.delete(Tkinter.ALL)
+        dc.delete(tkinter.ALL)
         self.__images = {}
         for xc, yc, color, fill, style, width, size in self.curves:
             xp = [ dx+x*xsc for x in xc ]
             yp = [ dy+y*ysc for y in yc ]
             if style == "continuous":
-                dc.create_line(zip(xp, yp), fill=color, width=width)
+                dc.create_line(list(zip(xp, yp)), fill=color, width=width)   #OK for python 2,3
             elif style == "directed":
                 if size == 6: size = (6, -6)
                 self.linedirected(xp, yp, size, color, width, dc)
@@ -139,17 +140,17 @@ class ThanChart:
                 self.dashedsym(xp, yp, size, color, fill, dc)
             elif style == "image":
                 im = fill
-                print "regen:size=", size, "  ysc=", ysc
+                print("regen:size=", size, "  ysc=", ysc)
                 item = dc.create_image(int(xp[0]), int(yp[0]), image=self.thanTkImage(im, int(fabs(size*ysc)+0.5)), anchor="sw")
             else:
                 p = thanPoints[style]
-                for (x,y) in zip(xp, yp): p(dc, x, y, size, color, fill)
+                for (x,y) in list(zip(xp, yp)): p(dc, x, y, size, color, fill)  #OK for python 2,3
 
     def thanTkImage(self, im, size):
         "Returns a Tk photoimage class of im using cache."
         try: return self.__images[(id(im), int(size))]
         except KeyError: pass
-        print "thanTkImage:size:", size
+        print("thanTkImage:size:", size)
         b,h = im.size
         h1 = size
         b1 = int(b * size / h)
@@ -163,7 +164,7 @@ class ThanChart:
     def redraw(self, dc, margin=0.02):
         "Redraws the curves into canvas dc."
 
-        dc.delete(Tkinter.ALL)
+        dc.delete(tkinter.ALL)
 
         dc.update()
         self.wx = dc.winfo_width()
@@ -181,7 +182,7 @@ class ThanChart:
             xp = [         (x-xmi)*xsc for x in xc ]
             yp = [ self.wy-(y-ymi)*ysc for y in yc ]
             if style == "continuous":
-                dc.create_line(zip(xp, yp), fill=color, width=width)
+                dc.create_line(list(zip(xp, yp)), fill=color, width=width)  #OK for python 2,3
             elif style == "directed":
                 if size == 6: size = (6, -6)
                 self.linedirected(xp, yp, size, color, width, dc)
@@ -193,13 +194,13 @@ class ThanChart:
                 self.dashedsym(xp, yp, size, color, fill, dc)
             else:
                 p = thanPoints[style]
-                for (x,y) in zip(xp, yp): p(dc, x, y, size, color, fill)
+                for (x,y) in list(zip(xp, yp)): p(dc, x, y, size, color, fill)  #OK for python 2,3
 
 #=============================================================================
 
     def linedirected(self, xp, yp, r, color, width, dc):
         "Plots a continuous line with direction arrows."
-        dc.create_line(zip(xp, yp), fill=color, width=width)
+        dc.create_line(list(zip(xp, yp)), fill=color, width=width)  #OK for python 2,3
         i = 1
         x1, y1 = xp[0], yp[0]
         ir = 0
@@ -311,7 +312,7 @@ class ThanChart:
                     y1 += dy*as_/d
                 elif isinstance(sym, Image.Image):
                     dc.create_image(int(x1), int(y1), image=self.thanTkImage(sym, rsym), anchor="sw")
-                elif sym != None:
+                elif sym is not None:
                     thanPoints[sym](dc, x1, y1, rsym, color, fill)
                 else:
                     dc.create_rectangle(x1-1, y1-1, x1+1, y1+1, fill=color) # This is exactly 1 dot
@@ -347,7 +348,7 @@ def test1():
     ch = ThanChart()
     im = Image.open("pict0003.gif")
     ch.imageAdd(im, 20, 20, 100)
-    from vis import vis, visdxf
+    from .vis import vis, visdxf
     vis(ch)
 
 
@@ -357,7 +358,7 @@ def test2():
     xx = 0, 100, 150
     yy = 0, 100, 100
     ch.curveAdd(xx, yy, color="red", fill=None, style="directed", width=1, size=(16, -16))
-    from vis import vis
+    from .vis import vis
     vis(ch)
 
 

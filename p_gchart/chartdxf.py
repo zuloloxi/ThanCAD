@@ -1,5 +1,7 @@
-from chart import ThanChart
-from vis import vis
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+from .chart import ThanChart
+from .vis import vis
 
 class ThanChartDxf:
         "Class to emulate dxf; it takes dxf calls and produces a ThaChart at the end."

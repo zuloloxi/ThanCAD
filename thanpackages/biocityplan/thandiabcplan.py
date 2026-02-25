@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,15 +23,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to define the necessary elements
 and options for bioclimatic city plan design.
 """
 
-import sys, copy, ConfigParser, Tkinter
+import sys, copy
+import tkinter
 
-import p_gtkuti, p_gtkwid, p_ggen
+import p_gtkwid, p_ggen
 from thanvar import Canc, DEFCAN
 from thantrans import Tarch, T, Twid, Tmatch
 from thantkdia import ThanArchCom
@@ -71,30 +72,30 @@ class ThanBcplan(ThanArchCom):
     def body2(self, win):
         "Create the body of the dialog in steps."
 #        self.fraLogo(win, 0, theme=Tarch["Bioclimatic City Plan Design Algorithms"], year="2010-2013")
-        self.fraLogo2(win, 0, year="2010-2013")
+        self.fraLogo2(win, 0, year="2010-2016")
         self.fraDefine(win, 1)
         self.fraParams(win, 2)
 
 
     def fraParams(self, win, ir):
         "Select the room dimensions constraints."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["CITY BLOCK PARAMETERS:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["CITY BLOCK PARAMETERS:"])
         lab.grid(row=0, column=1, sticky="w", columnspan=4)
 
         keys = "entMinWidth", "entMaxWidth"
         tits = "Min width (m)", "Max width (m)"   #Tarch["Min width (m)"], Tarch["Max width (m)"]
         ir = 1
-        lab = Tkinter.Label(fra, fg=self.colfra, text=Tarch["City block width (east-west):"])
+        lab = tkinter.Label(fra, fg=self.colfra, text=Tarch["City block width (east-west):"])
         lab.grid(row=ir, column=1, columnspan=2, sticky="w")
-        for key, tit in zip(keys, tits):
+        for key, tit in zip(keys, tits):  #works for python2,3
             ir += 1
             val = p_gtkwid.ThanValFloat(1.0, 1000.0)
-            lab = Tkinter.Label(fra, text=Tarch[tit])
+            lab = tkinter.Label(fra, text=Tarch[tit])
             lab.grid(row=ir, column=1, sticky="e")
             wid = p_gtkwid.ThanEntry(fra, width=5)
             wid.grid(row=ir, column=2, sticky="we")
@@ -103,12 +104,12 @@ class ThanBcplan(ThanArchCom):
         keys = "entMinHeight", "entMaxHeight"
         tits = "Min height (m)", "Max height (m)"   #Tarch["Min height (m)"], Tarch["Max height (m)"]
         ir = 1
-        lab = Tkinter.Label(fra, fg=self.colfra, text=Tarch["City block height (north-south) < width:"])
+        lab = tkinter.Label(fra, fg=self.colfra, text=Tarch["City block height (north-south) < width:"])
         lab.grid(row=ir, column=4, columnspan=2, sticky="e")
-        for key, tit in zip(keys, tits):
+        for key, tit in zip(keys, tits):  #works for python2,3
             ir += 1
             val = p_gtkwid.ThanValFloat(1.0, 1000.0)
-            lab = Tkinter.Label(fra, text=Tarch[tit])
+            lab = tkinter.Label(fra, text=Tarch[tit])
             lab.grid(row=ir, column=4, sticky="e")
             wid = p_gtkwid.ThanEntry(fra, width=5)
             wid.grid(row=ir, column=5, sticky="we")
@@ -118,12 +119,12 @@ class ThanBcplan(ThanArchCom):
         keys = "entMinRoad", "entMaxRoad"
         tits = "Min width (m)", "Max width (m)"   #Tarch["Min width (m)"], Tarch["Max width (m)"]
         ir = 4
-        lab = Tkinter.Label(fra, fg=self.colfra, text=Tarch["Road width:"])
+        lab = tkinter.Label(fra, fg=self.colfra, text=Tarch["Road width:"])
         lab.grid(row=ir, column=1, columnspan=2, sticky="w")
-        for key, tit in zip(keys, tits):
+        for key, tit in zip(keys, tits):  #works for python2,3
             ir += 1
             val = p_gtkwid.ThanValFloat(1.0, 1000.0)
-            lab = Tkinter.Label(fra, text=Tarch[tit])
+            lab = tkinter.Label(fra, text=Tarch[tit])
             lab.grid(row=ir, column=1, sticky="e")
             wid = p_gtkwid.ThanEntry(fra, width=5)
             wid.grid(row=ir, column=2, sticky="we")
@@ -133,7 +134,7 @@ class ThanBcplan(ThanArchCom):
         key = "choBio"
         tit = "Apply bioclimatic constraints?"   #Tarch["Apply bioclimatic constraints?"]
         val = p_gtkwid.ThanValidator()
-        lab = Tkinter.Label(fra, text=Tarch[tit])
+        lab = tkinter.Label(fra, text=Tarch[tit])
         lab.grid(row=ir, column=4, sticky="e")
         wid = p_gtkwid.ThanYesno(fra, width=5)
         wid.grid(row=ir, column=5, sticky="we")
@@ -143,13 +144,13 @@ class ThanBcplan(ThanArchCom):
         key = "entMult"
         tit = "Multiple executions of the algorithm"   #Tarch["Multiple executions of the algorithm"]
         val = p_gtkwid.ThanValInt(1, 1000)
-        lab = Tkinter.Label(fra, text=Tarch[tit])
+        lab = tkinter.Label(fra, text=Tarch[tit])
         lab.grid(row=ir, column=4, sticky="e")
         wid = p_gtkwid.ThanEntry(fra, width=5)
         wid.grid(row=ir, column=5, sticky="we")
         self.thanWids.append((key, tit, wid, val))
 
-        wid = Tkinter.Frame(fra)
+        wid = tkinter.Frame(fra)
         wid.grid(row=2, column=3, sticky="we")
 
         fra.columnconfigure(3, weight=1)
@@ -157,18 +158,18 @@ class ThanBcplan(ThanArchCom):
 
     def fraDefine(self, win, ir):
         "Various city plan definititions."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["CITY PLAN DEFINITION:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tarch["CITY PLAN DEFINITION:"])
         lab.grid(row=0, column=1, sticky="w", columnspan=4)
 
         key = "refPolygon"
         tit = "Polygon enclosing\ncity plan defined?"    #Tarch["Polygon enclosing\ncity plan defined?"]
         val = _Val1()
-        lab = Tkinter.Label(fra, text=Tarch[tit], anchor="w")
+        lab = tkinter.Label(fra, text=Tarch[tit], anchor="w")
         lab.grid(row=1, column=1, sticky="e")
         wid = p_gtkwid.ThanRef(fra, text="", reference="", readonly=True, buttontext=Tarch["Define..."], width=3,
               command=self.__selref1, textcommand=self.__textref1)
@@ -178,7 +179,7 @@ class ThanBcplan(ThanArchCom):
         key = "refPrepro"
         tit = "Preprocessing done?"                      #Tarch["Preprocessing done?"]
         val = p_gtkwid.ThanValidator()
-        lab = Tkinter.Label(fra, text=Tarch[tit])
+        lab = tkinter.Label(fra, text=Tarch[tit])
         lab.grid(row=2, column=1, sticky="e")
         wid = p_gtkwid.ThanRef(fra, text="", reference="", readonly=True, buttontext=Tarch["Import from file..."], width=3,
               command=self.__rdcache, textcommand=self.__textcache)
@@ -188,7 +189,7 @@ class ThanBcplan(ThanArchCom):
 #        key = "labPrepro"
 #        tit = "Preprocessing done?"                      #Tarch["Preprocessing done?"]
 #        val = p_gtkwid.ThanValidator()
-#        lab = Tkinter.Label(fra, text=Tarch[tit])
+#        lab = tkinter.Label(fra, text=Tarch[tit])
 #        lab.grid(row=1, column=4, sticky="e")
 #        wid = p_gtkwid.ThanLabyesno(fra, width=5)
 #        wid.grid(row=1, column=5, sticky="we")
@@ -197,13 +198,13 @@ class ThanBcplan(ThanArchCom):
         key = "labDTM"
         tit = "DTM defined?"                             #Tarch["DTM defined?"]
         val = p_gtkwid.ThanValidator()
-        lab = Tkinter.Label(fra, text=Tarch[tit])
+        lab = tkinter.Label(fra, text=Tarch[tit])
         lab.grid(row=2, column=4, sticky="e")
         wid = p_gtkwid.ThanLabyesno(fra, width=5)
         wid.grid(row=2, column=5, sticky="we")
         self.thanWids.append((key, tit, wid, val))
 
-        wid = Tkinter.Frame(fra)
+        wid = tkinter.Frame(fra)
         wid.grid(row=1, column=3, sticky="we")
         fra.columnconfigure(3, weight=1)
 
@@ -211,7 +212,7 @@ class ThanBcplan(ThanArchCom):
     def __selref1(self, ref):
         "Select the 1 line."
         proj = self.thanProj
-        p_gtkuti.thanGrabRelease()
+        p_gtkwid.thanGrabRelease()
         self.withdraw()
         gps = thanSelMultlines(proj, 1, Tarch["Select polygon enclosing city plan\n"], strict=True)
         proj[2].thanGudResetSelColor()                   # Unmarks the selection
@@ -224,7 +225,7 @@ class ThanBcplan(ThanArchCom):
             gps = [list(c) for c in gps.pop().cp]
             text = self.__textref1(gps)
         self.deiconify()
-        p_gtkuti.thanGrabSet(self)
+        p_gtkwid.thanGrabSet(self)
         return gps, text
 
 
@@ -245,13 +246,13 @@ class ThanBcplan(ThanArchCom):
 #        hull = self.refPolygon.thanGet()
 #        if len(hull) < 4:
 #            why = Tarch["1 polygon enclosing the city plan must be selected"]
-#            p_gtkuti.thanGudModalMessage(proj[2], "%s:\n%s" % (Tarch["Import failed"], why),
-#                title=Tarch["Import failed"], icon = p_gtkuti.ERROR)
+#            p_gtkwid.thanGudModalMessage(proj[2], "%s:\n%s" % (Tarch["Import failed"], why),
+#                title=Tarch["Import failed"], icon = p_gtkwid.ERROR)
 #            return None, None
 #        if ref.dtm is None:
 #            why = Tarch["Can't preprocess: No DTM has been defined!"]
-#            p_gtkuti.thanGudModalMessage(proj[2], "%s:\n%s" % (Tarch["Import failed"], why),
-#                title=Tarch["Import failed"], icon = p_gtkuti.ERROR)
+#            p_gtkwid.thanGudModalMessage(proj[2], "%s:\n%s" % (Tarch["Import failed"], why),
+#                title=Tarch["Import failed"], icon = p_gtkwid.ERROR)
 #            return None, None
 
         fn, fr = thanTxtopen(proj, Tarch["Please select previous file with saved preprocessing results"], suf=".cache")
@@ -260,9 +261,9 @@ class ThanBcplan(ThanArchCom):
 #        refnew.hull = hull
         try:
             refnew.readGrid(fr)
-        except Exception, why:
-            p_gtkuti.thanGudModalMessage(proj[2], "%s:\n%s" % (Tarch["Import failed"], why),
-                title=Tarch["Import failed"], icon= p_gtkuti.ERROR)
+        except Exception as why:
+            p_gtkwid.thanGudModalMessage(proj[2], "%s:\n%s" % (Tarch["Import failed"], why),
+                title=Tarch["Import failed"], icon= p_gtkwid.ERROR)
             return None, None
         self.refPolygon.thanSet(refnew.hull)       #Set the enclosing polygon that was read from cache
         return refnew, self.__textcache(refnew)
@@ -282,7 +283,7 @@ class ThanBcplan(ThanArchCom):
         "The user pressed preprocess."
         if not ThanArchCom.apply2(self, *args): return False
         if self.refPrepro.thanGet().roadenx is not None:
-            ans = p_gtkuti.thanGudAskOkCancel(self,
+            ans = p_gtkwid.thanGudAskOkCancel(self,
                 message=Tarch["Preprocessing may take several minutes to complete.\nOk to proceed with preprocessing?"],
                 title=Tarch["Preprocessing is already done!"], default="cancel")
             if not ans: return False

@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,14 +21,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines an object which holds a set of lines which acts as an DTM.
 The lines are different and independent from the ThanLines of the ThanDrawing.
 """
 import p_gtri
 from thantrans import T
-from thanobject import ThanObject
+from .thanobject import ThanObject
 
 
 class ThanDTMlines(ThanObject):
@@ -48,7 +48,7 @@ class ThanDTMlines(ThanObject):
     def thanList(self, than):
         "Shows information about the DTMLines object."
         than.writecom("%s: %s\n" % (T["Object"], self.thanObjectName))
-        scen = " ".join(map(than.strdis, self.dtm.thanCen()))
+        scen = " ".join(map(than.strdis, self.dtm.thanCen()))   #works for python2,3
         than.write("%s %s\n" % (T["Centroid:"], scen))
         than.write("%s %s\n" % (T["Max X distance of line segments:"], than.strdis(self.dtm.thanDxmax)))
         than.write("%s %s\n" % (T["X extension for intersections  :"], than.strdis(self.dtm.thanDext)))

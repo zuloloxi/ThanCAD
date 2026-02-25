@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-7 -*-
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -22,13 +22,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module contains a mixin for the various 3d-2d and 2d-2d transformations
 available to ThanCad.
 """
 
-import Tkinter
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
+import tkinter
 import p_gtkwid
 import thandr
 from thantrans import Tmatch
@@ -64,12 +66,12 @@ class TransfMixin:
 
     def bodyProject(self, win, ir, wids, pro=True):
         "Select projection type."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=self.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tmatch["PROJECTION TYPE:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tmatch["PROJECTION TYPE:"])
         lab.grid(row=0, column=1, sticky="w", columnspan=4)
 
         key = "radProject"
@@ -77,7 +79,7 @@ class TransfMixin:
         rad = p_gtkwid.ThanRadio(fra)
         rad.grid(row=1, column=1, sticky="wesn", pady=5)
 
-        lab = Tkinter.Label(rad, text=Tmatch["3D-2D"], fg=self.colfra)
+        lab = tkinter.Label(rad, text=Tmatch["3D-2D"], fg=self.colfra)
         lab.grid(row=0, column=0, sticky="w")
         pc = self.projectcode
         if pro:                           #Professional version with FFLFs
@@ -92,7 +94,7 @@ class TransfMixin:
             wid = rad.add_button(text=Tmatch[pc[3+i][0]])
             wid.grid(row=i+1, column=2, sticky="w")
 
-        lab = Tkinter.Label(rad, text=Tmatch["2D-2D"], fg=self.colfra)
+        lab = tkinter.Label(rad, text=Tmatch["2D-2D"], fg=self.colfra)
         lab.grid(row=5, column=0, sticky="w")
         for i in xrange(4, 6):
             wid = rad.add_button(text=Tmatch[pc[3+i][0]])
@@ -100,7 +102,7 @@ class TransfMixin:
         for i in xrange(4, 6):
             wid = rad.add_button(text=Tmatch[pc[5+i][0]])
             wid.grid(row=i+2, column=2, sticky="w")
-        wid = Tkinter.Frame(rad)
+        wid = tkinter.Frame(rad)
         wid.grid(row=0, column=1, sticky="we", padx=30)
 
         val = p_gtkwid.ThanValidator()
@@ -127,23 +129,23 @@ class FraPo:
             self.widGps = "comGpsch"
             self.widRel = "comRelch"
         else:
-            raise ValueError, name
+            raise ValueError(name)
 
     def frame(self, parent, win, ir, wids):
         "Create the widgets for selecting control or check points."
         self.thanProjlays = parent.thanProjlays
-        fra = self.fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = self.fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
 #        fra.grid(row=ir, column=0, pady=5, sticky="we")
 
-        lab = Tkinter.Label(fra, fg=parent.colfra, text="%d."%(ir,))
+        lab = tkinter.Label(fra, fg=parent.colfra, text="%d."%(ir,))
         lab.grid(row=0, column=0)
-        lab = Tkinter.Label(fra, anchor="w", fg=parent.colfra, text=self.Selpo)
+        lab = tkinter.Label(fra, anchor="w", fg=parent.colfra, text=self.Selpo)
         lab.grid(row=0, column=1, sticky="w", columnspan=2)
 
         key = self.widGps
         tit = "Drawing/layer of reference points"                  #Tmatch["Drawing/layer of reference points"]
         val = self.thanValGps = ThanValProjlay(parent.thanProjlays)
-        lab = Tkinter.Label(fra, text=Tmatch[tit])
+        lab = tkinter.Label(fra, text=Tmatch[tit])
         lab.grid(row=1, column=1, sticky="e")
         wid = p_gtkwid.ThanCombo(fra, labels=parent.thanNames, width=30)
         wid.grid(row=1, column=2, sticky="we")
@@ -153,16 +155,16 @@ class FraPo:
         key = self.widRel
         tit = "Drawing/layer of image points"                      #Tmatch["Drawing/layer of image points"]
         val = self.thanValRel = ThanValProjlay(parent.thanProjlays)
-        lab = Tkinter.Label(fra, text=Tmatch[tit])
+        lab = tkinter.Label(fra, text=Tmatch[tit])
         lab.grid(row=2, column=1, sticky="e")
         wid = p_gtkwid.ThanCombo(fra, labels=parent.thanNames, width=30)
         wid.grid(row=2, column=2, sticky="we")
         wids.append((key, tit, wid, val))
         self.comRel = wid
 
-        wid = Tkinter.Frame(fra, height=10)
+        wid = tkinter.Frame(fra, height=10)
         wid.grid(row=3, column=1)
-        lab = Tkinter.Label(fra, text=self.Stapo)
+        lab = tkinter.Label(fra, text=self.Stapo)
         lab.grid(row=4, column=1, sticky="w")
         wid = p_gtkwid.ThanScrolledText(fra, height=3, readonly=True, bg="lightpink")
         wid.grid(row=5, column=1, columnspan=2, sticky="wesn")
@@ -186,10 +188,10 @@ class FraPo:
         cpref, _ = findPoints(lay)
         _, lay = self.thanProjlays[self.comRel.thanGet()]
         cpima, _ = findPoints(lay)
-        for name in sorted(cpref.keys()):
+        for name in sorted(cpref.keys()):   #works for python2,3
             if name not in cpima:
                 prt("Reference point %s not found in image points." % name)
-        for name in sorted(cpima.keys()):
+        for name in sorted(cpima.keys()):  #works for python2,3
             if name not in cpref:
                 prt("Image point %s not found in reference points." % name)
         return cpref, cpima
@@ -264,11 +266,10 @@ def findProjlays():
     projlays = {}
     for proj in thanfiles.getOpened()[1:]:
         lt = proj[1].thanLayerTree
-        for lay in lt.dilay.itervalues():
+        for lay in lt.dilay.values():   #works for python2,3
             nam = "%s/%s" % (proj[0].namebase, lay.thanGetPathname())
             projlays[nam] = (proj, lay)
-    names = projlays.keys()
-    names.sort()
+    names = sorted(projlays.keys())   #works for python2,3
     return names, projlays
 
 

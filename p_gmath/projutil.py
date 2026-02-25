@@ -1,10 +1,11 @@
 "Utilities for projection transformations."
-from proj import (DLTProjection, Rational1Projection, Rational2Projection,
+from __future__ import print_function
+from .proj import (DLTProjection, Rational1Projection, Rational2Projection,
                   Rational15Projection, Polynomial1Projection, Polynomial2Projection,
                   Polynomial1_2DProjection, DLT2Projection, Rational1_2DProjection,
                   Polynomial2_2DProjection, NonCartesian,
                  )
-from projcom import read1
+from .projcom import read1
 
 
 def Projection(icod):
@@ -26,7 +27,7 @@ def Projection(icod):
     elif icod == 13: return Polynomial2_2DProjection
 
     elif icod == 21: return NonCartesian
-    raise ValueError, "No projection with integer index %d" % (icod,)
+    raise ValueError("No projection with integer index %d" % (icod,))
 
 
 def readProj(fr):
@@ -39,4 +40,4 @@ def readProj(fr):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

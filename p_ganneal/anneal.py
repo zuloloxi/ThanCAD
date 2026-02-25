@@ -1,10 +1,12 @@
 # -*- coding: iso-8859-7 -*-
+from __future__ import print_function
+from p_ggen.py23 import xrange
 import sys, random
 from math import exp
 import p_ggen, p_gmath
 
 
-class SimulatedAnnealing:
+class SimulatedAnnealing(object):
     "The class implements the simulated annealing method."
 
     def __init__(self, **kw):
@@ -29,15 +31,17 @@ class SimulatedAnnealing:
         self.e1     = 0.0    # energy before and ..
         self.e2     = 0.0    # after a change
         self.emin   = 0.0    # minimum energy found
+        self.iTstep = -1     #Save the temperature steps, in case they are needed (for example research)
+
         self.r = random.Random()
         self.anim = SAAnimation()
         self.config(**kw)
 
     def config(self, treduce=None, tsteps=None, prt=None, animon=None, animsize=None, animnframe=None, animpref=None):
         "Change default values."
-        if treduce != None: self.tFactr = treduce
-        if tsteps != None: self.nTsteps = int(tsteps)
-        if prt != None: self.prt = prt
+        if treduce is not None: self.tFactr = treduce
+        if tsteps is not None: self.nTsteps = int(tsteps)
+        if prt is not None: self.prt = prt
         self.anim.config(on=animon, size=animsize, nframe=animnframe, pref=animpref)
 
     def anneal(self, obj):
@@ -81,8 +85,9 @@ class SimulatedAnnealing:
             self.t *= self.tFactr
             eprev = self.e1
 
+        self.iTstep = iTstep            #Save the temperature steps, in case they are needed (for example research)
         obj.restoreMinState()
-        print "minenergy         =", self.emin/obj.efact
+        print("minenergy         =", self.emin/obj.efact)
         #print "restored minenergy=", obj.energyState()
 
         #print "Best:         rooms=%d" % (len(obj.sable),)
@@ -143,7 +148,7 @@ class SimulatedAnnealing:
         return (x < xm)
 
 
-class SAAnnealable:
+class SAAnnealable(object):
     "An abstract class for objects that can be annealed."
 
     def __init__(self):
@@ -159,23 +164,23 @@ class SAAnnealable:
 
     def getDimensions(self):
         "Return the dimensionality of current configuration of the annealing object."
-        raise AttributeError, "It should have been overridden"
+        raise AttributeError("It should have been overridden")
         return self.ndimState
 
     def energyState(self):
         "Return the energy of the current configuration."
-        raise AttributeError, "It should have been overridden"
+        raise AttributeError("It should have been overridden")
         return 100.0             #Thanasis2011_05_19:Do NOT multiply by self.efact:this is done in SimulatedAnnealing object
 
     def getState(self):
         "Return an object which fully reflects the state of the annealing object."
-        raise AttributeError, "It should have been overridden"
+        raise AttributeError("It should have been overridden")
         state = p_ggen.Struct()
         return state
 
     def setState(self, state):
         "Replace current state of the annealing object with the one in variable state."
-        raise AttributeError, "It should have been overridden"
+        raise AttributeError("It should have been overridden")
         pass
 
     def saveMinState(self):
@@ -196,11 +201,11 @@ class SAAnnealable:
 
     def changeState(self):
         """Randomly change the configuration of the problem."
-        
+
         changestate should not save current configuration before changing the
         state (anneal() does this automatically).
         """
-        raise AttributeError, "It should have been overridden"
+        raise AttributeError("It should have been overridden")
         pass
 
     def initState(self, tempr, spSch):
@@ -231,6 +236,9 @@ class SAAnnealable:
                     de += e2-e1
                     npos += 1
                 e1 = e2
+            print("==============================================================================")
+            print('npos=', npos, 'ntries=', ntries, 'j=', j)
+            print("==============================================================================")
             if npos > ntries/2: break
         else:
             return False                    # Could not do calibration
@@ -245,7 +253,7 @@ class SAAnnealable:
         "Superimpose image foreground to the given the background image."
         from PIL import ImageDraw
         imd = ImageDraw.Draw(im)
-        if T != None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill=colot)
+        if T is not None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill=colot)
 
     def imageBackgroundState(self, imsize):                 #Minimal example
         "Create and return background image and object for coordinate transformation."
@@ -263,7 +271,7 @@ class SAAnnealable:
         ot = list(self.pol.iterOT(self.state))
         imd = ImageDraw.Draw(im)
         self.pol.topil(imd, ct, ot=ot, colot=colot)
-        if T != None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill=colot)
+        if T is not None: imd.text((5,1), text="t=%.2f  e=%.1f" % (T, e), fill=colot)
 
     def imageBackgroundState1(self, imsize):               #Example of imageBackgroundState
         "Superimpose background to the given (blank)image and return object for coordinate transformation."
@@ -271,7 +279,7 @@ class SAAnnealable:
         return self.pol.pilout("", imsize[0], imsize[1], iso=self.dtm.thanLines, roads=self.pol.roads)
 
 
-class SAAnimation:
+class SAAnimation(object):
     "An convenient object for storing animation data."
     def __init__(self):
         "Make default setting for animation."
@@ -287,10 +295,10 @@ class SAAnimation:
 
     def config(self, on=None, size=None, nframe=None, pref=None):
         "Change default values."
-        if on     != None: self.on = on               #If on is true, images will be made
-        if size   != None: self.imsize = size         #image width and height
-        if nframe != None: self.nframe = nframe       #How many frames it skips to make final video shorter
-        if pref   != None: self.impref = pref         #Image filename prefix
+        if on     is not None: self.on = on               #If on is true, images will be made
+        if size   is not None: self.imsize = size         #image width and height
+        if nframe is not None: self.nframe = nframe       #How many frames it skips to make final video shorter
+        if pref   is not None: self.impref = pref         #Image filename prefix
 
     def saveImage(self, obj, T=None, e=None, colot="blue"):
         """Save the current configuration as a raster image.
@@ -303,7 +311,7 @@ class SAAnimation:
         if not self.on: return
         self.iframe += 1
         if self.iframe % self.nframe != 0: return
-        if self.im == None:   #First time: build image background
+        if self.im is None:   #First time: build image background
             #roads = self.pol.roadcoor(s)
             roads = ()
             self.im, self.ct = obj.imageBackgroundState(self.imsize)

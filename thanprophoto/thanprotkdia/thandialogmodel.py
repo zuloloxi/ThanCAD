@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,14 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This dialog defines a photogrammeric model.
 """
 
-import sys, copy, ConfigParser, Tkinter
-from tkMessageBox import ERROR
-import p_gtkuti, p_gtkwid, p_ggen
+import sys, copy
+import tkinter
+from tkinter.messagebox import ERROR
+import p_gtkwid, p_ggen
 from thanvar import thanfiles
 import thandefs
 from thanopt.thancadconf import thanUndefPrefix
@@ -38,7 +39,7 @@ from thantrans import Tphot
 #T = p_gtkwid.Translation(dict(__TRANSLATION__=("en", "EN", "en", "EN")))  ##############
 
 
-mm = p_gtkuti.thanGudModalMessage
+mm = p_gtkwid.thanGudModalMessage
 
 
 class ThanModel(p_gtkwid.ThanComDialog):
@@ -81,14 +82,14 @@ class ThanModel(p_gtkwid.ThanComDialog):
 
     def fraModel(self, win, ir):
         "Widgets for model definition."
-        fra = Tkinter.Frame(win, bd=3, relief=Tkinter.RIDGE)
+        fra = tkinter.Frame(win, bd=3, relief=tkinter.RIDGE)
         fra.grid(row=ir-1, column=0, pady=5, sticky="wesn")
-        lab = Tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["MODEL DEFINITION:"])
+        lab = tkinter.Label(fra, anchor="w", fg=self.colfra, text=Tphot["MODEL DEFINITION:"])
         lab.grid(row=0, column=1, columnspan=2, sticky="w")
 
         key = "entName"
         tit = "Model Name"                         #Tphot["Model Name"]
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=1, column=1, sticky="w")
         wid = p_gtkwid.ThanEntry(fra)
         wid.grid(row=1, column=2, sticky="we")
@@ -97,7 +98,7 @@ class ThanModel(p_gtkwid.ThanComDialog):
 
         key = "entDesc"
         tit = "Model Description"                  #Tphot["Model Description"]
-        lab = Tkinter.Label(fra, text=Tphot[tit])
+        lab = tkinter.Label(fra, text=Tphot[tit])
         lab.grid(row=2, column=1, sticky="w")
         wid = p_gtkwid.ThanText(fra, height=2, width=40)
         wid.grid(row=2, column=2, sticky="wesn")
@@ -107,10 +108,10 @@ class ThanModel(p_gtkwid.ThanComDialog):
         for j, w in enumerate(("Left", "Right")):
             tit = w+" image file"                  #Tphot["Left image file"]    #Tphot["Right image file"]
             key = "fil"+w
-            lab = Tkinter.Label(fra, anchor="w", text=Tphot[tit])
+            lab = tkinter.Label(fra, anchor="w", text=Tphot[tit])
             lab.grid(row=3+j, column=1, sticky="w")
             wid = p_gtkwid.ThanFile(fra, extension="*", mode="r",
-                command=self.__validateraster, title=tit, width=20, relief=Tkinter.RAISED)
+                command=self.__validateraster, title=tit, width=20, relief=tkinter.RAISED)
             wid.grid(row=3+j, column=2, sticky="we")
             val = p_gtkwid.ThanValPIL()
             self.thanWids.append((key, tit, wid, val))
@@ -132,7 +133,7 @@ class ThanModel(p_gtkwid.ThanComDialog):
 
 
 def test1():
-    root = Tkinter.Tk()
+    root = tkinter.Tk()
     dia = ThanModel(root)
 #    root.mainloop()
 

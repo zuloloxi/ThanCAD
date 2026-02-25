@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,18 +21,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the point element.
 """
 
+from __future__ import print_function
 from math import fabs, hypot
-from itertools import izip
 import p_ggen
 from p_gmath import thanNearx
 from thantrans import T
-from thanelem import ThanElement
-from thantext import ThanText
+from .thanelem import ThanElement
+from .thantext import ThanText
 try: import pyx
 except ImportError: pass
 
@@ -86,13 +86,13 @@ class ThanPoint(ThanElement):
 
     def thanScale(self, cs, scale):
         "Scales the element in n-space with defined scale and center of scale."
-        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in izip(self.cc, cs)]
+        self.cc = [cs1+(cc1-cs1)*scale for (cc1,cs1) in zip(self.cc, cs)]  #works for python2,3
         self._setbbox()
 
 
     def thanMove(self, dc):
         "Moves the element with defined n-dimensional distance."
-        self.cc = [cc1+dd1 for (cc1,dd1) in izip(self.cc, dc)]
+        self.cc = [cc1+dd1 for (cc1,dd1) in zip(self.cc, dc)]  #works for python2,3
         self._setbbox()
 
 
@@ -127,7 +127,7 @@ class ThanPoint(ThanElement):
 
     def thanTkGet(self, proj):
         "Gets the attributes of the point interactively from a window."
-        raise AttributeError, "Use thancom.thancomdraw.thanTkDrawPoint() instead."
+        raise AttributeError("Use thancom.thancomdraw.thanTkDrawPoint() instead.")
 
 
     def thanTkDraw1(self, than):
@@ -256,7 +256,7 @@ class ThanPointNamed(ThanPoint):
 
     def thanTkGet(self, proj):
         "Gets the attributes of the point interactively from a window."
-        raise AttributeError, "Use thancom.thancomdraw.thanTkDrawPointNamed() instead."
+        raise AttributeError("Use thancom.thancomdraw.thanTkDrawPointNamed() instead.")
 
 
     def thanTkDraw1(self, than):
@@ -345,7 +345,7 @@ class ThanPointNamed(ThanPoint):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
     c = ThanPoint()
     c.thanSet((10.0, 20.0, 0.0))
-    print "point=", c
+    print("point=", c)

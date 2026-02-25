@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,15 +21,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
-This module defines functionality necessary for drawing elements on a Tkinter
+This module defines functionality necessary for drawing elements on a tkinter
 drawing window.
 """
 
+from __future__ import print_function
 from math import pi, sin, cos, atan2
-from Tkinter import ARC
+from tkinter import ARC
 from p_gmath import PI2
+import p_ggen
 from thanopt import thancadconf
 from thandefs import thanatt
 
@@ -255,7 +257,7 @@ class ThanTkGuiHighDraw:
                 ThanElement.thanRotateXypn2(c)
             dc.coords(item, *c)
         t2 = time.time()
-        print "Rotated in", t2-t1, "secs"
+        print("Rotated in", t2-t1, "secs")
         self.thanProj[1].thanTouch()
 
 
@@ -428,11 +430,11 @@ class ThanTkGuiHighDraw:
             e = tagel[titem]
             e.thanScale(xc, yc, fact)
         t2 = time.time()
-        print "Net Element Scaled in", t2-t1, "secs"
+        print("Net Element Scaled in", t2-t1, "secs")
         t1 = t2
         dc.scale("sel", xcp, ycp, fact, fact)
         t2 = time.time()
-        print "Net Canvas  Scaled in", t2-t1, "secs"
+        print("Net Canvas  Scaled in", t2-t1, "secs")
         self.thanProj[1].thanTouch()
 
 
@@ -450,13 +452,20 @@ class ThanTkGuiHighDraw:
         lt = self.thanProj[1].thanLayerTree
         thanCur1 = lt.thanCur
         dilay = lt.dilay
-        elems = [(dilay[e.thanTags[1]], e) for e in elems]
-        elems.sort()
-        for lay, e in elems:
+
+        #elems = [(dilay[e.thanTags[1]], e) for e in elems]
+        #elems.sort()
+        #for lay, e in elems:
+        #   if lay != lt.thanCur:
+        #       lay.thanTkSet(than)
+        #       lt.thanCur = lay
+        #   e.thanTkDraw(than)
+        for lay, layelems in p_ggen.groupitems(elems, key=lambda e: dilay[e.thanTags[1]]):
             if lay != lt.thanCur:
                 lay.thanTkSet(than)
                 lt.thanCur = lay
-            e.thanTkDraw(than)
+            for e in layelems: e.thanTkDraw(than)
+
         lay = thanCur1
         if lay != lt.thanCur:
             lay.thanTkSet(than)
@@ -497,25 +506,25 @@ class ThanTkGuiHighDraw:
         """Selects as "x" all active elements of a layer which also have tag 'selall'.
 
         It does not interfere with normal selection mechanism."""
-#       print "initially:"; self.prtags()
+#       print("initially:"; self.prtags())
         dc = self.thanCanvas
         dc.dtag("all", "selx")
-#        print "Tag 'selx' removed:"; self.prtags()
+#        print("Tag 'selx' removed:"; self.prtags())
 
         dc.addtag_withtag("sel1", "selall")    # "selall" items have tag "sel1"
-#       print "Tag 'sel1' added:"; self.prtags()
+#       print("Tag 'sel1' added:"; self.prtags())
 
         dc.dtag(tlay, "sel1")                  # "selall" items have tag "sel1" except from the items of layer tag tlay
-#       print "Tag 'sel1' partialy removed:"; self.prtags()
+#       print("Tag 'sel1' partialy removed:"; self.prtags())
 
         dc.addtag_withtag("selx", "selall")    # "selall" items have tag "selx"
-#       print "Tag 'selx' added:"; self.prtags()
+#       print("Tag 'selx' added:"; self.prtags())
 
         dc.dtag("sel1", "selx")                # "selall" items have tag "selx" if they belong to layer tag tlay
-#       print "Tag 'selx' partialy removed:"; self.prtags()
+#       print("Tag 'selx' partialy removed:"; self.prtags())
 
         dc.dtag("selall", "sel1")
-#       print "Tag 'sel1' removed:"; self.prtags()
+#       print("Tag 'sel1' removed:"; self.prtags())
 
 
     def thanGudSetSelColorx(self, col=thanatt.ThanAttCol(thancadconf.thanColSel).thanTk, fillcol=""):
@@ -557,4 +566,4 @@ class ThanTkGuiHighDraw:
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

@@ -1,5 +1,7 @@
 # -*- coding: iso-8859-7 -*-
 
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 import sys
 from p_ggen import path, prg
 fw = None
@@ -12,7 +14,7 @@ exParams = []
 
 def openFileWrmed(nPro, pro):
     "Save information into the intermediate file."
-    import openfile
+    from . import openfile
     global pathMed, fw
 
 #-----Open intermediate file (mediate.tmp)
@@ -50,7 +52,7 @@ def openFileMed(pro, nPro):
     nPro : The number of prefixes the program requires
     nProm: The number of prefixes in mediate.tmp (nPro<=nProm)
     """
-    import openfile
+    from . import openfile
     try: fr = open(pathMed, "r")
     except IOError: return None
     dline = fr.readline()
@@ -101,8 +103,8 @@ def openFileMed(pro, nPro):
 def errMedFile1():
     "This sr reports error into file mediate.tmp."
     global fw
-    import openfile
-    if fw == None:
+    from . import openfile
+    if fw is None:
 #-------If mediate.tmp was not open, then it could not be accessed.
 #       Since the calling program ended abnormally, try to write
 #       an error message to it now.
@@ -115,10 +117,10 @@ def errMedFile1():
 
 def okMedFile1():
     "This sr reports OK into file mediate.tmp."
-    import openfile
+    from . import openfile
     global fw
 #    print "okMedFile1a: fw=", fw
-    if fw == None:
+    if fw is None:
 
 #-------If mediate.tmp was not open, then it could not be accessed.
 #       Since the calling program ended normally, we try to delete file
@@ -126,9 +128,9 @@ def okMedFile1():
 #       the information that should be written to mediate.tmp.
 
         try: pathMed.remove()
-        except Exception, why: pass
+        except Exception: pass
         try: FILNAMMED.remove()
-        except Exception, why: pass
+        except Exception: pass
         return
     if not openfile.fylPro:
 
@@ -137,9 +139,9 @@ def okMedFile1():
 #        print "okMedFile1b: fw=", fw
         fw.close()
         try: pathMed.remove()
-        except Exception, why: pass
+        except Exception: pass
         try: FILNAMMED.remove()
-        except Exception, why: pass
+        except Exception: pass
         return
 
 #----Ignore the first 2 lines which contain the error sentinel

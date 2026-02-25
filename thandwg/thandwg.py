@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,20 +21,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines a ThanCad drawing, which contains elements, has layers,
 viewports, etc."
 """
 
-import p_ggen, p_gdxf, p_gimgeo, p_gimage
+from __future__ import print_function
+import p_ggen, p_gdxf, p_gimgeo, p_gimage, p_ggeod
 from p_gmath   import ThanRectCoorTransf, thanRoundCenter
 import thanfonts, thandefs
 from thanlayer import ThanLayerTree, col2tuple
 from thandefs  import ThanId
 from thandr    import ThanElement, ThanImage, thanElemClass, thanImageClasses
 
-from thandwgvars import thanVarsDef, thanVarsExpThc, thanVarsImpThc, thanObjsDef, thanObjsExpThc, thanObjsImpThc
+from .thandwgvars import thanVarsDef, thanVarsExpThc, thanVarsImpThc, thanObjsDef, thanObjsExpThc, thanObjsImpThc
 
 
 class ThanDoundo:
@@ -102,7 +103,7 @@ class ThanTagel(dict):
 
     def __setitem__(self, key, val):
         "Do not delete readonly items."
-        if key in self.rdlist: raise KeyError, "Readonly item: key: %s" % key
+        if key in self.rdlist: raise KeyError("Readonly item: key: %s" % key)
         dict.__setitem__(self, key, val)
 
     def get(self, key, defv=None):
@@ -117,12 +118,12 @@ class ThanTagel(dict):
         if v is not None: return v
         v = dict.get(self, self.prefix+str(key))
         if v is not None: return v
-        raise ValueError, "Tag/handle %s not found in this drawing" % (key,)   # Raise ValueError to accommodate ThanRfile/ThanWfile
+        raise ValueError("Tag/handle %s not found in this drawing" % (key,))   # Raise ValueError to accommodate ThanRfile/ThanWfile
 
 
 class ThanDrawing:
     "Represents a whole drawing."
-    thanThcVersions = ((0,1,0), (0,1,1), (0,2,0), (0,2,1))   #All supported versions of .thcx files
+    thanThcVersions = ((0,1,0), (0,1,1), (0,2,0), (0,2,1), (0,3,0))   #All supported versions of .thcx files
 
     def __init__ (self):
         """Creates a new drawing instance.
@@ -172,6 +173,8 @@ class ThanDrawing:
         self.thanObjects = thanObjsDef()
         self.thanElements2Repair = []    #Elements with wrong handle which must be repaired
         self.repairhandle = False        #If True, then elements with wrong handle will be repaired
+        self.Lgeodp = p_ggeod.params.fromEgsa87()  #Default geodetic projection is EGSA87
+        self.geodp = p_ggeod.params.toProj(self.Lgeodp) #Geodetic projections are BUILTIN in ThanCad
 
 
     def thanExpThc(self, fw):
@@ -187,16 +190,22 @@ class ThanDrawing:
         fw.writeEnd("ATTRIBUTES")
         fw.writeBeg("TEXTSTYLES")
         fw.pushInd()
-        for t in self.thanTstyles.itervalues():
+        for t in self.thanTstyles.values():  #works for python2,3
             pass
         fw.popInd()
         fw.writeEnd("TEXTSTYLES")
         fw.writeBeg("LINETYPES")
         fw.pushInd()
-        for t in self.thanLtypes.itervalues():
+        for t in self.thanLtypes.values():  #works for python2,3
             t.thanExpThc(fw)
         fw.popInd()
         fw.writeEnd("LINETYPES")
+
+        fw.writeBeg("GEODETICPROJECTION")
+        fw.pushInd()
+        p_ggeod.params.toFile(self.Lgeodp, fw)
+        fw.popInd()
+        fw.writeEnd("GEODETICPROJECTION")
 
         self.thanUnits.thanExpThc(fw)
         thanVarsExpThc(fw, self.thanVar, self.thanThcVersion)
@@ -214,10 +223,10 @@ class ThanDrawing:
 
         fr.readBeg("ATTRIBUTES")
         t = fr.readAtt("version")[0]
-        self.thanThcVersion = tuple(map(int, t.split(".")))
-        if self.thanThcVersion not in self.thanThcVersions: raise ValueError, "Unknown thc version: %r" % (self.thanThcVersion,)
-        self.viewPort = map(float, fr.readAtt("viewport"))
-        if len(self.viewPort) != 4: raise ValueError, "Invalid viewport"
+        self.thanThcVersion = tuple(map(int, t.split(".")))  #works for python2,3
+        if self.thanThcVersion not in self.thanThcVersions: raise ValueError("Unknown thc version: %r" % (self.thanThcVersion,))
+        self.viewPort = list(map(float, fr.readAtt("viewport")))    #works for python2,3
+        if len(self.viewPort) != 4: raise ValueError("Invalid viewport")
         fr.readEnd("ATTRIBUTES")
         fr.readBeg("TEXTSTYLES")
         fr.readEnd("TEXTSTYLES")
@@ -231,6 +240,12 @@ class ThanDrawing:
             if lt.thanName != "continuous":
                 self.thanLtypes[lt.thanName] = lt
         fr.readEnd("LINETYPES")
+
+        if (self.thanThcVersion >= (0,3,0)):   #Otherwise keep default geodetic projection
+            fr.readBeg("GEODETICPROJECTION")
+            self.Lgeodp = p_ggeod.params.fromFile(fr)
+            self.geodp = p_ggeod.params.toProj(self.Lgeodp)
+            fr.readEnd("GEODETICPROJECTION")
 
         self.thanUnits.thanImpThc(fr)
         d = thanVarsImpThc(fr, self.thanThcVersion)
@@ -248,7 +263,7 @@ class ThanDrawing:
         "Save all the elements of the drawing in thc format."
         fw.writeBeg("ELEMENTS")
         fw.pushInd()
-        for lay in self.thanLayerTree.dilay.itervalues():
+        for lay in self.thanLayerTree.dilay.values():   #works for python2,3
             layname = lay.thanGetPathname()
             for e in lay.thanQuad:
                 e.thanExpThc(fw, layname)
@@ -268,7 +283,7 @@ class ThanDrawing:
             fr.unread()
             if name == "/ELEMENTS": break
             class_ = thanElemClass.get(name)
-            if class_ is None: raise ValueError, "Unknown element type: %s" % name
+            if class_ is None: raise ValueError("Unknown element type: %s" % name)
             e1 = class_()
             if forceunload and name in thanImageClasses:
                 layname = e1.thanImpThc(fr, self.thanThcVersion, forceunload)
@@ -276,7 +291,7 @@ class ThanDrawing:
                 layname = e1.thanImpThc(fr, self.thanThcVersion)
             if layname != laynamecur:
                 lt.thanCur = lt.thanFindic(layname)
-                if lt.thanCur is None: raise ValueError, "Layer %s was not found in layer hierarchy" % (layname,)
+                if lt.thanCur is None: raise ValueError("Layer %s was not found in layer hierarchy" % (layname,))
                 laynamecur = layname
             self.thanElementAdd(e1)
         fr.readEnd("ELEMENTS")
@@ -325,16 +340,16 @@ class ThanDrawing:
             if self.repairhandle:
                 elem.handle, tag = -1, "-1"
                 self.thanElements2Repair.append(elem)    #Elements with wrong handle which must be repaired
-                print "New element added has illegal handle: %s" % (elem.handle,)
+                print("New element added has illegal handle: %s" % (elem.handle,))
             else:
                 elem.handle, tag = self.__idTag.new2()
         else:
             elem1 = self.thanTagel.get(elem.handle)
             if elem1 is not None:
-                if not self.repairhandle: raise IndexError, "New element added has the same tag/handle with existing element: %s" % (elem.handle,)
+                if not self.repairhandle: raise IndexError("New element added has the same tag/handle with existing element: %s" % (elem.handle,))
                 elem.handle, tag = -1, "-1"
                 self.thanElements2Repair.append(elem)    #Elements with wrong handle which must be repaired
-                print "New element added has the same tag/handle with existing element: %s" % (elem.handle,)
+                print("New element added has the same tag/handle with existing element: %s" % (elem.handle,))
             else:
                 tag = self.__idTag.addprefix(elem.handle)
         if elem.thanTkCompound > 1:
@@ -367,9 +382,11 @@ class ThanDrawing:
 
     def thanRepairHandles(self):
         "Repair handles of elements with wrong handles."
+        del self.thanTagel["-1"]   #At least one element was added with tag "-1"  #Thanasis2015_09_29
         for elem in self.thanElements2Repair:
             elem.handle, tag = self.__idTag.new2()
             elem.thanTags = (tag,) + elem.thanTags[1:]
+            self.thanTagel[elem.thanTags[0]] = elem                               #Thanasis2015_09_29
 
 #===========================================================================
 
@@ -425,10 +442,11 @@ class ThanDrawing:
 
 #------Initialise min,max with first element
 
-        if lays == "all": lays = self.thanLayerTree.dilay.values()
-        lays = [(lay.thanAtts["draworder"].thanVal, lay) for lay in lays]
-        lays.sort()
-        lays = [lay for i,lay in lays]
+        if lays == "all": lays = list(self.thanLayerTree.dilay.values())   #works for python2,3
+        #lays = [(lay.thanAtts["draworder"].thanVal, lay) for lay in lays]
+        #lays.sort()
+        #lays = [lay for i,lay in lays]
+        lays.sort(key=lambda lay: lay.thanAtts["draworder"].thanVal)
         for lay in lays:
             if lay.thanAtts["frozen"].thanVal: continue
             for e in lay.thanQuad:
@@ -440,7 +458,7 @@ class ThanDrawing:
             else: continue
             break
         else:
-            print "no elements found in active layers"
+            print("no elements found in active layers")
             self.thanAreaIterated = (None, None, None, None)    # No limit in all directions
             self.xMinAct = self.yMinAct = self.xMaxAct = self.yMaxAct = None
             return    # Drawing has no elements in active layers
@@ -563,6 +581,18 @@ class ThanDrawing:
         self.thanTouch()
 
 
+    def thanPointMirSel(self, elems, c1):
+        "Mirrors the selected elements with respect to a point."
+        ThanElement.thanPointMirSet(c1)
+        for e in elems:
+            e.thanPointMir()
+            if e.thanXymm[0] < self.xMinAct: self.xMinAct = e.thanXymm[0]
+            if e.thanXymm[1] < self.yMinAct: self.yMinAct = e.thanXymm[1]
+            if e.thanXymm[2] > self.xMaxAct: self.xMaxAct = e.thanXymm[2]
+            if e.thanXymm[3] > self.yMaxAct: self.yMaxAct = e.thanXymm[3]
+        self.thanTouch()
+
+
     def thanScaleSel(self, elems, cc, fact):
         "Scales the selected elements."
         if fact == 1.0: return
@@ -607,7 +637,7 @@ class ThanDrawing:
         for e in elems:
             elay.setdefault(e.thanTags[1], set()).add(e)
             del self.thanTagel[e.thanTags[0]]
-        for tlay,eset in elay.iteritems():
+        for tlay,eset in elay.items():   #works for python2,3
             lay = taglay[tlay]
             lay.thanQuad -= eset
         self.thanTouch()
@@ -673,7 +703,7 @@ class ThanDrawing:
         dxf.than = than = p_ggen.Struct()
         than.pointsize = 0.14       #cm
         than.scale = 500.0 / 100.0  #scale 1:500
-        for lay in self.thanLayerTree.dilay.itervalues():
+        for lay in self.thanLayerTree.dilay.values():   #works for python2,3
             layname = lay.thanGetPathname("__")
             dxf.thanDxfSetLayer(layname)
             than.layname = layname  #Active layername is needed by namedpoint
@@ -706,7 +736,7 @@ class ThanDrawing:
         "Exports all the linear elements of the drawing to syk file."
         than = p_ggen.Struct("ThanCad .syk file and options container")
         than.write = fSyk.write
-        for lay in self.thanLayerTree.dilay.itervalues():
+        for lay in self.thanLayerTree.dilay.values():   #works for python2,3
             than.layname = lay.thanGetPathname("__")
             for e in lay.thanQuad:
                 e.thanExpSyk(than)
@@ -719,7 +749,7 @@ class ThanDrawing:
         than.write = fSyk.write
         than.ibr = 0
         than.form = "THC%07d%15.3f%15.3f%15.3f\n"
-        for lay in self.thanLayerTree.dilay.itervalues():
+        for lay in self.thanLayerTree.dilay.values():   #works for python2,3
             than.layname = lay.thanGetPathname("__")
             for e in lay.thanQuad:
                 e.thanExpBrk(than)
@@ -733,7 +763,7 @@ class ThanDrawing:
         than.ibr = 0
         than.form = "THC%07d%15.3f%15.3f%15.3f\n"     #normal point
         than.formnam = "%-10s%15.3f%15.3f%15.3f\n"    #named point
-        for lay in self.thanLayerTree.dilay.itervalues():
+        for lay in self.thanLayerTree.dilay.values():    #works for python2,3
             than.layname = lay.thanGetPathname("__")
             for e in lay.thanQuad:
                 e.thanExpSyn(than)
@@ -748,7 +778,7 @@ class ThanDrawing:
         than.form = "THC%07d"     #normal point
 #        p_gimgeo.writeKmlInit(than.kml)
         than.kml = p_gimgeo.ThanKmlWriter(fSyk)
-        for lay in self.thanLayerTree.dilay.itervalues():
+        for lay in self.thanLayerTree.dilay.values():  #works for python2,3
             than.layname = lay.thanGetPathname("__")
             for e in lay.thanQuad:
                 e.thanExpKml(than)
@@ -765,7 +795,7 @@ class ThanDrawing:
         x1 = y1 = 0.0
         x2 = y2 = 1.0
         than.ct.set((x1, y1, x2, y2), (0, 0, (x2-x1)*scale, (y2-y1)*scale))
-        for lay in self.thanLayerTree.dilay.itervalues():
+        for lay in self.thanLayerTree.dilay.values():   #works for python2,3
             lay.thanPdfSet(than)
             for e in lay.thanQuad:
                 e.thanPlotPdf(than)
@@ -796,7 +826,7 @@ class ThanDrawing:
         bcolpil = col2tuple(than.bcol, than.mode)
         if than.mode != "RGB": bcolpil = bcolpil[0]    #If gray or b/w PIL needs one integer
         than.im = p_gimage.new(than.mode, imsize, bcolpil)
-        if isinstance(than.im, p_gimage.ThanImageMissing): raise ValueError, "Python module Image was not found"
+        if isinstance(than.im, p_gimage.ThanImageMissing): raise ValueError("Python module Image/Pillow was not found")
         ib, ih = than.im.size
         than.viewPort = x1, y1, x2, y2 = self.__roundCenter(self.viewPort, (0, ih, ib, 0))
         than.dc = p_gimage.Draw(than.im)
@@ -813,14 +843,15 @@ class ThanDrawing:
 #        f = p_gimage.load_path("/home/a12/work/tcadtree.23/grhelv-b-10.pil")
 #        than.font = f
 
-        lays = self.thanLayerTree.dilay.values()
-        lays = [(lay.thanAtts["draworder"].thanVal, lay) for lay in lays]
-        lays.sort()
-        lays = [lay for i,lay in lays]
+        lays = list(self.thanLayerTree.dilay.values())   #works for python2,3
+        #lays = [(lay.thanAtts["draworder"].thanVal, lay) for lay in lays]
+        #lays.sort()
+        #lays = [lay for i,lay in lays]
+        lays.sort(key=lambda lay: lay.thanAtts["draworder"].thanVal)
         for lay in lays:
             if lay.thanAtts["frozen"].thanVal: continue
             lay.thanPilSet(than, dpi)
-            print "PIL: outline=", than.outline
+            print("PIL: outline=", than.outline)
             than.width  = int(than.rwidth + 0.5)
             than.widthline = int((than.width+1)/2)               # Get around PIL bug for line width
             i2 = int(than.width/2)
@@ -870,4 +901,4 @@ class ThanDrawing:
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

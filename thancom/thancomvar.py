@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -23,23 +23,26 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes various commands.
 """
 
+from __future__ import print_function
+#from past.builtins import xrange
+from p_ggen.py23 import xrange
 from math import pi
-import tkFont
+import tkinter
 import p_ggen, p_gtkwid
-import thandr, thancomsel, thantkdia, thanlayer
+import thandr, thantkdia, thanlayer
 from thanvers import tcver
 from thanvar import Canc
 from thantrans import T, thanLangSetall
-import thanundo
-from thancomfile import thanTxtopen
-from thancommod import thanModCanc, thanModCancSel, thanModEnd
 from thanopt import thancadconf
+from . import thancomsel, thanundo
+from .thancomfile import thanTxtopen
+from .thancommod import thanModCanc, thanModCancSel, thanModEnd
 
 
 def thanVarLang(proj):
@@ -47,7 +50,7 @@ def thanVarLang(proj):
     res = proj[2].thanGudGetOpts("Enter language (en=english/gr=greek) <en>:",
         default="en", fullopt=True, options=("en", "gr"))
     if res == Canc: return proj[2].thanGudCommandCan()
-    print "new lang=", res
+    #print "new lang=", res
     thanLangSetall(res)
     proj[2].thanGudCommandEnd("Please restart ThanCad to complete the translation.", "info")
 
@@ -128,7 +131,7 @@ def thanVarScriptDo(proj, fr):
     while True:
         while not cmd.thanWaitingInput:
             dc.update()
-        try: com1 = coms.next()
+        try: com1 = next(coms)
         except StopIteration: break
         win.thanScheduler.thanSchedClear()    # The previous command is cleared; breaks some tk gui commands
         cmd.thanEnter(com1)
@@ -147,7 +150,7 @@ def thanFormLay(proj):
     "Shows interactive window with layer tree in order to manipulates layers."
     from thanlayer.thanlayatts import thanChangedAtts
     newcl, newroot = thanundo.thanLtClone(proj)
-    print "newroot"
+    #print "newroot"
     pre(newroot)
     w = thantkdia.ThanDialogLay(proj[2],
         objs=[newroot], current=newcl,
@@ -170,7 +173,7 @@ def thanFormLay(proj):
         proj[2].thanGudCommandCan()
 
 def pre(lay):
-    print "%s '%s' '%s'" % (lay.thanAtts[thanlayer.THANNAME].thanVal, lay.thanAtts["expand"].thanVal, lay.thanAtts["expand"].thanPers)
+    print("%s '%s' '%s'" % (lay.thanAtts[thanlayer.THANNAME].thanVal, lay.thanAtts["expand"].thanVal, lay.thanAtts["expand"].thanPers))
     for lay in lay.thanChildren: pre(lay)
 
 def __formLayUndo(proj, oldcl, oldroot):
@@ -178,7 +181,7 @@ def __formLayUndo(proj, oldcl, oldroot):
 #The following commented code is broken, since a whole subhierarchy of layers
 #may have been moved to another parent
 #    oldleaflayers = {}
-#    for lay,atts in newleaflayers.iteritems():
+#    for lay,atts in newleaflayers.items():   #works for python2,3
 #        names = lay.thanGetPathname().split("/")
 #        lay = oldroot.thanFind(names)
 #        natts = dict((a, lay.thanAtts[a].thanAct) for a in atts)
@@ -266,7 +269,7 @@ def thanList(proj):
 
     if res == "o":                      #List objects
         thanModCancSel(proj)            #The user did not select anything so cancel current (empty) selection
-        for name, objs in proj[1].thanObjects.iteritems():
+        for name, objs in proj[1].thanObjects.items():  #works for python2,3
             for obj in objs:
                 obj.thanList(than)
     else:                               #List elements
@@ -280,20 +283,20 @@ def thanList(proj):
 
 def thanHelpAbout(proj):
     "Shows brief information about the program."
-    font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
+    font1 = tkinter.font.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
     p_gtkwid.thanGudHelpWin(proj[2], tcver.about, "%s %s" % (T["About"], tcver.name),
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 
 
 def thanHelpHelp(proj):
-    font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
+    font1 = tkinter.font.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
     p_gtkwid.thanGudHelpWin(proj[2], tcver.help, tcver.name+" "+T["Help"],   # (Gu)i (d)ependent
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 
 def thanHelpGpl (proj):
-    font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
+    font1 = tkinter.font.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
     p_gtkwid.thanGudHelpWin(proj[2], tcver.license[2], tcver.name+" "+T["GPL"],   # (Gu)i (d)ependent
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
@@ -334,7 +337,7 @@ def thanDevCm(proj):
 
 def thanDevCmdsave(proj):
     "Saves the content of the command window to a txt file."
-    import thancomfile
+    from . import thancomfile
     _, fout = thancomfile.thanTxtopen(proj, T["Save command window text"], mode="w")
     if fout == Canc: return proj[2].thanGudCommandCan()
     fout.write(proj[2].thanCom.thanGet())
@@ -352,10 +355,11 @@ def __AddElem(proj, elemClass, *args, **kw):
 
 def thanDevTrans(proj):
     "Save the translation report to a file."
-    import thancomfile, thantrans
+    import thantrans
+    from . import thancomfile
     _, fout = thancomfile.thanTxtopen(proj, T["Save translation report"], mode="w")
     if fout == Canc: return proj[2].thanGudCommandCan()
-    for t, Ti in thantrans.thanTransAll.iteritems():
+    for t, Ti in thantrans.thanTransAll.items():   #works for python2,3
         fout.write("%s:\n" % t)
         Ti.thanReport(fout)
         fout.write("\n\n\n")
@@ -369,7 +373,7 @@ def thanDevHandle(proj):
     n = 100
     prt = proj[2].thanPrt
     prt("%7s %-7s %-7s %r" % ("Handle", "Tag", "ElemTag", "Element"), "info")
-    for h,e in itertools.islice(proj[1].thanTagel.iteritems(), n):
+    for h,e in itertools.islice(proj[1].thanTagel.items(), n):   #works for python2,3
         prt("%7d %-7s %-7s %r" % (e.handle, h, e.thanTags[0], e))
     proj[2].thanGudCommandEnd()
 
@@ -384,7 +388,7 @@ def thanFractal(proj):
     dwav = proj[2].thanGudGetFloat(T["Color difference (enter=+20): "], 20.0)
     if dwav == Canc: return proj[2].thanGudCommandCan()
     proj[2].thanPrt(T["Please wait.."])
-    print width, dwav, cor
+    #print width, dwav, cor
     fractal(proj,  width, dwav, cor)
 #    fractal(proj,  512,  20.0, cor)   #"cred.jpg"
 #    fractal(proj,  512, -20.0, cor)   #"cblue.jpg"
@@ -427,10 +431,84 @@ def __backgrestore(proj, col):
     #Thus all the layers with black or white colour must be drawn again
     thancadconf.thanColBack = col
     proj[2].thanCanvas.config(background=col.thanTk)
-    for tlay,lay in proj[1].thanLayerTree.dilay.iteritems():
+    for tlay,lay in proj[1].thanLayerTree.dilay.items():  #works for python2,3
         if lay.thanAtts["frozen"].thanVal: continue   #There are no elements of frozen layers on the canvas
         sc = str(lay.thanAtts["moncolor"])
         if sc != "black" and sc != "white": continue
         scoli, fill = lay.thanGetColour()
         proj[2].thanGudGetSelLayerx(tlay)                     #Select all layer's active elements on the canvas and..
         proj[2].thanGudSetSelColorx(col=scoli, fillcol=fill)  #..Change their colour
+
+
+import p_gimgeo
+import thantk, thansupport
+class Dfr(tkinter.Toplevel):
+    def __init__(self, proj, fn, fr, *args, **kw):
+        tkinter.Toplevel.__init__(self, proj[2], *args, **kw)
+        self.thanProj = proj
+        self.title(proj[0].basename()+" - "+fn.basename())
+        self.txt = p_gtkwid.ThanText(self)
+        self.txt.grid(sticky="wesn")
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.txt.thanAppend(fr.read())
+        self.txt.bind("<Double-Button-1>", self.dfrOnDClick)
+        thantk.createTags((self.txt,))
+        self.cps = []        #Points that we made circles at
+        fn = self.thanProj[0].parent / self.thanProj[0].namebase + ".kml"
+        self.kmlw = p_gimgeo.ThanKmlWriter(fn)
+        #self.protocol("WM_DELETE_WINDOW", self.destroy) # THIS IS NOT NEEDED (IT IS ACTUALLY WRONG)..
+                                                         # ..destroy()) is automatically called when window is deleted
+
+    def dfrOnDClick(self, evt):
+        pos = "@%d,%d" % (evt.x, evt.y)
+        t = self.txt.thanGetPart(pos+"linestart", pos+"lineend")
+        #print t
+        try:
+            dl = t.split()
+            xp, yp = float(dl[0]), float(dl[1])
+        except (ValueError, IndexError):
+            return
+        #print xp, yp
+        cp = list(self.thanProj[1].thanVar["elevation"])
+        cp[:2] = xp, yp
+
+        laydfr = thansupport.thanToplayerCurrent(self.thanProj, "dfr", current=True, moncolor="red")
+        elem = thandr.ThanCircle()
+        elem.thanSet(cp, 1000.0)
+        self.thanProj[1].thanElementAdd(elem)             # thanTouch is implicitly called
+        elem.thanTkDraw(self.thanProj[2].than)
+        self.cps.append(cp)
+        fn = self.thanProj[0].parent / self.thanProj[0].namebase + ".kml"
+        kmlw = p_gimgeo.ThanKmlWriter(fn)
+        kmlw.thanSetProjection(self.thanProj[1].geodp)
+        fw = open(fn.parent / fn.namebase + ".syn.sel", "w")
+        for i,cp in enumerate(self.cps):
+            kmlw.writePlacemark("THC"+str(i+1), cp)
+            fw.write("%-10s%15.3f%15.3f\n" % ("THC"+str(i+1), cp[0], cp[1]))
+        kmlw.close()
+        fw.close()
+
+        xymm = list(elem.getBoundBox())
+        dx, dy = xymm[2]-xymm[0], xymm[3]-xymm[1]
+        xymm[0] -= 5*dx; xymm[2] += 5*dx
+        xymm[1] -= 5*dy; xymm[3] += 5*dy
+        self.thanProj[1].viewPort[:] = self.thanProj[2].thanGudZoomWin(xymm)
+        self.thanProj[2].thanAutoRegen(regenImages=True)
+
+    def destroy(self):
+        "Break circular references."
+        #print "destroy called"
+        del self.txt, self.thanProj
+        tkinter.Toplevel.destroy(self)
+
+
+def thanDfr(proj):
+    "Open a dfr file which contains coordinates."
+    fn, fr = thanTxtopen(proj, "Please select .dfr file", suf=".dfr", mode="r", initialfile=None, initialdir=None)
+    if fn == Canc: return proj[2].thanGudCommandCan()
+    top = Dfr(proj, fn, fr)
+    fr.close()
+    proj[1].thanDoundo.thanAdd("dfr", p_ggen.doNothing, (),
+                                      p_ggen.doNothing, ())
+    proj[2].thanGudCommandEnd()

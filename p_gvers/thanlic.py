@@ -664,3 +664,57 @@ rented, leased, copied or transfered to.
 """
         lic = lic_short
     return [lic_name, lic_short, lic]
+
+#===========================================================================
+
+def STAMOS_COM(lang=-1):        #lang==-1 ->Greek, lang==-2 -> English
+    lic_name = "Stamos Commercial License"
+    if lang == -1:
+        lic_short = u"""\
+    Το πρόγραμμα αποτελεί πνευματική ιδιοκτησία του Θανάση Στάμου. Το πρόγραμμα
+συντάχθηκε για ιδία χρήση, δηλαδή για χρήση από το Θανάση Στάμο και τους
+συνεργάτες του (για όσο διαρκεί η συνεργασία), στους υπολογιστές και στα γραφεία
+του ιδίου και των συνεργατών του.
+    Το πρόγραμμα δεν είναι εμπορικό και ΑΠΑΓΟΡΕΥΕΤΑΙ η χρήση του προγράμματος
+από οποιονδήποτε άλλο σε οποιοδήποτε άλλο μέρος. Εκτός των άλλων,
+ΑΠΑΓΟΡΕΥΕΤΑΙ και η αντιγραφή, μεταβίβαση, πώληση, ενοικίαση, leasing ή άλλη
+χρήση του προγράμματος προς αποκόμιση άμεσου ή έμμεσου οικονομικού οφέλους."""
+        lic = lic_short
+    else:
+        lic_short = u"""\
+    This program is intellectual property of Thanasis Stamos (copyright holder) and
+is protected by Greek law and international treaties.
+
+Provided that the Licensee of this program has paid the license fees, the Licensee:
+1. Gets a non-exclusive license to use this program.
+2. May install the program at most 3 computers which belong to the Licensee.
+3. May not execute the program in more than 1 computers at the same time.
+
+Other than allowed by this license, the use of the program by anyone else in any
+other computers is strictly prohibited. The program can not, by any means, be sold,
+rented, leased, copied or transfered to.
+
+    The Licensee agrees that he/she will use this program according to Greek law
+and/or any other jurisdiction that may apply to the Licensee. If the program
+is used against the law, the sole responsible for any consequences is the
+Licensee; the Licensee agrees that the copyright holder can not be held
+repsonsible in any way.
+
+THE PROGRAM IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
+OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS
+TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH THE LICENSOR. SHOULD THE
+PROGRAM PROVE DEFECTIVE, THE LICENSOR ASSUMES THE COST OF ALL NECESSARY SERVICING,
+REPAIR OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, BE LIABLE TO YOU FOR DAMAGES,
+INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING
+OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED
+TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY
+YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
+PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES.
+"""
+        lic = lic_short
+    return [lic_name, lic_short, lic]

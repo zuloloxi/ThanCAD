@@ -1,7 +1,7 @@
 ##############################################################################
-# ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+# ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 # 
-# Copyright (C) 2001-2014 Thanasis Stamos, November 15, 2014
+# Copyright (C) 2001-2016 Thanasis Stamos, June 19, 2016
 # Athens, Greece, Europe
 # URL: http://thancad.sourceforge.net
 # e-mail: cyberthanasis@excite.com
@@ -21,7 +21,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
 """\
-ThanCad 0.2.4 "Valencia": n-dimensional CAD with raster support for engineers
+ThanCad 0.3.0 "Oberpfaffenhofen": n-dimensional CAD with raster support for engineers
 
 This module defines the ellipse element.
 """
@@ -31,9 +31,9 @@ from p_gmath import (dpt, thanNearx, thanNear2, ellipse2Line, ellipse5Lsm, ellip
                      ellipse5Fit, ellipse4Fit, PI05, PI2)
 from thanvar import thanExtendNodeDims
 from thantrans import T
-from thanline import ThanCurve, ThanLine
-from thanelem import ThanElement
-from thanpoint import ThanPoint
+from .thanline import ThanCurve, ThanLine
+from .thanelem import ThanElement
+from .thanpoint import ThanPoint
 
 
 class ThanEllipse(ThanCurve):
@@ -58,6 +58,9 @@ class ThanEllipse(ThanCurve):
             self.theta1 = theta1 % PI2        # radians assumed
             self.theta2 = theta2 % PI2        # radians assumed
             if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
+        self.theta1 = pi/6        ####################
+        self.theta2 = pi/2+pi/4   ####################
+        self.full = False         ####################
         self.phi = dpt(phi)
         self.spin = spin             #By default we assume counterclockwise (1)
 #        self.setBoundBoxRect(cc[0], cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
@@ -92,6 +95,97 @@ class ThanEllipse(ThanCurve):
         self.cc = self.thanRotateXy(self.cc)
         self.phi = dpt(self.phi + self.rotPhi)
         self.setBoundBoxRect(self.cc[0], self.cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
+
+
+    def thanMirror(self):
+        "Mirrors the element within XY-plane with predefined point and unit vector."
+        cs = []
+        cosf = cos(self.phi)
+        sinf = sin(self.phi)
+        for om in pi, 0, self.theta1, self.theta2:
+            x = self.a*cos(om)
+            y = self.b*sin(om)
+            xt = x*cosf - y*sinf
+            yt = x*sinf + y*cosf
+            cs.append((self.cc[0]+xt, self.cc[1]+yt))
+        ca, cb = self.thanMirrorXy(cs[0]), self.thanMirrorXy(cs[1])
+        self.phi = atan2(cb[1]-ca[1], cb[0]-ca[0])
+        self.cc = self.thanMirrorXy(self.cc)
+        if not self.full: 
+            #self.__mirrorThetas(cs)
+            self.theta2, self.theta1 = (-self.theta1) % PI2, (-self.theta2)%PI2  #See documetation of __mirrorThetas()
+            if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
+        self.setBoundBoxRect(self.cc[0], self.cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
+
+    def __mirrorThetas(self, cs):
+            """Compute the mirror of thetas.
+
+            Ater running this function some times, we realised that the thetas
+            become negative. Also to keep the notation that the arc is draw, 
+            counterclokwise from theta1 to theta2, we swap theta1 and theta2.
+            """
+            print("thanMirror: original: theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
+            print("thanMirror: original: ca, cb=", cs[2], cs[3])
+            ca, cb = self.thanMirrorXy(cs[2]), self.thanMirrorXy(cs[3])
+            print("thanMirror: after   : ca, cb=", ca, cb)
+            cosf = cos(-self.phi)
+            sinf = sin(-self.phi)
+            oms = []
+            for xt,yt in ca, cb:
+                xt = xt - self.cc[0]
+                yt = yt - self.cc[1]
+                x = xt*cosf - yt*sinf
+                y = xt*sinf + yt*cosf
+                cosom = x/self.a
+                sinom = y/self.b
+                oms.append(atan2(sinom, cosom)%PI2)
+            self.theta2, self.theta1 = oms
+            print("thanMirror: after   : theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
+            if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
+            print("thanMirror: after   : theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
+
+
+    def thanPointMir(self):
+        "Mirrors the element within XY-plane with respect to predefined point."
+        cs = []
+        cosf = cos(self.phi)
+        sinf = sin(self.phi)
+        for om in pi, 0, self.theta1, self.theta2:
+            x = self.a*cos(om)
+            y = self.b*sin(om)
+            xt = x*cosf - y*sinf
+            yt = x*sinf + y*cosf
+            cs.append((self.cc[0]+xt, self.cc[1]+yt))
+        ca, cb = self.thanPointMirXy(cs[0]), self.thanPointMirXy(cs[1])
+        self.phi = atan2(cb[1]-ca[1], cb[0]-ca[0])
+        self.cc = self.thanPointMirXy(self.cc)
+        #if not self.full:  #See documetation of __pointMirThetas()
+        #    self.__pointMirThetas(cs)
+        self.setBoundBoxRect(self.cc[0], self.cc[1], 2.0*self.a, 2.0*self.b, self.phi, center=True)
+
+    def __pointMirThetas(self, cs):
+            """Compute the point mirror of thetas.
+
+            Ater running this function some times, we realised that the thetas
+            remain the same!
+            """
+            print("thanPointMir: original: theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
+            ca, cb = self.thanPointMirXy(cs[2]), self.thanPointMirXy(cs[3])
+            cosf = cos(-self.phi)
+            sinf = sin(-self.phi)
+            oms = []
+            for xt,yt in ca, cb:
+                xt = xt - self.cc[0]
+                yt = yt - self.cc[1]
+                x = xt*cosf - yt*sinf
+                y = xt*sinf + yt*cosf
+                cosom = x/self.a
+                sinom = y/self.b
+                oms.append(atan2(sinom, cosom)%PI2)
+            self.theta1, self.theta2 = oms
+            print("thanPointMir: after   : theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
+            if self.theta2 < self.theta1: self.theta2 += PI2   # Ensure theta2>=theta1
+            print("thanPointMir: after   : theta1, theta2=", self.theta1*180/pi, self.theta2*180/pi)
 
 
     def thanChelev(self, z):
@@ -242,12 +336,12 @@ class ThanEllipse(ThanCurve):
     def thanImpThc1(self, fr, ver):
         "Read the ellipse from thc format."
         cc = fr.readNode()                   #May raise ValueError, IndexError, StopIteration
-        a, b = map(float, fr.next().split()) #May raise ValueError, IndexError, StopIteration
-        theta1, theta2 = map(float, fr.next().split()) #May raise ValueError, IndexError, StopIteration
-        phi = float(fr.next())               #May raise ValueError, StopIteration
-        full = bool(int(fr.next()))          #May raise ValueError, StopIteration
-        spin = int(fr.next())                #May raise ValueError, StopIteration
-        if spin not in (1, -1): raise ValueError, "spin must be 1, or -1"
+        a, b = map(float, next(fr).split()) #May raise ValueError, IndexError, StopIteration   #works for python2,3
+        theta1, theta2 = map(float, next(fr).split()) #May raise ValueError, IndexError, StopIteration   #works for python2,3
+        phi = float(next(fr))               #May raise ValueError, StopIteration
+        full = bool(int(next(fr)))          #May raise ValueError, StopIteration
+        spin = int(next(fr))                #May raise ValueError, StopIteration
+        if spin not in (1, -1): raise ValueError("spin must be 1, or -1")
         self.thanSet(cc, a, b, theta1, theta2, phi, full, spin)
 
 

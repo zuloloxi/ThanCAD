@@ -3,6 +3,16 @@ import base64
 k = []
 
 
+def than():
+    f = '  ахамасиос сталос - коцислийо циа лгвамийоус '
+    f = ffff(f)
+    print f
+    f = 'ISTCzcrPx9jK09Ql3NbH0dDXITIpzdXIytfNztPRJsjKxSHR0NnH0srO0NrcIg=='
+    f = gggg(f)
+    print "|%s|" % (f,)
+    print "|%s|" % (fff(),)
+
+
 def pre():
     from math import pi
     a = pi - int(pi)

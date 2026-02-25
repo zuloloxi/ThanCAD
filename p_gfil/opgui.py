@@ -22,7 +22,7 @@ class Root(Tkinter.Tk, p_gtkuti.ThanFontResize):
         Tkinter.Tk.__init__(self, *args, **kw)
         self.title(p_ggen.thanUnicode(descp))
         self.thanResizeFont()
-        self.deficon()
+        p_gtkuti.thanDeficon(self, iconxbm)
         thanFormTkcol = "#%02x%02x%02x"
         col = thanFormTkcol % (254, 214, 254)
         self.tinfo = p_gtkwid.ThanScrolledText(root, font=self.thanFonts[0], readonly=True, width=100, bg="orange")
@@ -38,19 +38,6 @@ class Root(Tkinter.Tk, p_gtkuti.ThanFontResize):
         except: print "bad geometry:", geom; pass
         self.timep = time.time()
         self.dtimep = 5.0
-
-    def deficon(self):
-        "Decorates the window with the thancad icon."
-        global iconxbm
-        if iconxbm == None:
-            b = "@"+(p_ggen.path(sys.path[0]).parent/"thanapps.dir"/"than05.xbm")
-            try:    self.iconbitmap(b)
-            except: pass
-            else: return
-            b = "@"+(p_ggen.path(sys.path[0]).parent/"than05.xbm")  #This is when the script is run via py2exe or Freeze..
-            try:    self.iconbitmap(b)                              #..where sys.path[0] has an additional subdirectory at the end
-            except: pass
-
 
     def __crmenus(self):
         "Creates a description of the desired menus in a list."

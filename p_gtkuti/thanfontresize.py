@@ -7,8 +7,10 @@ class ThanFontResize:
 
     def thanResizeFont(self, font=None):
         "Creates and sets font."
-        if font != None: font1 = font
-        else:            font1 = tkFont.Font(name="TkFixedFont", exists=True, size=10)
+        if font != None: 
+            if isinstance(font, tkFont.Font): font1 = font
+            else:                              font1 = tkFont.Font(name=font)
+        else:            font1 = tkFont.Font(name="TkFixedFont", exists=True, size=10)   # Negative size means size in pixels
         font2 = font1.copy()
         font2.config(weight=tkFont.BOLD)
         font3 = font2.copy()

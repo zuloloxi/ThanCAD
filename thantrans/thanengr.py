@@ -1,11 +1,12 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +22,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek.
 """
@@ -43,6 +43,9 @@ en2gr = \
 "&Open"                                           : u"Ανοιγμα",
 "Open &without images"                            : u"Ανοιγμα χωρίς εικόνες",
 "Opens an existing drawing with the images unloaded": u"Ανοίγει ένα υφιστάμενο σχέδιο με απόκρυψη των εικόνων",
+"Ins&ert"                                         : u"Εισαγωγή",
+"Inserts other drawings into current drawing"     : u"Εισάγει άλλα σχέδια μέσα στο τρέχον σχέδιο",
+"Choose files to insert"                          : u"Επιλέξτε αρχεία προς εισαγωγή",
 "&Save"                                           : u"Αποθήκευση",
 "Save"                                            : u"Αποθήκευση",
 "S&ave as"                                        : u"Αποθήκευση ως",
@@ -142,8 +145,12 @@ en2gr = \
 "&Clip image"                                     : u"Απόκρυψη περιθωρίων εικόνας",
 "Import &log Image"                               : u"Εισαγωγή εικόνας μορφής .log",
 "Import &tfw Image"                               : u"Εισαγωγή εικόνας μορφής .tfw",
-"Inserts images (tif) whose positions are defined in .tfw files": u"Εισάγει εικόνες (tif) των οποίων οι θέσεις καθορίζονται σε αρχεία .log",
-"Inserts images (bmp) whose positions are defined in .log files": u"Εισάγει εικόνες (tif) των οποίων οι θέσεις καθορίζονται σε αρχεία .tfw",
+"Import &GeoTIFF"                                 : u"Εισαγωγή εικόνας μορφής GeoTIFF",
+"Inserts TIFF images whose georeference is inside the TIFF":
+                                                    u"Εισάγει εικόνες TIFF η γεωαναφορά των οποίων είναι μέσα στο TIFF",
+"Inserts TIFF images whose georeference is defined in .tfw files":
+                                                    u"Εισάγει εικόνες TIFF η γεωαναφορά των οποίων καθορίζεται σε αρχεία .tfw",
+"Inserts BMP images whose georeference is defined in .log files": u"Εισάγει εικόνες BMP η γεωαναφορά των οποίων καθορίζεται σε αρχεία .log",
 "Import &Cadastre"                                : u"Εισαγωγή εικόνας κτηματολογίου",
 "Inserts Greek cadastre map image to its correct position using standardised file naming conventions":
     u"Εισάγει εικόνα εληνικού κτηματολογίου στη σωστή της θέση χρησιμοποιώντας προτυποποιημένη σύμβαση ονοματισμού αρχείων",
@@ -204,7 +211,6 @@ en2gr = \
 "&Dimension aligned"                              : u"Στοιχισμένη διάσταση",
 "&Engineering"                                    : u"Μηχανική",
 "&Grid"                                           : u"Κάναβος",
-"&Rectify Map"                                    : u"Ορθοαναγωγή χάρτη",
 
 "Load DE&Ms"                                      : u"Εισαγωγή ΨΜΕπ",
 "Loads DEMs (USGS format) stored in .tif files"   : u"Εισαγωγή Ψηφιακών Μοντέλων Επιφανείας (μορφή USGS) που είναι αποθηκευμένα σε αρχεία .tif",

@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines an object which reads a .dxf file and it creates
 ThanCad's elements to represent it in ThanCad.
@@ -37,6 +37,7 @@ from thandefs.thanatt import ThanAttCol
 from thanlayer import THANNAME
 from thanvar import ThanLayerError
 from thandr import *
+from thantrans import T
 
 COLSENT = ThanAttCol("0 222 255", inherit=False)  # This color does not exist in dxf and it is used as sentinel
                                                   # If one of already defined layers has this color, it will
@@ -56,13 +57,16 @@ class ThanCadDrSave(ThanDrWarn):
         self._elev = dr.thanVar["elevation"]
         self.ielems = self.ieldeg = 0
         self.t1 = self.t2 = time.time()
-        self.newelems = []                   # Records elements which are added to the drawing
+        self.newelems = []                   #Records elements which are added to the drawing
+        self.viewportDefined = False         #True if the viewport was defined by the caller (dxfVport())
 #-------Use already defined layers
         self.dxfLayers = {}   #This is just a cache; no need to fill it with existing layers (if not a new drawing)
 #       for lay in self._dr.thanLayerTree.thanRoot.thanChildren:
 #           nam = str(lay.thanAtts[THANNAME])
 #           col = "%03d" % lay.thanAtts["moncolor"].thanDxf()
 #           self.dxfLayers[nam, col] = self.dxfLayers[nam, None] = lay
+        self.ltunit = {}     #This dict saves the unit of the linetype as read from the dxf file
+        self.var = {}         #Global variables
 
 
     def addElem(self, e, handle=None):
@@ -99,9 +103,15 @@ class ThanCadDrSave(ThanDrWarn):
 #-------Add here code to put default color to layers with COLSENT
 
 
+    def dxfVars(self, v):
+        "Global variables of dxf file."
+        self.var.update(v)
+
+
     def dxfVport(self, name, x1, y1, x2, y2):
         "Saves a View Port."
         self._dr.viewPort[:] = (x1, y1, x2, x2)
+        self.viewportDefined = True    #Viewport  has been defined
         self._count()
 
 
@@ -112,7 +122,7 @@ class ThanCadDrSave(ThanDrWarn):
         try:
             v = str(atts["color"])
         except KeyError:
-            a["moncolor"] = a["plotcolor"] = COLSENT
+            a["moncolor"] = a["plotcolor"] = COLSENT     #COLSENT is a TahnAttCol instance
         else:
             a["moncolor"]  = ThanAttCol(v, inherit=False)
             a["plotcolor"] = ThanAttCol(v, inherit=False)
@@ -123,6 +133,16 @@ class ThanCadDrSave(ThanDrWarn):
         else:
             class_ = a["frozen"].__class__
             a["frozen"] = class_(v, False)
+        try:
+            v = str(atts["linetype"]).strip().lower()
+        except KeyError:
+            pass                  #default linetype is continuous
+        else:
+            class_ = a["linetype"].__class__
+            scale = self.var.get("LTSCALE", 1.0)
+            a["linetype"] = class_((v, self.ltunit.get(v, "mm"), scale))    #Unit "mm" is the default
+            if v not in self._dr.thanLtypes: #If not found then complain (thanlayer.thanTkSet replaces it with continuous)
+                self.prt(T["Unknown linetype '%s' is replaced with 'continuous'"] % (v,), "can1")
         self._count()
 
 
@@ -130,10 +150,12 @@ class ThanCadDrSave(ThanDrWarn):
         "Saves a line type; name is in lower letters and free of preceding and trailing blanks."
         ltypes1 = {"continuous", "bylayer", "byblock"} #bylayer, byblock are not real linetypes, just sentinels..
                                                        #..and continuous is automatically inside ThanCad
+        name = name.strip().lower()
         if name in ltypes1: return
         lt = ThanLtype()
-        lt.thanFromDxf(name, desc, elems)
+        unit = lt.thanFromDxf(name, desc, elems)
         self._dr.thanLtypes[name] = lt
+        self.ltunit[name] = unit
         self._count()
 
 
@@ -256,7 +278,7 @@ class ThanCadDrSave(ThanDrWarn):
         try:
             im = Image.open(filnam)
         except IOError, why:
-            self.prt("Error loading image from file %s\n    %s" % (filnam, why))
+            self.prt(T["Error loading image from file %s\n    %s"] % (filnam, why))
             im = ThanImageMissing(size=size)
         width, height = im.size
 
@@ -339,9 +361,9 @@ class ThanCadDrSave(ThanDrWarn):
         except ThanLayerError, why:
             pass
         name = "unknown"                               # Layer is invalid; create default
-        self.prt("Dxf layer '%s' can not be created and it is ignored:" % named)
+        self.prt(["Dxf layer '%s' can not be created and it is ignored:"] % named)
         self.prt("    %s" % why)
-        self.prt("    Layer '%s' is used instead." % name)
+        self.prt(t["    Layer '%s' is used instead."] % name)
         for lay in laypar.thanChildren:
             if name == str(lay.thanAtts[THANNAME]): return lay # Return existing default layer
         lay = laypar.thanChildNew(name)                # No error is expected here
@@ -383,7 +405,7 @@ class ThanCadDrSave(ThanDrWarn):
         if degenerate: self.ieldeg += 1
         if self.ielems % 1000 == 0 or force:
             self.t2 = time.time()
-            self.prt("%d elements, %d degenerate, %.1f sec" % (self.ielems, self.ieldeg, self.t2-self.t1))
+            self.prt(T["%d elements, %d degenerate, %.1f sec"] % (self.ielems, self.ieldeg, self.t2-self.t1))
             self.t1 = self.t2
 
 

@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes view commands.
@@ -133,10 +133,16 @@ def thanZoomExt(proj):
         return # No active (visible) elements; zoom all has no meaning
     v = dr.viewPort
     w = dr.xMinAct, dr.yMinAct, dr.xMaxAct, dr.yMaxAct
+    print "ThanZoomExt(): w=", w
     v[:] = proj[2].thanGudZoomWin(w)
+    print "ThanZoomExt(): v=", v
     proj[2].thanAutoRegen(regenImages=False)               # Zoom is possible, but another autoregen..
     w1 = dr.xMinAct, dr.yMinAct, dr.xMaxAct, dr.yMaxAct    # ..follows, thus no regenImages
-    if w != w1: v[:] = proj[2].thanGudZoomWin(w1)          # The previous regen changed xyMinMaxAct
+    if w != w1:
+        if thanNear2(w1[:2], w1[2:]):  #This means the coordinates are too big: w1 = (1e50, 1e50, 1e50, 1e50)
+            proj[2].thanGudCommandEnd(T["Element coordinates too big to auto zoom: %s\nPlease zoom manually"] % (w1,), "can")
+            return
+        v[:] = proj[2].thanGudZoomWin(w1)          # The previous regen changed xyMinMaxAct
     proj[2].thanAutoRegen(regenImages=True)                # This may not lead to a full regen, ..
     proj[2].thanGudCommandEnd()                            # ..but regenImages is needed.
 

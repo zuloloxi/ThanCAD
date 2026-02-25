@@ -1,27 +1,33 @@
-import sys, thanlic
+import sys, collections
+from p_ggen import ThanStub
+import thanlic
 from thanverstrans import T
 
 NA = T["(Not available)"]
+SENTCOM = 78*("#")
 
 
-def commentize(s):
+def commentize(s, encoding=None):   #encoding="iso-8859-7"):
     "Transform a multiline string s to python comment."
     dlines = s.split("\n")
-    sep = 77*("#")
+    for i in xrange(len(dlines)):
+        dlines[i] = "# " + dlines[i]
     for i in (0, -1):
-        if dlines[i].strip() == "": dlines[i] = sep
-        else: dlines.insert(i, sep)
-    for i in xrange(len(dlines)): dlines[i] = "# " + dlines[i]
+        if dlines[i].strip() == "#": dlines[i] = SENTCOM
+        else:                        dlines.insert(i, SENTCOM)
+    if encoding != None:
+        dlines.insert(0, "# -*- coding: %s -*-" % (encoding,))
     return "\n".join(dlines)
 
 
-
 class ThanVersion:
-  fields = "name,version,author,author_email,url,description,download_url,"\
-             "long_description,date,city,address1,address2,company,company_url,"\
-             "company_email,company_address1,company_address2,"\
-             "license,help,history,"\
-             "title,short_info,about,about_source".split(",")
+  fields = """name  version  author  author_email  url  description  download_url
+             long_description  date  dates  city  address1  address2  phone
+             copyright  company  company_url
+             company_email  company_address1  company_address2  company_phone
+             license  help  history
+             title  short_info  about  about_source""".split()
+# description should be an one line (short) description of the program
 
   def setup(self, **kw):
     "Sets information about the program."
@@ -37,7 +43,7 @@ class ThanVersion:
         addressx = self.address1
         emailx = self.author_email
     else:
-        authorx = self.company + "   ("+T["URL"]+": " + self.company_url + ")"
+        authorx = self.company
         addressx = self.company_address1
         emailx = self.company_email
 
@@ -46,22 +52,28 @@ class ThanVersion:
         if self.version != NA: self.title += " " + self.version
         if self.description != NA: self.title += ": " + self.description
 
+    if self.copyright == NA:
+        self.copyright = T["Copyright (C)"] + " "
+        if self.dates != NA: self.copyright += self.dates + " "
+        self.copyright += authorx
+        if self.date != NA: self.copyright += ", "+ self.date
+
     if self.short_info == NA:
-        self.short_info = self.title + "\n\n"+T["Copyright (C)"]+"  "
-        if self.date != NA: self.short_info += self.date
-        self.short_info += " " + authorx + "\n"
+        self.short_info = self.title + "\n\n"+self.copyright + "\n"
         if addressx != NA: self.short_info += addressx + "\n"
         self.short_info += T["URL"]+": " + self.url + "\n" + T["e-mail"]+": " +emailx
 
+    temp1 = self.about
     if self.about == NA:
         self.about = self.short_info
         if self.license != NA: self.about += "\n\n" + self.license[1]
         if self.help == NA: self.help = self.about
         else:               self.help = self.title + "\n" + self.help
+        temp1 = self.about   #temp1 is self.about without the history: for about_source
         if self.history != NA: self.about += "\n\nHistory\n" + self.history
 
     if self.about_source == NA:
-        self.about_source = commentize(self.about)
+        self.about_source = commentize(temp1)
 
     if self.author != NA:
         t = "\n\n" + 30*" " + self.author
@@ -91,9 +103,34 @@ class ThanVersion:
     p_gtkuti.thanGudHelpWin(win, self.license[2], self.license[0], font=font)
 
 
+  def helpMenu(self, win, font2=None):
+    "Create a minimal help menu."
+    s = ["Help"]
+    m = {}
+    m["Help"] = \
+        [ ("menu", "&Help", "", None, "help"),            # Menu Title
+          (ThanStub(self.tkHelp,    win, font2), "&Introduction", "Introduction to "+self.name),
+          (ThanStub(self.tkLicense, win, font2), "&License",      self.license[0]),
+          (ThanStub(self.tkAbout,   win, font2), "&About",        "Information about "+self.name),
+          ("endmenu",),
+        ]
+    return s, m
 
-##############################################################################
-##############################################################################
+
+  def toexeDetails(self, iconwin=None):
+        "Return details in the format of toexe program."
+        details = collections.defaultdict(str,
+            name        = self.name,
+#            version     = self.version,
+            version     = self.version.split()[0],    #Hack to get the number but not the text: 0.1.2 "xxx" ->0.1.2
+            description = self.description,
+            author      = self.author,
+            author_email= self.author_email,
+            url         = self.url,
+            iconwin     = iconwin)
+        return details
+
+
 
 if __name__ == "__main__":
  long_description = \
@@ -243,12 +280,14 @@ You can find information about GPL in:  http://www.gnu.org/licenses/gpl.html
  long_description  = long_description,
 
  date              = "January 10, 2004",
+ dates             = "2004-2013",
  city              = "Athens",
  address1          = "Athens, Greece, Europe",
  company           = "A. STAMOS S.A.",
  company_url       = "www.astamos.com",
  company_email     = "mail@astamos.com",
  company_address1  = "Athens, Greece, Europe",
+ company_phone     = "+210.7454606-7, fax +210.7254608",
  license           = thanlic.STAMOS_INTERNAL(),
  help              = help,
  history           = NA)

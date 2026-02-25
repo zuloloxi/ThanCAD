@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines the classes for layer attributes.
 """
@@ -94,8 +94,8 @@ class ThanAtt:
     def thanExpThc (self, fw, name):
         "Save the personal value and the inherit switch in .thc format."
         t = ("%s" % self.thanPers).strip()
-        if t == "": t = "+"       #Avoid empty strings as they can not be read by impthcx
-        fw.writeAtt(name, "%s %d" % (t, self.thanInher))
+        if t == "": t = "+"       #Avoid empty strings as they can not be read by impthc
+        fw.writeAtt(name, "%s %d" % (p_ggen.thanUnunicode(t), self.thanInher))
 
     def thanImpThc(self, fr, ver, name):
         "Read the personal value and the inherit switch from thc format."
@@ -105,7 +105,7 @@ class ThanAtt:
 
 
 class ThanAttLtype(ThanAtt):
-    "Linetype attribute; a tuple of the linetype pattern (dashes), unit and scale."
+    "Linetype attribute; a tuple of: the name of the linetype pattern (dashes), the unit, and the scale."
 
     def thanValSet(self, val):
         "Save the value as a tuple of a string, units and non negative double."
@@ -124,7 +124,8 @@ class ThanAttLtype(ThanAtt):
     def thanExpThc(self, fw, name):
         "Save the personal value and the inherit switch in .thc format."
         f = "%s  " + fw.formFloat + "  %d"
-        fw.writeAttb(name, self.thanPers[0], f % (self.thanPers[1], self.thanPers[2], self.thanInher))
+        namlt, unit, scale = self.thanPers
+        fw.writeAttb(name, p_ggen.thanUnunicode(namlt), f % (unit, scale, self.thanInher))
 
     def thanImpThc(self, fr, ver, name):
         "Read the personal value and the inherit switch from thc format."
@@ -145,7 +146,7 @@ class ThanAttTextb(ThanAtt):
     def thanExpThc (self, fw, name):
         "Save the personal value and the inherit switch in .thc format."
         t = ("%s" % self.thanPers).strip()
-        fw.writeAttb(name, t, "%d" % (self.thanInher,))
+        fw.writeAttb(name, p_ggen.thanUnunicode(t), "%d" % (self.thanInher,))
 
 
     def thanImpThc(self, fr, ver, name):

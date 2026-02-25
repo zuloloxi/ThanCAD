@@ -1,11 +1,12 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,14 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines the menus and the mechanism to create and update them.
 """
 import p_ggen, p_gtkuti
-import thanvers, thanopt
+import thanopt
+from thanvers import tcver
 from thantrans import T, Tmatch, Tphot, Tarch, Tcivil, Turban
 
 
@@ -114,7 +115,7 @@ def thanStandardMenus(B):
           (S(B, "saveas"), T["S&ave as"], T["Saves drawing into a file"]),
           (S(B, "close"),  T["&Close"],   T["Closes current drawing"]),
           ("-",),               # Separator
-          (S(B, "insert"), T["Ins&ert"],    T["Inserts a drawing into current drawing"]),
+          (S(B, "insert"), T["Ins&ert"],    T["Inserts other drawings into current drawing"]),
 #          (S(B, "insertunload"), T["Insert &without images"], T["Inserts a drawing with the images unloaded"]),
           ("-",),               # Separator
           (S(B, "pilout"), T["Export &Image"], T["Exports a raster image"]),
@@ -127,7 +128,7 @@ def thanStandardMenus(B):
 #
           ("-",),               # Separator
           ("-",),
-          (S(B, "quit"), T["E&xit"], "Terminate "+thanvers.thanCadName, "darkred"),
+          (S(B, "quit"), T["E&xit"], "Terminate "+tcver.name, "darkred"),
           ("endmenu",),
         ]
 
@@ -163,14 +164,14 @@ def thanStandardMenus(B):
           (S(B, "regen"),       T["Re&gen"],          "Regenerates screen"),
           ("endmenu",),
         ]
-
         m["Image"] = \
         [ ("menu", T["&Image"], ""), # Menu Title
-          (S(B, "imageattach"), T["Insert Raster &Image"], "Inserts a new image to the current drawing"),
-          (S(B, "imagelog"),    T["Import &log Image"], T["Inserts images (bmp) whose positions are defined in .log files"]),
-          (S(B, "imagegeo"),    T["Import &geotiff"],   T["Inserts a (tif) image whose position is defined in the image"]),
-          (S(B, "imagetfw"),    T["Import &tfw Image"], T["Inserts images (tif) whose positions are defined in .tfw files"]),
+          (S(B, "imageattach"), T["Insert Raster &Image"], T["Inserts a new image to the current drawing"]),
+          (S(B, "imagegeo"),    T["Import &GeoTIFF"],   T["Inserts TIFF images whose georeference is inside the TIFF"]),
+          (S(B, "imagetfw"),    T["Import &tfw Image"], T["Inserts TIFF images whose georeference is defined in .tfw files"]),
+          (S(B, "imagelog"),    T["Import &log Image"], T["Inserts BMP images whose georeference is defined in .log files"]),
           (S(B, "imagecadastre"), T["Import &Cadastre"],T["Inserts Greek cadastre map image to its correct position using standardised file naming conventions"]),
+          (S(B, "imagetiles"),  T["Import tiled Image"],T["Inserts a Digital Globe image split into multiple tiles"]),
           (S(B, "imagescan"),   T["&Scan Image"],       T["Acquires image from scanner"]),
           (S(B, "imageframe"),  T["Image &frame"],      T["Displays or not frames around images"]),
           ("-",),               # Separator
@@ -245,7 +246,9 @@ def thanStandardMenus(B):
         ]
         if thanFrape.ortho:
             m1.extend(
-            [ (S(B, "EngMapRect"),T["&Rectify Map"], "Rectifies a raster topographic map"),
+            [ (S(B, "EngMapRect"),Tphot["&Rectify Map"], Tphot["Rectifies a raster topographic map"]),
+              (S(B, "enggeoreference"),Tphot["G&eoreference Image"], Tphot["Image georeferencing with control points"]),
+              (S(B, "engorthoimage"),Tphot["&Orthoimage GDEM"], Tphot["Image orthorectification using global DEM"]),
             ])
         m1.extend(
         [ (S(B, "EngTrace"),  T["&Trace"],       "Traces a curve in a bitmap raster image"),
@@ -257,7 +260,7 @@ def thanStandardMenus(B):
           (S(B, "dtmz"),      T["DTM/DEM &Z"],       T["Computes and shows the z coordinate at an arbitrary point"]),
           (S(B, "dtmpoints"), T["Add Z to &Points"], T["Supplies z coordinates to existing points"]),
           (S(B, "dtmline"),   T["Add Z to &Lines"],  T["Supplies z coordinates to existing polylines"]),
-          (S(B, "triangulation"), T["Triangulation"],T["Creates and manages triangulation from (2D) points and lines."]),
+          (S(B, "triangulation"), T["Tr&iangulation"],T["Creates and manages triangulation from (2D) points and lines."]),
           ("-",),
         ])
         if thanFrape.civil:
@@ -408,7 +411,7 @@ def thanStandardMenus(B):
 
         m["Window"] = \
         [ ("menu", T["&Window"], ""),          # Menu Title
-#       m.append((self.thanParent.thanGudSetFocus, thanvers.thanCadName, thanvers.thanCadName+" main window"))
+#       m.append((self.thanParent.thanGudSetFocus, tcver.name, tcver.name+" main window"))
 #        for w, f in thanfiles.getOpened():
 #            m.append((w.thanGudSetFocus, f, f))
           ("endmenu",),
@@ -416,10 +419,10 @@ def thanStandardMenus(B):
 
         m["Help"] = \
         [ ("menu", T["&Help"], "", None, "help"),            # Menu Title
-          (S(B, "help"),  T["&Introduction"], "Introduction to "+thanvers.thanCadName),
+          (S(B, "help"),  T["&Introduction"], "Introduction to "+tcver.name),
           (S(B, "gpl"),   T["&GPL"],          "Gnu General Public License"),
           (S(B, "language"), "&Language",     "Change the language of ThanCad's interface"),
-          (S(B, "about"), T["&About"],        "Information about "+thanvers.thanCadName),
+          (S(B, "about"), T["&About"],        "Information about "+tcver.name),
           ("endmenu",),
         ]
         return s, m
@@ -445,13 +448,13 @@ def thanMainMenus(B):
 #-------recent files
 #
           ("-",),               # Separator
-          (S(B, "quit"), "E&xit", "Terminate "+thanvers.thanCadName, "darkred"),
+          (S(B, "quit"), "E&xit", "Terminate "+tcver.name, "darkred"),
           ("endmenu",),
         ]
 
         m["Window"] = \
         [ ("menu", "&Window", ""),          # Menu Title
-#       m.append((self.thanParent.thanGudSetFocus, thanvers.thanCadName, thanvers.thanCadName+" main window"))
+#       m.append((self.thanParent.thanGudSetFocus, tcver.name, tcver.name+" main window"))
 #        for w, f in thanfiles.getOpened():
 #            m.append((w.thanGudSetFocus, f, f))
           ("endmenu",),
@@ -459,17 +462,17 @@ def thanMainMenus(B):
 
         m["Help"] = \
         [ ("menu", "&Help", ""),            # Menu Title
-          (S(B, "help"),  "&Introduction", "Introduction to "+thanvers.thanCadName),
+          (S(B, "help"),  "&Introduction", "Introduction to "+tcver.name),
           (S(B, "gpl"),   "&GPL",          "Gnu General Public License"),
-          (S(B, "about"), "&About",        "Information about "+thanvers.thanCadName),
+          (S(B, "about"), "&About",        "Information about "+tcver.name),
           ("endmenu",),
         ]
         return s, m
 
 if __name__ == "__main__":
     import p_ggen
-    thanvers = p_ggen.Struct()
-    thanvers.thanCadName = "GREAT ThanCad"
+    tcver = p_ggen.Struct()
+    tcver.name = "GREAT ThanCad"
     thanMenusSeq, thanMenus = thanStandardMenus()
     for m in thanMenusSeq: assert m in thanMenus
     for m in thanMenus: assert m in thanMenusSeq

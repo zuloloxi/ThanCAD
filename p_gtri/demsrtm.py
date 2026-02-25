@@ -1,3 +1,4 @@
+from math import hypot
 from demusgs import ThanDEMusgs
 
 
@@ -22,6 +23,26 @@ class ThanDEMsrtm(ThanDEMusgs):
         "Return the coordinates of the centroid taking into account the transformation."
         cu = self.geodetGRS802User(self.thanCena)
         return cu
+
+
+    def thanDxy(self):
+        """Return the DX, DY of the dem.
+
+        Because the coordinate transformation usually leads to variable DX, DY
+        the average DX, DY are returned.
+        """
+        ca = (self.xymma[0], self.thanCena[1], 0.0)
+        ca = self.geodetGRS802User(ca)
+        cb = (self.xymma[2], self.thanCena[1], 0.0)
+        cb = self.geodetGRS802User(cb)
+        dx = hypot(cb[1]-ca[1], cb[0]-ca[0]) / self.nxcols
+
+        ca = (self.thanCena[0], self.xymma[1], 0.0)
+        ca = self.geodetGRS802User(ca)
+        cb = (self.thanCena[0], self.xymma[3], 0.0)
+        cb = self.geodetGRS802User(cb)
+        dy = hypot(cb[1]-ca[1], cb[0]-ca[0]) / self.nyrows
+        return dx, dy
 
 
     def thanXymm(self):

@@ -805,6 +805,19 @@ class Polynomial1Projection(_Projection):
         return xp, yp, z      # The last coordinate (z) is not used
 
 
+    def invproject(self, xp, yp, z):
+        "Compute object coordinates given pixel coordinates."
+#        xp = L[0]*x+L[1]*y+L[2]*z+L[3]     =>
+#        yp = L[4]*x+L[5]*y+L[6]*z+L[7]
+#        xp-L[2]*z-L[3] = L[0]*x+L[1]*y
+#        yp-L[6]*z-L[7] = L[4]*x+L[5]*y
+        L = self.L
+        x, y = linEq2(L[0], L[1], xp-L[2]*z-L[3],
+                      L[4], L[5], yp-L[6]*z-L[7])
+        if x == None: raise ValueError, "%s projection can not be inverted" % (self.name,)
+        return x, y, z
+
+
     def lsm23(self, fots):
         "Find polynomial coefficients using least square."
         L = []

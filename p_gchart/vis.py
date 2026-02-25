@@ -511,6 +511,17 @@ def viswin(root, *charts, **kw):
         c = ChartWin1(ch, thanUnicode(ch.title), root, bg=bg, **kw)
     c.wait_window()
 
+
+def visfil(*charts, **kw):
+    "The caller may already started tk with library p_gfil, or not."
+    import p_gfil
+    winmain, _, _ = p_gfil.openfileWinget()
+    if winmain != None:
+        viswin(winmain, *charts, **kw)
+    else:
+        vis(*charts, **kw)
+
+
 def visdxf(*charts):
     root = ChartDxf(charts[0], charts[0].title+" (Main)")
 #    for ch in charts[1:]:

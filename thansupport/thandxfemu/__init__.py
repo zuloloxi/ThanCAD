@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,11 +20,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This package emulates the dxf library in ThanCad.
+ThanDxfEmu is a producer class to import a drawing as it is being created.
+
+    The class is based on the importation of dxf files; it works like the class
+    ThanImportDxf of the p_gimdxf library.
+    The class sends drawing commands to the drawing object dr (self.thanDr)
+    which is a receiver class instance.
+    Here the receiver class is the ThanCadDrSave class.
+    The class emulates the p_gdxf library so that a program which calls p_gdxf
+    to create drawing (in a .dxf file), can now create the drawing into ThanCad
+    in real time, with no modifications.
 """
 
 from thandxfini import ThanDxfEmu

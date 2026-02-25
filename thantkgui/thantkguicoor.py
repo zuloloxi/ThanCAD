@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines a mixin that copes with Tkinter's 2 coordinate systems -
 plus the world (user) coordinate system of ThanCad. All the zoom, pan,
@@ -37,8 +37,7 @@ or print information to the user.
 """
 
 from Tkinter import *
-from p_gmath import thanNearx
-from p_gmath import ThanRectCoorTransf, thanRoundCenter
+from p_gmath import thanNearx, thanNear2, ThanRectCoorTransf, thanRoundCenter
 from thanvar import Canc, thanLogTk
 from thanopt import thancadconf
 from thantrans import T
@@ -76,9 +75,21 @@ class ThanTkGuiCoor:
         self.__onsizepreempt = False
         self.__autoregen_preempt = False
         self.__regen_preempt = False
+
         self.thanCanvas.bind("<Configure>", self.__onSize)    # Bind in the end, in order to avoid preemptive calls
 
-#============================================================================
+    def thanCleanupRegen(self):
+        "Cleanup this object's state."
+        ret = self.__zoomwin_preempt   or \
+              self.__onsizepreempt     or \
+              self.__autoregen_preempt or \
+              self.__regen_preempt
+        self.__zoomwin_preempt = False
+        self.__onsizepreempt = False
+        self.__autoregen_preempt = False
+        self.__regen_preempt = False
+        return ret  #If this is true, then the cleanup was necessary
+
 
     def __getWinExtent(self):
         """Gets the size of current window.
@@ -356,17 +367,19 @@ class ThanTkGuiCoor:
     def thanGudPan(self, dx, dy):
         """Pans the canvas and adjusts viewport's coordinates."
 
-	IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
+        IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
+        """
         ct = self.thanCt
         dx, dy = ct.global2LocalRel(dx, dy)
         dx, dy = int(dx), int(dy)
-	dxn, dyn = ct.local2GlobalRel(dx, dy)
-	self.__worPort[0] += dxn
-	self.__worPort[2] += dxn
-	self.__worPort[1] += dyn
-	self.__worPort[3] += dyn
-	print "thanGudPan(): dx, dy=", dx, dy
+        dxn, dyn = ct.local2GlobalRel(dx, dy)
+        self.__worPort[0] += dxn
+        self.__worPort[2] += dxn
+        self.__worPort[1] += dyn
+        self.__worPort[3] += dyn
+        print "thanGudPan(): dx, dy=", dx, dy
+        print "thanGudPan(): new worPort=", self.__worPort
+
         if abs(dx) > 1000000 or abs(dy) > 1000000:
             self.thanRegen()     # Canvas can't scroll more than biggest long. CHECK WITH NEWER VERSIONS OF TKINTER
         else:
@@ -473,25 +486,26 @@ class ThanTkGuiCoor:
     def thanGudZoom(self, xc, yc, fact):
         """Zooms dynamically the canvas."
 
-	IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
-	dx1 = xc - self.__worPort[0]
-	dx2 = xc - self.__worPort[2]
-	dy1 = yc - self.__worPort[1]
-	dy2 = yc - self.__worPort[3]
-	self.__worPort[0] = xc - dx1/fact
-	self.__worPort[2] = xc - dx2/fact
-	self.__worPort[1] = yc - dy1/fact
-	self.__worPort[3] = yc - dy2/fact
+        IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
+        """
+        dc = self.thanCanvas
+        if fact != 0.0:          #If fact is zero do not zoom at all
+            dx1 = xc - self.__worPort[0]
+            dx2 = xc - self.__worPort[2]
+            dy1 = yc - self.__worPort[1]
+            dy2 = yc - self.__worPort[3]
+            self.__worPort[0] = xc - dx1/fact
+            self.__worPort[2] = xc - dx2/fact
+            self.__worPort[1] = yc - dy1/fact
+            self.__worPort[3] = yc - dy2/fact
 
-	(xc, yc) = self.thanCt.global2Local(xc, yc)
-	dc = self.thanCanvas
-        dc.scale(ALL, xc, yc, fact, fact)
+            (xc, yc) = self.thanCt.global2Local(xc, yc)
+            dc.scale(ALL, xc, yc, fact, fact)
 
 #-------Because we scaled the elements the viewport's logical coordinates
 #       remain the same. 2006-06-24: Nevermind, compute them again!!
 
-	self.thanGudCalcScale()
+        self.thanGudCalcScale()
         dc.thanGudCoorChanged()
 
 
@@ -586,6 +600,7 @@ class ThanTkGuiCoor:
         IT CHANGES THE COORDINATE SYSTEM TRANSFORMATION.
         """
         (self.__pixPort, logPort) = self.__getWinExtent()
+        print "thanGudCalcScale(): __pixPort, logPort, worPort:", self.__pixPort, logPort, self.__worPort
         self.thanCt.set(self.__worPort, logPort)
 
 #===========================================================================
@@ -598,26 +613,52 @@ class ThanTkGuiCoor:
         """
         if self.__zoomwin_preempt:
             print "thanGudZoomWin() called preemptively; returning immediately"
+            self.__zoomwin_preempt = 0
             return
         self.__zoomwin_preempt = 1
 
+        print "thanGudZoomWin(): before: worPortn=", worPortn
+        if thanNear2(worPortn[:2], worPortn[2:]):
+            self.thanProj[2].thanPrter("Can not zoom/pan to window %s", (worPortn,))
+            self.__zoomwin_preempt = 0
+            return tuple(self.__worPort)
         worPortn = self.__roundCenter(worPortn)
-        xc = (self.__worPort[0] + self.__worPort[2])*0.5
-        yc = (self.__worPort[1] + self.__worPort[3])*0.5
-        xcn = (worPortn[0] + worPortn[2])*0.5
-        ycn = (worPortn[1] + worPortn[3])*0.5
+        if thanNear2(worPortn[:2], worPortn[2:]):
+            self.thanProj[2].thanPrter("Can not zoom/pan to window %s", (worPortn,))
+            self.__zoomwin_preempt = 0
+            return tuple(self.__worPort)
+        print "thanGudZoomWin(): after:  worPortn=", worPortn
+
+        if thanNear2(self.__worPort[:2], self.__worPort[2:]):   #Current viewport is invalid
+            self.__worPort[:] = worPortn
+            self.thanRegen()
+            self.__zoomwin_preempt = 0
+            return tuple(self.__worPort)
+
+        xc = self.__worPort[0]*0.5 + self.__worPort[2]*0.5
+        yc = self.__worPort[1]*0.5 + self.__worPort[3]*0.5
+        xcn = worPortn[0]*0.5 + worPortn[2]*0.5
+        ycn = worPortn[1]*0.5 + worPortn[3]*0.5
+        print "thanGudZoomWin(): xc,  yc =", xc, yc
+        print "thanGudZoomWin(): xcn, ycn=", xcn, ycn
+        print "thanGudZoomWin(): worPort before pan=", self.__worPort
+        dx, dy = xcn-xc, ycn-yc
+        if thanNear2((xc-dx*0.5, yc-dx*0.5), (xc+dx*0.5, yc+dx*0.5)):  #Because of adding small to big numbers
+            self.thanRegen()
+            self.__zoomwin_preempt = 0
+            return tuple(self.__worPort)
         self.thanGudPan(xcn-xc, ycn-yc)
+        print "thanGudZoomWin(): worPort after  pan=", self.__worPort
 
 	dxn = worPortn[2] - worPortn[0]
 	dyn = worPortn[3] - worPortn[1]
 	if abs(dxn) > abs(dyn):    # For numerical stability; otherwise not needed
 	    fact = (self.__worPort[2] - self.__worPort[0]) / dxn
 	else:
-	    fact = (self.__worPort[3] - self.__worPort[1]) / dyn
-	self.thanGudZoom(xcn, ycn, fact)
-
+            fact = (self.__worPort[3] - self.__worPort[1]) / dyn
+        self.thanGudZoom(xcn, ycn, fact)   #If zero factor do not zoom at all
         self.__zoomwin_preempt = 0
-	return tuple(self.__worPort)
+        return tuple(self.__worPort)
 
 
 if __name__ == "__main__":

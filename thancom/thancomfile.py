@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes file related commands.
@@ -31,11 +31,12 @@ import cPickle, bz2, copy
 from tkMessageBox import ERROR
 from p_ggen import path, Struct, doNothing, ThanImportError
 import p_gtkuti
-import thanvers, thandr, thanimp, thanexp, thantkgui, thantkdia, thansupport
+import thandr, thanimp, thanexp, thantkgui, thantkdia, thansupport
+from thanvers import tcver
 import thanopt, thanlayer
 from thantrans import T, Tmatch
 from thanvar import Canc, thanfiles
-import thancommod, thanrwf, thanundo
+import thancommod, thancomview, thanrwf, thanundo
 
 mm = p_gtkuti.thanGudModalMessage
 
@@ -67,8 +68,10 @@ _importClass = { ".dxf": ("Drawing Interchange",     thanimp.ThanImportDxf),
                  ".syn": ("Topographic Points",      thanimp.ThanImportSyn),
                  ".lin": ("Linicad Drawing",         thanimp.ThanImportLin),
                  ".xyz": ("3D Lines, Intermap xyz format", thanimp.ThanImportXyzIntermap),
+                 ".kml": ("Google KML 3D points (placemarks)", thanimp.ThanImportKml),
+                 ".kmz": ("Compressed Google KML 3D points (placemarks)", thanimp.ThanImportKmz),
                }
-_ser = ".dxf .syk .brk .syn .lin .xyz".split()
+_ser = ".dxf .syk .brk .syn .kml .kmz .xyz .lin".split()
 if thanopt.thancon.thanFrape.civil:
     import thanprocivil
     from thanprocivil.thanproimp import ThanImportMhk
@@ -120,11 +123,12 @@ def thanFileOpenPaths(proj, fns, forceunload=False):
     for fn in fns:
             fn = path(fn)
             if fn.ext in _importClass:
-                dr = impFile(proj, fn, _importClass[fn.ext][1])
+                dr, zoomext = impFile(proj, fn, _importClass[fn.ext][1])
                 success = "%s: %s" % (fn.name, T["file has been successfully imported."])
             elif fn.ext == ".thcx":
                 dr = openThcx(proj, fn, forceunload)
                 success = T["Existing drawing has been opened."]
+                zoomext = False
             else:
                 try:
                     dr = None
@@ -133,6 +137,7 @@ def thanFileOpenPaths(proj, fns, forceunload=False):
                     fr.close()
                     dr = cPickle.loads(s) # Unpickle (in case of error it raises PickleError, and maybe ValueError from numpy))
                     success = T["Existing drawing has been opened."]
+                    zoomext = False
                 except (IOError, cPickle.PickleError, ImportError, AttributeError, ValueError), why:    # ImportError happens if BZ2file can not import its base class
                     try: dr.thanDestroy()
                     except: pass
@@ -144,8 +149,8 @@ def thanFileOpenPaths(proj, fns, forceunload=False):
                 replace = proj[1]     #in case proj is ThanCad and not another drawing
                 replace = replace and (not proj[1].thanIsModified())
                 replace = replace and thanfiles.isTempname1(proj[0].basename())
-                if replace: __openHouseReplace(proj, fn, dr, success)
-                else:       __openHouse(proj, fn, dr, success)
+                if replace: __openHouseReplace(proj, fn, dr, success, zoomext)
+                else:       __openHouse(proj, fn, dr, success, zoomext)
     return nopened
 
 
@@ -188,7 +193,7 @@ def impFile(proj, fn, ImportClass, defaultLayer="0"):
     except IOError, e:
         mm(proj[2], e, "%s: %s" % (fn.name, fail), ERROR)   # (Gu)i (d)ependent
         proj[2].thanGudCommandEnd(fail, "can")
-        return None
+        return None, None
 #---create a new drawing
     dr = thandr.ThanDrawing()
 #---import
@@ -205,17 +210,18 @@ def impFile(proj, fn, ImportClass, defaultLayer="0"):
         print str(e.message)
         mm(proj[2], str(e.message), "%s: %s" % (fn.name, fail), ERROR)            # (Gu)i (d)ependent
         proj[2].thanGudCommandEnd(fail, "can")
-        return None
+        return None, None
     finp.close()
     ts.thanAfterImport()
 #    del imp.thanDr._dr, imp.thanDr.prt
 #    del imp.thanDr
 #    del imp
     dr.thanLayerTree.thanDictRebuild()
-    return dr
+    zoomext = not ts.viewportDefined
+    return dr, zoomext
 
 
-def __openHouse(proj, fn, dr, mes):
+def __openHouse(proj, fn, dr, mes, zoomext):
     "House keeping for file open."
     fn = fn.abspath()
     thanfiles.setFiledir(fn.parent)
@@ -224,6 +230,7 @@ def __openHouse(proj, fn, dr, mes):
     projnew = win.setDrawing(fn, dr)
     projnew = win.thanProj
     try:
+        if zoomext: thancomview.thanZoomExt(projnew)
         projnew[2].thanRegen()
     except:
         projnew[2].destroy()
@@ -241,7 +248,7 @@ def __openHouse(proj, fn, dr, mes):
     return projnew
 
 
-def __openHouseReplace(proj, fn, dr, mes):
+def __openHouseReplace(proj, fn, dr, mes, zoomext):
     "House keeping for file open."
     fn = fn.abspath()
     thanfiles.setFiledir(fn.parent)
@@ -251,6 +258,7 @@ def __openHouseReplace(proj, fn, dr, mes):
     win = proj[2]
     projnew = win.setDrawing(fn, dr)     #This is exactly the same project as proj
     try:
+        if zoomext: thancomview.thanZoomExt(projnew)
         projnew[2].thanRegen()
     except:
         projnew[2].destroy()
@@ -277,7 +285,7 @@ def thanFileMerge(proj, copyelems=False, forceunload=False):
     exts = _exts                      #Make a shallow copy
     fildir = thanfiles.getFiledir()
     while True:
-        fns = p_gtkuti.thanGudGetReadFile(proj[2], exts, T["Choose files to import"],
+        fns = p_gtkuti.thanGudGetReadFile(proj[2], exts, T["Choose files to insert"],
                  initialdir=fildir, multiple=True)
         if fns == None: return proj[2].thanGudCommandCan()     # Open cancelled
         projothers = thanFileMergePaths(proj, fns, forceunload)
@@ -304,7 +312,7 @@ def thanFileMergePaths(proj, fns, forceunload=False):
     for fn in fns:
             fn = path(fn)
             if fn.ext in _importClass:
-                dr = impFile(proj, fn, _importClass[fn.ext][1], defaultLayer=clname)
+                dr, _ = impFile(proj, fn, _importClass[fn.ext][1], defaultLayer=clname)
             elif fn.ext == ".thcx":
                 dr = openThcx(proj, fn, forceunload)
             else:
@@ -527,7 +535,7 @@ def thanRenameHouse(proj, fn):
     fnold = proj[0]
     thanfiles.delOpened(proj)    #It should be already there
     proj[0] = fn
-    proj[2].thanTitle = thanvers.thanCadName + " - " + proj[0].name
+    proj[2].thanTitle = tcver.name + " - " + proj[0].name
     proj[2].title(proj[2].thanTitle)
     if fn.ext == ".thcx": proj[1].thanResetModified()
     fn = fn.abspath()

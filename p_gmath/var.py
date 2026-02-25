@@ -150,7 +150,7 @@ def thanNearx(xa, xb):
     return d < v*thanThresholdx
 
 
-def iszero(x, xmax=1000.0, fact=1.0e-6):
+def isZero(x, xmax=1000.0, fact=1.0e-6):
     "Test if x is zero compared to xmax; xmax is non-negative."
     if xmax < fact:
         return fabs(x) < fact

@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines an object which reads a .syk, .brk, .syn, .lin  file and it
 creates the appropriate ThanCad's elements to represent it in ThanCad.
@@ -29,6 +29,7 @@ creates the appropriate ThanCad's elements to represent it in ThanCad.
 
 import cPickle
 from p_gimdxf import ThanImportBase
+import p_gimgeo
 from thantrans import T
 
 
@@ -80,7 +81,7 @@ class ThanImportSyk(ThanImportBase):
             self.thanDr.dxfPolyline(xx, yy, zz, lay, handle, None)
 
 
-class ThanImportBrk(ThanImportSyk):
+class ThanImportBrk(ThanImportBase):
     "A class to import a brk file."
 
     def thanImport(self):
@@ -140,8 +141,8 @@ class ThanImportSyn(ThanImportBase):
                 xx = float(s[10:25])
                 yy = float(s[25:40])
                 sl = s[40:55]
-                if sl != "": z1 = float(sl)
-                else:        z1 = 0.0             #Consistency with other programs
+                if sl != "": zz = float(sl)
+                else:        zz = 0.0             #Consistency with other programs
                 t1 = s[55:57].strip()
                 validc[2] = t1 == ""
             except (ValueError, IndexError), why:
@@ -201,7 +202,7 @@ class ThanImportLin(ThanImportBase):
             self.thanWarn(T["%d unknown elements were not imported"] % nzn)
 
 
-class ThanImportXyzIntermap(ThanImportSyk):
+class ThanImportXyzIntermap(ThanImportBase):
     """A class to import lines in xyz intergraph format.
 
     Sample file:
@@ -253,6 +254,34 @@ class ThanImportXyzIntermap(ThanImportSyk):
             if len(xx) < 2: self.thanWarn(T["Polyline with 1 or 0 vertices."])
             self.thanDr.dxfPolyline(xx, yy, zz, self.defLay, handle, None)
             if s == "": break     # Sentinel not found at end of file; not normal, but OK
+
+
+class ThanImportKml(ThanImportBase):
+    """A class to import lines in Google Keuhole Markup Language format, .kml filena3mes."""
+
+    def thanImport(self):
+        "Imports a dxf file."
+        pnts, terr = p_gimgeo.readKml(self.fDxf, greece=True)
+        if pnts == None: self.thanEr2s(terr)
+        self._getPoints(pnts)
+
+
+    def _getPoints(self, pnts):
+        "Reads all points from .syn file."
+        handle = ""
+        validc = [True, True, True]
+        for aa, xx, yy, zz, col, desc in pnts:
+            self.thanDr.dxfPoint(xx, yy, zz, self.defLay, handle, None, aa, validc)
+
+
+class ThanImportKmz(ThanImportKml):
+    """A class to import lines in Google Keuhole Markup Language format, .kml filena3mes."""
+
+    def thanImport(self):
+        "Imports a dxf file."
+        pnts, terr = p_gimgeo.readKmz(self.fDxf.name, greece=True)
+        if pnts == None: self.thanEr2s(terr)
+        self._getPoints(pnts)
 
 
 if __name__ == "__main__":

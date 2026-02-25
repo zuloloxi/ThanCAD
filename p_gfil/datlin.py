@@ -90,12 +90,12 @@ class Datlin:
 
     def datCurline(self):
         "Returns current whole raw dataline."
-	return self.dlPrev
+        return self.dlPrev
 
     def datRawline(self, failoneof=True):
         "Reads and returns a raw dataline."
-	if not self.datLin(failoneof): return None
-	return self.dlPrev
+        if not self.datLin(failoneof): return None
+        return self.dlPrev
 
     def datLinSet(self, dl):
         "Sets the current line as if it were read from file."

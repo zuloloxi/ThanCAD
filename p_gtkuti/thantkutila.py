@@ -9,8 +9,6 @@ from p_ggen import floate, isString, thanUnunicode, thanUnicode, path, Pyos
 import thantksimpledialog, thanfontresize
 
 
-
-
 def thanTkGuiCreateMenus(self, mlist):
     """Create the menus described in list mlist=thanGetMenus().
 
@@ -37,7 +35,7 @@ def thanTkGuiCreateMenus(self, mlist):
 
 #-------Normal Menu entry
         if len(m) > 3: fg = m[3]
-	else         : fg = None
+        else         : fg = None
 
         if m[0] != None:
             menu.add_command(label=thanUnicode(replace(m[1], "&", "")), foreground=fg, 
@@ -228,7 +226,7 @@ def thanExtExpand(ext):
         [ (<NULL explanation>, string),
           ("All files", "*"),
         ]
-    string with blanks: the string contains mulrtiple extensions separated by
+    string with blanks: the string contains multiple extensions separated by
         blanks, and it is transformed to:
         [ (<NULL explanation>, ext1),
           (<NULL explanation>, ext2),
@@ -237,7 +235,7 @@ def thanExtExpand(ext):
           ("All files", "*"),
         ]
     tuple of strings: The first string of the tuple is the explanation and the other
-        string is the extension. It is transformed to:	
+        string is the extension. It is transformed to:
         [ tuple,
           ("All files", "*"),
         ]
@@ -372,6 +370,31 @@ class ThanToplevel(Toplevel, thanfontresize.ThanFontResize):
     def destroy(self):
         self.thanDestroy()
         Toplevel.destroy(self)
+
+
+def thanDeficon(win, iconxbm=None):
+    "Decorates the window with an icon stored in filename iconxbm."
+#    When the script is run via py2exe or Freeze, sys.path[0] has an additional
+#    subdirectory at its end, and thus the its parent must be used.
+    if iconxbm != None:
+        if _tryIconbitmap(win, iconxbm): return  #Try in current dir (or in path if iconxbm is a pathname)
+        iconxbm = path(iconxbm).basename()
+        if _tryIconbitmap(win, path(sys.path[0])/iconxbm): return   #Try in the dir where the program is
+        if _tryIconbitmap(win, path(sys.path[0]).parent/iconxbm): return   #py2exe or Freeze: we hope iconxbm was copied by the toexe script:)
+    if _tryIconbitmap(win, path(sys.path[0]).parent/"thanapps.dir"/"than05.xbm"): return   #Try standard icon
+    if _tryIconbitmap(win, path(sys.path[0]).parent/"than05.xbm"): return  #py2exe or Freeze: we hope than05.xbm was copied by the toexe script:)
+
+def _tryIconbitmap(win, iconxbm):
+    "Try to open iconxbm."
+    b = "@"+iconxbm
+#    print "thanDeficon:", b
+    try:
+        win.iconbitmap(b)
+    except Exception, e:
+#        print e
+        return False
+    else:
+        return True
 
 
 def thanGudHelpWin(parentwin, mes, title, hbar=0, vbar=1, width=80, height=25,

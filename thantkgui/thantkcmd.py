@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,16 +20,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 It implements ThanCad command line window.
 """
 
 import Tkinter, tkFont
 import p_gtkwid, p_gtkuti, p_ggen
-import thanvers, thancom
+import thancom
+from thanvers import tcver
 from thanopt import thancadconf
 from thantkguilowget.thantkconst import *
 from thanopt import thancadconf
@@ -117,8 +118,8 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 
     def thanCadVer(self):
         "Prints ThanCad's version."
-        self.thanAppend("%s %s" % (thanvers.thanCadName, thanvers.thanCadVersion), "thancad")
-        self.thanAppend("\n%s %s,   %s\n" % (thanvers.thanCopyright, thanvers.thanAuthorName, thanvers.thanCadDate))
+        self.thanAppend("%s %s" % (tcver.name, tcver.version), "thancad")
+        self.thanAppend("\n%s\n" % (tcver.copyright,))
 
 
     def thanPrompt(self, mes=DEFMES):
@@ -284,14 +285,20 @@ class ThanTkCmd(p_gtkwid.ThanScrolledText):
 	    return
 	if dc.thanFloatMenu != None and dc.thanFloatMenu.winfo_ismapped():
             dc.thanCleanup()          # Delete floating (rightclick) menu
-	    return
-	sched = self.__proj[2].thanScheduler
-	if not sched.thanSchedIdle():
+            return
+        sched = self.__proj[2].thanScheduler
+        if not sched.thanSchedIdle():
             sched.thanSchedClear()
-	    dc.thanCleanup()
-	    self.thanCleanup(T["\nThanScheduler was cleared for debugging reasons."], "can")
-	    self.thanPrompt()
-	    return
+            dc.thanCleanup()
+            self.thanCleanup(T["\nThanScheduler was cleared for debugging reasons."], "can")
+            self.thanPrompt()
+            return
+        if self.__proj[2].thanCleanupRegen():
+            dc.thanCleanup()
+            self.thanCleanup(T["\nThanScheduler was cleared for debugging reasons."], "can")
+            self.thanPrompt()
+            return
+
         dc.thanCleanup()
         self.thanCleanup("\n%s" % T["Nothing to cancel."], "can")
         self.thanPrompt()

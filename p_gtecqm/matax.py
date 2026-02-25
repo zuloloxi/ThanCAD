@@ -3,10 +3,10 @@
 
 Two types of axial loading are supported:
 1. Concentrated axial load Fi at some distance a from the first (left) joint
-2. Uniform distribnuted axial load v, which applies to the whole legth of the member.
+2. Uniform distributed axial load v, which applies to the whole length of the member.
 The loads are considered positive according to the local coordinate
-system of the member. This means that positive is the dircetion which
-goes form left to right (or form the first joint of the member towards the
+system of the member. This means that positive is the direction which
+goes form left to right (or from the first joint of the member towards the
 second -the last- joint.
 The axial force at distance x from the first (left) joint of the member is:
 
@@ -20,7 +20,7 @@ from mat import genEval, xrangec
 
 
 class Axialmac:
-    "Object to find bending moments and shear forces of a beam."
+    "Object to find axial forces of a beam."
 
     def __init__(self, loads=()):
         "Get loads and compute internal coeficients."
@@ -45,7 +45,7 @@ class Axialmac:
 
 
     def evalN(self, x):
-        "Finds the sear force at distance x from the start."
+        "Finds the axial force at distance x from the start."
         y = 0.0
         for f1, x1, pow1 in self.coefs: 
             if pow1 >= 0 and x > x1: y += f1 * (x-x1)**pow1
@@ -79,7 +79,7 @@ def computeCoefs(loads):
             coefs.append((-f1+0.0, x1+0.0, 1))
             coefs.append(( f1+0.0, x2+0.0, 1))
         else:
-            assert 0, load[0]+": Unknown load name!"
+            assert 0, load[0]+": Unknown axial load name!"
     return coefs
 
 

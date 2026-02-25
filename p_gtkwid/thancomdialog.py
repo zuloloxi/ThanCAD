@@ -35,11 +35,11 @@ class ThanComDialog(p_gtkuti.ThanDialog):
         "Read widget values from a file."
 #        Override to use the functionality.
 #        fn = self.thanProj[0].parent / (self.thanProj[0].namebase + ".m23")
-#        self.thanValsReadFile1(self, v, fn):
+#        self.thanValsReadFile1(v, fn):
 
 
     def thanValsReadFile1(self, v, fn):
-        "Reads the values from a file with specific suffix."
+        "Reads the values from a file with specific suffix; ."
         if not fn.exists(): return
         self._c = ConfigParser.SafeConfigParser()
         self._c.read(fn)
@@ -53,7 +53,7 @@ class ThanComDialog(p_gtkuti.ThanDialog):
 
 
     def thanValsReadFile2(self):
-        "This does the actual reading from configparser."
+        "This does the actual reading from configparser; override."
         return
         self._tv["radProject"][1] = p_gtwid.ThanValInt(0, 9)
         self._tv["radProjApprox"][1] = p_gtwid.ThanValInt(0, 3)
@@ -79,7 +79,7 @@ class ThanComDialog(p_gtkuti.ThanDialog):
         "Write widget values to a file."
 #        Override to use the functionality.
 #        fn = self.thanProj[0].parent / (self.thanProj[0].namebase + ".m23")
-#        self.thanValsWriteFile1(self, v, fn):
+#        self.thanValsWriteFile1(v, fn)
 
 
     def thanValsWriteFile1(self, v, fn):
@@ -92,12 +92,13 @@ class ThanComDialog(p_gtkuti.ThanDialog):
 
         self.thanValsWriteFile2()
 
+        print "p_gtwid.thanValsWrite1(): fn=%s  _c=\n%s" % (fn, self._c)
         try: self._c.write(fn.open("w"))
-        except: pass
+        except: raise; pass
         del self._c, self._tv, self._v
 
 
-    def thanValsWrite2(self, v):
+    def thanValsWriteFile2(self):
         "This does the actual writing to configparser."
         self.thanValsWriteICP()   # Common ICP parameters
         self.thanValsWriteSec("ICP GENERAL PARAMETERS", "entDisInt entDisRange entThres entSteps")
@@ -111,6 +112,8 @@ class ThanComDialog(p_gtkuti.ThanDialog):
         if not self._c.has_section(sec): self._c.add_section(sec)
         for key in keys.split():
             tit, val = self._tv[key]
+            print "p_gtwid.thanValsWriteSec(): sec=%s  key=%s   val=%s" % (sec, tit, getattr(self._v, key))
+            print "                                %s      %s       %s" % (type(sec), type(tit), type(getattr(self._v, key)))
             self._c.set(sec, tit, str(getattr(self._v, key)))
 
 

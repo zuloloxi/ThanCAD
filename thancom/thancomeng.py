@@ -1,11 +1,12 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +22,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes commands related to engineering.
@@ -223,8 +223,8 @@ def __demdrawbou(proj, demobjs):
     for demobj in demobjs:
         elems1 = __demdrawbou1(proj, demobj)
         elems.extend(elems1)
-        if newport == None: newport = Xymm(demobj.dtm.thanXymm())
-        else:               newport.lengthen(demobj.dtm.thanXymm())
+        if newport == None: newport = Xymm(demobj.dtm.thanXymm()); print newport
+        else:               newport.lengthen(demobj.dtm.thanXymm()); print newport
     oldport = tuple(proj[1].viewPort)             #make distict copy
     newport = proj[2].thanGudZoomWin(newport)     #Returns a tuple
     proj[1].viewPort[:] = newport
@@ -299,7 +299,7 @@ def __demdrawnod(proj, demobj):
         ea(el)
 
 
-def thanDemLoad(proj):
+def thanDemLoadold(proj):
     "Loads many USGS DEM stored in geotif format and draws them."
     fildir = thanfiles.getFiledir()
     while True:
@@ -310,6 +310,38 @@ def thanDemLoad(proj):
         nopened = 0
         for fi in fns:
             dem = p_gtri.ThanDEMusgs()
+            ok, ter = dem.thanSet(fi)
+            if ok:
+                demobj = thandr.thanobject.ThanDEMusgs()
+                demobj.dtm = dem
+                demobjs.append(demobj)
+                nopened += 1
+            else:
+                p_gtkuti.thanGudModalMessage(proj[2], ter, tit)   # (Gu)i (d)ependent
+        if nopened > 0: break
+    elems, newport, oldport = __demdrawbou(proj, demobjs)     #This calls thanTouch implicitelly
+    for demobj in demobjs: proj[1].thanObjects["DEMUSGS"].append(demobj)
+    proj[1].thanDoundo.thanAdd("demload", __demdrawbouRedo, (elems, newport, (), demobjs),
+                                          __demdrawbouUndo, (elems, oldport, (), demobjs))
+    proj[2].thanGudCommandEnd()
+
+
+
+def thanDemLoad(proj):
+    "Loads many USGS DEMs stored in geotif format, or ESRI BIL/HDR DEMs stored in bil format, and draws them."
+    fildir = thanfiles.getFiledir()
+    while True:
+        fns = p_gtkuti.thanGudGetReadFile(proj[2], (".tif .bil .hdr"), T["Choose DEM tif (USGS) or bil (ESRI BIL/HDR) files"],
+              initialdir=fildir, multiple=True)
+        if fns == None: return proj[2].thanGudCommandCan()            # Image canceled
+        demobjs = []
+        nopened = 0
+        for fi in fns:
+            ext = fi.ext.lower()
+            if ext == ".bil" or ext == ".hdr":
+                dem = p_gtri.ThanDEMbil()
+            else:
+                dem = p_gtri.ThanDEMusgs()
             ok, ter = dem.thanSet(fi)
             if ok:
                 demobj = thandr.thanobject.ThanDEMusgs()
@@ -338,7 +370,7 @@ def thanDemLoadSrtmold(proj):
     xb, yb = cb[:2]
     xymm = min(xa, xb), min(ya, yb), max(xa, xb), max(ya, yb)
     gdem = p_gearth.SRTMGDEM()
-    dems, nloaded, notfound = gdem.thanGetWin(xymm)
+    dems, nloaded, notfound, notcovered = gdem.thanGetWin(xymm)
     demsinthancad = set(demobj.dtm for demobj in proj[1].thanObjects["DEMUSGS"])
     dems = set(dems)
     demsnew = dems.difference(proj[1].thanObjects["DEMUSGS"])
@@ -360,11 +392,12 @@ def thanDemLoadSrtmold(proj):
 def thanDemLoadGdem(proj, name):
     "Loads many parts of the SRTM as USGS DEM stored in geotif format and draws them."
     import p_gearth
+    dtm = p_gearth.gdem(name)    #This is empty initially so that it doesn't cost much memory and time
     for demobj in proj[1].thanObjects["DEMUSGS"]:
-        if isinstance(demobj.dtm, p_gearth.SRTMGDEM):
-            return proj[2].thanGudCommandCan(T["SRTM DEM is already loaded!"])
+        if isinstance(demobj.dtm, dtm.__class__):
+            return proj[2].thanGudCommandCan(T["%s gdem is already loaded!"] % (dtm.name,))
     demobj = thandr.thanobject.ThanDEMusgs()
-    demobj.dtm = p_gearth.gdem(name)
+    demobj.dtm = dtm
     proj[1].thanObjects["DEMUSGS"].append(demobj)
     proj[1].thanTouch()
     proj[1].thanDoundo.thanAdd("demload", __demdrawbouRedo, ((), None, (), [demobj]),
@@ -373,7 +406,7 @@ def thanDemLoadGdem(proj, name):
 
 
 def thanDemImageDir(proj):
-    "Locate the directory where missing image files fore DEMs can be found."
+    "Locate the directory where missing image files for DEMs can be found."
     for elem in proj[1].thanObjects["DEMUSGS"]:
         if elem.dtm.im == None: break
     else:

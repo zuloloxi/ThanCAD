@@ -57,6 +57,10 @@ class ThanDEMusgs(ThanDTMDEM):
         self.thanCentroidCompute()
         return True, ""
 
+    def getpixel(self, jx, iy):
+        "Return the pixel value"
+        return self.im.getpixel((jx, iy))
+
 
     def thanCentroidCompute(self):
         "Compute the centroid of all lines."
@@ -74,6 +78,11 @@ class ThanDEMusgs(ThanDTMDEM):
         return self.xymma
 
 
+    def thanDxy(self):
+        "Return the DX, DY of the dem."
+        return self.DX, self.DY
+
+
     def thanPointZ(self, cp, native=False):
         "Calculate the z coordinate of a point with bilinear interpolation."
 #        print "usgs: thanPointZ() 1: cp=", cp
@@ -83,14 +92,14 @@ class ThanDEMusgs(ThanDTMDEM):
         iy = int(y)
 #        print "jx, iy=", jx, iy
         if jx < 0 or iy < 0 or jx >= self.nxcols-1 or iy >= self.nyrows-1: return None
-        z00 = self.im.getpixel((jx, iy))
+        z00 = self.getpixel(jx, iy)
 #        print "z00=", z00
         if z00 == self.GDAL_NODATA: return None
-        z10 = self.im.getpixel((jx+1, iy))
+        z10 = self.getpixel(jx+1, iy)
         if z10 == self.GDAL_NODATA: return None
-        z01 = self.im.getpixel((jx, iy+1))
+        z01 = self.getpixel(jx, iy+1)
         if z01 == self.GDAL_NODATA: return None
-        z11 = self.im.getpixel((jx+1, iy+1))
+        z11 = self.getpixel(jx+1, iy+1)
         if z11 == self.GDAL_NODATA: return None
         x -= jx
         y -= iy
@@ -99,7 +108,7 @@ class ThanDEMusgs(ThanDTMDEM):
 
 
     def iterNodes(self, validnodes=True, invalidnodes=False, xymm=None):
-        "Iterate through valid and or invalid nodes of the DEM."
+        "Iterate through valid and or invalid nodes of the DEM; xymm is according to ThanCad conventions."
         if xymm == None:
             jx1 = iy1 = 0
             jx2 = self.nxcols
@@ -121,7 +130,7 @@ class ThanDEMusgs(ThanDTMDEM):
         k = 0
         for iy in xrange(iy1, iy2):
             for jx in xrange(jx1, jx2):
-                h = self.im.getpixel((jx, iy))      #getpixel:  im.getpixl(xy)
+                h = self.getpixel(jx, iy)      #getpixel:  im.getpixel(xy)
                 x = self.X0 + jx*self.DX
                 y = self.Y0 - iy*self.DY
                 if h == self.GDAL_NODATA:
@@ -158,7 +167,7 @@ class ThanDEMusgs(ThanDTMDEM):
         iy2 = self.nyrows
         f = "="+str(self.nxcols)+form
         for iy in xrange(iy1, iy2):
-            dline = [self.im.getpixel((jx, iy)) for jx in xrange(jx1, jx2)]
+            dline = [self.getpixel(jx, iy) for jx in xrange(jx1, jx2)]
             dline = struct.pack(f, *dline)
             fw.write(dline)
         fw.close()
@@ -237,7 +246,7 @@ def test(im):
     for key in im.tag.keys():
         print key, im.tag.get(key)
     print im.size
-    print im.getpixel((10,20))
+    print self.getpixel(10,20)
 
 
 def test2(im):

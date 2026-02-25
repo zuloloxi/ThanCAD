@@ -88,6 +88,8 @@ Pyos.Macos = 'darwin' in mach
 mach = platform.machine().lower()
 Pyos.Amd64 = ("x86" in mach or "amd" in mach) and "64" in mach  #If machine is x86-64 compatible (OS may still run in 32bits)
 del mach
+Pyos.Os64 = sys.maxsize > 2**32     #This means that the OS is running at 64bits (on a 64bit processor of course)
+
 
 ############################################################################
 ############################################################################

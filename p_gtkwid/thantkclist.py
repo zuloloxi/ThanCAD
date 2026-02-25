@@ -389,11 +389,11 @@ class ThanMixinUtil:
 	    thanGudModalMessage(self, lay1, T["Rename Failed"])
 	    return Canc
 
-	self.thanLimain.delete(i)
-	self.thanLimain.thanInsert(i, dots+name1)
-	self.thanSel1(i)
-	self.thanModified = True
-	return lay
+        self.thanLimain.delete(i)
+        self.thanLimain.thanInsert(i, dots+name1)
+        self.thanSel1(i)
+        self.thanModified = True
+        return lay
 
     def destroy(self):
         "Destroys the circlular reference of attrinutes."

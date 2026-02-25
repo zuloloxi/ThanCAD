@@ -1,11 +1,12 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +22,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines various information for the translation from English to Greek
 and other languages. This module is specific to the modules which implement the
@@ -144,6 +144,13 @@ en2gr = \
 "&Stereo grid"                                    : u"Κάναβος στερεοσκοπικής",
 "Sets a grid at the reference elevation on and off to aid stereo viewing":
                                                     u"Ενεργοποίηση/απενεργοποίηση κάναβου στο υψόμετρο αναφοράς για διευκόλυνση στερεσοκπικής όρασης",
+
+"&Rectify Map"                                    : u"Ορθοαναγωγή χάρτη",
+"Rectifies a raster topographic map"              : u"Κάνει ορθοαναγωγή τοπογραφικού χάρτη (raster)",
+"G&eoreference Image"                             : u"Γεωαναφορά εικόνας",
+"Image georeferencing with control points"        : u"Κάνει γεωαναφορά εικόνας με φωτοσταθερά σημεία",
+"&Orthoimage GDEM"                                : u"Ορθοφωτογραφία ΠΨΜΕ",
+"Image orthorectification using global DEM"       : u"Ορθοαναγωγή φωτογραφίας με χρήση παγκόσμιου ΨΜΕ",
 }
 Tphot = Translation(en2gr)
 #Tarch.thanLangSet("en", thancadconf.thanTranslateTo)

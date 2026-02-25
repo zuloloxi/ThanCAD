@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines the ThanCad Line type, and some builtin line types.
 """
@@ -38,7 +38,13 @@ class ThanLtype:
 
         In contrast to the Tk specification which does not allow zero length
         dashed, ThanCad accepts a zero dash; it is a special case where the
-        dash is plotted as a single pixel dot."""
+        dash is plotted as a single pixel dot.
+        The dashes list is in the form: dash1, space1, dash2, space2, dash3, space3, ...
+        Thus the first element is always a dash. The number of elements must be
+        even.
+        The unit is either 'mm' or 'u'. The fisrt means that the elements are in
+        mm which are independent to the scale of the drawing, and the second
+        means user data units, which are affacted by the sclae of the drawing."""
         ok, terr = thanDashesTest(dashes)
         assert ok, terr
         self.thanName = name.strip()
@@ -50,12 +56,15 @@ class ThanLtype:
 
     def thanTkSet(self, than, unit="mm", scale=1.0):
         "Convert the dashes to Tk gui pixels."
+        print "Thancad :", self.thanName, ":", self.thanDashes
         self.thanPixelSet(than, unit, scale)
+        print "Tkinter :", self.thanName, ":", than.dash
         ds = than.dash
         maxpix = 255
         for i,d1 in enumerate(ds):
             if d1 > maxpix: ds[i] = maxpix
 #           print "ThanLtype: thanTkset() 5: ds=", ds
+        print "Tkinter :", self.thanName, ":", than.dash
 
 
     def thanPilSet(self, than, unit="mm", scale=1.0):
@@ -142,7 +151,9 @@ class ThanLtype:
     def thanExpDxf(self, fDxf, unit="mm", scale=1.0):
         "Exports the linetype to dxf file."
         desc = self.desc
-        if unit == "mm": desc = self.MMSENT + desc
+        if unit == "mm":
+            desc = self.MMSENT + desc
+            scale *= 0.1                 #thAtCad equivalent is in cm (ThanCad dash is in mm)
         relems = [d1*scale for d1 in self.thanDashes]
         for i in xrange(0, len(relems), 2):
             relems[i] = -relems[i]
@@ -162,14 +173,18 @@ class ThanLtype:
                 del dash[i]
             else:
                 i += 1
-        if dash[0] < 0:                           #If ltype begins with space, add a small dash (dot) in front of it
-            dash.insert(0, 0.0)
-        for i,d1 in enumerate(dash):              #Now make spaces positive
+        if len(dash) > 0:
+            if dash[0] < 0:            #If ltype begins with space, add a small dash (dot) in front of it
+                dash.insert(0, 0.0)
+            if len(dash) % 2 != 0:     #If odd number of dashes..
+                dash.append(dash[1])   #..append a space at the end (the first space defined is appended)
+        for i,d1 in enumerate(dash):   #Now make spaces positive
             dash[i] = fabs(d1)
 
         if self.MMSENT in desc:
             desc = desc.replace(self.MMSENT, "")
             unit = "mm"
+            dash = [d1*10.0 for d1 in dash]  #In this case thAtCad equivalent is cm and we convert it to mm
         else:
             unit = "u"
         self.thanName = name
@@ -189,6 +204,7 @@ def thanDashesTest(dashes):
     for i in xrange(1, len(dashes), 2):
         if dashes[i] == 0.0: return False, "Zero space found"
 #    if len(dashes) > 12: return False, "Too many dashes"     #Tk does not set a limit (as some other CAD does)
+    if len(dashes) % 2 != 0: return False, "The number of dashed must an even number"
     return True, ""
 
 

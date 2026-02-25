@@ -125,7 +125,7 @@ def thanRobustDim(self=None):
             self = Tkinter._default_root
         else:
             self.update_idletasks()              # _idletasks breaks WinDoze (98?) support. Skotistika
-            self = self.windfo_toplevel()
+            self = self.winfo_toplevel()
         self.update_idletasks()                  # _idletasks breaks WinDoze (98?) support. Skotistika
         width  = self.winfo_screenwidth()        # Pixels
         height = self.winfo_screenheight()       # Pixels

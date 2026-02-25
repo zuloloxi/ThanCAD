@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines the generic ThanCad object. A ThanCad object is an element
 without graphical representation, such as DTM, It can be also used as a null
@@ -160,10 +160,18 @@ class ThanDEMusgs(ThanObject):
 
     def thanImpThc1(self, fr, ver):
         "Reads the name of the tif which contains the USGS DEM, and loads it."
-        self.filnam = fr.readAtt("TIF")[0]
+        self.filnam = p_ggen.path(fr.readAtt("TIF")[0])
         if self.filnam.startswith("%%%") and self.filnam.endswith("%%%"):
             import p_gearth
             self.dtm = p_gearth.gdem(self.filnam)   #May raise ValueError
+            return
+        ext = self.filnam.ext.lower()
+        if ext == ".bil" or ext == ".hdr":
+            self.dtm = p_gtri.ThanDEMbil()
+            ok, terr = self.dtm.thanSet(self.filnam)
+            if not ok:
+                fr.prter("Invalid/missing bil/hdr file while reading %s: %s:\n%s" % (self.thanObjectName, self.filnam, why))
+                self.dtm.im = None
             return
         try:
             im = Image.open(self.filnam)
@@ -172,7 +180,7 @@ class ThanDEMusgs(ThanObject):
             im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
             self.dtm.thanSet(self.filnam, im)  #This will raise ValueError is something is wrong
         except (IOError, ValueError), why:
-            fr.prter("Invalid/missing TIF in while reading %s: %s:\n%s" % (self.thanObjectName, self.filnam, why))
+            fr.prter("Invalid/missing TIF while reading %s: %s:\n%s" % (self.thanObjectName, self.filnam, why))
             self.dtm.im = None
 
 

@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,13 +20,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes image related commands.
 """
+import re
 import Image
 import p_gtkuti, p_ggen
 import thandr
@@ -37,66 +38,17 @@ from thancommod import thanModCanc, thanModEnd
 from thancomsel import thanSelect1, thanSelectGen
 
 
-def thanTkGetlog(proj):
-    "Imports many raster images whose positions are stored in log format (bmp image)."
-    tit = T["Image file open failed"]
-    fildir = thanfiles.getFiledir()
-    fns = p_gtkuti.thanGudGetReadFile(proj[2], ".log", T["Choose image .log files"],
-                                          initialdir=fildir, multiple=True)
-    if fns == None: return proj[2].thanGudCommandCan()   # Image canceled
-    newelems = []
-    for fi in fns:
-        elem = thandr.ThanImage()
-        try:
-            elem.thanLogGet(proj, fi)
-        except (IOError, ValueError), why:
-            p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
-        else:
-            proj[1].thanElementAdd(elem)     # thanTouch is implicitely called
-            elem.thanTkDraw(proj[2].than)    # This also sets thanImages
-            newelems.append(elem)
-    proj[2].thanRedraw()                 # Images regen probably violated draworder
-    proj[1].thanDoundo.thanAdd("imagelog", thanundo.thanReplaceRedo, ((), newelems),
-                                           thanundo.thanReplaceUndo, ((), newelems))
-    return proj[2].thanGudCommandEnd()
-
 def thanTkGetLog(proj):
     "Imports many raster images whose positions are stored in tfw format (tif image)."
     return thanTkGetPos(proj, "imagelog", "thanLogGet", ".log", T["Choose image .log files"])
 
 def thanTkGetTfw(proj):
     "Imports many raster images whose positions are stored in tfw format (tif image)."
-    tit = T["Image file open failed"]
-    fildir = thanfiles.getFiledir()
-    fns = p_gtkuti.thanGudGetReadFile(proj[2], ".tfw", T["Choose image .tfw files"],
-                                          initialdir=fildir, multiple=True)
-    if fns == None: return proj[2].thanGudCommandCan()   # Image canceled
-    newelems = []
-    for fi in fns:
-        elem = thandr.ThanImage()
-        try:
-            elem.thanTfwGet(proj, fi)
-        except (IOError, ValueError), why:
-            p_gtkuti.thanGudModalMessage(proj[2], why, tit)   # (Gu)i (d)ependent
-        else:
-            proj[1].thanElementAdd(elem)     # thanTouch is implicitely called
-            elem.thanTkDraw(proj[2].than)    # This also sets thanImages
-            newelems.append(elem)
-    proj[2].thanRedraw()                 # Images regen probably violated draworder
-    proj[1].thanDoundo.thanAdd("imagetfw", thanundo.thanReplaceRedo, ((), newelems),
-                                           thanundo.thanReplaceUndo, ((), newelems))
-    return proj[2].thanGudCommandEnd()
-
-
-def thanTkGetTfw(proj):
-    "Imports many raster images whose positions are stored in tfw format (tif image)."
     return thanTkGetPos(proj, "imagetfw", "thanTfwGet", ".tfw", T["Choose image .tfw files"])
-
 
 def thanTkGetGeotif(proj):
     "Imports many tif images whose positions are stored in tags in the tif file itself."
     return thanTkGetPos(proj, "imagegeotiff", "thanGeotifGet", ".tif", T["Choose geotiff image files"])
-
 
 def thanTkGetPos(proj, com, methodname, ext, stat):
     "Imports many raster images whose positions are stored in some format."
@@ -121,6 +73,113 @@ def thanTkGetPos(proj, com, methodname, ext, stat):
     proj[2].thanRedraw()                 # Images regen probably violated draworder
     proj[1].thanDoundo.thanAdd(com, thanundo.thanReplaceRedo, ((), newelems),
                                     thanundo.thanReplaceUndo, ((), newelems))
+    return proj[2].thanGudCommandEnd()
+
+
+def thanTkGetTiles(proj):
+    """Imports the tiles of an image which has been split.
+
+    The tiles should have r1c1, r1c2, r1c3, .., r2c1, r2c2,.. in their filenames.
+    """
+    load = True                           #Load images
+    tit = T["Image file open failed"]
+    fildir = thanfiles.getFiledir()
+    fns = p_gtkuti.thanGudGetReadFile(proj[2], "*", T["Choose image tiles"],
+                                          initialdir=fildir, multiple=True)
+    if fns == None: return proj[2].thanGudCommandCan()   # Image canceled
+    newelems = []
+    bcol = {}
+    hrow = {}
+    imps = []
+    _splitter = re.compile(r""".*[rR](\d+)[cC](\d+).*""")
+    for fi in fns:
+        dl = _splitter.findall(fi)
+        print "fi=", fi, "dl=", dl
+        if len(dl) != 1 or len(dl[0]) != 2:
+            p_gtkuti.thanGudModalMessage(proj[2],
+            "The 'r<n>c<n>' pattern was not found in the filename: %s" % (fi,),
+            T["Not an image tile"])   # (Gu)i (d)ependent
+            continue
+        imp = p_ggen.Struct()
+        imp.irow = int(dl[0][0])-1
+        imp.icol = int(dl[0][1])-1
+        imp.im, terr = imageOpen(fi, load=load)    #This also checks if dxp>=2 and dyp>=2
+        if terr != "":
+            p_gtkuti.thanGudModalMessage(proj[2], terr, tit)     # (Gu)i (d)ependent
+            continue
+        if not load: imp.im = ThanImageMissing(size=(b, h))
+        imp.b, imp.h = imp.im.size
+        imp.fi = fi
+        imp.x = imp.y = 0
+        print imp.anal()
+        imps.append(imp)
+
+    if len(imps) == 0: return proj[2].thanGudCommandCan(T["No images were loaded."])
+    if len(imps) == 1:
+        elem = thandr.ThanImage()
+        imp = imps[0]
+        ret = elem.thanTkGet(proj, imori=imp.im, imfilnamori=imp.fi, insertmode="p")
+        if ret == Canc: return proj[2].thanGudCommandCan()
+        proj[1].thanElementAdd(elem)     # thanTouch is implicitely called
+        elem.thanTkDraw(proj[2].than)    # This also sets thanImages
+        newelems = [elem]
+        proj[2].thanRedraw()             # Images regen probably violated draworder
+        proj[1].thanDoundo.thanAdd("imagetiles", thanundo.thanReplaceRedo, ((), newelems),
+                                                 thanundo.thanReplaceUndo, ((), newelems))
+        return proj[2].thanGudCommandEnd()
+
+    b = {}
+    h = {}
+    for imp in imps:
+        b[imp.icol] = imp.b
+        h[imp.irow] = imp.h
+    if len(b) > 1: tilesize = b[min(b)]    #Note that there are at least 2 tile rows or 2 tile columns
+    else:          tilesize = h[min[h]]
+    icollast = max(b)
+    irowlast = max(h)
+    blast = b[icollast]
+    hlast = h[irowlast]
+    print "b=", b
+    print "h=", h
+    print "irowlast, icollast=", irowlast, icollast
+    print "tilesize, blast, hlast=", tilesize, blast, hlast
+    terr  = T["All but the last tiles should have the same width, height"]
+    terrb = T["All the tiles of the last column should have the same width"]
+    terrh = T["All the tiles of the last row should have the same height"]
+    for imp in imps:
+        if imp.icol < icollast:
+            if imp.b != tilesize: return proj[2].thanGudCommandCan(terr)
+        else:
+            if imp.b != blast: return proj[2].thanGudCommandCan(terrb)
+        if imp.irow < irowlast:
+            if imp.h != tilesize: return proj[2].thanGudCommandCan(terr)
+        else:
+            if imp.h != hlast: return proj[2].thanGudCommandCan(terrh)
+
+    for imp in imps:
+        imp.x = imp.icol*tilesize       #In the image coordinate system (x of the upper left corner, or lower left corner)
+        imp.y = imp.irow*tilesize       #In image coordinate system (y of the upper left corner)
+    ymax = irowlast*tilesize
+    for imp in imps:
+        if imp.irow < irowlast: imp.y += tilesize #In image coordinate system (y of the lower left corner)
+        else                  : imp.y += hlast    #In image coordinate system, last tile (y of the lower left corner)
+        imp.y = (ymax+hlast) - imp.y #ThanCad coordinate system (y of the lower left corner) units are pixels)
+
+    newelems = []
+    for imp in imps:
+        elem = thandr.ThanImage()
+        c1 = list(proj[1].thanVar["elevation"])
+        c1[:2] = 0.0+imp.x, 0.0+imp.y    # This is the lower-left corner of the lower-left pixel
+        c2 = list(c1)
+        c2[0] += imp.b                   # This is the upper-right corner of the upper-right pixel
+        c2[1] += imp.h
+        elem.thanSet(imp.fi, imp.im, c1, c2, theta=0.0, transpose=0, clip=None, loaded=load)
+        proj[1].thanElementAdd(elem)     # thanTouch is implicitely called
+        elem.thanTkDraw(proj[2].than)    # This also sets thanImages
+        newelems.append(elem)
+    proj[2].thanRedraw()                 # Images regen probably violated draworder
+    proj[1].thanDoundo.thanAdd("imagetiles", thanundo.thanReplaceRedo, ((), newelems),
+                                             thanundo.thanReplaceUndo, ((), newelems))
     return proj[2].thanGudCommandEnd()
 
 

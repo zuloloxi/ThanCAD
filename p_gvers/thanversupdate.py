@@ -1,161 +1,135 @@
-##############################################################################
-# ThanCad 0.0.4: 2dimensional CAD with raster support for engineers.
-# 
-# Copyright (C)  30, March 2003  by Thanasis Stamos
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
-# 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details (www.gnu.org/licenses/gpl.html).
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-##############################################################################
-
+# -*- coding: iso-8859-7 -*-
 """\
-ThanCad 0.0.4: 2dimensional CAD with raster support for engineers.
-This module contains a script which updates the short description,
-version, author etc. of ThanCad, which exist as comments in the
-beginning of every source file.
+This module contains a script which updates the title, version, author and other
+information of all the source files of a python program. The information is
+written as comments in the beginning of every source file.
 """
-
+descMod = __doc__
 
 import sys
-from p_ggen import path
-import thanvers
+import p_ggen, p_gtkuti
+from thanvers import SENTCOM
+frw = {}
+winmain = None
+prg = p_ggen.prg
+sourceDir = ""
 
-sourcedir = path("/windows/D/progs/thancadtemp/xxx")
-sourcefiles = \
-[ "thancad.py",
-  "thandr/thanarc.py", "thandr/thancirc.py", "thandr/thandr.py",
-      "thandr/thanelem.py", "thandr/thanline.py", "thandr/thanpoint.py",
-      "thandr/thanregi.py", "thandr/thantext.py",
-  "thanexpdxf/thanexpdxf.py",
-      "thanexpdxf/dxflib/thandxfatt.py", "thanexpdxf/dxflib/thandxfdra.py",
-      "thanexpdxf/dxflib/thandxfgeo.py", "thanexpdxf/dxflib/thandxfini.py",
-      "thanexpdxf/dxflib/thandxflin.py", "thanexpdxf/dxflib/thandxfsym.py",
-  "thanfonts/thanfont.py", "thanfonts/thanfontpolygon.py",
-      "thanfonts/thanfontprime.py", "thanfonts/thansymbol.py",
-      "thanfonts/utils.py",
-  "thangui/thanfiles.py", "thangui/thanguiutil.py",
-      "thangui/thanguiwindraw.py", "thangui/thanguiwinmain.py",
-  "thanimp/thanimpsyk.py",
-  "thanimpdxf/thanimpdxf.py", "thanimpdxf/thanimpdxfent.py",
-      "thanimpdxf/thanimpdxfhead.py", "thanimpdxf/thanimpdxftab.py",
-      "thanimpdxf/thanimpdxftra.py",
-  "thanlayer/thanlayatts.py", "thanlayer/thanlayer.py",
-  "thantk/tkut.py",
-      "thantk/thantkclist/thantkcli.py", "thantk/thantkclist/thantkclist.py",
-  "thantkgui/thantkconst.py", "thantkgui/thantkguicoor.py",
-      "thantkgui/thantkguihighdraw.py", "thantkgui/thantkguihighget.py",
-      "thantkgui/thantkguilowget.py", "thantkgui/thantkguiwindraw.py",
-      "thantkgui/thantkguiwinmain.py", "thantkgui/thantkutil.py",
-  "thanvar/thanutila.py",
-  "thanvers/thanvers.py", "thanvers/thanversupdate.py",
-]
 
-oldersourcefiles = \
-[ "thanimp/thanimpdxf.py",
-  "thanquadxxx/thanhalf.py", "thanquadxxx/thanquadxx.py"
-]
 
-thanCadAbout = [ "#"*78 + "\n" ]
-for dl in thanvers.thanCadAbout.splitlines(1):
-    thanCadAbout.append("# " + dl)
-thanCadAbout.append("#"*78 + "\n")
+def thanVersUpdate(thanCadAbout, title):
+    "Main routine."
+    import p_gfil
+    openFiles()
+    try:
+        doversion(thanCadAbout, title)
+    except BaseException, e:
+        p_gfil.er1s("\n%s:\n%s" % (p_gfil.Tgui["Error while executing program"], e), "can")
+    p_gfil.closeFiles1()                        #Not reentrant
+
+
+def doversion(thanCadAbout, title):
+    "Main function."
+    global sourceDir
+    prg("source path: %s" % (sourceDir,), "info")
+    prg("excluded directories: %s" % (p_ggen.thancadrel.excluded,), "info")
+    prg("excluded matched directories: %s" % (p_ggen.thancadrel.excludedmatch,), "info")
+    prg("-----------------------------------------------------------------------------")
+    if winmain == None: a = p_ggen.inpNo("Proceed with update (enter=yes)?", True)
+    else:               a = p_gtkuti.xinpNo(winmain, "Proceed with update (enter=yes)?", True)
+    if not a: return
+    thanUpdateSources(sourceDir, thanCadAbout, title)
+    prg("-----------------------------------------------------------------------------")
+    prg("Sources have been updated as .new files.", "info")
+    lineCount(sourceDir)
+    if winmain == None:
+        a = p_ggen.inpNo("Proceed with replace (enter=no)?", False)
+    else:
+        winmain.showEnd()
+        a = p_gtkuti.xinpNo(winmain, "Proceed with replace (enter=no)?", False)
+    if a:
+        rotateSources(sourceDir)
+        prg("done", "info")
+        prg("-----------------------------------------------------------------------------")
+        lineCount(sourceDir)
 
 #==========================================================================
 
-def thanUpdateSources():
+def thanUpdateSources(sourceDir, thanCadAbout, title):
     "Updates the version number, description and license in the sources."
-    
-    for f in sourcefiles:
-        fpa = sourcedir / f
-	print fpa
-
-	fr = file(fpa, "r")
-	__skipOldDoc(fr)
-
-	fw = file(fpa+".new", "w")
-	__writeNewDoc(fw)
-	__writeRest(iterInp, fw)
-
-	fr.close()
-	fw.close()
+    for fp in p_ggen.thancadrel.iterfpy(sourceDir):
+        prg(fp)
+        fInp = file(fp, "r")
+        iterInp = iter(fInp)
+        fOut = file(fp+".new", "w")
+        __skipOldDoc(iterInp, fOut)
+        __writeNewDoc(fOut, thanCadAbout, title)
+        __writeRest(iterInp, fOut)
+        fInp.close()
+        fOut.close()
 
 #==========================================================================
 
-def rotateSources():
-    "Renames a source to source.bak, and source.new to source."
-    for f in sourcefiles:
-        fpa = sourcedir / f
-	print fpa
-	filbak = __getBackupName(fpa)
-	fpa.rename(filbak)
-	filnew = fpa + ".new"
-	filnew.rename(fpa)
+def rotateSources(sourceDir):
+    "Renames the previously created *.py.new files to *.py files."
+    for f in p_ggen.thancadrel.iterfpy(sourceDir):
+        filbak = __getBackupName(f)
+        f.rename(filbak)
+        fnew = f + ".new"
+        fnew.rename(f)
 
 #==========================================================================
 
-def __getBackupName(fpa):
-    "Skips the doc string which must be long format string and at the first line."
-    fbak = fpa + ".bak"
-    if not fbak.exists(): return fbak
+def lineCount(sourceDir):
+    "Counts all the lines in .py files recursively."
+    n = 0
+    for f in p_ggen.thancadrel.iterfpy(sourceDir):
+        n += len(f.lines())
+    prg("Total line count=%s" % (n,), "info")
+
+#==========================================================================
+
+def __getBackupName(fp):
+    "Finds a backup name for the file fp, which does not already exist."
+    filnam = fp+".bak"
+    if not filnam.exists(): return filnam
     for i in xrange(10):
-        fbak = fpa + ".bk" + str(i)
-        if not fbak.exists(): return fbak
-    raise IOError, fpa + ":    Can not create backup file."
+        filnam = p_ggen.path("%s.bk%d" % (fp, i))
+        if not filnam.exists(): return filnam
+    raise IOError, fp+": Can not create backup file."
 
 #==========================================================================
 
-def __skipOldDoc (fr):
+def __skipOldDoc (iterInp, fOut):
     "Skips the doc string which must be long format string and at the first line."
-    for dl in fr:
-        if dl.rstrip() == "#"*78: break
-        print "    Sentinel comment not found on first line!"
-	sys.exit(1)
+    import p_gfil
+    for dl in iterInp:
+        if dl.rstrip() == SENTCOM: break
+        fOut.write(dl.rstrip()+'\n')
     else:
-        print "    Source file should not be empty!"
-	sys.exit()
+        p_gfil.er1s("    Sentinel comment not found at the beginning of file!")
 
-    for dl in fr:
-        if dl.rstrip() == "#"*78: break
-	dl = dl.strip()
-        if dl == "" or dl[0] == "#": continue
-        print "    Between the 2 sentinel comments there should be only comments or blanks."
-	sys.exit(1)
+    for dl in iterInp:
+        if dl.rstrip() == SENTCOM: break
     else:
-	print "    Sentinel comment not found before end of file!"
-        sys.exit(1)
+        p_gfil.er1s("    Sentinel comment not found before end of file!")
 
-    for dl in fr:
+    for dl in iterInp:
         if dl.rstrip() == '"""\\': break
     else:
-	print "    Doc string not found before end of file!"
-        sys.exit(1)
+        p_gfil.er1s("    Doc string not found before end of file!")
 
-    for dl in fr:
+    for dl in iterInp:
         break
     else:
-	print "    Doc string does not exist!"
-        sys.exit(1)
+        p_gfil.er1s("    Doc string does not exist!")
 
 #==========================================================================
 
-def __writeNewDoc (fOut):
+def __writeNewDoc (fOut, thanCadAbout, title):
     "Writes description of the project and the new doc string."
-
     for dl in thanCadAbout: fOut.write(dl)
     fOut.write('\n"""\\\n')
-    fOut.write(thanvers.thanCadShortDesc+"\n")
+    fOut.write(title+"\n")
 
 #==========================================================================
 
@@ -166,7 +140,44 @@ def __writeRest (iterInp, fOut):
 
 #==========================================================================
 
-print __doc__
-#thanUpdateSources()
-print "--------------------------------------------"
-rotateSources()
+def openFiles():
+    "Opens files for the program."
+    import p_gfil
+    global frw, winmain, prg
+    p_gfil.setPar(openfileParx)
+    p_gfil.openFile1(0, ' ', ' ', 0, 'Πρόγραμμα αντικατάστασης έκδοσης σε αρχεία κώδικα python')
+    frw = p_gfil.openFile1(998, ' ', ' ', 0, ' ')
+    winmain, prg1, _ = p_gfil.openfileWinget()
+    if winmain != None: prg = prg1
+
+
+def openfileParx (icod1, un):
+    global sourceDir
+    if p_ggen.Pyos.Windows: sourceDir1 = p_ggen.path(".\\")
+    else:                   sourceDir1 = p_ggen.path(".").expand()
+#---Read parameters from keyboard
+    if icod1 == 0:
+        prg(' ')
+        sourceDir = p_ggen.inpStrB("Φάκελλος αρχείων κώδικα (enter=%s): " % sourceDir1, sourceDir1)
+        sourceDir = p_ggen.path(sourceDir).expand().abspath()
+#---Read parameters from unit un (file="mediate.tmp")
+    elif icod1 == 1:
+        sourceDir = p_ggen.medStr(un, "Φάκελλος αρχείων κώδικα=", sourceDir1)
+        sourceDir = p_ggen.path(sourceDir).expand().abspath()
+#---Read parameters from xwin
+    elif icod1 == 3:
+        sourceDir = p_gtkuti.thanGudGetDir(un, "Φάκελλος αρχείων κώδικα", initialdir=sourceDir1)
+        if sourceDir == None: sys.exit()
+        sourceDir = p_ggen.path(sourceDir).expand().abspath()
+    elif icod1 == 2:
+        un.write("%s\n" % (sourceDir,))
+#---messages
+    elif icod1 < 0:
+        prt = un
+        prt(descMod)
+    else:
+        assert False, 'Sr openFilePar: Fildat library error: unknown code!'
+
+
+if __name__ == "__main__":
+    thanVersUpdate()

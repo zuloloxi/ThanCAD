@@ -12,6 +12,7 @@ class ThanDrIgnore:
         if prt == None: self.prt = p_ggen.doNothing   # No message will be printed
         else:           self.prt = prt
 
+    def dxfVars    (self, v):                     pass
     def dxfVport   (self, name, x1, y1, x2, y2):  pass
     def dxfXymm    (self, x1, y1, x2, y2):        pass
     def dxfLayer   (self, name, atts):            pass
@@ -51,13 +52,18 @@ class ThanDrWarn(ThanDrIgnore):
     """
 
     def __init__(self, laykno=(), **kw):
-        "Set known and unknown layers."
+        """Set known and unknown layers.
+
+        The argument laykno is a list/tuple of layers which the user is interested in.
+        (and expects). The layers may contain wild characters as understood by fnmatch().
+        These layers (with the wild characters) are copied to _layknopat (pat is for pattern).
+        """
         ThanDrIgnore.__init__(self, **kw)
         self._objunk = {}  # Unknown objects: objects which the user is not interested in
         self._functy = {}  # Functionality which the user is not interested in
         self._laykno = {}  # Layers which the user expects
         self._layunk = {}  # Layers which the user is not interested in
-        self._layknopat = [lay.lower() for lay in laykno]
+        self._layknopat = [lay.lower() for lay in laykno]  #Layers which the user expects; may contain wild chars
 
 
     def warnObj(self, lay, obj):
@@ -97,6 +103,7 @@ class ThanDrWarn(ThanDrIgnore):
         self.prt("Dxf import Warning: %s will be ignored." % functyname, "can1")
 
 
+    def dxfVars     (self, v):                     self.warnFuncty("Variables definition")
     def dxfVport    (self, name, x1, y1, x2, y2):  self.warnFuncty("Viewport definition")
     def dxfXymm     (self, x1, y1, x2, y2):        self.warnFuncty("Extents definition")
     def dxfLayer    (self, name, atts):            self.warnFuncty("Layer definition")
@@ -158,20 +165,26 @@ class ThanDrSave(ThanDrIgnore):
     def __init__(self, **kw):
         "Creates an instance of the class."
         ThanDrIgnore.__init__(self, **kw)
+        self.thanVars = {}
         self.thanVports = [ ]
-	self.thanLayers = [ ]
-	self.thanLtypes = [ ]
-	self.thanXymm = None
+        self.thanLayers = [ ]
+        self.thanLtypes = [ ]
+        self.thanXymm = None
         self.thanPolylines = [ ]
         self.thanLines = [ ]
-	self.thanCircles = [ ]
-	self.thanPoints = [ ]
+        self.thanCircles = [ ]
+        self.thanPoints = [ ]
         self.thanArcs = [ ]
         self.thanEllipses = [ ]
-	self.thanTexts = [ ]
-	self.thanBlocks = []
-	self.thanImages = []
-	self.than3dfaces = []
+        self.thanTexts = [ ]
+        self.thanBlocks = []
+        self.thanImages = []
+        self.than3dfaces = []
+
+
+    def dxfVars(self, v):
+        "Saves the variables."
+        self.thanVars.update(v)
 
     def dxfVport(self, name, x1, y1, x2, y2):
         "Saves a View Port."
@@ -236,12 +249,13 @@ class ThanDrSave(ThanDrIgnore):
 	if self.thanXymm == None: n = "NOT"
 	self.prt("Max, min of x,y     : %s defined in dxf file" % n, "info1")
 
-	self.prt("Number of view ports: %d" % len(self.thanVports), "info1")
-	self.prt("Number of layers    : %d" % len(self.thanLayers), "info1")
+        self.prt("Number of variables : %d" % len(self.thanVars), "info1")
+        self.prt("Number of view ports: %d" % len(self.thanVports), "info1")
+        self.prt("Number of layers    : %d" % len(self.thanLayers), "info1")
 	self.prt("Number of line types: %d" % len(self.thanLtypes), "info1")
-	self.prt("Number of polylines : %d" % len(self.thanPolylines), "info1")
+        self.prt("Number of polylines : %d" % len(self.thanPolylines), "info1")
 	self.prt("Number of lines     : %d" % len(self.thanLines), "info1")
-	self.prt("Number of texts     : %d" % len(self.thanTexts), "info1")
+        self.prt("Number of texts     : %d" % len(self.thanTexts), "info1")
 	self.prt("Number of points    : %d" % len(self.thanPoints), "info1")
 	self.prt("Number of circles   : %d" % len(self.thanCircles), "info1")
         self.prt("Number of arcs      : %d" % len(self.thanArcs), "info1")
@@ -387,162 +401,6 @@ class ThanDxfDrawing(ThanDrSave):
             pass
 
 
-class ThanDrConpas(ThanDrWarn):
-    "A class which gets control/pass points from a .dxf file."
-
-    def __init__(self, filnam="<undefined>", ctype="noname", layer=("fotost*", ), prt=p_ggen.prg):
-        """Sets the type of points and the layers to serach.
-	
-	If type == "noname" then x, y, z coordinates of all points plus an
-            arbitrary name are returned.
-        If type == "pixel" then x, y, z coordinates of all points are returned.
-	    Furthermore, the program looks for texts and finds the closest text to 
-	    a point, and considers it as the point's name. As a precaution, this
-	    point must also be the closest point to the text found, or else there
-	    is ambiguity and the program returns an error. The texts must not
-	    contain the character '/'.
-        If type == "EGSA87" then x, y coordinates of all points are returned.
-	    Furthermore, the program looks for texts and finds the closest text to 
-	    a point, and considers it as the point's name. As a precaution, this
-	    point must also be the closest point to the text found, or else there
-	    is ambiguity and the program returns an error. The texts must
-	    contain the character '/' and after this the z coordinate of the point
-	    for example "Point1/123.457". This z is returned.
-	if layer == "*" all the layers are searched. Else only the layer with name
-	    the content of the variable layer is searched.
-	    Another possibility is if layer ends with * (for example fotost*). In
-	    this case all the layers beginning with fotost are searched.
-        """
-        ThanDrWarn.__init__(self, layer, prt=prt)
-        self.cxypix = []       # pixel coordinates of control points
-        self.cname =  []       # names of control points
-        self.filnam = filnam   # Name of the dxf file
-        self.ctype = ctype     # Coordinate system type: pixel, EGSA87, or noname
-
-
-    def dxfPoint(self, xx, yy, zz, lay, handle, col):
-        "Selects the polylines only in certain layers."
-        if self.isLayerKnown(lay):
-            self.cxypix.append([None, xx, yy, zz])
-        else:
-            self.warnObj(lay, self.POINT)
-
-
-    def dxfText(self, xx, yy, zz, lay, handle, col, t, h, theta):
-        "Selects the circle of layer plaisio; its center is the origin point."
-        if self.isLayerKnown(lay):
-            self.cname.append((t, xx, yy))
-        else:
-            self.warnObj(lay, self.TEXT)
-
-
-    def findHeight(self):
-        "Tests and finds the height for the EGSA87 coordinates, or put zero height for pixel coordinates."
-        if self.ctype == "nonamez":
-	    for j,(t,xt,yt) in enumerate(self.cname):
-	        try:
-	            ht = float(t)
-		except ValueError, IndexError:
-	            self.prt("Error in file %s: Illegal height '%s':" % (self.filnam, t), "can")
-		    self.prt("The height must be a numeric value.", "can")
-		    self.prt("For example: '128.89' or '12.989'", "can")
-		    raise p_ggen.RecordedError, "Errors recorded above."
-		self.cname[j] = "noname", xt, yt, ht
-	elif self.ctype != "pixel":
-	    for j,(t,xt,yt) in enumerate(self.cname):
-	        try:
-	            t1, t2 = t.split("/")
-		    ht = float(t2)
-		except ValueError, IndexError:
-	            self.prt("Error in file %s: Illegal point name '%s':" % (self.filnam, t), "can")
-		    self.prt("The point should be of the form:", "can")
-		    self.prt(" <name> / <height>", "can")
-		    self.prt("For example: 'P1 / 128.89' or '1/12.989'", "can")
-		    raise p_ggen.RecordedError, "Errors recorded above."
-		self.cname[j] = t1.strip(), xt, yt, ht
-	else:
-	    for j,(t,xt,yt) in enumerate(self.cname):
-	        try:
-	            t1, t2 = t.split("/")
-		    ht = float(t2)
-		except ValueError, IndexError:
-		    pass
-		else:
-	            self.prt("Warning in file %s: It seems that you defined height to point '%s':" % (self.filnam, t), "can1")
-		    self.prt("    The point should NOT be of the form:", "can1")
-		    self.prt("     <name> / <height>", "can1")
-		    self.prt("    Please remove the height from the point.", "can1")
-		self.cname[j] = t.strip(), xt, yt, 0.0
-		    
-
-
-    def corNameHeight(self):
-        "Correlates names with points; the name of a point is the closest text to it."
-	for i,(aa,x,y,h) in enumerate(self.cxypix):
-	    if len(self.cname) < 1:
-	        self.prt("Error in file %s: Point with %s coordinates %.1f %.1f:" % (self.filnam, self.ctype, x,y), "can")
-		self.prt("The name and/or the height of this point was not defined.", "can")
-	        self.prt("(The number of point names and/or heights is less than the number of points!)", "can")
-		raise p_ggen.RecordedError, "Errors recorded above."
-	    ds = [((x-xt)**2+(y-yt)**2, j) for j,(t,xt,yt,ht) in enumerate(self.cname)]
-	    d, j = min(ds); t,xt,yt,ht = self.cname[j]
-	    ds = [((x1-xt)**2+(y1-yt)**2, i1) for i1,(aa1,x1,y1,h1) in enumerate(self.cxypix) if aa1 == None]
-	    d, i1 = min(ds)
-	    if i1 != i:
-	        self.prt("Error in file %s: Point with %s coordinates %.1f %.1f:" % (self.filnam, self.ctype, x,y), "can")
-		self.prt("The name and/or height of this point was probably not defined.", "can")
-		self.prt("The nearest name and/or height to this point is: '%s' but it was found to refer to" % t, "can")
-		self.prt("point with pixel coordinates %.1f %.1f" % (x1,y1))
-		raise p_ggen.RecordedError, "Errors recorded above."
-	    self.cxypix[i][0] = t
-	    if self.ctype != "pixel": self.cxypix[i][3] = ht
-	    del self.cname[j]
-        if len(self.cname) > 0:
-            self.prt("Warning in file %s: The number of points is less than the number of point names" % self.filnam, "can1")
-            self.prt("and/or heights. The following point names and/or heights do not refer to any point:", "can1")
-            if self.ctype == "nonamez":
-                for t,xt,yt,ht in self.cname: self.prt(str(ht))
-            else:
-                for t,xt,yt,ht in self.cname: self.prt(t)
-
-
-    def addName(self):
-        "Adds suitable name to simple points."
-        i = 1
-        for c in self.cxypix:
-            c[0] = str(i)
-            i += 1
-
-
-def thanDxfGetConpas(fdxf, ctype, layer=("fotost*",), prt=p_ggen.prg):
-    "Reads the coordinates of the control points from dxf file."
-    dr = ThanDrConpas(fdxf.name, ctype, layer, prt)
-    t = ThanImportDxf(fdxf, dr)
-    t.thanImport()
-    if ctype == "noname":
-        dr.addName()
-    elif ctype == "nonamez":
-        dr.findHeight()
-        dr.corNameHeight()
-        dr.addName()
-    else:
-        dr.findHeight()
-        dr.corNameHeight()
-    return dr.cxypix
-
-
-def testThanDxfGetConpas():
-    "Test dxf import of named points."
-    f = open("trap.dxf", "r")
-    cxypix = thanDxfGetConpas(f, "pixel")
-    for a,x,y,h in cxypix:
-        print "%10s%15.3f%15.3f%15.3f" % (a,x,y,h)
-    f = open("trap.dxe", "r")
-    cxypix = thanDxfGetConpas(f, "EGSA87")
-    for a,x,y,h in cxypix:
-        print "%10s%15.3f%15.3f%15.3f" % (a,x,y,h)
-
-
 def testThanDrSave():
     "Test dxf import."
     from p_gimdxf import ThanImportDxf
@@ -558,8 +416,8 @@ def testThanDrLayer():
     "Test dxf import."
     from p_gimdxf import ThanImportDxf, ThanDrLayer, thanDxfColCode2Rgb
     fr = file("shm.dxf", "r")
-    dr = ThanDrLayer()           # Instantiate the object that collects the layers
-    t = ThanImportDxf(fr, dr)     # Instantiate the object which reads the dxf file
+    dr = ThanDrLayer()           # Instantiate the receiver object that collects the layers
+    t = ThanImportDxf(fr, dr)    # Instantiate the producer object which reads the dxf file
     t.thanImport()               # Read and parse the dxf file
     fr.close()
     del t
@@ -569,9 +427,9 @@ def testThanDrLayer():
                      "off", "locked", "lineweight", "noplot"))
     for name in dr.layer:
         atts = dr.layer[name]
-	fw.write(form % (name, atts["color"], thanDxfColCode2Rgb[atts["color"]], 
-	         atts["linetype"], atts["frozen"], atts["off"], atts["locked"],
-		 atts["lineweight"], atts["noplot"]))
+        fw.write(form % (name, atts["color"], thanDxfColCode2Rgb[atts["color"]], 
+                 atts["linetype"], atts["frozen"], atts["off"], atts["locked"],
+                 atts["lineweight"], atts["noplot"]))
     fw.close()
 
 
@@ -582,15 +440,6 @@ def testThanDrWarn():
     dr = ThanDrWarn()
     t = ThanImportDxf(f, dr)
     t.thanImport()
-    f.close()
-
-
-def testThanDrConpas():
-    "Test dxf import."
-    from p_gimdxf import ThanImportDxf
-    f = file("trap1.dxe", "r")
-    xy = thanDxfGetConpas(f, ctype="EGSA87")
-    for xy1 in xy: print xy1
     f.close()
 
 

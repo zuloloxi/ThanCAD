@@ -364,7 +364,7 @@ class ThanTri:
 
 
     def writetri(self, fw, form1="%-10s%15.3f%15.3f%15.3f\n", form2="%10d\n"):
-        "Write the trianguation in tri file; the links must be already sorted."
+        "Write the trianguation in a tri file; the links must be already sorted."
         iaa, seq = self.serialise()      # The points must be written with a certain sequence
         for c in seq:
             ca = list(c[:3])
@@ -373,6 +373,22 @@ class ThanTri:
             for ca in self.ls[c]:
                 fw.write(form2 % iaa[ca])
             fw.write("$\n")
+
+
+    def writetrp(self, fw, p, hphoto, form1="%-10s%15.3f%15.3f%15.3f%10d%10d\n", form2="%10d\n"):
+        "Write the trianguation in trp file; the links must be already sorted."
+        iaa, seq = self.serialise()      # The points must be written with a certain sequence
+        for c in seq:
+            ca = list(c[:3])
+            while len(ca) < 3: ca.append(0.0)
+            px, py, pz = p.project(ca)
+            px = px + 1                  # Μετατροπή σε συντεταγμένες DVP
+            py = hphoto - py             # τις οποίες αναμένει το ortho
+            fw.write(form1 % (self.aa[c], ca[0], ca[1], ca[2], int(px+0.5), int(py+0.5)))
+            for ca in self.ls[c]:
+                fw.write(form2 % iaa[ca])
+            fw.write("$\n")
+
 
     apnames = frozenset(('####ΚΑ####', '####ΚΔ####', '####ΠΔ####', '####ΠΑ####'))
 

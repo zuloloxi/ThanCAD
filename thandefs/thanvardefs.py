@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines the ThanCad TextStyle, and an object used if an image is
 not found or if Python Image Library is not installed.
@@ -54,7 +54,7 @@ class ThanTstyle:
 class ThanImageMissing:
     def __init__(self, size=(100,100)): self.size = size
     def copy    (self): return ThanImageMissing(self.size)
-    def __error (self):	raise ValueError, "Image was not found/not supported/corrupted."
+    def __error (self): raise ValueError, "Image was not found/not supported/corrupted."
     def getpixel(self, *args, **kw): self.__error()
     def resize  (self, *args, **kw): self.__error()
     def paste   (self, *args, **kw): self.__error()
@@ -69,13 +69,14 @@ class ThanImageMissing:
         return ThanImageMissing(size=(dxp, dyp))
 
 
-def imageOpen(fi, size=None):
+def imageOpen(fi, size=None, load=True):
     "Get an image from a file and report errors."
     import Image
     try:
         im = Image.open(fi)
         if im.size[0] < 2 or im.size[1] < 2: raise ValueError, T["Image is probably corrupted: size is less than 2 pixels"]
-        im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
+        if load:
+            im.crop((0,0,2,2))   #This will trigger decode error (IOError) if image is not recognised
         return im, ""
     except (IOError, ValueError), e:
         if size == None: im = ThanImageMissing(size)

@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,16 +20,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module defines a Tkinter window to display a ThanCad drawing.
 """
 
 import weakref, Tkinter
 import p_ggen, p_gtkuti, p_gtkwid
-import thantk, thanvar, thancom, thanvers, thaneng, thanmenus, thanfonts
+import thantk, thanvar, thancom, thaneng, thanmenus, thanfonts
+from thanvers import tcver
 from thanopt import thancadconf
 from thanopt.thancon import thanFrape
 from thandefs.thanatt import ThanAttCol
@@ -49,7 +50,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
     def __initold__ (self, fpath, dr):
         "Initialise base classes and mixins and then this class."
         self.thanProj = [fpath, dr, self]
-        self.thanTitle = thanvers.thanCadName + " - " + self.thanProj[0].name
+        self.thanTitle = tcver.name + " - " + self.thanProj[0].name
         self.thanSelectLayButton = False                 # NOT in selection mode
 
         thantkguihighget.ThanTkGuiHighGet.__init__(self)
@@ -111,7 +112,7 @@ class ThanTkGuiWinDraw(Tkinter.Toplevel,
         "Associate a ThanCad drawing with this drawing window."
         self.thanProj[:2] = fn, dr
         thantkguicoor.ThanTkGuiCoor.__init__(self)
-        self.thanTitle = thanvers.thanCadName + " - " + self.thanProj[0].name
+        self.thanTitle = tcver.name + " - " + self.thanProj[0].name
         self.title(self.thanTitle)
         self.thanSelectLayButton = False                 # NOT in selection mode
 

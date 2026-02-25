@@ -1,9 +1,10 @@
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 This module displays a dialog for the user to enter object snap values.
 It also has the routine to get the osnap values from the config files.
@@ -90,8 +90,10 @@ class ThanTkOsnap(p_gtkuti.ThanDialog):
 	w = Label(f, text=" Object Snap Modes")
 	w.grid(row=0, column=1, columnspan=4, sticky="w")
 
-        but = p_gtkwid.ThanButtonIm(f, image=thanimag.ntuabig3(), title=T["National Technical University of Athens"],
-            url="www.ntua.gr/index_en.html", iconsize=(480,360))
+#        but = p_gtkwid.ThanButtonIm(f, image=thanimag.ntuabig3(), title=T["National Technical University of Athens"],
+#            url="www.ntua.gr/index_en.html", iconsize=(480,360))
+        but = p_gtkwid.ThanButtonIm(f, image=thanimag.hannover_leibniz(), title=T["Leibniz Universitaet Hannover"],
+            url="www.uni-hannover.de/en", iconsize=(480,360))
         but.grid(row=1, column=3, rowspan=modescol, padx=5, pady=5)
 
         w = Frame(f, width=5); w.grid(row=0, column=7)

@@ -1,11 +1,12 @@
 # -*- coding: iso-8859-7 -*-
 
 ##############################################################################
-# ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+# ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 # 
-# Copyright (c) 2001-2013 Thanasis Stamos,  January 16, 2013
-# URL:     http://thancad.sourceforge.net
-# e-mail:  cyberthanasis@excite.com
+# Copyright (C) 2001-2013 Thanasis Stamos, March 25, 2013
+# Athens, Greece, Europe
+# URL: http://thancad.sourceforge.net
+# e-mail: cyberthanasis@excite.com
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,9 +22,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ##############################################################################
-
 """\
-ThanCad 0.2.2 "Urban SAR": 2dimensional CAD with raster support for engineers.
+ThanCad 0.2.3 "Hannover": 2dimensional CAD with raster support for engineers
 
 Package which processes commands entered by the user.
 This module processes various commands.
@@ -34,7 +34,8 @@ from math import pi, atan2
 import tkFont
 import p_ggen, p_gtkuti, p_ggeom
 from p_gmath import dpt, thanNear2
-import thandr, thancomsel, thantkdia, thanlayer, thanvers
+import thandr, thancomsel, thantkdia, thanlayer
+from thanvers import tcver
 from thanvar import Canc
 from thantrans import T, thanLangSet
 import thanundo
@@ -282,20 +283,20 @@ def thanList(proj):
 def thanHelpAbout(proj):
     "Shows brief information about the program."
     font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
-    p_gtkuti.thanGudHelpWin(proj[2], thanvers.thanCadAbout, "%s %s" % (T["About"], thanvers.thanCadName),
+    p_gtkuti.thanGudHelpWin(proj[2], tcver.about, "%s %s" % (T["About"], tcver.name),
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 
 
 def thanHelpHelp(proj):
     font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
-    p_gtkuti.thanGudHelpWin(proj[2], thanvers.thanCadHelp, thanvers.thanCadName+" "+T["Help"],   # (Gu)i (d)ependent
+    p_gtkuti.thanGudHelpWin(proj[2], tcver.help, tcver.name+" "+T["Help"],   # (Gu)i (d)ependent
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 
 def thanHelpGpl (proj):
     font1 = tkFont.Font(family=thancadconf.thanFontfamily, size=thancadconf.thanFontsize)
-    p_gtkuti.thanGudHelpWin(proj[2], thanvers.thanGplText, thanvers.thanCadName+" "+T["GPL"],   # (Gu)i (d)ependent
+    p_gtkuti.thanGudHelpWin(proj[2], tcver.license[2], tcver.name+" "+T["GPL"],   # (Gu)i (d)ependent
                             font=font1)   # (Gu)i (d)ependent
     proj[2].thanGudCommandEnd()
 

@@ -42,9 +42,11 @@ class ThanRectCoorTransf:
                  xl1 + B*(xGlobal-xg1) = xl1 - B*xg1 + B*xGlobal =
                  A + B*xGlobal
         """
-
-        assert xg1 != xg2, "Some window has 1 dimension zero!"
-        b = float(xl2-xl1) / float(xg2-xg1)
+    #    assert xg1 != xg2, "Some window has 1 dimension zero!"
+        if xg1 == xg2:
+            b = 0.0
+        else:
+            b = float(xl2-xl1) / float(xg2-xg1)
         a = xl1 - b*xg1
         return a, b
 
@@ -80,13 +82,10 @@ class ThanRectCoorTransf:
 
 
 def thanRoundCenter(w, local, per=6):
-        """Rounds an abstract window w, so that it fits exactly to the actual (GuiDependent) window."
-
-	IT DOES NOT CHANGE THE COORDINATE SYSTEM TRANSFORMATION.
-	"""
+        "Rounds an abstract window w, so that it fits exactly to the actual (GuiDependent) window."
         xa, ya, xb, yb = local
-	wpi = abs(xb - xa)
-	hpi = abs(yb - ya)
+        wpi = abs(xb - xa)
+        hpi = abs(yb - ya)
 
         wun = w[2] - w[0]
         hun = w[3] - w[1]
@@ -94,12 +93,13 @@ def thanRoundCenter(w, local, per=6):
 #       per =                                       # margin in pixels
         if wpi < 10*per or hpi < 10*per: per = 0     # no margin for very small windows
         if thanNearx(wun, 0.0):
-	    assert not thanNearx(hun, 0.0), "Zero world coordinates window dimensions"
+#            assert not thanNearx(hun, 0.0), "Zero world coordinates window dimensions"
+            if thanNearx(hun, 0.0): return tuple(w)  #Zero world coordinates window dimensions
             sx = sy = float(hpi - per) / hun
-	elif thanNearx(hun, 0.0):
-	    sx = float(wpi - per) / wun
+        elif thanNearx(hun, 0.0):
+            sx = float(wpi - per) / wun
         else:
-	    sx = float(wpi - per) / wun
+            sx = float(wpi - per) / wun
             sy = float(hpi - per) / hun
             if sy < sx: sx = sy
         dx = (wpi / sx - wun) * 0.5

@@ -1,12 +1,5 @@
-
-############################################################################
-############################################################################
-
-
 class ThanHeader:
     "Mixin to import the header section of a dxf file."
-
-#===========================================================================
 
     def thanGetHeader(self):
         "Imports dxf header."
@@ -29,7 +22,7 @@ class ThanHeader:
 #-----------Read variable's atributes
 
             var = text
-            atts = { }
+            atts = {}
             while 1:
                 icod, text = self.thanGetDxf()
                 if icod == -1:                # End of file
@@ -42,9 +35,18 @@ class ThanHeader:
 
 #-------Get min, max from the variables
 
+        v = {}
         if "$EXTMIN" in vars and "$EXTMAX" in vars:
             att1 = vars["$EXTMIN"]
             att2 = vars["$EXTMAX"]
             if not self.trAttsFloat(att1, 10, 20):
+                v["EXTMIN"] = att1[10], att1[20]
                 if not self.trAttsFloat(att2, 10, 20):
+                    v["EXTMAX"] = att2[10], att2[20]
                     self.thanDr.dxfXymm(att1[10], att1[20], att2[10], att2[20])
+
+        if "$LTSCALE" in vars:
+            att1 = vars["$EXTMIN"]
+            if not self.trAttsFloat(att1, 40):
+                v["LTSCALE"] = att1[40]
+        self.thanDr.dxfVars(v)

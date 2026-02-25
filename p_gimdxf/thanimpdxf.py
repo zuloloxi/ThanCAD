@@ -87,6 +87,12 @@ class ThanImportBase:
         raise p_ggen.ThanImportError, s1
 
 
+    def thanEr2s(self, s):
+        "Raises import error with message (no lines are reported)."
+        self.thanDr.prt(s, "can")
+        raise p_ggen.ThanImportError, s
+
+
 
 class ThanImportDxf(ThanImportBase, ThanHeader, ThanEntities, ThanTables):
     "A producer class to import a dxf file and send drawing commands to the drawing object dr (self.thanDr)."

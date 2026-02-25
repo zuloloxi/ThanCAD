@@ -5,4 +5,5 @@ from dtmlines import ThanDTMlines
 from demusgs import ThanDEMusgs, prop
 from demdict import ThanDEMdict
 from demsrtm import ThanDEMsrtm
+from dembil import ThanDEMbil
 from hulls import hull
